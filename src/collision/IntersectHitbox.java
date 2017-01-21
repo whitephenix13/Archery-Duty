@@ -8,7 +8,7 @@ import types.Point_float;
 
 public class IntersectHitbox { //separating axis test
 
-	public static boolean hitboxIntersect(Hitbox hit1, int angle1,Hitbox hit2,int angle2){return(false);}
+	//public static boolean hitboxIntersect(Hitbox hit1, int angle1,Hitbox hit2,int angle2){return(false);}
 
 	/*
 	static float projectPointOnAxe(Point point, Point axe)

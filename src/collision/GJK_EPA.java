@@ -6,6 +6,8 @@ import java.util.List;
 
 import javax.vecmath.Vector2d;
 
+import types.Hitbox;
+
 public abstract class GJK_EPA {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	private static float FLOAT_MAX = 3.402823466e+38F;
@@ -13,21 +15,32 @@ public abstract class GJK_EPA {
 	public static int NOT_INTER=-1;
 	public static int TOUCH=0;
 	public static int INTER=1;
-
+	/**
+	 * @param a the object polygon
+	 * @param b the monde polygon
+	 */
 	public static int intersectsB( final Polygon a, final Polygon b, final Vector2d firstDir )
 	{
 		List<Vector2d> simplex = intersects(a, b,firstDir );
-			return isIntersect(simplex);
+		List<Vector2d> normals = new ArrayList<Vector2d>();
+		double dInter=0.0d;
+		boolean dNull=true;
+		if(simplex!=null)
+		{
+			dNull=false;
+			GJK_EPA.EPA(b, a, simplex, firstDir , normals);
+		}
+			return isIntersect(dInter,dNull);
 	}
-	/*public static int isIntersect(double dInter,boolean dNull)
+	public static int isIntersect(double dInter,boolean dNull)
 	{
 		if(dNull)
 			return NOT_INTER;
-		else if(Math.abs(dInter)<0.71) //~sqrt(2)/2
+		else if(Math.abs(dInter)<0.001) 
 			return TOUCH;
 		else 
 			return INTER;
-	}*/
+	}
 	public static int isIntersect(List<Vector2d> simplex)
 	{
 		boolean touching=false; //0 belong to one of the side of the simplex

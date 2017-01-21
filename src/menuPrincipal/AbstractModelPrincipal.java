@@ -17,6 +17,7 @@ import Affichage.Affichage;
 import choixNiveau.AbstractControlerChoixNiveau;
 import choixNiveau.AbstractModelChoixNiveau;
 import choixNiveau.AffichageChoixNiveau;
+import credit.AffichageCredit;
 import editeur.AbstractControlerEditeur;
 import editeur.AbstractModelEditeur;
 import editeur.AffichageEditeur;
@@ -51,6 +52,8 @@ public abstract class AbstractModelPrincipal implements Observable{
 	protected AbstractModelEditeur edit ;
 	protected AbstractControlerEditeur controlerEditeur ;
 	protected AffichageEditeur affichageEditeur ;
+	
+	protected AffichageCredit affichageCredit;
 	
 	protected AbstractModelChoixNiveau choix ;
 	protected AbstractControlerChoixNiveau controlerChoix ;

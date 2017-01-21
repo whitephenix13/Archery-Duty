@@ -12,6 +12,7 @@ import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
+import java.util.List;
 
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
@@ -31,12 +32,14 @@ import types.Bloc;
 import types.Hitbox;
 import types.Touches;
 import Affichage.Affichage;
+import collision.Collidable;
 import collision.Collision;
 import collision.IntersectHitbox;
 import deplacement.Attente;
 import deplacement.Course;
 import deplacement.Marche;
 import deplacement.Mouvement;
+import deplacement.Mouvement_perso;
 import deplacement.Saut;
 
 public class ModelPartie extends AbstractModelPartie{
@@ -45,13 +48,12 @@ public class ModelPartie extends AbstractModelPartie{
 	 * gère l'action dans le jeu liée à l'appui d'une touche
 	 */	
 
-
 	public void startPartie(int typeDeSpawn,String nomPartie)
 	{
 		//on charge notre niveau
 		charger(nomPartie);
 		//on fait apparaitre les monstres 
-		nombreMonstreRestant=1000;
+		nombreMonstreRestant=100;
 		spawnMonster(nombreMonstreRestant,typeDeSpawn);
 	}
 
@@ -60,6 +62,7 @@ public class ModelPartie extends AbstractModelPartie{
 	 * 
 	 * @param affich, la JFrame a afficher
 	 */	
+	@SuppressWarnings("unchecked")
 	public void play(Affichage affich) 
 	{
 		try 
@@ -86,12 +89,6 @@ public class ModelPartie extends AbstractModelPartie{
 			//int y= heros.yPos+ heros.deplacement.ydecallsprite[heros.anim]; 
 
 			//on efface les qui doivent être détruit 
-			effaceTout();
-
-			//on vide les listes
-			lEffaceFleche.clear();
-			lEffaceTirMonstre.clear();
-			lEffaceMonstre.clear();
 
 			//on desactive la touche cap au cas ou elle serait utilisée
 			Toolkit.getDefaultToolkit().setLockingKeyState(KeyEvent.VK_CAPS_LOCK, false);
@@ -100,21 +97,30 @@ public class ModelPartie extends AbstractModelPartie{
 			//Lors d'une pause, on ne veut pas réinitaliser la partie en cours mais juste y accéder à nouveau
 			if(!inPause)
 			{
+				//First action is to delete since we want the user to since the colliding object for at least 1 frame 
+				deleteObject(lEffaceFleche,(List<Collidable>)(List<?>) tabFleche);
+				deleteObject(lEffaceTirMonstre,(List<Collidable>)(List<?>)tabTirMonstre);
+				deleteObject(lEffaceMonstre,(List<Collidable>)(List<?>)tabMonstre);
+
+				//on vide les listes
+				lEffaceFleche.clear();
+				lEffaceTirMonstre.clear();
+				lEffaceMonstre.clear();
+
 				//DEPLACEMENT 
 				//Heros
-				deplace.DeplaceHeros(heros,nouvMouv ,nouvAnim,this);
+				deplace.DeplaceObject(heros,heros.nouvMouv,this);
 				//Monstre
 
 				for(int i=0 ; i< tabMonstre.size(); i++)
 				{
-
+					Monstre m = tabMonstre.get(i);
 					//on ne deplace le monstre qui si il est visible
-					Hitbox ecran =  new Hitbox(	InterfaceConstantes.HG_FENETRE,InterfaceConstantes.BG_FENETRE,
-							InterfaceConstantes.BD_FENETRE,InterfaceConstantes.HD_FENETRE);
-					if (Hitbox.isPointInRectangle(new Point (tabMonstre.get(i).xPos+xdeplaceEcran+xdeplaceEcranBloc,
-							tabMonstre.get(i).yPos+ydeplaceEcran+ydeplaceEcranBloc),ecran))
-
-						deplace.DeplaceMonstre(tabTirMonstre,tabMonstre.get(i), this);
+					boolean monsterOnScreen= InterfaceConstantes.SCREEN.polygon.contains(new Point 
+							(m.xpos+xdeplaceEcran+xdeplaceEcranBloc,
+									m.ypos+ydeplaceEcran+ydeplaceEcranBloc));
+					if (monsterOnScreen)
+						deplace.DeplaceObject(m,m.deplacement, this);
 
 				}
 
@@ -122,50 +128,53 @@ public class ModelPartie extends AbstractModelPartie{
 				//Fleche
 				for(int i=0; i<tabFleche.size(); i++)
 				{
-					deplace.DeplaceFleche(tabFleche.get(i), tabFleche.get(i).anim, this,heros);
+					Fleche f=tabFleche.get(i);
+					deplace.DeplaceObject(f, f.deplacement, this);
 				}
 
 				//Tir Monstre deplace et a effacer
 				for(int i=0 ; i< tabTirMonstre.size(); i++)
 				{
-					tabTirMonstre.get(i).deplaceTir(this);
-
-					if(tabTirMonstre.get(i).doitDetruire)
-					{
-						lEffaceTirMonstre.add(i);
-					}
-
+					TirMonstre tir = tabTirMonstre.get(i);
+					deplace.DeplaceObject(tir,tir.deplacement, this);
 				}
 
-				//DESTRUCTION
-				//tir monstre
-				effaceTirMonstre();
-
-				lEffaceTirMonstre.clear();
 				//tir fleche
 
 				for(int i=0; i<tabFleche.size(); i++)
 				{
-
-					long tempsFleche= System.nanoTime()-tabFleche.get(i).tempsDetruit;
-					if(tabFleche.get(i).doitDetruire && (tempsFleche >= InterfaceConstantes.TEMPS_DESTRUCTION_FLECHE))
-					{
-						System.out.println("t1 "+ System.nanoTime() + " t2 "+ tabFleche.get(i).tempsDetruit + " t1-t2 "+ tempsFleche);
-						lEffaceFleche.add(i);
-					}
+					Fleche fleche = tabFleche.get(i);
 					//on déclenche le timer des fleches qui sont dans le mur 
-					if(tabFleche.get(i).tempsDetruit==0)
+					if(fleche.isPlanted && fleche.tempsDetruit==0)
 					{
-						tabFleche.get(i).timer();
+						fleche.timer();
 					}
+					long tempsFleche=  System.nanoTime()-fleche.tempsDetruit;
+
+					if(fleche.isPlanted && (tempsFleche >= InterfaceConstantes.TEMPS_DESTRUCTION_FLECHE))
+					{
+						fleche.needDestroy=true;
+					}
+
 				}
-				effaceFleche();
-				lEffaceFleche.clear();
 
 
 				//on gere la collision des tirs/monstre/heros
 				gestionTir();
 
+				//PREPARE OBJECTS FOR DESTRUCTION 
+
+				for(int i =0; i <tabFleche.size();++i)
+					if(tabFleche.get(i).needDestroy)
+						lEffaceFleche.add(i);
+
+				for(int i =0; i <tabTirMonstre.size();++i)
+					if(tabTirMonstre.get(i).needDestroy)
+						lEffaceTirMonstre.add(i);
+
+				for(int i =0; i <tabMonstre.size();++i)
+					if(tabMonstre.get(i).needDestroy)
+						lEffaceMonstre.add(i);
 
 				//on met a jour le heros si il est touché avant de l'afficher
 				heros.miseAjourTouche();
@@ -200,11 +209,6 @@ public class ModelPartie extends AbstractModelPartie{
 	 */	
 	public void charger(String nomFichier)
 	{
-		// InputStream input = getClass().getClassLoader().getResourceAsStream("resources/Levels/"+nomFichier);
-		//ois=new ObjectInputStream(new BufferedInputStream(input));
-
-		//monde=(Monde)ois.readObject();
-		//ois.close();
 		monde= Serialize.charger(nomFichier);
 		//le monde est initialisé, il reste à mettre à jour les coordonées de départ du heros
 
@@ -217,11 +221,6 @@ public class ModelPartie extends AbstractModelPartie{
 		heros.xpos=(InterfaceConstantes.LARGEUR_FENETRE/2+(INIT_RECT.x==monde.xStartPerso-InterfaceConstantes.LARGEUR_FENETRE/2? 0:100 ))/100*100;
 		heros.ypos=(InterfaceConstantes.HAUTEUR_FENETRE/2+(INIT_RECT.y==monde.yStartPerso-InterfaceConstantes.HAUTEUR_FENETRE/2? 0:100 ))/100*100;
 
-
-
-		//isFound=false;
-		//JOptionPane.showMessageDialog(null, "Fichier inexistant" , "Echec Chargement", JOptionPane.ERROR_MESSAGE);
-
 	}
 
 	/**
@@ -229,288 +228,74 @@ public class ModelPartie extends AbstractModelPartie{
 	 */	
 	void gestionTir () 
 	{
-
 		//gestion fleche/TirMonstre 
 		for(int i=0; i<tabFleche.size(); i++)
-		{
-			for(int j=0; j<tabTirMonstre.size(); j++)
-			{
-				if(!tabFleche.get(i).encochee && !(tabFleche.get(i).doitDetruire&&(tabFleche.get(i).tempsDetruit>0)))
+			for(int j=0; j<tabTirMonstre.size(); j++){
+				Fleche fleche= tabFleche.get(i);
+				if(!fleche.encochee && !(fleche.isPlanted &&(fleche.tempsDetruit>0)) && !fleche.needDestroy)
 				{
-					int angle1= 0;
-					//TODO: changement
-					/*switch (tabFleche.get(i).anim)
-			{
-			case 1: angle1=45;break;
-			case 3: angle1=-45;break;
-			case 5: angle1=45;break;
-			case 7: angle1=45;break;
-			default: angle1=0;break;
-			}*/
-					Fleche fleche= tabFleche.get(i);
-					//variables pour localiser la fleche
-					//{{
-					int xHG =fleche.xpos+ fleche.deplacement.xHdecallsprite.get(fleche.anim);
-					int xHD =fleche.xpos + fleche.deplacement.xHdecallsprite.get(fleche.anim) + fleche.deplacement.xHdecall2.get(fleche.anim);
-					int xBG =fleche.xpos + fleche.deplacement.xBdecallsprite.get(fleche.anim);
-					int  xBD= fleche.xpos + fleche.deplacement.xBdecallsprite.get(fleche.anim) + fleche.deplacement.xBdecall2.get(fleche.anim);
-					int yHG =fleche.ypos + fleche.deplacement.yHdecallsprite.get(fleche.anim);
-					int yHD=fleche.ypos + fleche.deplacement.yHdecallsprite.get(fleche.anim) + fleche.deplacement.yHdecall2.get(fleche.anim);
-					int  yBG =fleche.ypos + fleche.deplacement.yBdecallsprite.get(fleche.anim);
-					int yBD=fleche.ypos + fleche.deplacement.yBdecallsprite.get(fleche.anim) + fleche.deplacement.yBdecall2.get(fleche.anim);
+					TirMonstre tirM= tabTirMonstre.get(j);
 
-					//}}
-					//variables pour localiser le TirMonstre 
-					//{{
-					int length= tabTirMonstre.get(j).xhitbox.get(tabTirMonstre.get(j).anim);
-					int width= tabTirMonstre.get(j).yhitbox.get(tabTirMonstre.get(j).anim);
-
-					int xM= tabTirMonstre.get(j).xpos+tabTirMonstre.get(j).xdecallsprite.get(tabTirMonstre.get(j).anim);
-					int yM=tabTirMonstre.get(j).ypos+tabTirMonstre.get(j).ydecallsprite.get(tabTirMonstre.get(j).anim);
-
-
-
-					int angle2=0;
-					//}}
-
-					Hitbox hit1 = new Hitbox(new Point(xHG,yHG),new Point(xBG,yBG),new Point(xBD,yBD),new Point(xHD,yHD));
-					Hitbox hit2 = new Hitbox(new Point(xM,yM),new Point(xM,yM+width),new Point(xM+length,yM+width),new Point(xM+length,yM));
-
-					if(IntersectHitbox.hitboxIntersect(hit1,angle1,hit2,angle2))
+					if(!tirM.needDestroy && this.deplace.colli.collisionObjects(this, deplace, fleche, tirM))
 					{
-
-						if(!lEffaceFleche.contains(i)&& !lEffaceTirMonstre.contains(j))
-						{
-							lEffaceFleche.add(i);
-							lEffaceTirMonstre.add(j);
-							//bruit de collision tir/tir 
-							(new MusicBruitage("annulation tir")).startBruitage(100);
-						}
-
-
-						/*
-				if(!lEffaceFleche.contains(i)){lEffaceFleche.add(i);}
-				if(!lEffaceTirMonstre.contains(j)){lEffaceTirMonstre.add(j);}
-				//bruit de collision tir/tir 
-				 (new MusicBruitage("annulation tir")).startBruitage(100);
-						 */
-
+						fleche.handleObjectCollision(this, deplace);
+						tirM.handleObjectCollision(this, deplace);
+						//bruit de collision tir/tir 
+						(new MusicBruitage("annulation tir")).startBruitage(100);
 					}
 				}
 			}
-		}
 		//gestion fleche/monstre 
 		for(int i=0; i<tabFleche.size(); i++)
-		{
 			for(int j=0; j<tabMonstre.size(); j++)
 			{
-				if(!tabFleche.get(i).encochee && !(tabFleche.get(i).doitDetruire && (tabFleche.get(i).tempsDetruit>0)))
+				Fleche fleche= tabFleche.get(i);
+				if(!fleche.encochee && !(fleche.isPlanted && (fleche.tempsDetruit>0)) && !fleche.needDestroy)
 				{
-					int angle1= 0;
-					//TODO: changement
-					/*
-			switch (tabFleche.get(i).anim)
-			{
-			case 1: angle1=45;break;
-			case 3: angle1=-45;break;
-			case 5: angle1=45;break;
-			case 7: angle1=45;break;
-			default: angle1=0;break;
-			}*/
-					Fleche fleche= tabFleche.get(i);
-					//variables pour localiser la fleche
-					//{{
-					int xHG =fleche.xpos+ fleche.deplacement.xHdecallsprite.get(fleche.anim);
-					int xHD =fleche.xpos + fleche.deplacement.xHdecallsprite.get(fleche.anim) + fleche.deplacement.xHdecall2.get(fleche.anim);
-					int xBG =fleche.xpos + fleche.deplacement.xBdecallsprite.get(fleche.anim);
-					int  xBD= fleche.xpos + fleche.deplacement.xBdecallsprite.get(fleche.anim) + fleche.deplacement.xBdecall2.get(fleche.anim);
-					int yHG =fleche.ypos + fleche.deplacement.yHdecallsprite.get(fleche.anim);
-					int yHD=fleche.ypos + fleche.deplacement.yHdecallsprite.get(fleche.anim) + fleche.deplacement.yHdecall2.get(fleche.anim);
-					int  yBG =fleche.ypos + fleche.deplacement.yBdecallsprite.get(fleche.anim);
-					int yBD=fleche.ypos + fleche.deplacement.yBdecallsprite.get(fleche.anim) + fleche.deplacement.yBdecall2.get(fleche.anim);
+					Monstre monstre = tabMonstre.get(j);
 
-					//}}
-					//variables pour localiser le monstre 
-					//{{
-
-					int length= tabMonstre.get(j).deplacement.xhitbox.get(tabMonstre.get(j).anim);
-					int width= tabMonstre.get(j).deplacement.yhitbox.get(tabMonstre.get(j).anim);
-
-					int xM= tabMonstre.get(j).xPos+tabMonstre.get(j).deplacement.xdecallsprite.get(tabMonstre.get(j).anim);
-					int yM=tabMonstre.get(j).yPos+tabMonstre.get(j).deplacement.ydecallsprite.get(tabMonstre.get(j).anim);
-
-
-
-					int angle2=0;
-
-					//}}
-
-					Hitbox hit1 = new Hitbox(new Point(xHG,yHG),new Point(xBG,yBG),new Point(xBD,yBD),new Point(xHD,yHD));
-					Hitbox hit2 = new Hitbox(new Point(xM,yM),new Point(xM,yM+width),new Point(xM+length,yM+width),new Point(xM+length,yM));
-
-
-					if(IntersectHitbox.hitboxIntersect(hit1,angle1,hit2,angle2))
+					if(!monstre.needDestroy && deplace.colli.collisionObjects(this, deplace, fleche, monstre))
 					{
-						if(!lEffaceFleche.contains(i)&& !lEffaceMonstre.contains(j))
-						{
-							lEffaceFleche.add(i);
-							tabMonstre.get(j).addLife(tabFleche.get(i).degat);
+						tabMonstre.get(j).addLife(tabFleche.get(i).degat);
 
-							if(tabMonstre.get(j).getLife()==InterfaceConstantes.MINLIFE)
-							{
-								lEffaceMonstre.add(j);
-							}
-						}
+						fleche.handleObjectCollision(this, deplace);
+						monstre.handleObjectCollision(this, deplace);
 
-
-						/*
-				if(!lEffaceFleche.contains(i))
-				{
-					lEffaceFleche.add(i);
-					tabMonstre.get(j).addLife(tabFleche.get(i).degat);
-				}
-				if(!lEffaceMonstre.contains(j)&& tabMonstre.get(j).getLife()==MINLIFE)
-				{
-					lEffaceMonstre.add(j);
-				}
-						 */
 					}
 				}
 			}
-		}
 
+		//Update nombre monstre restant
+		nombreMonstreRestant=tabMonstre.size();
 
 		//gestion tirMonstre/heros
-		//variables pour localiser le heros 
-		//{{
-
-		int x= heros.xpos + heros.deplacement.xdecallsprite.get(heros.anim)-xdeplaceEcran-xdeplaceEcranBloc;
-		int y= heros.ypos + heros.deplacement.ydecallsprite.get(heros.anim)-ydeplaceEcran-ydeplaceEcranBloc;
-		int length = heros.deplacement.xhitbox.get(heros.anim);
-		int width = heros.deplacement.yhitbox.get(heros.anim);
-
-		int angle=0;
-		//}}
 		for(int j=0; j<tabTirMonstre.size(); j++)
 		{
-			//variables pour localiser le TirMonstre 
-			//{{
-			int xM= tabTirMonstre.get(j).xpos+tabTirMonstre.get(j).xdecallsprite.get(tabTirMonstre.get(j).anim);
-			int yM=tabTirMonstre.get(j).ypos+tabTirMonstre.get(j).ydecallsprite.get(tabTirMonstre.get(j).anim);
-			int lengthM=tabTirMonstre.get(j).xhitbox.get(tabTirMonstre.get(j).anim);
-			int widthM= tabTirMonstre.get(j).yhitbox.get(tabTirMonstre.get(j).anim);
-			int angle2=0;
-			//}}
+			TirMonstre tirM= tabTirMonstre.get(j);
 
-			Hitbox hit1 = new Hitbox(new Point(x,y),new Point(x,y+width),new Point(x+length,y+width),new Point(x+length,y));
-			Hitbox hit2 = new Hitbox(new Point(xM,yM),new Point(xM,yM+width),new Point(xM+length,yM+width),new Point(xM+length,yM));
-
-
-			if(IntersectHitbox.hitboxIntersect(hit1,angle,hit2,angle2))
-
+			if(!tirM.needDestroy && !heros.needDestroy && deplace.colli.collisionObjects(this, deplace, heros, tirM))
 			{
-				if(!lEffaceTirMonstre.contains(j))
-				{
-					lEffaceTirMonstre.add(j);
-				}
 				if(!heros.invincible)
-				{
 					heros.touche(tabTirMonstre.get(j).dommage);
-				}
+
+				heros.handleObjectCollision(this, deplace);
+				tirM.handleObjectCollision(this, deplace);					
 			}
-
 		}
-
 	}
 
-	//fonctions pour effacer 
-	/**
-	 * efface les monstres mort
-	 */	
-	void effaceMonstre()
+	void deleteObject(List<Integer> indexList, List<Collidable> objectList )
 	{
-		Collections.sort(lEffaceMonstre);
+		Collections.sort(indexList);
 
-		//efface les monstres
-		for(int i=0; i<lEffaceMonstre.size(); i++)
+		for(int i=0; i<indexList.size(); i++)
 		{
-
-			tabMonstre.remove(lEffaceMonstre.get(i)-i);
-			nombreMonstreRestant--;
-			//bruit de destruction du robot
-			(new MusicBruitage("destruction robot")).startBruitage(1000);
-
-		}
-
-	}
-	/**
-	 * efface les tirs à détruire
-	 */	
-	void effaceTirMonstre() 
-	{
-		Collections.sort(lEffaceTirMonstre);
-		//efface les tirs de monstre
-		for(int i=0; i<lEffaceTirMonstre.size(); i++)
-		{
-			//on execute l'action à la destruction
-
-			tabTirMonstre.get(lEffaceTirMonstre.get(i)-i).detruire();
-			tabTirMonstre.remove(lEffaceTirMonstre.get(i)-i);
-
+			objectList.get(indexList.get(i)-i).destroy();
+			objectList.remove(indexList.get(i)-i);
 		}
 	}
-	/**
-	 * efface les fleches a detruire
-	 */	
-	void effaceFleche() 
-	{
-		Collections.sort(lEffaceFleche);
-		//efface les fleches
-		for(int i=0; i<lEffaceFleche.size(); i++)
-		{
-			tabFleche.remove(lEffaceFleche.get(i)-i);
-		}
 
 
-	}
-	/**
-	 * efface les monstres et l'ensemble des tirs 
-	 */	
-	void effaceTout()
-	{
-		effaceMonstre();
-		effaceTirMonstre();
-		effaceFleche();
-	}
-
-	/*
-boolean intersectRectangle(Point HG1, Point HD1, Point BG1, Point BD1,int angle1,Point HG2, Point HD2, Point BG2, Point BD2,int angle2)
-{
-
-	Point centre1 = getRectCenter(HG1,HD1,BG1,BD1);
-	Point centre2 = getRectCenter(HG2,HD2,BG2,BD2);
-	boolean resultat= false;
-	Point rHG1 = rotatePoint(HG1,centre1,angle1);
-	Point rHD1 = rotatePoint(HD1,centre1,angle1);
-	Point rBG1 = rotatePoint(BG1,centre1,angle1);
-	Point rBD1 = rotatePoint(BD1,centre1,angle1);
-	Point rHG2 = rotatePoint(HG2,centre2,angle2);
-	Point rHD2 = rotatePoint(HD2,centre2,angle2);
-	Point rBG2 = rotatePoint(BG2,centre2,angle2);
-	Point rBD2 = rotatePoint(BD2,centre2,angle2);
-
-	resultat= resultat || isPointInRectangle(rHG1,rHG2,rHD2,rBG2);
-	resultat= resultat || isPointInRectangle(rHD1,rHG2,rHD2,rBG2);
-	resultat= resultat || isPointInRectangle(rBG1,rHG2,rHD2,rBG2);
-	resultat= resultat || isPointInRectangle(rBD1,rHG2,rHD2,rBG2);
-
-	resultat= resultat || isPointInRectangle(rHG2,rHG1,rHD1,rBG1);
-	resultat= resultat || isPointInRectangle(rHD2,rHG1,rHD1,rBG1);
-	resultat= resultat || isPointInRectangle(rBG2,rHG1,rHD1,rBG1);
-	resultat= resultat || isPointInRectangle(rBD2,rHG1,rHD1,rBG1);
-	return(resultat);
-}
-	 */
 	/**
 	 * Initialise les monstres dans le niveau
 	 * 
@@ -559,33 +344,8 @@ boolean intersectRectangle(Point HG1, Point HD1, Point BG1, Point BD1,int angle1
 					y= monde.yStartMap- INIT_RECT.y +y;
 					//on créer le monstre à faire apparaitre
 					spirel = new Spirel(x,y,false);
-
-
-					int BASDROITE = 6;
-					int HAUTGAUCHE= 8;
-
-					//pour le test de blocage d'un monstre dans un mur, on utilise l'ancienne direction dans laquelle il s'est déplacé
-					//On test les deux bords extreme. Si les tests réussient, le monstre n'est pas dans un mur 
-					int ancienDirection=HAUTGAUCHE;
-
-					int xS = 0; 
-					int yS= 0;	
-
-					//Test du blocage du coin HAUT GAUCHE du monstre
-					for (int j=0 ; j<3 ; j ++)
-					{
-						xS=spirel.xPos+spirel.deplacement.xdecallsprite.get(spirel.anim)+ (j==0 ? 0 : spirel.deplacement.xhitbox.get(spirel.anim));
-						yS=spirel.yPos+spirel.deplacement.ydecallsprite.get(spirel.anim) + (j==2 ? 0 : spirel.deplacement.yhitbox.get(spirel.anim)); 
-						correct= correct && !Collision.isBloque(this, spirel,xS,yS,ancienDirection);
-					}
-
-					ancienDirection=BASDROITE;
-					//Test du blocage du coin BAS DROITE du monstre
-					for (int j=0 ; j<3 ; j ++)
-					{
-						xS = spirel.xPos+spirel.deplacement.xdecallsprite.get(spirel.anim) + (j<=1 ? 0 : spirel.deplacement.xhitbox.get(spirel.anim));
-						yS= spirel.yPos+spirel.deplacement.ydecallsprite.get(spirel.anim)  + (j>=1 ? 0 : spirel.deplacement.yhitbox.get(spirel.anim));
-					}
+					Collision colli = new Collision();
+					correct = !colli.isWorldCollision(this, deplace, spirel);
 				}
 				while (!correct); //on attend d'avoir une position correct avant de placer le monstre 
 
@@ -619,26 +379,23 @@ boolean intersectRectangle(Point HG1, Point HD1, Point BG1, Point BD1,int angle1
 					Fleche fleche= new Fleche();
 					fleche.nulle=false;
 					fleche.encochee=true;
-					//on regle la position et la vitesse
-					deplace.setParamFleche(this,fleche, heros);
 					tabFleche.add(fleche);
 				}
 
 				//COURSE DROITE
-				if(courseDroiteDown && !(heros.IsDeplacement(Mouvement.glissade))&& !flecheEncochee)
+				if(courseDroiteDown && !(heros.deplacement.IsDeplacement(Mouvement_perso.glissade))&& !flecheEncochee)
 				{
 					changeMouv=true;
 					//si on ne courrait pas vers la droite avant
-					if(! (heros.IsDeplacement(Mouvement.course) && heros.anim>=4))
+					if(! (heros.deplacement.IsDeplacement(Mouvement_perso.course) && heros.anim>=4))
 					{
-						nouvAnim= 4; 
-						nouvMouv= new Course(); 
+						heros.nouvAnim= 4; 
+						heros.nouvMouv= new Course(); 
 					}
 					else //on courrait deja avant , il suffit juste de changer de sprite et de le decaller 
 					{
-
-						nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche"? (heros.anim+1)%4 :(heros.anim+1)%4+4 ); 
-						nouvMouv= heros.deplacement; 
+						heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche"? (heros.anim+1)%4 :(heros.anim+1)%4+4 ); 
+						heros.nouvMouv= heros.deplacement; 
 					}
 				}
 
@@ -647,64 +404,67 @@ boolean intersectRectangle(Point HG1, Point HD1, Point BG1, Point BD1,int angle1
 				{
 					changeMouv=true;
 
-					if(heros.deplacement.getClass().getName()=="deplacement.Glissade"&& heros.anim==1)
+					if(heros.deplacement.IsDeplacement(Mouvement_perso.glissade)&& heros.anim==1)
 					{
 						changeMouv=true;
 
-						nouvAnim= (heros.vit.y>=0 ? 4 : 3); 
-						nouvMouv= new Saut(); 
+						heros.nouvAnim= (heros.vit.y>=0 ? 4 : 3); 
+						heros.nouvMouv= new Saut(); 
 					}
-					else if (heros.deplacement.getClass().getName().equals("deplacement.Glissade"))
+					else if (heros.deplacement.IsDeplacement(Mouvement_perso.glissade))
 					{
 						//on change rien 				
-						nouvMouv= heros.deplacement;
-						nouvAnim=heros.anim;
+						heros.nouvMouv= heros.deplacement;
+						heros.nouvAnim=heros.anim;
 					}
 					//si on courrait vers la droite en l'air ou non 
-					else if((heros.deplacement.getClass().getName()=="deplacement.Course" && heros.anim>=4))
+					else if((heros.deplacement.IsDeplacement(Mouvement_perso.course) && heros.anim>=4))
 					{		
-						nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche" ? (heros.anim+1)%4 :(heros.anim+1)%4+4 ); 
-						nouvMouv= heros.deplacement; 
+						heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche" ? (heros.anim+1)%4 :(heros.anim+1)%4+4 ); 
+						heros.nouvMouv= heros.deplacement; 
 					}
 
 					//si on ne marchait pas vers la droite et qu'on est pas en l'air 
-					else if(! (heros.deplacement.getClass().getName()=="deplacement.Marche" && heros.anim>=4)&& peutSauter)
+					else if(! (heros.deplacement.IsDeplacement(Mouvement_perso.marche) && heros.anim>=4)&& heros.peutSauter)
 					{
-						nouvAnim= 4; 
-						nouvMouv=new Marche();
-
+						heros.nouvAnim= 4; 
+						heros.nouvMouv=new Marche();
 					}
 
 					//si on veut marcher en l'air (donc vers la droite) 
-					else if (!peutSauter&& !heros.last_colli_right)
+					else if (!heros.peutSauter) 
 					{
-						deplaceSautDroit=true; // on fait bouger le heros
-						nouvAnim= heros.anim %3 +3;
-						nouvMouv=new Saut();
+						heros.deplaceSautDroit=true; // on fait bouger le heros
+						boolean fall = heros.vit.y >=0 ;
+						heros.nouvAnim= fall? 4 : 3 ; 
+						heros.nouvMouv=new Saut();
 					}
-					else // si le heros est au sol et veux continuer à marcher vers la droite
+					else if(heros.peutSauter)// si le heros est au sol et veux continuer à marcher vers la droite
 					{
-
-						nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche" ? (heros.anim+1)%4 :(heros.anim+1)%4+4 ); 
-						nouvMouv= heros.deplacement; 
+						heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche" ? (heros.anim+1)%4 :(heros.anim+1)%4+4 ); 
+						heros.nouvMouv= heros.deplacement; 
+					}
+					else
+					{
+						try {throw new Exception("Unhandled input right in KeyDownAction ");} catch (Exception e) {e.printStackTrace();}
 					}
 				}
 				//COURSE GAUCHE
-				if(courseGaucheDown && !(heros.deplacement.getClass().getName()=="deplacement.Glissade")&& !flecheEncochee)
+				if(courseGaucheDown && !(heros.deplacement.IsDeplacement(Mouvement_perso.glissade))&& !flecheEncochee)
 				{
 					changeMouv=true;
 					//si on ne courrait pas vers la gauche avant 
-					if(! (heros.deplacement.getClass().getName()=="deplacement.Course" && heros.anim<4))
+					if(! (heros.deplacement.IsDeplacement(Mouvement_perso.course) && heros.anim<4))
 					{
 
-						nouvAnim=0;
-						nouvMouv= new Course();
+						heros.nouvAnim=0;
+						heros.nouvMouv= new Course();
 					}
 					else // si on courrait vers la gauche avant 
 					{
 
-						nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche" ? (heros.anim+1)%4 :(heros.anim+1)%4+4 ); 
-						nouvMouv= heros.deplacement; 
+						heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche" ? (heros.anim+1)%4 :(heros.anim+1)%4+4 ); 
+						heros.nouvMouv= heros.deplacement; 
 					}
 				}
 				//MARCHE GAUCHE 
@@ -712,46 +472,51 @@ boolean intersectRectangle(Point HG1, Point HD1, Point BG1, Point BD1,int angle1
 				{
 					changeMouv=true;
 
-					if(heros.deplacement.getClass().getName()=="deplacement.Glissade"&& heros.anim==0)
+					if(heros.deplacement.IsDeplacement(Mouvement_perso.glissade)&& heros.anim==0)
 					{
 						changeMouv=true;
 
-						nouvAnim= (heros.vit.y>=0 ? 1 : 0); 
-						nouvMouv= new Saut(); 
+						heros.nouvAnim= (heros.vit.y>=0 ? 1 : 0); 
+						heros.nouvMouv= new Saut(); 
 					}
-					else if (heros.deplacement.getClass().getName().equals("deplacement.Glissade"))
+					else if (heros.deplacement.IsDeplacement(Mouvement_perso.glissade))
 					{
 						//on change rien 
-						nouvMouv=  heros.deplacement;
-						nouvAnim= heros.anim;
+						heros.nouvMouv=  heros.deplacement;
+						heros.nouvAnim= heros.anim;
 					}
 
 					//si on courrait vers la gauche en l'air ou non 
-					else if((heros.deplacement.getClass().getName()=="deplacement.Course" && heros.anim<4))
+					else if((heros.deplacement.IsDeplacement(Mouvement_perso.course) && heros.anim<4))
 					{
 
-						nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche" ? (heros.anim+1)%4 :(heros.anim+1)%4+4 ); 
-						nouvMouv= heros.deplacement; 
+						heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche" ? (heros.anim+1)%4 :(heros.anim+1)%4+4 ); 
+						heros.nouvMouv= heros.deplacement; 
 					}
 
 					//si on ne marchait pas vers la gauche et qu'on est pas en l'air 
-					else if(! (heros.deplacement.getClass().getName()=="deplacement.Marche" && heros.anim<4)&& peutSauter)
+					else if(! (heros.deplacement.IsDeplacement(Mouvement_perso.marche) && heros.anim<4)&& heros.peutSauter)
 					{
-						nouvAnim=0;
-						nouvMouv= new Marche();
+						heros.nouvAnim=0;
+						heros.nouvMouv= new Marche();
 					}
 
 					//si on veut marcher en l'air (donc vers la gauche) 
-					else if (!peutSauter&& !heros.last_colli_left)
+					else if (!heros.peutSauter)
 					{
-						deplaceSautGauche=true; // on fait bouger le herosnnage
-						nouvAnim= heros.anim %3;
-						nouvMouv=new Saut(); 
+						heros.deplaceSautGauche=true; // on fait bouger le herosnnage
+						boolean fall = heros.vit.y >=0 ;
+						heros.nouvAnim=fall? 1 : 0 ; 
+						heros.nouvMouv=new Saut(); 
 					}
-					else // si le heros est au sol et veux continuer à marcher vers la gauche
+					else if(heros.peutSauter) // si le heros est au sol et veux continuer à marcher vers la gauche
 					{
-						nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche"? (heros.anim+1)%4 :(heros.anim+1)%4+4 ); 
-						nouvMouv= heros.deplacement; 
+						heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche"? (heros.anim+1)%4 :(heros.anim+1)%4+4 ); 
+						heros.nouvMouv= heros.deplacement; 
+					}
+					else
+					{
+						try {throw new Exception("Unhandled input left in KeyDownAction ");} catch (Exception e) {e.printStackTrace();}
 					}
 
 				}
@@ -778,33 +543,33 @@ boolean intersectRectangle(Point HG1, Point HD1, Point BG1, Point BD1,int angle1
 
 				//SAUT 
 				//si le herosnnage saute pour la première fois et qu'il peut sauter et qu'il ne glisse pas
-				if(sautDown && peutSauter && !(heros.deplacement.getClass().getName()=="deplacement.Glissade")&& !flecheEncochee)
+				if(sautDown && heros.peutSauter && !(heros.deplacement.IsDeplacement(Mouvement_perso.glissade))&& !flecheEncochee)
 				{
 					courseDroiteDown=false;
 					courseGaucheDown=false;
 
 					changeMouv=true;
 
-					peutSauter=false;
+					heros.peutSauter=false;
 
 
-					//le herosnnage saute donc finSaut est faux
-					debutSaut=true;
-					finSaut=false;
+					//le heros saute donc finSaut est faux
+					heros.debutSaut=true;
+					heros.finSaut=false;
 
-					nouvAnim=heros.droite_gauche(heros.anim)=="Gauche" ? 0 : 3 ;
-					nouvMouv= new Saut();
+					heros.nouvAnim=heros.droite_gauche(heros.anim)=="Gauche" ? 0 : 3 ;
+					heros.nouvMouv= new Saut();
 
 
 				}
 				//on glisse et on veut sauter 
-				else if(sautDown && heros.deplacement.getClass().getName()=="deplacement.Glissade") 
+				else if(sautDown && heros.deplacement.IsDeplacement(Mouvement_perso.glissade)) 
 				{
 					changeMouv=true;	
-					sautGlisse=true;
+					heros.sautGlisse=true;
 
-					nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche"? 0 : 3);
-					nouvMouv=new Saut();
+					heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche"? 0 : 3);
+					heros.nouvMouv=new Saut();
 
 				}
 
@@ -832,13 +597,11 @@ boolean intersectRectangle(Point HG1, Point HD1, Point BG1, Point BD1,int angle1
 			{
 				flecheEncochee=false;
 				changeMouv=true;
-				//on variablesPartieRapide.affiche l'animation d'attente
 
-				nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche" ? 0 : 1) ;
-				nouvMouv= new Attente();
+				heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche" ? 0 : 1) ;
+				heros.nouvMouv= new Attente();
 
-
-				tabFleche.get(tabFleche.size()-1).flecheDecochee();
+				tabFleche.get(tabFleche.size()-1).flecheDecochee(deplace);
 			}
 
 		}
@@ -849,75 +612,70 @@ boolean intersectRectangle(Point HG1, Point HD1, Point BG1, Point BD1,int angle1
 		{
 			if(marcheDroiteReleased)
 			{
-				marcheDroiteDown=false;marcheDroiteReleased=false;
+				marcheDroiteDown=false;marcheDroiteReleased=false;heros.runBeforeJump=false;
 			}
 			if(courseDroiteReleased)
 			{
-				courseDroiteDown=false;courseDroiteReleased=false;
+				courseDroiteDown=false;courseDroiteReleased=false;heros.runBeforeJump=false;
 			}
 			if(marcheGaucheReleased)
 			{
-				marcheGaucheDown=false;marcheGaucheReleased=false;
+				marcheGaucheDown=false;marcheGaucheReleased=false;heros.runBeforeJump=false;
 			}
 			if(courseGaucheReleased)
 			{
-				courseGaucheDown=false;courseGaucheReleased=false;
+				courseGaucheDown=false;courseGaucheReleased=false;heros.runBeforeJump=false;
 			}
 
 
-			if( !heros.deplacement.getClass().getName().equals("deplacement.Glissade") && !flecheEncochee )
+			if( !heros.deplacement.IsDeplacement(Mouvement_perso.glissade) && !flecheEncochee )
 			{
 				changeMouv=true;
 
 				//pas de decallage de sprite 
 
 				//au sol
-				if((heros.deplacement.getClass().getName()=="deplacement.Marche"|| heros.deplacement.getClass().getName()=="deplacement.Course"||heros.deplacement.getClass().getName()=="deplacement.Dash") && peutSauter)
+				if((heros.deplacement.IsDeplacement(Mouvement_perso.marche)|| heros.deplacement.IsDeplacement(Mouvement_perso.course)) && heros.peutSauter)
 				{
 					changeMouv=true;
 					//on variablesPartieRapide.affiche l'animation d'attente
 
-					nouvAnim= (heros.droite_gauche(heros.anim)=="Droite" ? 1: 0 );
-					nouvMouv= new Attente();
+					heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Droite" ? 1: 0 );
+					heros.nouvMouv= new Attente();
 
 					//on met sa vitesse à 0:  
 					heros.vit.x=0;
 
 				}
 
-				else if (heros.deplacement.getClass().getName()=="deplacement.Attente")
+				else if (heros.deplacement.IsDeplacement(Mouvement_perso.attente))
 				{
 					//on arrete quand meme le herosnnage (exemple si il relache la touche de deplacement sur laquelle il avait appuyé en l'air)
 					changeMouv=true;
 					//on variablesPartieRapide.affiche l'animation d'attente
 
-					nouvAnim= heros.droite_gauche(heros.anim)=="Droite" ? 1: 0 ;
-					nouvMouv= new Attente();
+					heros.nouvAnim= heros.droite_gauche(heros.anim)=="Droite" ? 1: 0 ;
+					heros.nouvMouv= new Attente();
 
 					//on met sa vitesse à 0:  
 					heros.vit.x=0;
 				}
 				//en l'air et glisse pas
-				else if(!peutSauter)
+				else if(!heros.peutSauter)
 				{
 
 					heros.vit.x=0;
 					changeMouv=true;
-					// tout dépend si le herosnnage tombe ou non 
-					if (heros.vit.y<0)
-					{
-						//il ne tombe pas donc on met les premières animations de saut
+					// tout dépend si le heros tombe ou non 
 
-						nouvAnim= heros.droite_gauche(heros.anim)=="Gauche" ? 0: 3 ;
+					if (heros.vit.y<0)//il ne tombe pas donc on met les premières animations de saut
+						heros.nouvAnim= heros.droite_gauche(heros.anim)=="Gauche" ? 0: 3 ;
 
-						nouvMouv=new Saut();
-					}
+					else // le heros tombe 
+						heros.nouvAnim=heros.droite_gauche(heros.anim)=="Gauche" ? 1: 4 ;
 
-					else // le herosnnage tombe 
-					{
-						nouvAnim=heros.droite_gauche(heros.anim)=="Gauche" ? 1: 4 ;
-						nouvMouv=new Saut();
-					}
+					heros.nouvMouv=new Saut();
+
 				}
 			}
 		}
@@ -941,6 +699,7 @@ boolean intersectRectangle(Point HG1, Point HD1, Point BG1, Point BD1,int angle1
 	}
 
 	public void HandlePressedInput(int input) {
+
 		if( input==Touches.t_pause)
 		{
 			pauseDown=true;
@@ -961,7 +720,8 @@ boolean intersectRectangle(Point HG1, Point HD1, Point BG1, Point BD1,int angle1
 		{
 			clickTime2 = System.nanoTime();
 			float delta = (float) ((clickTime2-clickTime1)*Math.pow(10, -6));
-			boolean dash = delta<InterfaceConstantes.TDash && delta>InterfaceConstantes.TminDash;
+			boolean dash = delta<InterfaceConstantes.TDash ; // no tmin dash 
+
 			if(dash && clickRight==true && input==Touches.t_droite)
 			{
 				courseDroiteDown=true;
@@ -1014,7 +774,7 @@ boolean intersectRectangle(Point HG1, Point HD1, Point BG1, Point BD1,int angle1
 		}
 		if (input==Touches.t_droite)
 		{
-			deplaceSautDroit=false;
+			heros.deplaceSautDroit=false;
 
 			marcheDroiteDown=false;
 			marcheDroiteReleased=true;
@@ -1026,7 +786,7 @@ boolean intersectRectangle(Point HG1, Point HD1, Point BG1, Point BD1,int angle1
 		}
 		if(input==Touches.t_gauche)
 		{
-			deplaceSautGauche=false;
+			heros.deplaceSautGauche=false;
 
 			marcheGaucheDown=false;
 			marcheGaucheReleased=true;
@@ -1119,7 +879,7 @@ boolean intersectRectangle(Point HG1, Point HD1, Point BG1, Point BD1,int angle1
 
 		pan.setOpaque(false);
 
-		drawMonde(g,true);
+		drawMonde(g,false);
 		drawMonstres(g,false);
 		drawPerso(g,true);
 		drawFleches(g,false);
@@ -1163,16 +923,15 @@ boolean intersectRectangle(Point HG1, Point HD1, Point BG1, Point BD1,int angle1
 
 		for(Monstre m : tabMonstre )
 		{
-			int xDraw= m.xPos+xdeplaceEcran+xdeplaceEcranBloc;
-			int yDraw= m.yPos+ydeplaceEcran+ydeplaceEcranBloc;
+			int xDraw= m.xpos+xdeplaceEcran+xdeplaceEcranBloc;
+			int yDraw= m.ypos+ydeplaceEcran+ydeplaceEcranBloc;
 
 			g.drawImage(imMonstre.getImage(m), xDraw ,yDraw ,null);
 
 			if(drawHitbox)
 			{
-				int width= m.deplacement.xtaille.get(m.anim);
-				int height= m.deplacement.ytaille.get(m.anim);
-				drawHitbox(g,xDraw, yDraw,width,height);
+				Hitbox hitbox= m.getWorldHitbox(this);
+				drawPolygon(g,hitbox.polygon);
 			}
 		}
 
@@ -1182,16 +941,12 @@ boolean intersectRectangle(Point HG1, Point HD1, Point BG1, Point BD1,int angle1
 
 		if(heros.afficheTouche)
 		{
-			g.drawImage(heros.getImages(), heros.xpos ,heros.ypos,null);
+			g.drawImage(imHeros.getImages(heros), heros.xpos ,heros.ypos,null);
 		}
 
 		if(drawHitbox)
 		{
 			Hitbox hitbox= heros.getHitbox(INIT_RECT);
-			/*int xDraw = heros.xpos+heros.deplacement.xdecallsprite.get(heros.anim);
-			int yDraw= heros.ypos+heros.deplacement.ydecallsprite.get(heros.anim);
-			int width= heros.deplacement.xhitbox.get(heros.anim);
-			int height= heros.deplacement.yhitbox.get(heros.anim); */
 			drawPolygon(g,hitbox.polygon);
 		}
 
@@ -1204,17 +959,22 @@ boolean intersectRectangle(Point HG1, Point HD1, Point BG1, Point BD1,int angle1
 			return ;	
 		}
 		try{
-			for(Fleche fleche :tabFleche )
+			for(int i=0;i<tabFleche.size();++i) 
 			{
+				Fleche fleche = tabFleche.get(i);
 				int xdraw=  fleche.xpos+xdeplaceEcran+xdeplaceEcranBloc;
 				int ydraw= fleche.ypos+ydeplaceEcran+ydeplaceEcranBloc;
 				g.drawImage(defaultFleche.getImage(fleche),xdraw ,ydraw,null);
-
+				if(drawHitbox)
+				{
+					Hitbox hitbox= fleche.getWorldHitbox(this);
+					drawPolygon(g,hitbox.polygon);
+				}
 			}
 		}
 		catch(ConcurrentModificationException e1)
 		{
-			System.out.println("ERROR: ConcurrentModificationException");
+			e1.printStackTrace();
 		}
 
 
@@ -1223,19 +983,25 @@ boolean intersectRectangle(Point HG1, Point HD1, Point BG1, Point BD1,int angle1
 
 	public void drawTirMonstres(Graphics g,boolean drawHitbox) {
 		//Affichage des tirs de monstres 
-		for(TirMonstre tir : tabTirMonstre)
-		{
-			int xdraw=  tir.xpos +xdeplaceEcran+xdeplaceEcranBloc;
-			int ydraw= tir.ypos +ydeplaceEcran+ydeplaceEcranBloc;
-			g.drawImage(imTirMonstre.getImage(tir),xdraw,ydraw,null);
-
-			if(drawHitbox)
+		try{
+			for(int i=0; i<tabTirMonstre.size();++i)
 			{
-				int width= tir.xtaille.get(tir.anim);
-				int height=tir.ytaille.get(tir.anim);
-				drawHitbox(g,xdraw,ydraw,width,height);
-			}
+				TirMonstre tir= tabTirMonstre.get(i);
+				int xdraw=  tir.xpos +xdeplaceEcran+xdeplaceEcranBloc;
+				int ydraw= tir.ypos +ydeplaceEcran+ydeplaceEcranBloc;
+				g.drawImage(imTirMonstre.getImage(tir),xdraw,ydraw,null);
 
+				if(drawHitbox)
+				{
+					Hitbox hitbox= tir.getWorldHitbox(this);
+					drawPolygon(g,hitbox.polygon);
+				}
+
+			}
+		}
+		catch(ConcurrentModificationException e1)
+		{
+			e1.printStackTrace();
 		}
 
 	}
@@ -1261,9 +1027,9 @@ boolean intersectRectangle(Point HG1, Point HD1, Point BG1, Point BD1,int angle1
 		//affichage de la vie des monstres 
 		for(Monstre m : tabMonstre )
 		{
-			int xG= m.xPos+xdeplaceEcran+xdeplaceEcranBloc;
+			int xG= m.xpos+xdeplaceEcran+xdeplaceEcranBloc;
 			int xD= xG +m.deplacement.xtaille.get(m.anim);
-			int yH= m.yPos+ydeplaceEcran+ydeplaceEcranBloc;
+			int yH= m.ypos+ydeplaceEcran+ydeplaceEcranBloc;
 
 			drawBar(g,xG/2+xD/2-InterfaceConstantes.MAXLIFE/2,yH-10,InterfaceConstantes.MAXLIFE,5,m.getLife(),Color.BLACK,Color.GREEN);
 		}

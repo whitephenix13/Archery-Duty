@@ -11,11 +11,12 @@ import javax.sound.sampled.FloatControl;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
+import option.Config;
 import principal.InterfaceConstantes;
 
 public class Music implements InterfaceConstantes{
-static double gain = valeurSonInit;
-static String musiqueEnCours ="";
+static double gain = Config.bruitageVolume;
+public static String musiqueEnCours ="";
 static Map<String,Clip> mapClips = new HashMap<String,Clip>();
 boolean soundFound=true;
 
@@ -27,7 +28,6 @@ boolean soundFound=true;
 	{
 		
 	}
-
 	/**
 	 * Instantie une Music
 	 * 
@@ -99,7 +99,8 @@ boolean soundFound=true;
 	public static void volumeControl(Double nouvGain)
 	{
 		gain=nouvGain;
-		float dB = (float) (Math.log(gain) / Math.log(10.0) * 20.0);
+		Config.musicVolume=gain;
+		float dB = (float) (Math.log(gain) / Math.log(10.0) * 30.0);
 		
 		FloatControl gainControl = (FloatControl) mapClips.get(musiqueEnCours).getControl(FloatControl.Type.MASTER_GAIN);
 		gainControl.setValue(dB);

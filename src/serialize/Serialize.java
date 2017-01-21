@@ -81,7 +81,7 @@ public class Serialize implements InterfaceConstantes{
 		}
 		catch (IOException e)
 		{
-			System.out.println(e.getStackTrace());
+			e.getStackTrace();
 			String err= "ERREUR CHARGEMENT STOCKAGE MONSTRE\n";
 			
 			erreurMsgChargement+=err;
@@ -127,7 +127,7 @@ public class Serialize implements InterfaceConstantes{
 		}
 		catch (IOException e)
 		{
-			System.out.println(e.getStackTrace());
+			e.getStackTrace();
 			String err= "ERREUR CHARGEMENT LISTE STOCKAGE MONSTRE\n";
 			
 			erreurMsgChargement+=err;
@@ -199,7 +199,7 @@ public class Serialize implements InterfaceConstantes{
 		}
 		catch (IOException e)
 		{
-			System.out.println(e.getStackTrace());
+			e.getStackTrace();
 			String err= "ERREUR CHARGEMENT BLOC\n";
 			
 			erreurMsgChargement+=err;
@@ -384,7 +384,7 @@ public class Serialize implements InterfaceConstantes{
 		}
 		catch (IOException e)
 		{
-			System.out.println(e.getStackTrace());
+			e.getStackTrace();
 			
 			return "Erreur serialize monde";
 		}
@@ -438,7 +438,7 @@ public class Serialize implements InterfaceConstantes{
 		}
 		catch (IOException e)
 		{
-			System.out.println(e.getStackTrace());
+			e.getStackTrace();
 			String err= "ERREUR CHARGEMENT MONDE\n";
 			
 			erreurMsgChargement+=err;
@@ -452,8 +452,8 @@ public class Serialize implements InterfaceConstantes{
 		FileOutputStream fos;
 		String err="";
 		try {
-			fos=new FileOutputStream("bin/resources/Levels/"+name);
-			String version = "0.0.0";
+			fos=new FileOutputStream("src/resources/Levels/"+name);
+			String version = VERSION;
 			fos.write(version.getBytes());
 			err+=serializeMonde(fos,monde);
 			fos.close();
@@ -474,7 +474,7 @@ public class Serialize implements InterfaceConstantes{
 		Monde m= new Monde();
 		
 		try {
-			if(TypeApplication.isJar || TypeApplication.isExe)
+			if(TypeApplication.isJar)
 				is = Serialize.class.getResourceAsStream(path);
 			else
 				is = new FileInputStream(path);
@@ -490,7 +490,6 @@ public class Serialize implements InterfaceConstantes{
 			
 			erreurMsgChargement=err;
 		System.out.println(err);
-		//e1.printStackTrace();	
 		return null;
 		}
 		return(m);

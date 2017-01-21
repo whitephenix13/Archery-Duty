@@ -39,11 +39,9 @@ public abstract class AbstractModelChoixNiveau implements Observable{
 	
 	//Implémentation du pattern observer
 	  public void addObserver(Observer obs) {
-		  System.out.println("addObserver");
 	    this.listObserver.add(obs);
 	  }
 	  public void notifyObserver() {
-		  System.out.println(listObserver.size());
 	    for(Observer obs : listObserver)
 	      obs.update();
 	  }

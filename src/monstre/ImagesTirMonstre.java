@@ -5,10 +5,9 @@ import java.awt.Toolkit;
 
 public class ImagesTirMonstre {
 
-	
 	Image tir0;
-	Image tir4;
-	Image tir6;
+	Image tir1;
+	Image tir2;
 	
 	public ImagesTirMonstre()
 	{
@@ -27,8 +26,8 @@ public class ImagesTirMonstre {
 		switch(tir.anim)
 		{
 		case 0: return(tir0);
-		case 4: return(tir4);
-		case 6: return(tir6);
+		case 1: return(tir1);
+		case 2: return(tir2);
 		default: return(null);
 		}
 
@@ -40,8 +39,8 @@ public class ImagesTirMonstre {
 	public void chargerImages()
 	{
 		 tir0= Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/TirMonstre/monstre.TirSpirel/0.gif"));
-		 tir4= Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/TirMonstre/monstre.TirSpirel/4.gif"));
-		 tir6= Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/TirMonstre/monstre.TirSpirel/6.gif"));
+		 tir1= Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/TirMonstre/monstre.TirSpirel/1.gif"));
+		 tir2= Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/TirMonstre/monstre.TirSpirel/2.gif"));
 
 	}
 }

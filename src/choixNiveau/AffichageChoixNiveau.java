@@ -2,6 +2,8 @@ package choixNiveau;
 
 import java.awt.Color;
 import java.awt.GridLayout;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
@@ -88,7 +90,6 @@ public class AffichageChoixNiveau extends JFrame implements Observer{
 					panelBoutons.add(listNiveaux.get(i));
 				}
 				panelBoutonScroll = new JScrollPane(panelBoutons);
-				System.out.println(listNiveaux.size());
 				controlerChoix.choix.listNiveaux=listNiveaux;
 	}
 	
@@ -97,10 +98,16 @@ public class AffichageChoixNiveau extends JFrame implements Observer{
 		public void mouseClicked(MouseEvent e) {}
 		public void mouseEntered(MouseEvent e) {}
 		public void mouseExited(MouseEvent e) {}
-		public void mousePressed(MouseEvent e) {	
-			controlerChoix.choix.selectLevel((JButton)e.getSource());
+		public void mousePressed(MouseEvent e) {}
+		public void mouseReleased(MouseEvent e) 
+		{
+			JButton button = (JButton)e.getSource();
+			Rectangle r = button.getBounds();
+			//Apply pressed only if the release is on the pressed button
+			if(r.contains(new Point(r.x+e.getX(),r.y+e.getY()))){
+				controlerChoix.choix.selectLevel((JButton)e.getSource());
+			}
 		}
-		public void mouseReleased(MouseEvent e) {}
 	}
 	
 	  /**
@@ -111,12 +118,18 @@ public class AffichageChoixNiveau extends JFrame implements Observer{
 		public void mouseClicked(MouseEvent arg0) {}
 		public void mouseEntered(MouseEvent arg0) {}
 		public void mouseExited(MouseEvent arg0) {}
-		public void mousePressed(MouseEvent arg0) {
-			AbstractModelPrincipal.changeFrame=true;
-			AbstractModelPrincipal.modeSuivant="Principal";
-			AbstractModelPrincipal.changeMode=true;
+		public void mousePressed(MouseEvent arg0) {}
+		public void mouseReleased(MouseEvent e) 
+		{
+			JButton button = (JButton)e.getSource();
+			Rectangle r = button.getBounds();
+			//Apply pressed only if the release is on the pressed button
+			if(r.contains(new Point(r.x+e.getX(),r.y+e.getY()))){
+				AbstractModelPrincipal.changeFrame=true;
+				AbstractModelPrincipal.modeSuivant="Principal";
+				AbstractModelPrincipal.changeMode=true;
+			}
 		}
-		public void mouseReleased(MouseEvent arg0) {}
 	}
 	
 	  /**
@@ -127,13 +140,16 @@ public class AffichageChoixNiveau extends JFrame implements Observer{
 		public void mouseClicked(MouseEvent arg0) {}
 		public void mouseEntered(MouseEvent arg0) {}
 		public void mouseExited(MouseEvent arg0) {}
-		public void mousePressed(MouseEvent arg0) {
-			
+		public void mousePressed(MouseEvent arg0) {}
+		public void mouseReleased(MouseEvent e) 
+		{
+			JButton button = (JButton)e.getSource();
+			Rectangle r = button.getBounds();
+			//Apply pressed only if the release is on the pressed button
+			if(r.contains(new Point(r.x+e.getX(),r.y+e.getY()))){
 				controlerChoix.controlPlayLevel();
-			
+			}
 		}
-
-		public void mouseReleased(MouseEvent arg0) {}
 	}
 	
 	public void addListener()
@@ -152,10 +168,15 @@ public class AffichageChoixNiveau extends JFrame implements Observer{
 		List<JButton> listNiveaux = controlerChoix.choix.listNiveaux;
 		for(int i=0; i <controlerChoix.choix.listNomNiveaux.size(); i++ )
 		{
-			listNiveaux.get(i).removeMouseListener(listNiveaux.get(i).getMouseListeners()[1]);
+			JButton button = listNiveaux.get(i);
+			MouseListener[] ml = button.getMouseListeners();
+			button.removeMouseListener(ml[ml.length-1]);
 		}
-		boutonJouer.addMouseListener(boutonJouer.getMouseListeners()[1]);
-		boutonRetour.addMouseListener(boutonRetour.getMouseListeners()[1]);
+		MouseListener[] ml2 = boutonJouer.getMouseListeners();
+		MouseListener[] ml3 = boutonRetour.getMouseListeners();
+
+		boutonJouer.removeMouseListener(ml2[ml2.length-1]);
+		boutonRetour.removeMouseListener(ml3[ml3.length-1]);
 
 	}
 	
@@ -165,7 +186,6 @@ public class AffichageChoixNiveau extends JFrame implements Observer{
 		if(controlerChoix.choix.getUpdateListLevels())
 		{
 			fillPanelBoutons();
-			System.out.println("levels upd");
 		}	
 		controlerChoix.choix.resetVariablesAffichages();
 

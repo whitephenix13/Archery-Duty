@@ -7,13 +7,11 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 
 public class ThreadMusique implements Runnable
 {
-	public String nomMusique ;
 	public Music musique;
 	
 	public ThreadMusique (String nomMus) throws UnsupportedAudioFileException, IOException, LineUnavailableException
 	{
-	nomMusique=nomMus;	
-	 musique = new Music(nomMusique);
+		musique = new Music(nomMus);
 	}
 	
 	public void run() 

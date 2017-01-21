@@ -1,6 +1,7 @@
 package editeur.Menu;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -288,17 +289,18 @@ public class menuEditeur {
 			m_quit.addActionListener(new QuitterListener());
 			m_informations.addActionListener(new InformationsListener());
 			
-			m_loupe.addActionListener(new LoupeListener());
-			m_souris.addActionListener(new TextureListener());
-			m_deleteItem.addActionListener(new TextureListener());
-			m_sol.addActionListener(new TextureListener());
-			m_terre.addActionListener(new TextureListener());
-			m_ciel.addActionListener(new TextureListener());
-			m_perso.addActionListener(new TextureListener());
-			m_start.addActionListener(new TextureListener());
-			m_end.addActionListener(new TextureListener());
-			m_spirel.addActionListener(new TextureListener());
-			m_vide.addActionListener(new TextureListener());
+			for(Component item : m_texture.getMenuComponents())
+			{
+				JMenuItem jitem=null;
+				if(item instanceof JMenuItem)
+					jitem = (JMenuItem)item;
+				if(jitem!=null)
+					if(jitem==m_loupe)
+						jitem.addActionListener(new LoupeListener());
+					else
+						jitem.addActionListener(new TextureListener());
+
+			}
 
 			r_bloquant.addActionListener(new BloquantListener());
 			r_nonBloquant.addActionListener(new BloquantListener());
@@ -312,31 +314,30 @@ public class menuEditeur {
 	public void removeListenerMenuEditeur() 
 	{
 		
-		m_nouv.removeActionListener(m_nouv.getActionListeners()[0]);
-		m_menuP.removeActionListener(m_menuP.getActionListeners()[0]);
-		m_quit.removeActionListener(m_quit.getActionListeners()[0]);
-		m_informations.removeActionListener(m_informations.getActionListeners()[0]);
+		m_nouv.removeActionListener(m_nouv.getActionListeners()[m_nouv.getActionListeners().length-1]);
+		m_menuP.removeActionListener(m_menuP.getActionListeners()[m_menuP.getActionListeners().length-1]);
+		m_quit.removeActionListener(m_quit.getActionListeners()[m_quit.getActionListeners().length-1]);
+		m_informations.removeActionListener(m_informations.getActionListeners()[m_informations.getActionListeners().length-1]);
 		
-		m_loupe.removeActionListener(m_loupe.getActionListeners()[0]);
-		m_souris.removeActionListener(m_souris.getActionListeners()[0]);
-		m_deleteItem.removeActionListener(m_deleteItem.getActionListeners()[0]);
-		m_sol.removeActionListener(m_sol.getActionListeners()[0]);
-		m_terre.removeActionListener(m_terre.getActionListeners()[0]);
-		m_ciel.removeActionListener(m_ciel.getActionListeners()[0]);
-		m_perso.removeActionListener(m_perso.getActionListeners()[0]);
-		m_start.removeActionListener(m_start.getActionListeners()[0]);
-		m_end.removeActionListener(m_end.getActionListeners()[0]);
-		m_spirel.removeActionListener(m_spirel.getActionListeners()[0]);
-		m_vide.removeActionListener(m_vide.getActionListeners()[0]);
+		for(Component item : m_texture.getMenuComponents())
+		{
+			JMenuItem jitem=null;
+			if(item instanceof JMenuItem)
+				jitem = (JMenuItem)item;
+			if(jitem!=null){
+				ActionListener[] al = jitem.getActionListeners();
+				jitem.removeActionListener(al[al.length-1]);
+			}
+		}
 
-		r_bloquant.removeActionListener(r_bloquant.getActionListeners()[0]);
-		r_nonBloquant.removeActionListener(r_nonBloquant.getActionListeners()[0]);
+		r_bloquant.removeActionListener(r_bloquant.getActionListeners()[r_bloquant.getActionListeners().length-1]);
+		r_nonBloquant.removeActionListener(r_nonBloquant.getActionListeners()[r_nonBloquant.getActionListeners().length-1]);
 		
-		r_isBackground.removeActionListener(r_isBackground.getActionListeners()[0]);
-		r_nonIsBackground.removeActionListener(r_nonIsBackground.getActionListeners()[0]);
+		r_isBackground.removeActionListener(r_isBackground.getActionListeners()[r_isBackground.getActionListeners().length-1]);
+		r_nonIsBackground.removeActionListener(r_nonIsBackground.getActionListeners()[r_nonIsBackground.getActionListeners().length-1]);
 		
-		m_sauvegarder.removeActionListener(m_sauvegarder.getActionListeners()[0]);
+		m_sauvegarder.removeActionListener(m_sauvegarder.getActionListeners()[m_sauvegarder.getActionListeners().length-1]);
 	
-		m_charger.removeActionListener(m_charger.getActionListeners()[0]);
+		m_charger.removeActionListener(m_charger.getActionListeners()[m_charger.getActionListeners().length-1]);
 	}
 }

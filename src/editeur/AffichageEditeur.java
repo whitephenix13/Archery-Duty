@@ -219,10 +219,12 @@ public class AffichageEditeur extends JFrame implements Observer{
 		
 		controlerEditeur.edit.menuEdit.removeListenerMenuEditeur();
 		
-		dessin.removeMouseMotionListener(dessin.getMouseMotionListeners()[1]);
-		dessin.removeMouseMotionListener(dessin.getMouseMotionListeners()[0]);
-		dessin.removeMouseListener(dessin.getMouseListeners()[1]);
-		dessin.removeMouseListener(dessin.getMouseListeners()[0]);
+		//remove the two last elements 
+		dessin.removeMouseMotionListener(dessin.getMouseMotionListeners()[dessin.getMouseMotionListeners().length-2]);
+		dessin.removeMouseMotionListener(dessin.getMouseMotionListeners()[dessin.getMouseMotionListeners().length-1]);
+		//remove the two last elements 
+		dessin.removeMouseListener(dessin.getMouseListeners()[dessin.getMouseListeners().length-2]);
+		dessin.removeMouseListener(dessin.getMouseListeners()[dessin.getMouseListeners().length-1]);
 	}
 	
 	

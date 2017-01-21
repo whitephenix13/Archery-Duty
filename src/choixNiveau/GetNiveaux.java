@@ -34,7 +34,6 @@ public class GetNiveaux {
 	{
 		List<String> _listNomNiveaux = new ArrayList<String>();
 		CodeSource src = ModelChoixNiveau.class.getProtectionDomain().getCodeSource();
-		
 		if(src!=null)
 		{
 			URL jar= src.getLocation();

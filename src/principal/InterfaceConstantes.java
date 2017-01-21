@@ -2,8 +2,11 @@ package principal;
 import java.awt.Dimension;
 import java.awt.Point;
 
+import types.Hitbox;
+
 
 public interface InterfaceConstantes {
+	static String VERSION ="0.0.0";
 	//taille maximum de la matrice 
 	static int ABS_MAX = 1000;
 	static int ORD_MAX = 1000;
@@ -11,7 +14,7 @@ public interface InterfaceConstantes {
 	
 	//nombre de fleches max: 
 	static int NB_FLECHES_MAX = 50;
-	static long TEMPS_DESTRUCTION_FLECHE = 1000000000; //nanos, 1sec 
+	static long TEMPS_DESTRUCTION_FLECHE = (long) Math.pow(10, 9); //nanos, 1sec 
 	
 	static int NB_MONSTRES_MAX=100;
 	
@@ -32,13 +35,13 @@ public interface InterfaceConstantes {
 	static Point HG_FENETRE= new Point(-200,-200);
 	static Point BG_FENETRE= new Point(-200,HAUTEUR_FENETRE+200);
 	static Point HD_FENETRE= new Point(LARGEUR_FENETRE + 200,-200);
-
+	static Hitbox SCREEN =new Hitbox(InterfaceConstantes.HG_FENETRE,InterfaceConstantes.BG_FENETRE,
+									InterfaceConstantes.BD_FENETRE,InterfaceConstantes.HD_FENETRE);
 		
 	
 	//permet de determiner les vitesses de chute, de deplacement et de saut 
 	long T= 1; // temps de raffraichissement en milliseconde
-	long TDash= 100;
-	long TminDash= 0;
+	long TDash= 150;
 	//durée d'invincibilité lorsque le héros est touché 
 	static long INV_TOUCHE = 3000;
 	//fréquence à laquelle il clignote
@@ -48,12 +51,11 @@ public interface InterfaceConstantes {
 	static int MINLIFE= 0;
 	static int MAXSPE= 100;
 	static int MINSPE= 0;
+	static double FRICTION = 0.1;
 	
 	//vitesse a laquelle la spe diminue de 1 lors du slow down//augmente de 1 en dehors du slow down
 	static long TEMPS_VAR_SPE=100; 
 	
-	double valeurSonInit = 0.0 ; //0.3
-	double valeurBruitageInit= 0.0;//0.2
 	int NOMBRE_BRUITAGE_MAX= 100;
 	
 	//choix des musiques 

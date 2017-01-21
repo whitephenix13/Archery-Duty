@@ -119,9 +119,52 @@ public class Bloc extends Collidable{
 	public Hitbox getHitbox(Point INIT_RECT, Mouvement mouv, int _anim) {
 		return getHitbox(INIT_RECT);
 	}
-	public void handleCollision(Vector2d normal, AbstractModelPartie partie,Deplace deplace) {
+	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,Deplace deplace) {
 		//no collision handle: this bloc si currently static which means that the only objects that can collides with it are
 		//mobile objects. We'll rather call the handleCollision of the mobile objects 
 	}
+	public void handleObjectCollision(AbstractModelPartie partie,Deplace deplace) {
+		try {
+			throw new Exception("Calling handleObjectCollision for a bloc is forbidden");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void memorizeCurrentValue() {
+		//do nothing
+	}
+	@Override
+	public boolean deplace(AbstractModelPartie partie, Deplace deplace) {
+		//Do nothing
+		return false;
+	}
+	@Override
+	public void applyFriction(int minspeed) {
+		//do nothing
+	}
+	@Override
+	public void resetVarBeforeCollision() {
+		//do nothing
+	}
+	@Override
+	public void handleStuck(AbstractModelPartie partie, Deplace deplace) {
+		//do nothing
+	}
+	@Override
+	public void resetVarDeplace() {
+		//do nothing
+	}
+	@Override
+	public int setReaffiche() {
+		//default
+		return 0;
+	}
+	@Override
+	public void destroy() {
+		//do nothing
+	}
+
 
 }

@@ -3,11 +3,16 @@ package menuPrincipal;
 import java.awt.Dimension;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.security.CodeSource;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.JFrame;
 
+import music.Music;
 import music.ThreadMusique;
 import option.AffichageOption;
 import option.ControlerOption;
@@ -22,6 +27,7 @@ import Affichage.Affichage;
 import choixNiveau.AffichageChoixNiveau;
 import choixNiveau.ControlerChoixNiveau;
 import choixNiveau.ModelChoixNiveau;
+import credit.AffichageCredit;
 import editeur.AffichageEditeur;
 import editeur.ControlerEditeur;
 import editeur.ModelEditeur;
@@ -39,57 +45,59 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		catch (UnsupportedAudioFileException | IOException| LineUnavailableException e) {e.printStackTrace();}
 		touches=new Touches();
 		music=threadMusique.getMusic();
-		
+
 		principal = this;
 		controlerPrincipal = new ControlerPrincipal(principal);
 		affichagePrincipal = new AffichagePrincipal(controlerPrincipal);
 		principal.addObserver(affichagePrincipal);
-		
+
 		option = new ModelOption();
 		controlerOption = new ControlerOption(option);
 		affichageOption = new AffichageOption(controlerOption);
 		option.addObserver(affichageOption);
-		
+
 		edit = new ModelEditeur();
 		controlerEditeur = new ControlerEditeur(edit);
 		affichageEditeur = new AffichageEditeur(controlerEditeur);
 		edit.addObserver(affichageEditeur);
-		
+
+		affichageCredit= new AffichageCredit();
+
 		choix = new ModelChoixNiveau();
 		controlerChoix= new ControlerChoixNiveau(choix) ;
 		affichageChoix = new AffichageChoixNiveau(controlerChoix);
 		choix.addObserver(affichageChoix);
 		affichageChoix.init();
-		
+
 		partie = new ModelPartie();
 		controlerPartie= new ControlerPartie(partie) ;
 		affichagePartie = new AffichagePartie(controlerPartie);
 		partie.addObserver(affichagePartie);
 		partie.init();
-		
+
 		//try 
 		//{
 		//	partieRap= new PartieRapide(touches,variablesAffichage, variablesDeplace);
 		//} 
 		//catch (InterruptedException | UnsupportedAudioFileException| IOException | LineUnavailableException e) {e.printStackTrace();}
-		
-		affich = new Affichage(affichagePrincipal,affichageOption,affichageEditeur,affichageChoix,affichagePartie);
 
-		 threadMusique.musique.startMusique();
+		affich = new Affichage(affichagePrincipal,affichageOption,affichageEditeur,affichageCredit,affichageChoix,affichagePartie);
+
+		threadMusique.musique.startMusique();
 		//on met en place le conteneur 
 		affich.setResizable(false);
-		
+
 		affich.getContentPane().setFocusable(true);
 		affich.getContentPane().requestFocus();
 		//on ajoute de quoi écouter notre clavier
-		
+
 		affich.setSize(new Dimension(InterfaceConstantes.LARGEUR_FENETRE,InterfaceConstantes.HAUTEUR_FENETRE));
 		affich.setLocationRelativeTo(null);
 		affich.setTitle("Menu principal");
 		affich.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		affich.setVisible(true);
 	}
-	
+
 	protected void ChangementMode () 
 	{
 		changeMode=false;
@@ -102,71 +110,112 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		else if (modeSuivant=="Option")
 		{			
 			//musique 
-			threadMusique.musique.stopMusique();
-			try 
+			String nextMusic = InterfaceConstantes.musiqueOption;
+			if(!Music.musiqueEnCours.equals(nextMusic))
 			{
-				threadMusique.musique.setMusic(InterfaceConstantes.musiqueOption, music);
-			} 
-			catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {e.printStackTrace();}
-			threadMusique.musique.startMusique();
-			
+				threadMusique.musique.stopMusique();
+				try 
+				{
+					threadMusique.musique.setMusic(nextMusic, music);
+				} 
+				catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {e.printStackTrace();}
+				threadMusique.musique.startMusique();
+			}
 			//listener 
 			affich.removeListener(modeActuel);
-		
+
 			//changement de mode
 			modeActuel="Option";
 
-			//listener
-			affich.addListener(modeActuel);
-			
 			//affichage
 			changeFrame=true;
 			affich.actuAffichage();
-			
 
-			
+			//listener
+			affich.addListener(modeActuel);
+
 		}
 		else if (modeSuivant=="Editeur")
 		{
 
 			//musique 
-			threadMusique.musique.stopMusique();
-			try
+			String nextMusic = InterfaceConstantes.musiqueEditeur;
+
+			if(!Music.musiqueEnCours.equals(nextMusic))
 			{
-			threadMusique.musique.setMusic(InterfaceConstantes.musiqueEditeur, music);
-			} 
-			catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {e.printStackTrace();}
-			threadMusique.musique.startMusique();
-			
+				threadMusique.musique.stopMusique();
+				try
+				{
+					threadMusique.musique.setMusic(nextMusic, music);
+				} 
+				catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {e.printStackTrace();}
+				threadMusique.musique.startMusique();
+			}
 			//listener
 			affich.removeListener(modeActuel);
-			
+
 			//changement de mode
 			modeActuel="Editeur";
 
 			//listener
 			affich.addListener(modeActuel);
-			
+
 			//affichage
 			changeFrame=true;
 			affich.actuAffichage();
+		}
+		else if (modeSuivant=="Credit")
+		{
 
+			//musique 
+			String nextMusic = InterfaceConstantes.musiqueEditeur;
+			if(!Music.musiqueEnCours.equals(nextMusic))
+			{
+				threadMusique.musique.stopMusique();
+				try
+				{
+					threadMusique.musique.setMusic(nextMusic, music);
+				} 
+				catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {e.printStackTrace();}
+				threadMusique.musique.startMusique();
+			}
+			//listener
+			affich.removeListener(modeActuel);
 
-			
+			//changement de mode
+			modeActuel="Credit";
+
+			//listener
+			affich.addListener(modeActuel);
+
+			//affichage
+			changeFrame=true;
+			affich.actuAffichage();
 		}
 		else if (modeSuivant=="ChoixNiveau")
 		{
+			//musique 
+			String nextMusic = InterfaceConstantes.musiquePrincipal;
+			if(!Music.musiqueEnCours.equals(nextMusic))
+			{
+				threadMusique.musique.stopMusique();
+				try 
+				{
+					threadMusique.musique.setMusic(nextMusic, music);
+				} catch (UnsupportedAudioFileException | IOException| LineUnavailableException e) {e.printStackTrace();}
+				threadMusique.musique.startMusique();
+			}
 			//listener
 			affich.removeListener(modeActuel);
-			
+
 			//changement de mode
 			modeActuel="ChoixNiveau";
-			
+
 			//affichage
 			changeFrame=true;
-					
+
 			affich.actuAffichage();
-			
+
 			//listener
 			affich.addListener(modeActuel);
 
@@ -175,17 +224,21 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		{
 			//musique 
 			int numMus = (int) (Math.random()*InterfaceConstantes.musiquePartie.length);
-			threadMusique.musique.stopMusique();
-			try
+			String nextMusic = InterfaceConstantes.musiquePartie[numMus];
+
+			if(!Music.musiqueEnCours.equals(nextMusic))
 			{
-			threadMusique.musique.setMusic(InterfaceConstantes.musiquePartie[numMus], music);
-			} 
-			catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {e.printStackTrace();}
-			threadMusique.musique.startMusique();
-			
+				threadMusique.musique.stopMusique();
+				try
+				{
+					threadMusique.musique.setMusic(nextMusic, music);
+				} 
+				catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {e.printStackTrace();}
+				threadMusique.musique.startMusique();
+			}
 			//listener
 			affich.removeListener(modeActuel);
-			
+
 			//on reinitialiser les variables pour pouvoir rejouer plusieurs fois
 
 			partie.init();
@@ -194,18 +247,18 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 			//changement de mode
 			modeActuel="Partie";
 
-			
+
 			//affichage
 			changeFrame=true;
 			affich.actuAffichage();
-			
+
 			//listener
 			affich.addListener(modeActuel);
-			
+
 			//on lance la partie rapide si elle n'est pas deja en cours ie: le jeu n'est pas en pause
 
 			partie.startPartie(InterfaceConstantes.SPAWN_PROGRAMME,choix.getNiveauSelectionne());//SPAWN_ALEATOIRE, SPAWN_PROGRAMME
-			
+
 			//définition du thread d'affichage qui fait tourner partie rapide.play() en continue 
 			class ThreadAffichage implements Runnable
 			{
@@ -220,10 +273,10 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 					}
 					while(!partie.getFinPartie());//condition de fin
 				}
-			
+
 			}
 			ThreadAffichage t2= new ThreadAffichage();
-			
+
 			//on lance la partie
 			t2.run();
 			//affich.actuAffichage();
@@ -233,31 +286,34 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		else if (modeSuivant=="Principal")
 		{
 			//musique 
-			threadMusique.musique.stopMusique();
-			try 
+			String nextMusic = InterfaceConstantes.musiquePrincipal;
+			if(!Music.musiqueEnCours.equals(nextMusic))
 			{
-				threadMusique.musique.setMusic(InterfaceConstantes.musiquePrincipal, music);
-			} catch (UnsupportedAudioFileException | IOException| LineUnavailableException e) {e.printStackTrace();}
-			threadMusique.musique.startMusique();
-			
+				threadMusique.musique.stopMusique();
+				try 
+				{
+					threadMusique.musique.setMusic(nextMusic, music);
+				} catch (UnsupportedAudioFileException | IOException| LineUnavailableException e) {e.printStackTrace();}
+				threadMusique.musique.startMusique();
+			}
 			//listener 
 			affich.removeListener(modeActuel);
-			
+
 			//changement de mode
 			modeActuel="Principal";
 
 			//listeners
 			affich.addListener(modeActuel);
-			
-			
+
+
 			//affichage
 			changeFrame=true;
 			affich.actuAffichage();
-			
-			
+
+
 		}
-	affich.repaint();
-	affich.validate();
+		affich.repaint();
+		affich.validate();
 	}
 	protected void StartBoucleJeu()
 	{
@@ -267,17 +323,14 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 			if(changeMode)
 			{				
 				ChangementMode();	
-				System.out.println(modeActuel);
 			}
 			try {Thread.sleep(1);} catch (InterruptedException e) {e.printStackTrace();}//Need to slow down the loop or all others action are ignored
 		}
 	}
 	public static void main(String[] args) throws InterruptedException, UnsupportedAudioFileException, IOException, LineUnavailableException, URISyntaxException 
 	{
-		
+
 		TypeApplication.isJar= new TypeApplication().isJar();
-		TypeApplication.isExe= new TypeApplication().isExe();
-		
 		ModelPrincipal principal = new ModelPrincipal();
 		principal.Init();
 		principal.StartBoucleJeu();

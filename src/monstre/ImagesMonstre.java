@@ -3,9 +3,10 @@ package monstre;
 import java.awt.Image;
 import java.awt.Toolkit;
 
+import deplacement.Mouvement_perso;
+
 public class ImagesMonstre {
 
-	
 	Image SPattente0; 
 	Image SPattente1;
 	
@@ -16,6 +17,7 @@ public class ImagesMonstre {
 	
 	Image SPsaut0;
 	Image SPsaut1;
+	
 	public ImagesMonstre()
 	{
 		chargerImages();
@@ -32,7 +34,7 @@ public class ImagesMonstre {
 	{
 		if (monstre.nom.equals("spirel"))
 		{
-			if(monstre.deplacement.getClass().getName().equals("deplacement.Attente"))
+			if(monstre.deplacement.IsDeplacement(Mouvement_perso.attente))
 			{
 				switch(monstre.anim)
 				{
@@ -41,7 +43,7 @@ public class ImagesMonstre {
 				default: return(null);
 				}
 			}
-			else if (monstre.deplacement.getClass().getName().equals("deplacement.Marche"))
+			else if (monstre.deplacement.IsDeplacement(Mouvement_perso.marche))
 			{
 				switch(monstre.anim)
 				{
@@ -52,7 +54,7 @@ public class ImagesMonstre {
 				default: return(null);
 				}
 			}
-			else if(monstre.deplacement.getClass().getName().equals("deplacement.Saut"))
+			else if(monstre.deplacement.IsDeplacement(Mouvement_perso.saut))
 			{
 				switch(monstre.anim)
 				{

@@ -1,13 +1,15 @@
 package deplacement;
 
+import collision.Collidable;
 import monstre.Monstre;
+import monstre.TirMonstre;
 import personnage.Fleche;
 import personnage.Heros;
 import principal.InterfaceConstantes;
 
 public class Gravite implements InterfaceConstantes
 {
-	public static void gravite(Heros heros, boolean slowDown) {
+	public static void gravite(Collidable object, boolean slowDown) {
 		//vitesse max a 195km/h= 54,17 m/s
 		//variation de vitesse : Vnouv= - g * t  
 		// ici g= 10 et t= 17 * 10^-3 s 
@@ -19,22 +21,22 @@ public class Gravite implements InterfaceConstantes
 		float limVitesseGlissade = limVitesse/2;
 
 
-		if (heros.deplacement.getClass().getName()==("deplacement.Glissade"))
+		if (object.deplacement.IsDeplacement(Mouvement_perso.glissade))
 		{
-			if(heros.vit.y<(limVitesseGlissade - varVitesseGlissade))
-				heros.vit.y+= varVitesseGlissade;
-			
+			if(object.vit.y<(limVitesseGlissade - varVitesseGlissade))
+				object.vit.y+= varVitesseGlissade;
+
 			else 
-				heros.vit.y= (int) limVitesseGlissade;
+				object.vit.y= (int) limVitesseGlissade;
 		}
 		else 
 		{
-			if(heros.vit.y<(limVitesse - varVitesse))
-				heros.vit.y+= varVitesse;
-			
+			if(object.vit.y<(limVitesse - varVitesse))
+				object.vit.y+= varVitesse;
+
 			else 
-				heros.vit.y= (int) limVitesse;
-			
+				object.vit.y= (int) limVitesse;
+
 		}
 	}
 	public static void gravite(Fleche fleche, boolean slowDown) 
@@ -60,6 +62,26 @@ public class Gravite implements InterfaceConstantes
 		}
 	}
 
+	public static void gravite(TirMonstre tir) 
+	{
+		//vitesse max a 195km/h= 54,17 m/s
+		//variation de vitesse : Vnouv= - g * t  
+		// ici g= 10 et t= 17 * 10^-3 s 
+		int coefCorrecteurVar =1000 ;
+		int coefCorrecteurLim =15000 ;
+		float varVitesse = (float) (coefCorrecteurVar);
+		float limVitesse = (float) (coefCorrecteurLim) ;
+		
+		if(tir.vit.y<(limVitesse - varVitesse))
+		{
+			tir.vit.y+= varVitesse;
+		}
+		else 
+		{
+			tir.vit.y= (int) limVitesse;
+		}
+
+	}
 
 	public static void gravite(Monstre monstre) 
 	{

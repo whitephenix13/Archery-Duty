@@ -1,67 +1,65 @@
 package deplacement;
 
+import java.awt.Point;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
-public class Tir extends Mouvement
+import collision.Collidable;
+
+public class Tir extends Mouvement_perso
 {
-	//constructeur personnage
+	/* 0: H
+	 * 1: HD
+	 * 2: D
+	 * 3: BD
+	 * 4: B
+	 * 5: BG
+	 * 6: G 
+	 * 7: HG
+	 * */
 	public Tir() 
     {
-		/* 0: H
-		 * 1: HD
-		 * 2: D
-		 * 3: BD
-		 * 4: B
-		 * 5: BG
-		 * 6: G 
-		 * 7: HG
-		 * */
-		super();
-		xtaille =  Arrays.asList(86,76,82,88,80,88,82,76);
-		xhitbox =  Arrays.asList(32,32,34,36,36,36,36,34);
-		xdecallsprite =  Arrays.asList(27,15,18,20,19,35,33,28);
-		ytaille =  Arrays.asList(92,94,94,90,90,90,94,94);
-		yhitbox =  Arrays.asList(82,82,86,80,76,84,84,84);
-		ydecallsprite =  Arrays.asList(10,12,8 ,10,14,6 ,10,10);
-
-		//position point haut gauche de la fleche avec x (vers la droit) et y (vers le bas) par rapport à l'anim correspondante
-		//ces valeurs sont directement ajoutée dans deplace dans public void setParamFleche (Fleche fleche,Heros heros,Affichage affich)
-		/* 0: H :  +40 -3
-		 * 1: HD   +37 +10
-		 * 2: D    +40 +29
-		 * 3: BD   +45 +25
-		 * 4: B	   +32 +61
-		 * 5: BG   +19 +26
-		 * 6: G    +10 +29
-		 * 7: HG   +17 +16 
-		 * */
+		this(Mouvement_perso.heros);
 	}
 	//constructeur monstre
-	public Tir(String typeMonstre) 
+	public Tir(String type) 
     {
-		/* 0: H
-		 * 1: HD
-		 * 2: D
-		 * 3: BD
-		 * 4: B
-		 * 5: BG
-		 * 6: G 
-		 * 7: HG
-		 * */
 		super();
-		if(typeMonstre == "")
+		if(type.equals(Mouvement_perso.heros))
 		{
-			xtaille =  Arrays.asList(86,76,82,88,80,88,82,76);
-			xhitbox =  Arrays.asList(32,32,34,36,36,36,36,34);
-			xdecallsprite =  Arrays.asList(27,15,18,20,19,35,33,28);
-			ytaille =  Arrays.asList(92,94,94,90,90,90,94,94);
-			yhitbox =  Arrays.asList(82,82,86,80,76,84,84,84);
-			ydecallsprite =  Arrays.asList(10,12,8 ,10,14,6 ,10,10);
+			xtaille =  Arrays.asList(82,88,80,88,82,76,86,76);
+			ytaille =  Arrays.asList(94,90,90,90,94,94,92,94);
+			
+			List<List<Point>> hitboxCreation = new ArrayList<List<Point>>();
+			//add for every edge, a list of point depending on the animation
+			List<Integer> xg = Arrays.asList(18,20,19,35,33,28,27,15);
+			List<Integer> xd = Arrays.asList(52,56,55,71,69,62,59,47);
+			List<Integer> yh = Arrays.asList(8 ,10,14,6 ,10,10,10,12);
+			List<Integer> yb = Arrays.asList(94,90,90,90,94,94,92,94);
+
+			hitboxCreation.add(asListPoint(xg,yh));
+			hitboxCreation.add(asListPoint(xd,yh));
+			hitboxCreation.add(asListPoint(xd,yb));
+			hitboxCreation.add(asListPoint(xg,yb));
+
+			hitbox = createHitbox(hitboxCreation);
 		}
 	
 	}
 
-	public Mouvement Copy() {
-		return new Tir();
+	public Mouvement Copy(String type) {
+		return new Tir(type);
+	}
+	@Override
+	public void setSpeed(String type, Collidable object, int anim,Deplace deplace) {
+		if(type.equals(Mouvement_perso.heros))
+		{
+			//nothing
+		}
+		else if(type.equals(Mouvement_perso.m_spirel))
+		{
+			//nothing
+		}
 	}
 }

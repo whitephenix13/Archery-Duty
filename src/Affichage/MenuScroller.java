@@ -53,17 +53,13 @@ public class MenuScroller {
         ButtonUI ui = test.getUI();
         Dimension d = ui.getPreferredSize(test);
         double item_height = d.getHeight();
-        //System.out.println("JMenuItem Height " + item_height);
         JMenuItem up = new JMenuItem(MenuIcon.UP);
         ui = up.getUI();
         d = ui.getPreferredSize(up);
         double icon_height = d.getHeight();
-        //System.out.println("icon item height " + icon_height);
         double menu_border_height = 8.0; // kludge - how to detect this?
         double screen_height = java.awt.Toolkit.getDefaultToolkit().getScreenSize().getHeight();
-        //System.out.println("screen height " + screen_height);
         int n = (int)((screen_height - icon_height * 2 - menu_border_height) / item_height);
-        //System.out.println("max items " + n);
         return n;
   }
 
@@ -515,24 +511,6 @@ public class MenuScroller {
 
     private void setMenuItems() {
       menuItems = menu.getComponents();
-
-      // Hack for auto detect the topFixed total
-      /*int topFixedCountPrev = topFixedCount;
-      for(int i=menuItems.length-1;i>0;i--)
-      {
-        if(menuItems[i].getClass().getName().endsWith("Separator"))
-        {
-                System.out.println(i);
-                setTopFixedCount(i+1);
-               
-                if(topFixedCount!=topFixedCountPrev)
-                {
-                        scrollCount = getMaximumItems()-topFixedCount;
-                        System.out.println(getMaximumItems()-topFixedCount);
-                }
-                break;
-        }
-      }*/
      
       if (keepVisibleIndex >= topFixedCount
               && keepVisibleIndex <= menuItems.length - bottomFixedCount

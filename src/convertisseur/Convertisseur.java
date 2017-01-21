@@ -36,12 +36,9 @@ public class Convertisseur implements InterfaceConstantes{
 		//boucle for sur l'ensemble des fichiers 
 		for(int i=0; i<listNiveaux.size();i++)
 		{
-			System.out.println("Début sauvegarde monde "+ i);
 			nomFichier=listNiveaux.get(i);
 			monde=charger(nomFichier);
 			Serialize.sauver("_"+nomFichier+"_",monde);
-			System.out.println("Fin sauvegarde monde "+ i);
-
 
 		}
 		
@@ -57,7 +54,7 @@ public class Convertisseur implements InterfaceConstantes{
 	{
 		List<String> listNomNiveaux = new ArrayList<String>();
 		
-		if(!TypeApplication.isJar && ! TypeApplication.isExe)
+		if(!TypeApplication.isJar )
 		{
 			Path url = null;
 			try {url = Paths.get(ClassLoader.getSystemResource("resources/Levels/").toURI());

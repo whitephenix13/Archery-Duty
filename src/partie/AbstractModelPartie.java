@@ -18,6 +18,7 @@ import observer.Observable;
 import observer.Observer;
 import personnage.Fleche;
 import personnage.Heros;
+import personnage.ImagesHeros;
 import principal.InterfaceConstantes;
 import types.Monde;
 import Affichage.Affichage;
@@ -38,9 +39,6 @@ public abstract class AbstractModelPartie implements Observable {
 
 	public Heros heros;
 
-	protected int nouvAnim= 0;
-	protected Mouvement nouvMouv = new Attente();
-
 	//Action speciale pour ralentir le temps 
 	public boolean slowDown=false;
 	//public int slowDownFactor= 3;//6
@@ -48,7 +46,7 @@ public abstract class AbstractModelPartie implements Observable {
 	public int slowCount=0;
 
 	protected List<Fleche> tabFleche= new ArrayList<Fleche>();
-	protected List<TirMonstre> tabTirMonstre = new ArrayList<TirMonstre>();
+	public List<TirMonstre> tabTirMonstre = new ArrayList<TirMonstre>();
 	protected List<Monstre> tabMonstre= new ArrayList <Monstre> ();
 	protected int nombreMonstreRestant= 0;
 
@@ -77,6 +75,11 @@ public abstract class AbstractModelPartie implements Observable {
 	protected boolean toucheSlowReleased;
 	protected boolean pauseReleased;
 
+	//Variables de déplacement 
+	//booleen pour savoir si on change de mouvement et donc qu'on doit reequilibre la hitbox du heros
+	public boolean changeMouv=false;
+	public boolean flecheEncochee = false;
+	
 	protected boolean finPartie =false;
 	protected boolean inPause=false;
 
@@ -90,22 +93,6 @@ public abstract class AbstractModelPartie implements Observable {
 
 
 	//INPUT INTERPRETE 
-
-	//booleen pour savoir si le heros vient de sauter
-	public boolean debutSaut = false;
-	//booleen pour savoir si on arrive à la fin du saut 
-	public boolean finSaut = false;
-	//booleen pour savoir si il est en saut/peut sauter 
-	public boolean peutSauter = true;
-	//booleen pour savoir si le personnage veut sauter alors qu'il glisse
-	public boolean sautGlisse = false;
-	//booleen pour savoir si on veut déplacer le personnage sur le côté quand il saut 
-	public boolean deplaceSautDroit = false;
-	public boolean deplaceSautGauche =false;
-	//booleen pour savoir si on change de mouvement et donc qu'on doit reequilibre la hitbox du heros
-	public boolean changeMouv=false;
-
-	public boolean flecheEncochee = false;
 	protected int xPositionSouris = 0 ;
 	public int getXPositionSouris(){return xPositionSouris;}
 	protected int yPositionSouris = 0 ;
@@ -116,6 +103,7 @@ public abstract class AbstractModelPartie implements Observable {
 	//pour pouvoir acceder aux images chargées 
 	protected Monde m= new Monde("default");
 	protected ImagesMonstre imMonstre =new ImagesMonstre();
+	protected ImagesHeros imHeros = new ImagesHeros();
 	protected ImagesTirMonstre imTirMonstre= new ImagesTirMonstre();
 	protected Fleche defaultFleche = new Fleche(true);
 
@@ -155,9 +143,6 @@ public abstract class AbstractModelPartie implements Observable {
 
 		heros= new Heros(InterfaceConstantes.LARGEUR_FENETRE/2,InterfaceConstantes.HAUTEUR_FENETRE/2,1,new Attente());
 
-		nouvAnim= 0;
-		nouvMouv = new Attente();
-
 		//Action speciale pour ralentir le temps 
 		slowDown=false;
 		slowCount=0;
@@ -191,6 +176,9 @@ public abstract class AbstractModelPartie implements Observable {
 		toucheSlowReleased=false ;
 		pauseReleased=false ;
 
+		changeMouv=false;
+		flecheEncochee = false;
+		
 		finPartie =false;
 		inPause=false;
 
@@ -202,15 +190,6 @@ public abstract class AbstractModelPartie implements Observable {
 
 		firstNonFocused=true;
 
-		//INPUT INTERPRETE
-		debutSaut = false;
-		finSaut = false;
-		peutSauter = true;
-		sautGlisse = false;
-		deplaceSautDroit = false;
-		deplaceSautGauche =false;
-		changeMouv=false;
-		flecheEncochee = false;
 		xPositionSouris = 0 ;
 		yPositionSouris = 0 ;
 

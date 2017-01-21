@@ -159,14 +159,30 @@ public class Hitbox {
 		return(res);
 	}
 
-	public static Hitbox minusPoint(Hitbox hit, Point p)
+	public static Hitbox minusPoint(Hitbox hit, Point p, boolean copy)
 	{
+		Hitbox copyHit = null;
+		if(copy)
+			copyHit= new Hitbox();
 		for(int i=0; i<hit.polygon.npoints;i++)
 		{
-			hit.polygon.xpoints[i]-= p.x;
-			hit.polygon.ypoints[i]-= p.y;
+			if(copy)
+			{
+				copyHit.polygon.addPoint(hit.polygon.xpoints[i]-p.x, hit.polygon.ypoints[i]-p.y);
+			}
+			else
+			{
+				hit.polygon.xpoints[i]-= p.x;
+				hit.polygon.ypoints[i]-= p.y;
+			}
 		}
-		return hit;
+		return copy? copyHit: hit;
+	}
+	
+	public static Hitbox plusPoint(Hitbox hit, Point p, boolean copy)
+	{
+		Point p2 = new Point(-p.x,-p.y);
+		return minusPoint(hit,p2,copy);
 	}
 
 	static float projectPointOnAxe(Point point, Point axe)

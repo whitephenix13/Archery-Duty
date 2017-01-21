@@ -1,5 +1,10 @@
 //JFrame peut contenir plusieurs JPanel
 package Affichage;
+import java.awt.Image;
+import java.awt.Toolkit;
+import java.util.ArrayList;
+import java.util.List;
+
 /*
 	 |------------> x
 	 |
@@ -15,6 +20,7 @@ import option.AffichageOption;
 import partie.AffichagePartie;
 import principal.InterfaceConstantes;
 import choixNiveau.AffichageChoixNiveau;
+import credit.AffichageCredit;
 import editeur.AffichageEditeur;
 
 @SuppressWarnings("serial")
@@ -27,30 +33,41 @@ public class Affichage extends JFrame implements InterfaceConstantes
 	AffichageChoixNiveau affichageChoix;
 	AffichagePartie affichagePartie;
 	AffichageEditeur affichageEditeur;
+	AffichageCredit affichageCredit;
 
 
 	/**
 	 * Initialise Affichage
 	 */  
 	public Affichage(AffichagePrincipal _affichagePrincipal,AffichageOption _affichageOption, 
-			AffichageEditeur _affichageEditeur,AffichageChoixNiveau _affichageChoix,AffichagePartie _affichagePartie)
+			AffichageEditeur _affichageEditeur,AffichageCredit _affichageCredit,AffichageChoixNiveau _affichageChoix,AffichagePartie _affichagePartie)
 	{		
 		affichagePrincipal=_affichagePrincipal;
 		affichageOption = _affichageOption;
 		affichageEditeur=_affichageEditeur;
+		affichageCredit=_affichageCredit;
 		affichageChoix = _affichageChoix;
 		affichagePartie=_affichagePartie;
 
 		this.setFocusable(true);
 		this.setJMenuBar(null);
 
+		List<Image> icons = new ArrayList<Image>();
+		icons.add(getImage("16x16.gif"));
+		icons.add(getImage("32x32.gif"));
+		icons.add(getImage("64x64.gif"));
+		this.setIconImages(icons);
+		
 		affichagePrincipal.addListenerPrincipal();
 		AbstractModelPrincipal.changeFrame=true;
 		actuAffichage();
 
 	}
 
-
+	protected Image getImage(String name)
+	{
+		return Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/icons/"+name));
+	}
 	/**
 	 * Actualise le contenu de la frame (this)
 	 *
@@ -79,6 +96,12 @@ public class Affichage extends JFrame implements InterfaceConstantes
 				this.setTitle("Editeur"); 
 				this.revalidate();
 			}
+			else if (AbstractModelPrincipal.modeActuel=="Credit")
+			{	
+				this.setContentPane(affichageCredit.getContentPane());
+				this.setTitle("Credit"); 
+				this.revalidate();
+			}
 			else if (AbstractModelPrincipal.modeActuel=="ChoixNiveau")
 			{
 				this.setContentPane(affichageChoix.getContentPane());
@@ -104,6 +127,10 @@ public class Affichage extends JFrame implements InterfaceConstantes
 		if(mode=="Editeur")
 		{
 			affichageEditeur.addListenerEditeur();
+		}
+		else if(mode=="Credit")
+		{
+			affichageCredit.addListenerCredit();
 		}
 		else if (mode=="Option")
 		{
@@ -135,6 +162,10 @@ public class Affichage extends JFrame implements InterfaceConstantes
 		if(mode=="Editeur")
 		{
 			affichageEditeur.removeListenerEditeur();
+		}
+		else if(mode=="Credit")
+		{
+			affichageCredit.removeListenerCredit();
 		}
 		else if (mode=="Option")
 		{

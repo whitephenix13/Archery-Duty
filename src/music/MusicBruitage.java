@@ -11,6 +11,7 @@ import javax.sound.sampled.FloatControl;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
+import option.Config;
 import principal.InterfaceConstantes;
 
 public class MusicBruitage implements InterfaceConstantes{
@@ -31,7 +32,7 @@ public class MusicBruitage implements InterfaceConstantes{
 
 	public void initMusicBruitage()
 	{
-		gain = valeurBruitageInit;
+		gain = Config.bruitageVolume;
 		addToMap(bruitagesArray);
 
 	}
@@ -65,29 +66,28 @@ public class MusicBruitage implements InterfaceConstantes{
 	public MusicBruitage(String bruitage) {
 
 		typeBruitage=bruitage;
-		volumeControl();
+		volumeControl(gain);
 	}
 
-	public void setGain(Double nouvGain)
+	public void volumeControl(double nouvGain)
 	{
 		gain=nouvGain;
-	}
-	public void volumeControl()
-	{
+		Config.bruitageVolume=gain;
+
 		for(Clip c : mapClips.values())
 		{
 			FloatControl gainControl = (FloatControl) c.getControl(FloatControl.Type.MASTER_GAIN);
-			float dB = (float) (Math.log(gain) / Math.log(10.0) * 20.0);
+			float dB = (float) (Math.log(gain) / Math.log(10.0) * 30.0);
 			gainControl.setValue(dB);
 		}
 	}
 
 	public void startBruitage(long _time)
 	{
-		time=_time;
+		time=_time*1000;
 
 		startTime=System.nanoTime();
-		volumeControl();
+		volumeControl(gain);
 
 		Clip c = mapClips.get(typeBruitage);
 		c.stop();

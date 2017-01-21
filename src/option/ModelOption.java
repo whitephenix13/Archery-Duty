@@ -15,6 +15,7 @@ import types.Touches;
 
 public class ModelOption extends AbstractModelOption{
 
+
 	public void retourMenuPrincipal() {
 		AbstractModelPrincipal.changeFrame=true;
 		AbstractModelPrincipal.modeSuivant="Principal";
@@ -28,7 +29,7 @@ public class ModelOption extends AbstractModelOption{
 
 	public void setVolumeBruitage(ChangeEvent event) {
 		MusicBruitage bruit= new MusicBruitage();
-		bruit.setGain((double)((JSlider)event.getSource()).getValue()/100);
+		bruit.volumeControl((double)((JSlider)event.getSource()).getValue()/100);
 	}
 
 

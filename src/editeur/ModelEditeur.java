@@ -461,7 +461,6 @@ public class ModelEditeur extends AbstractModelEditeur{
 		
 		if( (InterfaceConstantes.ABS_MAX < futurNombreBlocL) || (InterfaceConstantes.ORD_MAX<futurNombreBlocH)  )
 		{
-			System.out.println("419 pas assez de place pour dezoomer");
 			showMessageDialog=true;
 			textMessageDialog[0]="Dezoom impossible: taille du monde trop petit";
 			textMessageDialog[1]="Erreur dezoom";
@@ -471,9 +470,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 		}
 		
 		else if(!loupe &&(xMinLim||yMinLim||xMaxLim ||yMaxLim))
-		{
-			System.out.println("limite terrain " );
-			
+		{			
 			if(xMinLim)
 				xViewPort=0;
 			if(yMinLim)

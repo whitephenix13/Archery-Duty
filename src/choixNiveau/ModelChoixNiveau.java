@@ -21,10 +21,17 @@ public class ModelChoixNiveau extends AbstractModelChoixNiveau{
 		bouton.setBackground(Color.BLACK);
 		bouton.setFont(new Font("Courrier",Font.PLAIN,44));
 	}
-	
-	  /**
-	   * Affiche la liste des niveaux
-	   */
+	public void resetBoutons()
+	{
+		for(JButton bouton:listNiveaux){
+			bouton.setForeground(Color.WHITE);
+			bouton.setBackground(Color.BLACK);
+			bouton.setFont(new Font("Courrier",Font.PLAIN,44));
+		}
+	}
+	/**
+	 * Affiche la liste des niveaux
+	 */
 	public void getAllNiveaux()
 	{
 		//on reinitialise les variables
@@ -33,7 +40,7 @@ public class ModelChoixNiveau extends AbstractModelChoixNiveau{
 		//on recupère le nom des niveaux 
 		try 
 		{
-			if(!TypeApplication.isJar && ! TypeApplication.isExe)
+			if(!TypeApplication.isJar)
 			{
 				Path url = Paths.get(ClassLoader.getSystemResource("resources/Levels/").toURI());
 				listNomNiveaux= GetNiveaux.getDocInFolder(url.toString() );
@@ -42,24 +49,23 @@ public class ModelChoixNiveau extends AbstractModelChoixNiveau{
 			{
 				listNomNiveaux=GetNiveaux.getDocInJar("resources/Levels/");
 			}
-		
-			System.out.println("GetAllNiveaux");
+
 			updateListLevels=true;
 			notifyObserver();
 		} 
 		catch (URISyntaxException e) {e.printStackTrace();}
-		
+
 		/*//on créer les boutons
 		panelBoutons.setLayout(new GridLayout(listNomNiveaux.size(),1));
 		//panelBoutons.setLayout(new FlowLayout());
 		for(int i=0; i <listNomNiveaux.size(); i++ )
 		{
 			listNiveaux.add(new JButton());
-			
+
 			resetBouton(listNiveaux.get(i),listNomNiveaux.get(i));
 			listNiveaux.get(i).setEnabled(true);
 			listNiveaux.get(i).setVisible(true);
-			
+
 			panelBoutons.add(listNiveaux.get(i));
 		}
 		panelBoutonScroll = new JScrollPane(panelBoutons);*/
@@ -67,7 +73,7 @@ public class ModelChoixNiveau extends AbstractModelChoixNiveau{
 
 	public static String getPath()
 	{
-		if(!TypeApplication.isJar && ! TypeApplication.isExe)
+		if(!TypeApplication.isJar)
 		{
 			String path="";
 			try {
@@ -88,8 +94,8 @@ public class ModelChoixNiveau extends AbstractModelChoixNiveau{
 	{
 		return(niveauSelectionne);
 	}
-	
-	
+
+
 	public List<JButton> getListBoutonNiveau()
 	{
 		return(listNiveaux);
@@ -98,7 +104,7 @@ public class ModelChoixNiveau extends AbstractModelChoixNiveau{
 	public void selectLevel(JButton button) {
 		//on reset les boutons 
 		for (int i=0; i<listNiveaux.size();i++){resetBouton(listNiveaux.get(i),listNomNiveaux.get(i));}
-		
+
 		button.setBackground(Color.GRAY);
 		niveauSelectionne=button.getText();
 	}
@@ -107,6 +113,7 @@ public class ModelChoixNiveau extends AbstractModelChoixNiveau{
 		AbstractModelPrincipal.changeFrame=true;
 		AbstractModelPrincipal.modeSuivant="Partie";
 		AbstractModelPrincipal.changeMode=true;
+		resetBoutons();
 	}
 
 }
