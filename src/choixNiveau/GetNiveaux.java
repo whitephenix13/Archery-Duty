@@ -55,7 +55,7 @@ public class GetNiveaux {
 				}
 				String name = e.getName();
 				
-				if(name.startsWith(path))
+				if(name.startsWith(path) && ! name.endsWith(path))
 				{
 					_listNomNiveaux.add(name.replaceFirst(path, ""));
 				}

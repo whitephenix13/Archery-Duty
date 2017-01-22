@@ -44,10 +44,13 @@ public class ModelChoixNiveau extends AbstractModelChoixNiveau{
 			{
 				Path url = Paths.get(ClassLoader.getSystemResource("resources/Levels/").toURI());
 				listNomNiveaux= GetNiveaux.getDocInFolder(url.toString() );
+
 			}
 			else
 			{
 				listNomNiveaux=GetNiveaux.getDocInJar("resources/Levels/");
+				for(int i=0; i<listNomNiveaux.size();++i)
+					System.out.println("Niveau: " + listNomNiveaux.get(i));
 			}
 
 			updateListLevels=true;
