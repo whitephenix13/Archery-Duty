@@ -2,7 +2,6 @@ package monstre;
 
 import java.awt.Image;
 import java.awt.Point;
-import java.awt.Polygon;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,16 +9,14 @@ import java.util.List;
 import javax.vecmath.Vector2d;
 
 import collision.Collidable;
-import partie.AbstractModelPartie;
-import personnage.Heros;
-import personnage.Heros.ResetHandleCollision;
-import principal.InterfaceConstantes;
-import types.Hitbox;
-import types.Monde;
-import types.Vitesse;
 import deplacement.Deplace;
 import deplacement.Mouvement;
 import deplacement.Mouvement_perso;
+import partie.AbstractModelPartie;
+import personnage.Heros;
+import principal.InterfaceConstantes;
+import types.Hitbox;
+import types.Vitesse;
 
 
 @SuppressWarnings("serial")
@@ -150,7 +147,7 @@ public abstract class Monstre extends Collidable implements InterfaceConstantes,
 
 		boolean collision_gauche = (vit.x<=0) && (normal.x>0);
 		boolean collision_droite = (vit.x>=0) && (normal.x<0);
-		boolean collision_haut = (vit.y<=0) && (normal.y>0);
+		//boolean collision_haut = (vit.y<=0) && (normal.y>0);
 		boolean collision_bas = (vit.y>=0) && (normal.y<0);
 		last_colli_left=collision_gauche;
 		last_colli_right=collision_droite;

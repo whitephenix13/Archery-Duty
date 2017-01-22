@@ -214,7 +214,6 @@ public class menuEditeur {
 			affichageEditeur.repaint();
 			}
 		}
-	//TODO:
 	public class retourMenuListener implements ActionListener{
 
 			public void actionPerformed(ActionEvent e) {

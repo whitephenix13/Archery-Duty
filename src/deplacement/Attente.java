@@ -1,13 +1,11 @@
 package deplacement;
 
 import java.awt.Point;
-import java.awt.Polygon;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import collision.Collidable;
-import types.Hitbox;
 import types.Vitesse;
 
 //il y a 1 animations de deux cotés 

@@ -16,18 +16,13 @@ import java.util.List;
 
 import javax.vecmath.Vector2d;
 
-import monstre.Monstre;
-import monstre.TirMonstre;
+import deplacement.Deplace;
 import partie.AbstractModelPartie;
-import personnage.Fleche;
-import personnage.Heros;
 import principal.InterfaceConstantes;
 import types.Bloc;
 import types.Hitbox;
 import types.Monde;
-import types.Point_float;
 import types.Vitesse;
-import deplacement.Deplace;
 
 public class Collision implements InterfaceConstantes{
 

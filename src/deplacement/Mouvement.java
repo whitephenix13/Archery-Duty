@@ -1,7 +1,6 @@
 package deplacement;
 
 import java.awt.Point;
-import java.awt.Polygon;
 import java.util.ArrayList;
 import java.util.List;
 

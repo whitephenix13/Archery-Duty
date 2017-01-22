@@ -3,7 +3,6 @@ package personnage;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Toolkit;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 

@@ -153,9 +153,6 @@ boolean soundFound=true;
 	}
 	public void endSlowDownMusic() throws UnsupportedAudioFileException, IOException, LineUnavailableException
 	{
-
-		AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(
-				getClass().getClassLoader().getResource("resources/musique/"+musiqueEnCours+".wav"));
 		Clip c = getClip(true);
 		if(c==null)
 			return;

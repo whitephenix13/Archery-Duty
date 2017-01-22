@@ -1,14 +1,11 @@
 package todo;
 
 public class Todo {
-	//Version alpha
-		
-	//TODO: valeur option partie != valeur option 
-	//TODO: TEST
-	//TODO: Github
-
-
-	//Version beta 
+	
+	//Version 0.0.0
+	//DONE 
+	
+	//Version 0.1.0
 	//TODO: effet slow motion (garder en mémoire les images des mouvements précédants et les afficher avec transparance)
 	//TODO: permttre le resize fenetre
 	//TODO: ajouter des plugins angel chore, ou celesta

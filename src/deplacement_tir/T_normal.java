@@ -6,10 +6,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import collision.Collidable;
-import deplacement.Attente;
 import deplacement.Deplace;
 import deplacement.Mouvement;
-import deplacement.Mouvement_perso;
 
 public class T_normal extends Mouvement_tir{
 

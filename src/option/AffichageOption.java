@@ -23,7 +23,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import observer.Observer;
-import principal.InterfaceConstantes;
 import types.Touches;
 
 @SuppressWarnings("serial")
@@ -95,7 +94,6 @@ public class AffichageOption extends JFrame implements Observer{
 	public AffichageOption(AbstractControlerOption _controler)
 	{
 		controler=_controler;
-		System.out.println(Config.musicVolume);
 		initComposant();
 	}
 

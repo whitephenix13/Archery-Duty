@@ -1,9 +1,7 @@
 package personnage;
 
-import java.awt.Image;
 import java.awt.Point;
 import java.awt.Polygon;
-import java.awt.Toolkit;
 import java.io.IOException;
 import java.util.List;
 
@@ -572,7 +570,6 @@ public class Heros extends Collidable{
 					anim= (droite_gauche(animHeros)=="Gauche" ? 0 :1);
 					deplacement=new Attente();
 					deplacement.setSpeed(Mouvement_perso.heros, this, anim,deplace);
-					//TODO:? nouvAnim=anim;
 					//on reinitialise les variables de saut 
 					debutSaut = false;
 					finSaut = false;
@@ -600,9 +597,6 @@ public class Heros extends Collidable{
 			//CHANGEMENT DE MOUVEMENT
 			if(partie.changeMouv && allowed)
 			{
-				System.out.println("current mouv " + this.deplacement.getClass().getName()+" "+ animHeros);
-				System.out.println("change mouv " + nouvMouv.getClass().getName()+" "+ nouvAnim);
-				//TODO:
 				alignHitbox(animHeros,nouvMouv,nouvAnim,partie,deplace);
 
 				if(nouvMouv.IsDeplacement(Mouvement_perso.saut) && debutSaut)
@@ -689,7 +683,6 @@ public class Heros extends Collidable{
 	//Move the character to center it before the animation change.
 	public void alignHitbox(int animActu,Mouvement depSuiv, int animSuiv, AbstractModelPartie partie,Deplace deplace)
 	{
-		System.out.println("Align "+ deplacement.getClass().getName()+" "+animActu +"("+anim+")"+",suiv "+depSuiv.getClass().getName()+" "+animSuiv);
 		/*
 			  normal -> normal : sens de la vitesse
 		 ***-> glissade sens de la vitesse: -> [| 
@@ -730,8 +723,6 @@ public class Heros extends Collidable{
 		boolean shooting =deplacement.IsDeplacement(Mouvement_perso.tir);
 		boolean landing= deplacement.IsDeplacement(Mouvement_perso.saut) && (animActu==2 || animActu==5);
 		
-		System.out.println(valid+" align left "+( (!valid && (attente||shooting||  landing))? !left:left) +" down? "+down  );
-
 		if(!valid && (attente||shooting||  landing))
 		{
 			dx= -dx  + Hitbox.supportPoint(new Vector2d(-xdir,0), getHitbox(partie.INIT_RECT,depActu, animActu).polygon).x -

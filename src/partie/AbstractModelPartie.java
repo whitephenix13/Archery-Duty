@@ -9,6 +9,9 @@ import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
+import Affichage.Affichage;
+import deplacement.Attente;
+import deplacement.Deplace;
 import monstre.ImagesMonstre;
 import monstre.ImagesTirMonstre;
 import monstre.Monstre;
@@ -21,15 +24,6 @@ import personnage.Heros;
 import personnage.ImagesHeros;
 import principal.InterfaceConstantes;
 import types.Monde;
-import Affichage.Affichage;
-import deplacement.Attente;
-import deplacement.Course;
-import deplacement.Deplace;
-import deplacement.Glissade;
-import deplacement.Marche;
-import deplacement.Mouvement;
-import deplacement.Saut;
-import deplacement.Tir;
 
 public abstract class AbstractModelPartie implements Observable {
 	//{{Variables	

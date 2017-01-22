@@ -1,7 +1,6 @@
 package deplacement_tir;
 
 import deplacement.Mouvement;
-import deplacement.Mouvement_perso;
 
 public abstract class Mouvement_tir extends Mouvement{
 

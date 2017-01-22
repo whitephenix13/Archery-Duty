@@ -3,15 +3,19 @@ package menuPrincipal;
 import java.awt.Dimension;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.security.CodeSource;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.JFrame;
 
+import Affichage.Affichage;
+import choixNiveau.AffichageChoixNiveau;
+import choixNiveau.ControlerChoixNiveau;
+import choixNiveau.ModelChoixNiveau;
+import credit.AffichageCredit;
+import editeur.AffichageEditeur;
+import editeur.ControlerEditeur;
+import editeur.ModelEditeur;
 import music.Music;
 import music.ThreadMusique;
 import option.AffichageOption;
@@ -23,14 +27,6 @@ import partie.ModelPartie;
 import principal.InterfaceConstantes;
 import principal.TypeApplication;
 import types.Touches;
-import Affichage.Affichage;
-import choixNiveau.AffichageChoixNiveau;
-import choixNiveau.ControlerChoixNiveau;
-import choixNiveau.ModelChoixNiveau;
-import credit.AffichageCredit;
-import editeur.AffichageEditeur;
-import editeur.ControlerEditeur;
-import editeur.ModelEditeur;
 
 public class ModelPrincipal extends AbstractModelPrincipal{
 

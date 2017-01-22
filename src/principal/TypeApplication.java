@@ -1,10 +1,5 @@
 package principal;
 
-import java.net.URL;
-import java.security.CodeSource;
-
-import choixNiveau.ModelChoixNiveau;
-
 public class TypeApplication {
 	public static boolean isJar;
 	

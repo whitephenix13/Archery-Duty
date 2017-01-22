@@ -19,6 +19,7 @@ import javax.swing.SwingConstants;
 
 import menuPrincipal.AbstractModelPrincipal;
 
+@SuppressWarnings("serial")
 public class AffichageCredit extends JFrame{
 
 	public CustomLabel lTitle = new CustomLabel("CREDITS",SwingConstants.CENTER);  

@@ -2,15 +2,13 @@ package types;
 
 import java.awt.Point;
 import java.awt.Polygon;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.vecmath.Vector2d;
 
-import partie.AbstractModelPartie;
 import collision.Collidable;
 import deplacement.Deplace;
 import deplacement.Mouvement;
+import partie.AbstractModelPartie;
 
 public class Bloc extends Collidable{
  private String img ="vide";

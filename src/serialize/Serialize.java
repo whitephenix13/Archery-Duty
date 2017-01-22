@@ -9,17 +9,16 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import choixNiveau.ModelChoixNiveau;
 import principal.InterfaceConstantes;
 import principal.TypeApplication;
 import types.Bloc;
 import types.Monde;
 import types.StockageMonstre;
-import choixNiveau.ModelChoixNiveau;
 
 public class Serialize implements InterfaceConstantes{
 
 	//OPTIMAL BUFFER SIZE: try 64K, 256K, 512KB or 1MB*/
-	//sauvegarder l'indice des positions d'ou on peut faire du multi thread? ...
 	// Données à sérializer 
 	
 	public static String erreurMsgChargement="";
@@ -174,6 +173,7 @@ public class Serialize implements InterfaceConstantes{
 		//int,4,position en x du bloc
 		bytes = new byte[4];
 		is.read(bytes);
+		//TODO:erreur? 
 		bloc.setPos(bytesToInt(bytes), bloc.getYpos());
 		//TODO 
 		//bloc.setxPos(bytesToInt(bytes));

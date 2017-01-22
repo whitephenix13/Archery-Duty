@@ -1,25 +1,13 @@
 package deplacement;
 
-import java.awt.Point;
-import java.awt.Polygon;
-import java.util.List;
-
 import javax.vecmath.Vector2d;
 
-import monstre.Monstre;
-import monstre.TirMonstre;
-import partie.AbstractModelPartie;
-import personnage.Fleche;
-import personnage.Heros;
-import principal.InterfaceConstantes;
-import types.Bloc;
-import types.Hitbox;
-import types.Monde;
-import types.Vitesse;
 import collision.Collidable;
 import collision.Collision;
-import collision.GJK_EPA;
-import deplacement_tir.Mouvement_tir;
+import partie.AbstractModelPartie;
+import personnage.Heros;
+import principal.InterfaceConstantes;
+import types.Hitbox;
 
 public class Deplace implements InterfaceConstantes{
 	public Collision colli;

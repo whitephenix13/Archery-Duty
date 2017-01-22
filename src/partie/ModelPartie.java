@@ -19,6 +19,14 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
+import Affichage.Affichage;
+import collision.Collidable;
+import collision.Collision;
+import deplacement.Attente;
+import deplacement.Course;
+import deplacement.Marche;
+import deplacement.Mouvement_perso;
+import deplacement.Saut;
 import menuPrincipal.AbstractModelPrincipal;
 import monstre.Monstre;
 import monstre.Spirel;
@@ -31,16 +39,6 @@ import serialize.Serialize;
 import types.Bloc;
 import types.Hitbox;
 import types.Touches;
-import Affichage.Affichage;
-import collision.Collidable;
-import collision.Collision;
-import collision.IntersectHitbox;
-import deplacement.Attente;
-import deplacement.Course;
-import deplacement.Marche;
-import deplacement.Mouvement;
-import deplacement.Mouvement_perso;
-import deplacement.Saut;
 
 public class ModelPartie extends AbstractModelPartie{
 
@@ -881,7 +879,7 @@ public class ModelPartie extends AbstractModelPartie{
 
 		drawMonde(g,false);
 		drawMonstres(g,false);
-		drawPerso(g,true);
+		drawPerso(g,false);
 		drawFleches(g,false);
 		drawTirMonstres(g,false);
 		drawEffects(g,pan,false);

@@ -4,7 +4,6 @@ import collision.Collidable;
 import monstre.Monstre;
 import monstre.TirMonstre;
 import personnage.Fleche;
-import personnage.Heros;
 import principal.InterfaceConstantes;
 
 public class Gravite implements InterfaceConstantes

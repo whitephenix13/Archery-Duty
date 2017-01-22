@@ -18,6 +18,7 @@ import principal.TypeApplication;
 @SuppressWarnings("serial")
 public class AffichagePrincipal extends JFrame implements Observer{
 
+	@SuppressWarnings("unused")
 	private AbstractControlerPrincipal controlerPrincipal;
 
 	private	PanelPrincipal panelBoutons = new PanelPrincipal();
