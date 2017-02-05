@@ -45,12 +45,12 @@ public class ImagesHeros {
 	Image tir5;
 	Image tir6;
 	Image tir7;
-	
+
 	public ImagesHeros()
 	{
 		chargerImages();
 	}
-	
+
 	public void chargerImages()
 	{
 		attente0= Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/deplacement.Attente/0.gif"));
@@ -93,7 +93,7 @@ public class ImagesHeros {
 		tir6= Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/deplacement.Tir/6.gif"));
 		tir7= Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/deplacement.Tir/7.gif"));
 	}
-	
+
 	public Image getImages(Heros heros)
 	{
 		if(heros.deplacement.IsDeplacement(Mouvement_perso.attente))

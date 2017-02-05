@@ -49,8 +49,6 @@ public class ModelChoixNiveau extends AbstractModelChoixNiveau{
 			else
 			{
 				listNomNiveaux=GetNiveaux.getDocInJar("resources/Levels/");
-				for(int i=0; i<listNomNiveaux.size();++i)
-					System.out.println("Niveau: " + listNomNiveaux.get(i));
 			}
 
 			updateListLevels=true;

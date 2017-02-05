@@ -3,16 +3,21 @@ package todo;
 public class Todo {
 	
 	//Version 0.0.0
+	//Heros: changeMouv deplacer le cas de fleche dans le else du dessous
 	//DONE 
 	
 	//Version 0.1.0
+	//seiery "séyéri" 
+	//TODO: eviter de modifier des variables sur le heros pour revenir a des valeurs antérieurs (anim, mouvement... cela créer des problèmes d'affichages)
+	//TODO: score quand tue un ennemi + combo + temps de fin de niveau // temps 
+	//TODO: effet ralentissement: taille en fonction de la fenetre
 	//TODO: effet slow motion (garder en mémoire les images des mouvements précédants et les afficher avec transparance)
 	//TODO: permttre le resize fenetre
 	//TODO: ajouter des plugins angel chore, ou celesta
 	//TODO: créer un Thread a part pour charger les niveaux dès le lancement du jeu
 	//TODO: pause sur escape 
 	//TODO: optimiser la taille du monde chargé dans partie rapide 
-	//TODO: jauge endurence//jauge mana pour eviter le spam tir 
+	//TODO: jauge endurence/fatigue //jauge mana pour eviter le spam tir 
 	//TODO: creer des "blocs" event
 	//TODO: creer un tutoriel
 	//TODO: permettre de replay le niveau: mémoriser les temps et valeurs des "touches down" et "touches released"

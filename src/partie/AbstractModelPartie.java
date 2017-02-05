@@ -39,7 +39,7 @@ public abstract class AbstractModelPartie implements Observable {
 	public int slowDownTir= 10;//6
 	public int slowCount=0;
 
-	protected List<Fleche> tabFleche= new ArrayList<Fleche>();
+	public List<Fleche> tabFleche= new ArrayList<Fleche>();
 	public List<TirMonstre> tabTirMonstre = new ArrayList<TirMonstre>();
 	protected List<Monstre> tabMonstre= new ArrayList <Monstre> ();
 	protected int nombreMonstreRestant= 0;
@@ -72,7 +72,6 @@ public abstract class AbstractModelPartie implements Observable {
 	//Variables de déplacement 
 	//booleen pour savoir si on change de mouvement et donc qu'on doit reequilibre la hitbox du heros
 	public boolean changeMouv=false;
-	public boolean flecheEncochee = false;
 	
 	protected boolean finPartie =false;
 	protected boolean inPause=false;
@@ -171,7 +170,6 @@ public abstract class AbstractModelPartie implements Observable {
 		pauseReleased=false ;
 
 		changeMouv=false;
-		flecheEncochee = false;
 		
 		finPartie =false;
 		inPause=false;

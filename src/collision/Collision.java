@@ -88,7 +88,6 @@ public class Collision implements InterfaceConstantes{
 		for(Bloc mondeBloc : mondeBlocs)
 		{
 			Hitbox mondeBox = mondeBloc.getHitbox(partie.INIT_RECT);
-		
 			Vector2d supp1 = GJK_EPA.support(mondeBox.polygon,minSpeed.vect2d() );//fixed one
 			Vector2d supp2 = GJK_EPA.support(objectHitbox.polygon, speed.vect2d());//mobile one
 			Vector2d firstDir = new Vector2d(supp1.x-supp2.x, supp1.y-supp2.y);
@@ -105,8 +104,8 @@ public class Collision implements InterfaceConstantes{
 				dInter= GJK_EPA.EPA(mondeBox.polygon, objectHitbox.polygon, simplex, minSpeed.vect2d(), normals);
 			}
 			collision_type =  GJK_EPA.isIntersect(dInter,dNull);
-
-			return collision_type == GJK_EPA.INTER;
+			if(collision_type == GJK_EPA.INTER)
+				return true;
 		}
 		return false;
 	}
@@ -190,7 +189,7 @@ public class Collision implements InterfaceConstantes{
 					dInter= GJK_EPA.EPA(mondeBox.polygon, objectHitbox.polygon, simplex, minSpeed.vect2d(), normals);
 				}
 				collision_type =  GJK_EPA.isIntersect(dInter,dNull);
-
+				
 				boolean inTouch= collision_type == GJK_EPA.TOUCH;
 				boolean inCollision = collision_type==GJK_EPA.INTER; 
 				if(inTouch || inCollision)

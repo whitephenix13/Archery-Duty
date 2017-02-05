@@ -2,8 +2,8 @@ package option;
 
 public class Config {
 	
-	public static double musicVolume= 0.3;
-	public static double bruitageVolume= 0.2;
+	public static double musicVolume= 0.0;
+	public static double bruitageVolume= 0.0;
 
 	//memorize keyboard input
 }

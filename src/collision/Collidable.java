@@ -50,6 +50,7 @@ public abstract class Collidable {
 	public abstract void applyFriction(int minSpeed);
 	public abstract void resetVarBeforeCollision();
 	public abstract void handleStuck(AbstractModelPartie partie,Deplace deplace);
+	public abstract void handleDeplacementSuccess(AbstractModelPartie partie,Deplace deplace);
 	public abstract void resetVarDeplace();
 	public abstract int setReaffiche();
 

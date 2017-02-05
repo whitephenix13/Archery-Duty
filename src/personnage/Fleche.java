@@ -181,7 +181,7 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 		if(encochee && !doitDeplace)
 		{
 			//set the anim 
-			int animFleche = deplace.animFlecheEncochee(partie);
+			int animFleche = partie.heros.anim;
 			//set the position of the arrow so that it fits the bow
 			xpos=(partie.heros.xpos-partie.xdeplaceEcran-partie.xdeplaceEcranBloc)+xcenterFleche.get(animFleche);
 			ypos= (partie.heros.ypos-partie.ydeplaceEcran-partie.ydeplaceEcranBloc)+ycenterFleche.get(animFleche);
@@ -320,6 +320,12 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 		handleWorldCollision( new Vector2d(), partie, deplace );
 	}
 	@Override
+	public void handleDeplacementSuccess(AbstractModelPartie partie,
+			Deplace deplace) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
 	public void applyFriction(int minspeed) {
 		//do nothing
 	}
@@ -341,6 +347,8 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 			throw new IllegalArgumentException("ERREUR setReaffiche, ACTION INCONNUE  "  +deplacement.getClass().getName());
 		}
 	}
+
+
 
 
 }

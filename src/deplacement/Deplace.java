@@ -49,6 +49,8 @@ public class Deplace implements InterfaceConstantes{
 				{
 					object.handleStuck(partie, this);
 				}
+				else
+					object.handleDeplacementSuccess(partie, this);
 				object.resetVarDeplace();
 
 				if(isHeros)

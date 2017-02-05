@@ -368,20 +368,15 @@ public class ModelPartie extends AbstractModelPartie{
 			if(!inPause )
 			{
 				//TIR 
-				if(toucheTirDown && !flecheEncochee)
+				if(toucheTirDown && !heros.flecheEncochee)
 				{
 					//on ne tir qu'une fleche
 					toucheTirDown=false;
-
-					flecheEncochee=true;
-					Fleche fleche= new Fleche();
-					fleche.nulle=false;
-					fleche.encochee=true;
-					tabFleche.add(fleche);
+					heros.doitEncocherFleche=true;
 				}
 
 				//COURSE DROITE
-				if(courseDroiteDown && !(heros.deplacement.IsDeplacement(Mouvement_perso.glissade))&& !flecheEncochee)
+				if(courseDroiteDown && !(heros.deplacement.IsDeplacement(Mouvement_perso.glissade))&& !heros.flecheEncochee)
 				{
 					changeMouv=true;
 					//si on ne courrait pas vers la droite avant
@@ -398,7 +393,7 @@ public class ModelPartie extends AbstractModelPartie{
 				}
 
 				//MARCHE DROITE 
-				else if(marcheDroiteDown&& !flecheEncochee)
+				else if(marcheDroiteDown&& !heros.flecheEncochee)
 				{
 					changeMouv=true;
 
@@ -448,7 +443,7 @@ public class ModelPartie extends AbstractModelPartie{
 					}
 				}
 				//COURSE GAUCHE
-				if(courseGaucheDown && !(heros.deplacement.IsDeplacement(Mouvement_perso.glissade))&& !flecheEncochee)
+				if(courseGaucheDown && !(heros.deplacement.IsDeplacement(Mouvement_perso.glissade))&& !heros.flecheEncochee)
 				{
 					changeMouv=true;
 					//si on ne courrait pas vers la gauche avant 
@@ -466,7 +461,7 @@ public class ModelPartie extends AbstractModelPartie{
 					}
 				}
 				//MARCHE GAUCHE 
-				else if(marcheGaucheDown&& !flecheEncochee )
+				else if(marcheGaucheDown&& !heros.flecheEncochee )
 				{
 					changeMouv=true;
 
@@ -541,7 +536,7 @@ public class ModelPartie extends AbstractModelPartie{
 
 				//SAUT 
 				//si le herosnnage saute pour la première fois et qu'il peut sauter et qu'il ne glisse pas
-				if(sautDown && heros.peutSauter && !(heros.deplacement.IsDeplacement(Mouvement_perso.glissade))&& !flecheEncochee)
+				if(sautDown && heros.peutSauter && !(heros.deplacement.IsDeplacement(Mouvement_perso.glissade))&& !heros.flecheEncochee)
 				{
 					courseDroiteDown=false;
 					courseGaucheDown=false;
@@ -591,9 +586,9 @@ public class ModelPartie extends AbstractModelPartie{
 			toucheTirDown=false;
 			toucheTirReleased=false;
 
-			if(flecheEncochee)
+			if(heros.flecheEncochee)
 			{
-				flecheEncochee=false;
+				heros.flecheEncochee=false;
 				changeMouv=true;
 
 				heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche" ? 0 : 1) ;
@@ -626,7 +621,7 @@ public class ModelPartie extends AbstractModelPartie{
 			}
 
 
-			if( !heros.deplacement.IsDeplacement(Mouvement_perso.glissade) && !flecheEncochee )
+			if( !heros.deplacement.IsDeplacement(Mouvement_perso.glissade) && !heros.flecheEncochee )
 			{
 				changeMouv=true;
 
@@ -683,7 +678,7 @@ public class ModelPartie extends AbstractModelPartie{
 			toucheSlowReleased=false;
 		}
 		//SAUT 
-		if(sautReleased&& !flecheEncochee )
+		if(sautReleased&& !heros.flecheEncochee )
 		{
 			sautDown=false;
 			sautReleased=false;

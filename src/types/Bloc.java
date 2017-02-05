@@ -151,6 +151,12 @@ public class Bloc extends Collidable{
 		//do nothing
 	}
 	@Override
+	public void handleDeplacementSuccess(AbstractModelPartie partie,
+			Deplace deplace) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
 	public void resetVarDeplace() {
 		//do nothing
 	}

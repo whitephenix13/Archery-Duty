@@ -83,6 +83,12 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 		handleWorldCollision(new Vector2d(0,0), partie, deplace);
 	}
 	@Override
+	public void handleDeplacementSuccess(AbstractModelPartie partie,
+			Deplace deplace) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
 	public void applyFriction(int minspeed) {
 		//do nothing
 	}

@@ -61,6 +61,9 @@ public class Heros extends Collidable{
 	public boolean sautGlisse = false;
 	public boolean glisse =false;
 
+	public boolean doitEncocherFleche=false;
+	public boolean flecheEncochee=false;
+
 	//booleen pour savoir si on veut déplacer le personnage sur le côté quand il saut 
 	public boolean deplaceSautDroit = false;
 	public boolean deplaceSautGauche =false;
@@ -421,6 +424,7 @@ public class Heros extends Collidable{
 		int ydeplaceEcran = partie.ydeplaceEcran;
 		boolean blocDroitGlisse=false;
 		boolean blocGaucheGlisse=false;
+
 		int animHeros=anim;
 		//translate all object hitboxes, see collision to get full formula
 		Point deplaceEcran =new Point(partie.xdeplaceEcran+partie.xdeplaceEcranBloc,
@@ -449,8 +453,6 @@ public class Heros extends Collidable{
 			}
 		}
 
-		//le heros tir une fleche
-		boolean isFiring = partie.flecheEncochee;
 		// le heros est en chute libre
 		boolean falling = !isGrounded(partie);
 		if(falling)
@@ -468,11 +470,11 @@ public class Heros extends Collidable{
 						(!blocGaucheGlisse && droite_gauche(animHeros)==("Droite")));
 
 		int anim=animHeros;
-		if(isFiring)//cas différent puisqu'on ne veut pas que l'avatar chute en l'air
+		if(doitEncocherFleche || flecheEncochee)//cas différent puisqu'on ne veut pas que l'avatar ait l'animation de chute en l'air
 		{
 			int animSuivante = deplace.animFlecheEncochee(partie);
 			//on decalle
-			alignHitbox(animHeros,tir,animSuivante ,partie,deplace);
+			alignHitbox(animHeros,tir,animSuivante ,partie,deplace,blocGaucheGlisse);
 			deplacement= new Tir();
 			deplacement.setSpeed(Mouvement_perso.heros, this, anim,deplace);
 			return(animSuivante);
@@ -487,7 +489,7 @@ public class Heros extends Collidable{
 				peutSauter=false;
 				if(!(deplacement.IsDeplacement(Mouvement_perso.glissade)||deplacement.IsDeplacement(Mouvement_perso.course)))
 				{
-					alignHitbox(animHeros,saut,(droite_gauche(animHeros)=="Gauche" ? 1 :4),partie,deplace );		
+					alignHitbox(animHeros,saut,(droite_gauche(animHeros)=="Gauche" ? 1 :4),partie,deplace,blocGaucheGlisse );		
 					animHeros = (droite_gauche(animHeros)=="Gauche" ? 1 :4);
 					anim=animHeros;
 					deplacement= new Saut();
@@ -503,7 +505,7 @@ public class Heros extends Collidable{
 			{
 
 				//on ajuste la position du personnage pour qu'il soit centré 
-				alignHitbox(animHeros,deplacement,(droite_gauche(animHeros)=="Gauche" ? 2 : 5 ),partie,deplace );
+				alignHitbox(animHeros,deplacement,(droite_gauche(animHeros)=="Gauche" ? 2 : 5 ),partie,deplace,blocGaucheGlisse );
 				glisse=false;
 				finSaut=false;//set landing to false
 				anim= (droite_gauche(animHeros)=="Gauche"? 2 : 5 );
@@ -519,7 +521,7 @@ public class Heros extends Collidable{
 				int nextAnim = runBeforeJump? (droite_gauche(animHeros)=="Gauche" ? 0 : 4 ) : (droite_gauche(animHeros)=="Gauche" ? 0 : 1 );
 				Mouvement_perso nextDep=  runBeforeJump? new Course() : new Attente();
 				//on ajuste la position du personnage pour qu'il soit centré 
-				alignHitbox(animHeros,nextDep,nextAnim,partie,deplace);
+				alignHitbox(animHeros,nextDep,nextAnim,partie,deplace,blocGaucheGlisse);
 				glisse=false;
 				//on choisit la direction d'attente			
 				vit.x=0;	
@@ -533,7 +535,7 @@ public class Heros extends Collidable{
 			}
 			else if(landSliding)
 			{
-				alignHitbox(animHeros,attente,(droite_gauche(animHeros)=="Gauche" ? 0 : 1 ),partie ,deplace);
+				alignHitbox(animHeros,attente,(droite_gauche(animHeros)=="Gauche" ? 0 : 1 ),partie ,deplace,blocGaucheGlisse);
 				glisse=false;
 				finSaut=false;
 				//on ajuste la position du personnage pour qu'il soit centré 
@@ -545,7 +547,7 @@ public class Heros extends Collidable{
 			}
 			else if(beginSliding)
 			{
-				alignHitbox(animHeros,glissade,(blocDroitGlisse ? 0 :1),partie ,deplace);
+				alignHitbox(animHeros,glissade,(blocDroitGlisse ? 0 :1),partie ,deplace,blocGaucheGlisse);
 				glisse=false;
 				anim = (blocDroitGlisse ? 0 :1);
 				deplacement= new Glissade();
@@ -566,7 +568,7 @@ public class Heros extends Collidable{
 							Hitbox.supportPoint(new Vector2d(0,-1), attenteHitbox.polygon).y);
 					ypos= (int)((ypos+yTailleHeros-ydeplaceEcran))/100*100-yTailleHeros+ydeplaceEcran-10;//-10 due to slide hitboxbeing reduced
 
-					alignHitbox(animHeros,attente,(droite_gauche(animHeros)=="Gauche" ? 0 :1),partie,deplace );
+					alignHitbox(animHeros,attente,(droite_gauche(animHeros)=="Gauche" ? 0 :1),partie,deplace,blocGaucheGlisse);
 					anim= (droite_gauche(animHeros)=="Gauche" ? 0 :1);
 					deplacement=new Attente();
 					deplacement.setSpeed(Mouvement_perso.heros, this, anim,deplace);
@@ -581,7 +583,7 @@ public class Heros extends Collidable{
 				}
 				else // le heros tombe 
 				{
-					alignHitbox(animHeros,saut,(droite_gauche(animHeros)=="Gauche" ? 1 :4),partie,deplace);
+					alignHitbox(animHeros,saut,(droite_gauche(animHeros)=="Gauche" ? 1 :4),partie,deplace,blocGaucheGlisse);
 					anim = (droite_gauche(animHeros)=="Gauche" ? 1 :4);
 					deplacement= new Saut();
 					deplacement.setSpeed(Mouvement_perso.heros, this, anim,deplace);
@@ -597,7 +599,7 @@ public class Heros extends Collidable{
 			//CHANGEMENT DE MOUVEMENT
 			if(partie.changeMouv && allowed)
 			{
-				alignHitbox(animHeros,nouvMouv,nouvAnim,partie,deplace);
+				alignHitbox(animHeros,nouvMouv,nouvAnim,partie,deplace,blocGaucheGlisse);
 
 				if(nouvMouv.IsDeplacement(Mouvement_perso.saut) && debutSaut)
 				{
@@ -618,13 +620,13 @@ public class Heros extends Collidable{
 
 				if( deplacement.IsDeplacement(Mouvement_perso.marche))
 				{	
-					alignHitbox(animHeros,marche,(droite_gauche(animHeros)=="Gauche" ? (animHeros+1)%4 :(animHeros+1)%4+4 ),partie,deplace);
+					alignHitbox(animHeros,marche,(droite_gauche(animHeros)=="Gauche" ? (animHeros+1)%4 :(animHeros+1)%4+4 ),partie,deplace,blocGaucheGlisse);
 					anim= (droite_gauche(animHeros)=="Gauche" ? (animHeros+1)%4 :(animHeros+1)%4+4 );
 					deplacement.setSpeed(Mouvement_perso.heros, this, anim,deplace);
 				}
 				else if(deplacement.IsDeplacement(Mouvement_perso.course))
 				{			
-					alignHitbox(animHeros,course,(droite_gauche(animHeros)=="Gauche" ? (animHeros+1)%4 :(animHeros+1)%4+4 ),partie,deplace );
+					alignHitbox(animHeros,course,(droite_gauche(animHeros)=="Gauche" ? (animHeros+1)%4 :(animHeros+1)%4+4 ),partie,deplace,blocGaucheGlisse);
 					anim= (droite_gauche(animHeros)=="Gauche" ? (animHeros+1)%4 :(animHeros+1)%4+4 );
 					deplacement.setSpeed(Mouvement_perso.heros, this, anim,deplace);
 				}
@@ -681,7 +683,7 @@ public class Heros extends Collidable{
 	}
 
 	//Move the character to center it before the animation change.
-	public void alignHitbox(int animActu,Mouvement depSuiv, int animSuiv, AbstractModelPartie partie,Deplace deplace)
+	public void alignHitbox(int animActu,Mouvement depSuiv, int animSuiv, AbstractModelPartie partie,Deplace deplace,boolean blocGaucheGlisse )
 	{
 		/*
 			  normal -> normal : sens de la vitesse
@@ -689,12 +691,13 @@ public class Heros extends Collidable{
 			  glissade -> *** opposé au regard |[ -> (on évite de rentrer dans le mur où on était)
 			  Par défaut si la vitesse est nulle: BAS DROITE
 		 * */
+		System.out.println("Align " + deplacement.getClass().getName() + animActu + " // "+ depSuiv.getClass().getName()+animSuiv);
 		Mouvement depActu= deplacement;
 		boolean isGlissade = deplacement.IsDeplacement(Mouvement_perso.glissade);
 		boolean going_left = vit.x<0;
 		boolean facing_left_still= vit.x==0 &&(droite_gauche(animActu)=="Gauche"|| last_colli_left)&& !isGlissade;
 		boolean sliding_left_wall = (droite_gauche(animActu)=="Droite") && isGlissade;
-		boolean left = ( going_left|| facing_left_still ||sliding_left_wall) ; 
+		boolean left = ( going_left|| facing_left_still ||sliding_left_wall || blocGaucheGlisse) ; 
 		boolean down = vit.y>=0; 
 
 		int xdir = left ? -1 :1;
@@ -705,9 +708,45 @@ public class Heros extends Collidable{
 		double dy= Hitbox.supportPoint(new Vector2d(0,ydir), getHitbox(partie.INIT_RECT,depActu, animActu).polygon).y -
 				Hitbox.supportPoint(new Vector2d(0,ydir), getHitbox(partie.INIT_RECT,depSuiv, animSuiv).polygon).y;
 
+		double m_dx=0; //-dx, computed if needed
+		double m_dy=0; //-dy, computed if needed
+
 		xpos+= dx;
 		ypos+= dy;
 
+		
+		boolean valid=alignTestValid(depSuiv, animSuiv, partie,deplace);
+
+		boolean attente = deplacement.IsDeplacement(Mouvement_perso.attente);
+		boolean shooting =deplacement.IsDeplacement(Mouvement_perso.tir);
+		boolean landing= deplacement.IsDeplacement(Mouvement_perso.saut) && (animActu==2 || animActu==5);
+		//test the opposite y 
+		if(!valid && (attente||shooting||  landing))
+		{
+			m_dy=Hitbox.supportPoint(new Vector2d(-ydir,0), getHitbox(partie.INIT_RECT,depActu, animActu).polygon).y -
+					Hitbox.supportPoint(new Vector2d(-ydir,0), getHitbox(partie.INIT_RECT,depSuiv, animSuiv).polygon).y;
+			ypos+=m_dy-dy;
+			valid =alignTestValid(depSuiv, animSuiv, partie,deplace);
+		}
+		
+		//test the opposite x with the first value of y
+		if(!valid && (attente||shooting||  landing))
+		{
+			m_dx=Hitbox.supportPoint(new Vector2d(-xdir,0), getHitbox(partie.INIT_RECT,depActu, animActu).polygon).x -
+					Hitbox.supportPoint(new Vector2d(-xdir,0), getHitbox(partie.INIT_RECT,depSuiv, animSuiv).polygon).x;;
+			xpos+=m_dx-dx;
+			ypos+=dy-m_dy;
+			valid =alignTestValid(depSuiv, animSuiv, partie,deplace);
+		}
+		//test the opposite x with the opposite y
+		if(!valid && (attente||shooting||  landing))
+		{
+			ypos+=m_dy-dy;
+			valid =alignTestValid(depSuiv, animSuiv, partie,deplace);
+		}
+	}
+	public boolean alignTestValid(Mouvement depSuiv, int animSuiv, AbstractModelPartie partie,Deplace deplace)
+	{
 		int prev_anim = anim;
 		Mouvement prev_mouv = deplacement.Copy(Mouvement_perso.heros);
 		this.anim=animSuiv;
@@ -717,19 +756,7 @@ public class Heros extends Collidable{
 		
 		this.anim=prev_anim;
 		this.deplacement=prev_mouv;
-		
-		
-		boolean attente = deplacement.IsDeplacement(Mouvement_perso.attente);
-		boolean shooting =deplacement.IsDeplacement(Mouvement_perso.tir);
-		boolean landing= deplacement.IsDeplacement(Mouvement_perso.saut) && (animActu==2 || animActu==5);
-		
-		if(!valid && (attente||shooting||  landing))
-		{
-			dx= -dx  + Hitbox.supportPoint(new Vector2d(-xdir,0), getHitbox(partie.INIT_RECT,depActu, animActu).polygon).x -
-					Hitbox.supportPoint(new Vector2d(-xdir,0), getHitbox(partie.INIT_RECT,depSuiv, animSuiv).polygon).x;
-			xpos+=dx;
-
-		}
+		return valid;
 	}
 
 	@Override
@@ -757,12 +784,28 @@ public class Heros extends Collidable{
 	}
 	@Override
 	public void handleStuck(AbstractModelPartie partie, Deplace deplace) {
+		System.out.println("heros stuck");
 		if(currentValue!=null)
 			currentValue.res();
 
 		if(resetHandleCollision != null){
 			resetHandleCollision.reset(deplace, partie);
 		}
+		doitEncocherFleche=false;
+	}
+	
+	@Override
+	public void handleDeplacementSuccess(AbstractModelPartie partie,
+			Deplace deplace) {
+		//The animation change is successful: create arrow
+		if(doitEncocherFleche && deplacement.IsDeplacement(Mouvement_perso.tir))
+		{
+			this.shootArrow(partie);
+			doitEncocherFleche=false;
+			flecheEncochee=true;
+		}
+		doitEncocherFleche=false;
+		
 	}
 
 	@Override
@@ -803,7 +846,14 @@ public class Heros extends Collidable{
 		return(reaffiche);
 
 	}
-
+	
+	public void shootArrow(AbstractModelPartie partie)
+	{
+		Fleche fleche= new Fleche();
+		fleche.nulle=false;
+		fleche.encochee=true;
+		partie.tabFleche.add(fleche);
+	}
 	@Override
 	public void destroy() {
 		//Do nothing

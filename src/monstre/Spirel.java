@@ -495,6 +495,12 @@ public class Spirel extends Monstre{
 			resetHandleCollision.reset();
 	}
 	@Override
+	public void handleDeplacementSuccess(AbstractModelPartie partie,
+			Deplace deplace) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
 	public void applyFriction(int minspeed) {
 		//do nothing
 	}
