@@ -20,15 +20,15 @@ public class Saut extends Mouvement_perso{
 		super();
 		if(type.equals(Mouvement_perso.heros))
 		{
-			xtaille =  Arrays.asList(74,90,76,74,90,76,-1,-1);
-			ytaille =  Arrays.asList(94,98,80,94,98,80,-1,-1); 
+			xtaille =  Arrays.asList(85,84,74,85,84,74);
+			ytaille =  Arrays.asList(97,105,91,97,105,91); 
 			
 			List<List<Point>> hitboxCreation = new ArrayList<List<Point>>();
 			//add for every edge, a list of point depending on the animation
-			List<Integer> xg = Arrays.asList(31,33,27,15,19,11);
-			List<Integer> xd = Arrays.asList(63,65,59,47,51,43);
-			List<Integer> yh = Arrays.asList(11,22,22,11,22,22);
-			List<Integer> yb = Arrays.asList(94,98,80,94,98,80);
+			List<Integer> xg = Arrays.asList(35,27,27,10,12,4);
+			List<Integer> xd = Arrays.asList(74,71,69,49,56,46);
+			List<Integer> yh = Arrays.asList(8,5,5,8,5,5);
+			List<Integer> yb = Arrays.asList(96,98,90,96,98,90);
 
 			hitboxCreation.add(asListPoint(xg,yh));
 			hitboxCreation.add(asListPoint(xd,yh));
@@ -70,9 +70,9 @@ public class Saut extends Mouvement_perso{
 				heros = (Heros) object;
 			}
 			//permet de déplacer le héros sur le cote 
-			final int vitMax = (object.vit.x == 0) ? 8000:  Math.abs(object.vit.x) ; 
-			final int varVit = 8000 ; 
-			final int vitSaut = -15000; //10000 normalement 
+			final int vitMax = (object.vit.x == 0) ? 8:  Math.abs(object.vit.x) ; 
+			final int varVit = 8 ; 
+			final int vitSaut = -15; //10000 normalement 
 
 			if(heros.sautGlisse)
 			{
@@ -127,8 +127,8 @@ public class Saut extends Mouvement_perso{
 			if(object instanceof Spirel)
 				spirel=(Spirel) object;
 			
-			int xspeed=10000;
-			int yspeed=15000;
+			int xspeed=10;//10000
+			int yspeed=15;//15000
 
 			if(spirel.peutSauter)
 			{

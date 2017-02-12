@@ -2,7 +2,12 @@ package personnage;
 
 import java.awt.Image;
 import java.awt.Point;
+import java.awt.Polygon;
 import java.awt.Toolkit;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Point2D;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -26,29 +31,19 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 	public boolean isPlanted=false; //fleche plantée dans le sol
 	public boolean nulle =false;
 	public boolean encochee =false;
-	
-	public List<Integer> xcenterFleche=Arrays.asList(37,45,33,6 ,-1,4,38,32);
-	public List<Integer> ycenterFleche=Arrays.asList(29,23,60,22,27,2,-18,4);
+	public static String SLOW_AURA="slow";
+	public String aura="";
+	public AffineTransform draw_tr;
+	//relative to heros position
+	public List<Integer> xanchor=Arrays.asList(28,20,45,45,40,30,55,52,70,35);
+	public List<Integer> yanchor=Arrays.asList(30,20,22,25,45,50,65,42,30,40);
 
-	Image fleche0;
-	Image fleche1;
-	Image fleche2;
-	Image fleche3;
-	Image fleche4;
-	Image fleche5;
-	Image fleche6;
-	Image fleche7;
 	//timer pour savoir quand est ce que la fleche doit disparaitre (voir interface constante)
 	public long tempsDetruit = 0;
 	
 	public int degat= -50;
 	 MusicBruitage bruitage;
 
-	//constructeur pour charger les images des fleches 
-	public Fleche(boolean b)
-	{
-		chargerFleches();
-	}
 		
 	public Fleche()
 	{
@@ -84,38 +79,23 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 		xpos=x;
 		ypos=y;
 	}
-	public void chargerFleches()
-	{
-		 fleche0=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/fleches/0.gif"));
-		 fleche1=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/fleches/1.gif"));
-		 fleche2=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/fleches/2.gif"));
-		 fleche3=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/fleches/3.gif"));
-		 fleche4=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/fleches/4.gif"));
-		 fleche5=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/fleches/5.gif"));
-		 fleche6=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/fleches/6.gif"));
-		 fleche7=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/fleches/7.gif"));
-	}
-	public Image getImage(Fleche fleche)
-	//{{
-	{
-		switch(fleche.anim)
-		{
-		case 0: return(fleche0);
-		case 1: return(fleche1);
-		case 2: return(fleche2);
-		case 3: return(fleche3);
-		case 4: return(fleche4);
-		case 5: return(fleche5);
-		case 6: return(fleche6);
-		case 7: return(fleche7);
-		default: return(fleche0);
-		}
-	}
-	//}}
-	public void flecheDecochee(Deplace deplace)
+	
+	public void flecheDecochee(AbstractModelPartie partie,Deplace deplace)
 	{
 		doitDeplace=true;
 		encochee=false;
+		
+		//get current position
+		Point2D newpos= draw_tr.transform(new Point(0,0), null);
+		xpos=(int) newpos.getX()-partie.xScreendisp;
+		ypos=(int) newpos.getY()-partie.yScreendisp;
+		
+		convertHitbox(partie.INIT_RECT,draw_tr,new Point(xpos,ypos),new Point(partie.xScreendisp,partie.yScreendisp));
+
+		//reset the 0 of the transformation. usefull since the position changed from 0 to its drawing position (~700,400)
+		draw_tr.translate(-xpos, -ypos);
+
+
 		deplacement.setSpeed(Mouvement_tir.fleche, this, anim, deplace);
 		bruitage.startBruitage(100);
 		
@@ -124,20 +104,47 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 	public void destroy(){
 		//do nothing when detroyed 
 	}
+	
+	public void convertHitbox(Point INIT_RECT,AffineTransform tr,Point pos,Point screendisp) {
+		List<Hitbox> current = deplacement.hitbox;
+		List<Hitbox> new_rotated_hit = new ArrayList<Hitbox>();
+
+		for (int i = 0; i<current.size(); ++i)
+		{
+			Polygon current_pol = current.get(i).polygon; 
+			Polygon new_pol = new Polygon();
+			for(int j = 0; j<current_pol.npoints; ++j)
+			{
+				Point2D temp = tr.transform(new Point(current_pol.xpoints[j],current_pol.ypoints[j]), null);
+				new_pol.addPoint((int)temp.getX()-pos.x-screendisp.x,(int)temp.getY()-pos.y-screendisp.y);
+				
+			}
+			new_rotated_hit.add(new Hitbox(new_pol));
+		}
+
+		deplacement.hitbox_rotated= new_rotated_hit;
+	}
 	@Override
 	public Hitbox getHitbox(Point INIT_RECT) {
-		return  Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos,ypos),true);	
+		if(!encochee)
+			return  Hitbox.plusPoint(deplacement.hitbox_rotated.get(anim), new Point(xpos,ypos),true);	
+		else
+			return  Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos,ypos),true);	
 	}
 	
 	@Override
 	public Hitbox getHitbox(Point INIT_RECT, Mouvement _dep, int _anim) {
+		//ASSUME WE ALWAYS USE THIS WHEN THE ARROW IS SHOT (!encochee)
 		Mouvement_tir temp = (Mouvement_tir) _dep.Copy(Mouvement_tir.fleche); //create the mouvement
-		return Hitbox.plusPoint(temp.hitbox.get(_anim), new Point(xpos,ypos),true);
+		return Hitbox.plusPoint(temp.hitbox_rotated.get(_anim), new Point(xpos,ypos),true);
 	}
 	public Hitbox getWorldHitbox(AbstractModelPartie partie) {
-		Hitbox hit1  =Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos,ypos),true);
-		return Hitbox.plusPoint(hit1, new Point(partie.xdeplaceEcran + partie.xdeplaceEcranBloc,
-				partie.ydeplaceEcran + partie.ydeplaceEcranBloc),true);
+		Hitbox hit1 = getHitbox(partie.INIT_RECT);
+		/*if(encochee)
+			hit1=Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos,ypos),true);
+		else
+			hit1=Hitbox.plusPoint(deplacement.hitbox_rotated.get(anim), new Point(xpos,ypos),true);*/
+		return Hitbox.plusPoint(hit1, new Point(partie.xScreendisp,partie.yScreendisp),true);
 	}
 		
 		
@@ -181,10 +188,12 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 		if(encochee && !doitDeplace)
 		{
 			//set the anim 
-			int animFleche = partie.heros.anim;
+			double[] anim_rot = deplace.getAnimRotationTir(partie,true);
+			int animFleche = (anim +1) %4;
+			rotation = anim_rot[1];
 			//set the position of the arrow so that it fits the bow
-			xpos=(partie.heros.xpos-partie.xdeplaceEcran-partie.xdeplaceEcranBloc)+xcenterFleche.get(animFleche);
-			ypos= (partie.heros.ypos-partie.ydeplaceEcran-partie.ydeplaceEcranBloc)+ycenterFleche.get(animFleche);
+			//xpos=(partie.heros.xpos-partie.xScreendisp)+xcenterFleche.get(animFleche);
+			//ypos= (partie.heros.ypos-partie.yScreendisp)+ycenterFleche.get(animFleche);
 			return animFleche;
 		}
 
@@ -197,10 +206,10 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 				return(animSuivante);
 			}
 			else 
-				return(anim);
+				return((anim+1)%4);
 			
 		}
-		return anim;
+		return (anim+1)%4;
 	}
 	public int gravityAnim()
 	{
@@ -341,7 +350,7 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 	@Override
 	public int setReaffiche() {
 		if(deplacement.IsDeplacement(Mouvement_tir.tir_normal)){
-			return(20);
+			return(2);
 		}
 		else {
 			throw new IllegalArgumentException("ERREUR setReaffiche, ACTION INCONNUE  "  +deplacement.getClass().getName());

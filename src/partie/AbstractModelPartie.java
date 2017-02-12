@@ -3,6 +3,7 @@ package partie;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
+import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +22,7 @@ import observer.Observable;
 import observer.Observer;
 import personnage.Fleche;
 import personnage.Heros;
+import personnage.ImagesFleche;
 import personnage.ImagesHeros;
 import principal.InterfaceConstantes;
 import types.Monde;
@@ -98,18 +100,43 @@ public abstract class AbstractModelPartie implements Observable {
 	protected ImagesMonstre imMonstre =new ImagesMonstre();
 	protected ImagesHeros imHeros = new ImagesHeros();
 	protected ImagesTirMonstre imTirMonstre= new ImagesTirMonstre();
-	protected Fleche defaultFleche = new Fleche(true);
+	protected ImagesFleche imFleches = new ImagesFleche();
 
 	public Point INIT_RECT= new Point(50000,50000); //(abs,ord)
-	public int absRect =INIT_RECT.x;
-	public int ordRect = INIT_RECT.y;
+	//public int absRect =INIT_RECT.x;
+	//public int ordRect = INIT_RECT.y;
 	public int TAILLE_BLOC=100;
+	//variable to know to displacement of the screen
+	public int xScreendisp = 0;
+	public int yScreendisp = 0;
+	/**
+	 * 
+	 * @param x: return xScreendispBloc, false: return yScreendispBloc
+	 * @return Screendisp grounded to the closest multiple of TAILLE_BLOC
+	 */
+	public int getXYScreendispBloc(boolean x)
+	{return (x?xScreendisp:yScreendisp)/TAILLE_BLOC*TAILLE_BLOC;}
+	/**
+	 * 
+	 * @param x: return xScreendispBloc, false: return yScreendispBloc
+	 * @return Screendisp modulo TAILLE_BLOC
+	 */
+	public int getXYScreendispMod(boolean x)
+	{return (x?xScreendisp:yScreendisp)%TAILLE_BLOC;}
+	
+	/**
+	 * 
+	 * @param x: return xScreendispBloc, false: return yScreendispBloc
+	 * @return x/y value of the viewport 
+	 */
+	public int getXYViewport(boolean x)
+	{return (x?INIT_RECT.x:INIT_RECT.y)- getXYScreendispBloc(x);}
 	//entier permettant de déplacer légérement l'ecran pour pas qu'il ne bouge par bloc(<100) 
-	public int xdeplaceEcran = 0;
-	public int ydeplaceEcran = 0;
+	//public int xdeplaceEcran = 0;
+	//public int ydeplaceEcran = 0;
 	//entier stockant les centaines de décallage (>100) 
-	public int xdeplaceEcranBloc = 0;
-	public int ydeplaceEcranBloc = 0;
+	//public int xdeplaceEcranBloc = 0;
+	//public int ydeplaceEcranBloc = 0;
 
 	//variables pour l'affichage 
 	protected boolean disableBoutonsFin=false;
@@ -131,6 +158,7 @@ public abstract class AbstractModelPartie implements Observable {
 
 	public void reset() 
 	{
+		System.out.println("reset");
 		deplace = new Deplace();
 		monde = new Monde();
 
@@ -188,17 +216,18 @@ public abstract class AbstractModelPartie implements Observable {
 		///AFFICHAGE 
 		//pour pouvoir acceder aux images chargées 
 		m= new Monde("default");
-		imMonstre =new ImagesMonstre();
-		imTirMonstre= new ImagesTirMonstre();
-		defaultFleche = new Fleche(true);
+		if(imHeros==null)
+			imHeros= new ImagesHeros();
+		if(imMonstre==null)
+			imMonstre =new ImagesMonstre();
+		if(imTirMonstre==null)
+			imTirMonstre= new ImagesTirMonstre();
+		if(imFleches==null)
+			imFleches = new ImagesFleche();
 
 		INIT_RECT= new Point(50000,50000); //(abs,ord)
-		absRect =INIT_RECT.x;
-		ordRect = INIT_RECT.y;
-		xdeplaceEcran = 0;
-		ydeplaceEcran = 0;
-		xdeplaceEcranBloc = 0;
-		ydeplaceEcranBloc = 0;
+		xScreendisp = 0;
+		yScreendisp = 0;
 	}
 	public void resetVariablesAffichage()
 	{
@@ -222,6 +251,14 @@ public abstract class AbstractModelPartie implements Observable {
 
 	public abstract void drawMonde(Graphics g,boolean drawHitbox);
 	public abstract void drawMonstres(Graphics g,boolean drawHitbox);
+	/**
+	 * @param pos : position of hitbox
+	 * @param anchor: position of center of rotation relative to top left of hitbox
+	 * @param taille: size of hitbox
+	 * @param rotation
+	 * @return
+	 */
+	public abstract AffineTransform getRotatedTransform(Point pos, Point anchor, Point taille, double rotation);
 	public abstract void drawPerso(Graphics g,boolean drawHitbox);
 	public abstract void drawFleches(Graphics g,boolean drawHitbox);
 	public abstract void drawTirMonstres(Graphics g,boolean drawHitbox);

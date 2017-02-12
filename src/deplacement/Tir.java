@@ -22,22 +22,31 @@ public class Tir extends Mouvement_perso
     {
 		this(Mouvement_perso.heros);
 	}
-	//constructeur monstre
 	public Tir(String type) 
     {
 		super();
 		if(type.equals(Mouvement_perso.heros))
 		{
-			xtaille =  Arrays.asList(82,88,80,88,82,76,86,76);
-			ytaille =  Arrays.asList(94,90,90,90,94,94,92,94);
+			xtaille =  Arrays.asList(50,63,75,75,63,50,57,75,75,57);
+			ytaille =  Arrays.asList(105,97,86,86,97,105,112,101,101,112);
 			
 			List<List<Point>> hitboxCreation = new ArrayList<List<Point>>();
 			//add for every edge, a list of point depending on the animation
-			List<Integer> xg = Arrays.asList(18,20,19,35,33,28,27,15);
-			List<Integer> xd = Arrays.asList(52,56,55,71,69,62,59,47);
-			List<Integer> yh = Arrays.asList(8 ,10,14,6 ,10,10,10,12);
-			List<Integer> yb = Arrays.asList(94,90,90,90,94,94,92,94);
+			List<Integer> xg = Arrays.asList(11,11,26,28,32,18,25,16,38,11);
+			List<Integer> xd = Arrays.asList(31,31,46,48,52,38,45,36,58,31);
+			List<Integer> yh = Arrays.asList(19,11,0 ,0 ,11,19,27,15,15,27);
+			List<Integer> yb = Arrays.asList(102,94,83,83,94,102,110,98,98,110);
 
+			x_rot_pos =  Arrays.asList(23,12,38,40,43,27,40,32,45,19);
+			y_rot_pos =  Arrays.asList(47,44,30,30,44,47,58,45,45,58);
+
+			for(int i=0;i<xg.size();++i)
+			{
+				// ASSUME THAT ALL TIR HITBOXES ARE THE SAME
+				x_center_tir.add(xg.get(i) + (xd.get(i)-xg.get(i))/2);//middle of x hitbox 
+				y_center_tir.add(yh.get(i)+ (yb.get(i)+yh.get(i))/5);//arm height
+
+			}
 			hitboxCreation.add(asListPoint(xg,yh));
 			hitboxCreation.add(asListPoint(xd,yh));
 			hitboxCreation.add(asListPoint(xd,yb));

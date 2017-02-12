@@ -12,8 +12,8 @@ public class Gravite implements InterfaceConstantes
 		//vitesse max a 195km/h= 54,17 m/s
 		//variation de vitesse : Vnouv= - g * t  
 		// ici g= 10 et t= 17 * 10^-3 s 
-		int coefCorrecteurVar =1000 ; //1000
-		int coefCorrecteurLim =15000 ;//15000
+		int coefCorrecteurVar =1 ; //1000
+		int coefCorrecteurLim =7 ;//15000
 		float varVitesse = (float) (coefCorrecteurVar);
 		float limVitesse = (float) (coefCorrecteurLim) ;
 		float varVitesseGlissade = varVitesse;
@@ -43,8 +43,8 @@ public class Gravite implements InterfaceConstantes
 		//vitesse max a 195km/h= 54,17 m/s
 		//variation de vitesse : Vnouv= - g * t  
 		// ici g= 10 et t= 17 * 10^-3 s 
-		int coefCorrecteurVar =1000 ;
-		int coefCorrecteurLim =15000 ;
+		int coefCorrecteurVar =1 ;
+		int coefCorrecteurLim =15 ;
 		float varVitesse = (float) (coefCorrecteurVar);
 		float limVitesse = (float) (coefCorrecteurLim) ;
 		if(!slowDown)
@@ -66,8 +66,8 @@ public class Gravite implements InterfaceConstantes
 		//vitesse max a 195km/h= 54,17 m/s
 		//variation de vitesse : Vnouv= - g * t  
 		// ici g= 10 et t= 17 * 10^-3 s 
-		int coefCorrecteurVar =1000 ;
-		int coefCorrecteurLim =15000 ;
+		int coefCorrecteurVar =1 ;
+		int coefCorrecteurLim =15 ;
 		float varVitesse = (float) (coefCorrecteurVar);
 		float limVitesse = (float) (coefCorrecteurLim) ;
 		
@@ -87,8 +87,8 @@ public class Gravite implements InterfaceConstantes
 		//vitesse max a 195km/h= 54,17 m/s
 		//variation de vitesse : Vnouv= - g * t  
 		// ici g= 10 et t= 17 * 10^-3 s 
-		int coefCorrecteurVar =1000 ;
-		int coefCorrecteurLim =15000 ;
+		int coefCorrecteurVar =1 ;
+		int coefCorrecteurLim =15 ;
 		float varVitesse = (float) (coefCorrecteurVar);
 		float limVitesse = (float) (coefCorrecteurLim) ;
 		if(monstre.vit.y<(limVitesse - varVitesse))

@@ -147,10 +147,10 @@ public class Spirel extends Monstre{
 		//on test le cooldown de mouvement
 		if(canMove)
 		{
-			herosAGauche= xpos-(heros.xpos-partie.xdeplaceEcran-partie.xdeplaceEcranBloc)>=0;
+			herosAGauche= xpos-(heros.xpos-partie.xScreendisp)>=0;
 
-			int herosXCentre= heros.xpos + heros.deplacement.xtaille.get(heros.anim)/2 -partie.xdeplaceEcran-partie.xdeplaceEcranBloc;
-			int herosYCentre= heros.ypos + heros.deplacement.ytaille.get(heros.anim)/2 -partie.ydeplaceEcran-partie.ydeplaceEcranBloc;
+			int herosXCentre= heros.xpos + heros.deplacement.xtaille.get(heros.anim)/2 -partie.xScreendisp;
+			int herosYCentre= heros.ypos + heros.deplacement.ytaille.get(heros.anim)/2 -partie.xScreendisp;
 
 			int monstreXCentre = xpos+deplacement.xtaille.get(anim)/2;
 			int monstreYCentre = ypos+deplacement.ytaille.get(anim)/2;
@@ -321,7 +321,7 @@ public class Spirel extends Monstre{
 	 */	
 	public void changeMouv (AbstractModelPartie partie,Deplace deplace)
 	{
-		boolean herosAGauche= xpos-(partie.heros.xpos-partie.xdeplaceEcran-partie.xdeplaceEcranBloc)>=0;
+		boolean herosAGauche= xpos-(partie.heros.xpos-partie.xScreendisp)>=0;
 		boolean falling= !isGrounded(partie);
 		boolean landing= (finSaut||!falling) && deplacement.IsDeplacement(Mouvement_perso.saut);
 		if(falling)
@@ -399,45 +399,17 @@ public class Spirel extends Monstre{
 	 */
 	public void alignHitbox(int animActu,Mouvement depSuiv, int animSuiv, AbstractModelPartie partie, Deplace deplace)
 	{
-		Mouvement depActu= deplacement;
 		boolean going_left = vit.x<0;
 		boolean facing_left_still= vit.x==0 &&(droite_gauche(animActu)=="Gauche"|| last_colli_left);
 		boolean sliding_left_wall = (droite_gauche(animActu)=="Droite") ;
 		boolean left = ( going_left|| facing_left_still ||sliding_left_wall) ; 
 		boolean down = vit.y>=0; 
 
-		int xdir = left ? -1 :1;
-		int ydir = down ? 1 :-1;
-		double dx= Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,depActu, animActu).polygon).x -
-				   Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,depSuiv, animSuiv).polygon).x;
-		
-		double dy= Hitbox.supportPoint(new Vector2d(0,ydir), getHitbox(partie.INIT_RECT,depActu, animActu).polygon).y -
-				   Hitbox.supportPoint(new Vector2d(0,ydir), getHitbox(partie.INIT_RECT,depSuiv, animSuiv).polygon).y;
-		
-		xpos+= dx;
-		ypos+= dy;
-		
-		int prev_anim = anim;
-		Mouvement prev_mouv = deplacement.Copy(Mouvement_perso.heros);
-		this.anim=animSuiv;
-		this.deplacement=depSuiv;
-		
-		boolean valid = deplace.colli.isWorldCollision(partie, deplace, this);
-		
-		this.anim=prev_anim;
-		this.deplacement=prev_mouv;
-		
-		boolean attente = deplacement.IsDeplacement(Mouvement_perso.attente);
-		boolean landing=  deplacement.IsDeplacement(Mouvement_perso.saut) && (animActu==2 || animActu==5);
-		if(!valid && (attente|| landing))
-		{
-			dx= -dx  + Hitbox.supportPoint(new Vector2d(-xdir,0), getHitbox(partie.INIT_RECT,depActu, animActu).polygon).x -
-					   Hitbox.supportPoint(new Vector2d(-xdir,0), getHitbox(partie.INIT_RECT,depSuiv, animSuiv).polygon).x;
-			xpos+=dx;
-			
-		}
+		super.alignHitbox(animActu,depSuiv, animSuiv, partie,deplace,left, down,Mouvement_perso.m_spirel,true);
+
 	}
 
+	
 	public boolean isGrounded(AbstractModelPartie partie)
 	{
 		return nearObstacle(partie,0,-1);
@@ -455,7 +427,7 @@ public class Spirel extends Monstre{
 		Hitbox hit = getHitbox(partie.INIT_RECT);
 		assert hit.polygon.npoints==4;
 		//get world hitboxes with Collision
-		Point p = new Point(partie.xdeplaceEcran+partie.xdeplaceEcranBloc,partie.ydeplaceEcran+partie.ydeplaceEcranBloc);
+		Point p = new Point(partie.xScreendisp,partie.yScreendisp);
 		Hitbox objectHitboxL= fixedWhenScreenMoves? Hitbox.minusPoint(hit,p,false): hit;
 		//Shift all points towards right/left
 		for(int i=0; i<objectHitboxL.polygon.npoints; ++i){
@@ -525,17 +497,17 @@ public class Spirel extends Monstre{
 	public int setReaffiche(){
 
 		if(deplacement.IsDeplacement(Mouvement_perso.attente)){
-			return(20);
+			return(2);
 		}
 		else if(deplacement.IsDeplacement(Mouvement_perso.marche)){
-			return(50);
+			return(5);
 		}
 
 		else if(deplacement.IsDeplacement(Mouvement_perso.saut)){
-			return(50);
+			return(5);
 		}
 		else if(deplacement.IsDeplacement(Mouvement_perso.tir)){
-			return(50);
+			return(5);
 		}
 		else {
 			throw new IllegalArgumentException("ERREUR setReaffiche monstre, ACTION INCONNUE  "  +this.deplacement.getClass().getName());
@@ -560,7 +532,7 @@ public class Spirel extends Monstre{
 		}
 		else if(deplacement.IsDeplacement(Mouvement_perso.marche))
 		{
-			int speed=10000;//4000
+			int speed=10;//4000
 			if(anim<2)
 			{
 				vit.x=-1*speed;
@@ -572,8 +544,8 @@ public class Spirel extends Monstre{
 		}
 		else if(deplacement.IsDeplacement(Mouvement_perso.saut))
 		{
-			int xspeed=10000;
-			int yspeed=15000;
+			int xspeed=10;
+			int yspeed=15;
 
 			if(peutSauter)
 			{

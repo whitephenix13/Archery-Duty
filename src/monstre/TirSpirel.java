@@ -55,7 +55,7 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	 */	
 	public void setSpeed(int anim) {
 		//0:gauche, 4:droite, 6:haut
-		int vitesse=10000;
+		int vitesse=10;
 		switch(anim)
 		{
 		case 0 : vit.x= 1*vitesse;break;
@@ -109,7 +109,7 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	@Override
 	public int setReaffiche()
 	{
-		return 20;
+		return 2;
 	}
 	/**
 	 * Permet de déclencher des événements lorsque la fleche doit etre détruite   
@@ -131,8 +131,7 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	}
 	public Hitbox getWorldHitbox(AbstractModelPartie partie) {
 		Hitbox hit1  =Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos,ypos),true);
-		return Hitbox.plusPoint(hit1, new Point(partie.xdeplaceEcran + partie.xdeplaceEcranBloc,
-				partie.ydeplaceEcran + partie.ydeplaceEcranBloc),true);
+		return Hitbox.plusPoint(hit1, new Point(partie.xScreendisp,partie.yScreendisp),true);
 	}
 	@Override
 	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,

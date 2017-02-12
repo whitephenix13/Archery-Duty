@@ -136,8 +136,7 @@ public abstract class Monstre extends Collidable implements InterfaceConstantes,
 	
 	public Hitbox getWorldHitbox(AbstractModelPartie partie) {
 		Hitbox hit1  =Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos,ypos),true);
-		return Hitbox.plusPoint(hit1, new Point(partie.xdeplaceEcran + partie.xdeplaceEcranBloc,
-				partie.ydeplaceEcran + partie.ydeplaceEcranBloc),true);	}
+		return Hitbox.plusPoint(hit1, new Point(partie.xScreendisp,partie.yScreendisp),true);	}
 	@Override
 	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,
 			Deplace deplace) {

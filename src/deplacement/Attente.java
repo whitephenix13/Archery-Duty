@@ -21,15 +21,15 @@ public class Attente extends Mouvement_perso{
 		super();
 		if(type.equals(Mouvement_perso.heros))
 		{
-			xtaille =  Arrays.asList(70,70,-1,-1,-1,-1,-1,-1);
-			ytaille =  Arrays.asList(94,94,-1,-1,-1,-1,-1,-1);
+			xtaille =  Arrays.asList(85,84,85,84);
+			ytaille =  Arrays.asList(100,100,100,100);
 
 			List<List<Point>> hitboxCreation = new ArrayList<List<Point>>();
 			//add for every edge, a list of point depending on the animation
-			List<Integer> xg = Arrays.asList(21,16);
-			List<Integer> xd = Arrays.asList(54,49);
-			List<Integer> yh = Arrays.asList(25,25);
-			List<Integer> yb = Arrays.asList(94,94);
+			List<Integer> xg = Arrays.asList(40,40,13,12);
+			List<Integer> xd = Arrays.asList(71,71,44,43);
+			List<Integer> yh = Arrays.asList(13,13,13,13);
+			List<Integer> yb = Arrays.asList(99,99,99,99);
 
 			hitboxCreation.add(asListPoint(xg,yh));
 			hitboxCreation.add(asListPoint(xd,yh));
@@ -37,6 +37,7 @@ public class Attente extends Mouvement_perso{
 			hitboxCreation.add(asListPoint(xg,yb));
 
 			hitbox = createHitbox(hitboxCreation);
+			
 		}
 		else if(type.equals(Mouvement_perso.m_spirel))
 		{

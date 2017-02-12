@@ -12,6 +12,15 @@ public abstract class Mouvement{
 	public List<Integer> xtaille= new ArrayList<Integer>() ;
 	public List<Integer> ytaille= new ArrayList<Integer>() ;
 	public List<Hitbox> hitbox = new ArrayList<Hitbox>();
+	public List<Hitbox> hitbox_rotated = new ArrayList<Hitbox>();//used to transform the initial hitbox into a rotated one
+
+	public List<Integer> x_center_tir = new ArrayList<Integer>();
+	public List<Integer> y_center_tir = new ArrayList<Integer>();
+
+	public List<Integer> x_rot_pos = new ArrayList<Integer>();
+	public List<Integer> y_rot_pos = new ArrayList<Integer>();
+
+	public Animation animation= new Animation();
 	
 	public List<Point> asListPoint(List<Integer> x, List<Integer> y)
 	{
@@ -25,7 +34,7 @@ public abstract class Mouvement{
 	/**
 	 * 
 	 * @param list [A B C D] where A : list of an edge pos (x,y) depending on the anim A[anim] list[edge][anim]
-	 * @return list [A B] where A : hitbox and list[anim]
+	 * @return list [A B] where list[anim] return a hitbox A
 	 */
 	public List<Hitbox> createHitbox(List<List<Point>> list)
 	{

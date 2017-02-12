@@ -64,15 +64,14 @@ public class Collision implements InterfaceConstantes{
 	 * 
 	 * @return True if the object is colliding with the world
 	 */
-	public boolean isWorldCollision(AbstractModelPartie partie,Deplace deplace, Collidable object)
+	public boolean isWorldCollision(AbstractModelPartie partie,Deplace deplace, Collidable object,boolean considerTouch)
 	{
 		List<Bloc> mondeBlocs = null;
 		Hitbox objectHitbox = null;
 		//translate all object hitboxes
 		Point CompScreenMove1 = new Point(0,0);
 
-		Point deplaceEcran =new Point(partie.xdeplaceEcran+partie.xdeplaceEcranBloc,
-									  partie.ydeplaceEcran+partie.ydeplaceEcranBloc);
+		Point deplaceEcran =new Point(partie.xScreendisp,partie.yScreendisp);
 
 		if(object.fixedWhenScreenMoves)
 			CompScreenMove1= new Point(deplaceEcran.x,deplaceEcran.y);
@@ -104,7 +103,7 @@ public class Collision implements InterfaceConstantes{
 				dInter= GJK_EPA.EPA(mondeBox.polygon, objectHitbox.polygon, simplex, minSpeed.vect2d(), normals);
 			}
 			collision_type =  GJK_EPA.isIntersect(dInter,dNull);
-			if(collision_type == GJK_EPA.INTER)
+			if( (collision_type == GJK_EPA.INTER && !considerTouch) || (considerTouch && collision_type != GJK_EPA.NOT_INTER) )
 				return true;
 		}
 		return false;
@@ -123,13 +122,13 @@ public class Collision implements InterfaceConstantes{
 
 		if(partie.slowDown)
 		{
-			xDeplacement=(int) (speed.x*T/1000/object.slowDownFactor);
-			yDeplacement=(int) (speed.y*T/1000/object.slowDownFactor);
+			xDeplacement=(int) (speed.x/object.slowDownFactor);
+			yDeplacement=(int) (speed.y/object.slowDownFactor);
 		}
 		else
 		{
-			xDeplacement=(int) (speed.x*T/1000);
-			yDeplacement=(int) (speed.y*T/1000);
+			xDeplacement=(int) (speed.x);
+			yDeplacement=(int) (speed.y);
 		}
 
 		boolean noIntersection = false;
@@ -150,8 +149,7 @@ public class Collision implements InterfaceConstantes{
 			//translate all object hitboxes
 			int xCompScreenMove=0; 
 			int yCompScreenMove=0;
-			Point deplaceEcran =new Point(partie.xdeplaceEcran+partie.xdeplaceEcranBloc,
-					partie.ydeplaceEcran+partie.ydeplaceEcranBloc);
+			Point deplaceEcran =new Point(partie.xScreendisp,partie.yScreendisp);
 			if(object.fixedWhenScreenMoves)
 			{
 				xCompScreenMove=deplaceEcran.x;
@@ -240,7 +238,7 @@ public class Collision implements InterfaceConstantes{
 		//last collision test to check if the object is now out 
 		if(xlimExceeded || ylimExceeded)
 		{
-			if(isWorldCollision(partie,deplace, object))
+			if(isWorldCollision(partie,deplace, object,false))
 				return false; // object is stuck
 		}
 
@@ -271,8 +269,7 @@ public class Collision implements InterfaceConstantes{
 		Point CompScreenMove1 = new Point(0,0);
 		Point CompScreenMove2 = new Point(0,0);
 
-		Point deplaceEcran =new Point(partie.xdeplaceEcran+partie.xdeplaceEcranBloc,
-									  partie.ydeplaceEcran+partie.ydeplaceEcranBloc);
+		Point deplaceEcran =new Point(partie.xScreendisp,partie.yScreendisp);
 
 		if(object1.fixedWhenScreenMoves)
 			CompScreenMove1= new Point(deplaceEcran.x,deplaceEcran.y);

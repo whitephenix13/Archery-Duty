@@ -25,15 +25,15 @@ public class Glissade extends Mouvement_perso
 		super();
 		if(type==Mouvement_perso.heros)
 		{
-			xtaille =  Arrays.asList( 61,61,0,0,0,0,0,0);
-			ytaille =  Arrays.asList(74,74,0,0,0,0,0,0);
+			xtaille =  Arrays.asList(49,49);
+			ytaille =  Arrays.asList(89,89);
 
 			List<List<Point>> hitboxCreation = new ArrayList<List<Point>>();
 			//add for every edge, a list of point depending on the animation
-			List<Integer> xg = Arrays.asList(7,1);
-			List<Integer> xd = Arrays.asList(59,53);
-			List<Integer> yh = Arrays.asList(9,9);
-			List<Integer> yb = Arrays.asList(74,74);
+			List<Integer> xg = Arrays.asList(9,0);
+			List<Integer> xd = Arrays.asList(48,39);
+			List<Integer> yh = Arrays.asList(5,5);
+			List<Integer> yb = Arrays.asList(88,88);
 
 			hitboxCreation.add(asListPoint(xg,yh));
 			hitboxCreation.add(asListPoint(xd,yh));

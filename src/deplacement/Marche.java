@@ -21,15 +21,15 @@ public class Marche extends Mouvement_perso{
 		if(type.equals(Mouvement_perso.heros))
 		{
 
-			xtaille =  Arrays.asList(62,82,72,68,62,82,72,68);
-			ytaille =  Arrays.asList(94,92,92,94,94,92,92,94);
+			xtaille =  Arrays.asList(75,75,75,75,75,75,75,75);
+			ytaille =  Arrays.asList(101,100,98,100,101,100,98,100);
 
 			List<List<Point>> hitboxCreation = new ArrayList<List<Point>>();
 			//add for every edge, a list of point depending on the animation
-			List<Integer> xg = Arrays.asList(14,13,28,22,22,32,14,9 );
-			List<Integer> xd = Arrays.asList(40,50,58,59,48,69,44,46);
-			List<Integer> yh = Arrays.asList(20,21,20,22,20,21,20,22);
-			List<Integer> yb = Arrays.asList(94,92,92,94,94,93,92,94);
+			List<Integer> xg = Arrays.asList(27,14,37,38,26,39,16,15);
+			List<Integer> xd = Arrays.asList(48,35,58,59,47,60,37,36);
+			List<Integer> yh = Arrays.asList(10,9,7,9,10,9,7,9);
+			List<Integer> yb = Arrays.asList(100,99,97,99,100,99,97,99);
 
 			hitboxCreation.add(asListPoint(xg,yh));
 			hitboxCreation.add(asListPoint(xd,yh));
@@ -70,11 +70,11 @@ public class Marche extends Mouvement_perso{
 		if(type.equals(Mouvement_perso.heros))
 		{
 			assert (anim>=0 && anim <8);
-			object.vit.x= 20000 * ((anim<4)? -1 : 1 );
+			object.vit.x= 2 * ((anim<4)? -1 : 1 );//20 for old deplace
 		}
 		else if(type.equals(Mouvement_perso.m_spirel))
 		{
-			int speed=10000;//4000
+			int speed=10;//4000
 			if(anim<2)
 				object.vit.x=-1*speed;
 			

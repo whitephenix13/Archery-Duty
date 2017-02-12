@@ -9,7 +9,9 @@ import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
+import java.awt.geom.AffineTransform;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.List;
@@ -27,6 +29,7 @@ import deplacement.Course;
 import deplacement.Marche;
 import deplacement.Mouvement_perso;
 import deplacement.Saut;
+import deplacement.Tir;
 import menuPrincipal.AbstractModelPrincipal;
 import monstre.Monstre;
 import monstre.Spirel;
@@ -115,8 +118,7 @@ public class ModelPartie extends AbstractModelPartie{
 					Monstre m = tabMonstre.get(i);
 					//on ne deplace le monstre qui si il est visible
 					boolean monsterOnScreen= InterfaceConstantes.SCREEN.polygon.contains(new Point 
-							(m.xpos+xdeplaceEcran+xdeplaceEcranBloc,
-									m.ypos+ydeplaceEcran+ydeplaceEcranBloc));
+							(m.xpos+xScreendisp,m.ypos+yScreendisp));
 					if (monsterOnScreen)
 						deplace.DeplaceObject(m,m.deplacement, this);
 
@@ -212,9 +214,6 @@ public class ModelPartie extends AbstractModelPartie{
 
 		INIT_RECT.x= (monde.xStartPerso-InterfaceConstantes.LARGEUR_FENETRE/2)/100*100;//49 900
 		INIT_RECT.y= (monde.yStartPerso-InterfaceConstantes.HAUTEUR_FENETRE/2)/100*100;//49 700
-
-		absRect=INIT_RECT.x;
-		ordRect=INIT_RECT.y;
 
 		heros.xpos=(InterfaceConstantes.LARGEUR_FENETRE/2+(INIT_RECT.x==monde.xStartPerso-InterfaceConstantes.LARGEUR_FENETRE/2? 0:100 ))/100*100;
 		heros.ypos=(InterfaceConstantes.HAUTEUR_FENETRE/2+(INIT_RECT.y==monde.yStartPerso-InterfaceConstantes.HAUTEUR_FENETRE/2? 0:100 ))/100*100;
@@ -343,7 +342,7 @@ public class ModelPartie extends AbstractModelPartie{
 					//on créer le monstre à faire apparaitre
 					spirel = new Spirel(x,y,false);
 					Collision colli = new Collision();
-					correct = !colli.isWorldCollision(this, deplace, spirel);
+					correct = !colli.isWorldCollision(this, deplace, spirel,false);
 				}
 				while (!correct); //on attend d'avoir une position correct avant de placer le monstre 
 
@@ -370,9 +369,12 @@ public class ModelPartie extends AbstractModelPartie{
 				//TIR 
 				if(toucheTirDown && !heros.flecheEncochee)
 				{
+					changeMouv=true;
 					//on ne tir qu'une fleche
 					toucheTirDown=false;
 					heros.doitEncocherFleche=true;
+					heros.nouvMouv= new Tir(); 
+
 				}
 
 				//COURSE DROITE
@@ -591,10 +593,9 @@ public class ModelPartie extends AbstractModelPartie{
 				heros.flecheEncochee=false;
 				changeMouv=true;
 
-				heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche" ? 0 : 1) ;
+				heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche" ? 0 : 2) ;
 				heros.nouvMouv= new Attente();
-
-				tabFleche.get(tabFleche.size()-1).flecheDecochee(deplace);
+				tabFleche.get(tabFleche.size()-1).flecheDecochee(this,deplace);
 			}
 
 		}
@@ -633,7 +634,7 @@ public class ModelPartie extends AbstractModelPartie{
 					changeMouv=true;
 					//on variablesPartieRapide.affiche l'animation d'attente
 
-					heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Droite" ? 1: 0 );
+					heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Droite" ? 2: 0 );
 					heros.nouvMouv= new Attente();
 
 					//on met sa vitesse à 0:  
@@ -647,7 +648,7 @@ public class ModelPartie extends AbstractModelPartie{
 					changeMouv=true;
 					//on variablesPartieRapide.affiche l'animation d'attente
 
-					heros.nouvAnim= heros.droite_gauche(heros.anim)=="Droite" ? 1: 0 ;
+					heros.nouvAnim= heros.droite_gauche(heros.anim)=="Droite" ? 2: 0 ;
 					heros.nouvMouv= new Attente();
 
 					//on met sa vitesse à 0:  
@@ -884,11 +885,14 @@ public class ModelPartie extends AbstractModelPartie{
 
 	public void drawMonde(Graphics g,boolean drawHitbox) 
 	{
-		int xStartAff = absRect/100-2;
-		int xEndAff = (InterfaceConstantes.LARGEUR_FENETRE/100+absRect/100)+2;
+		int xviewport = getXYViewport(true);
+		int yviewport = getXYViewport(false);
 
-		int yStartAff = ordRect/100-2;
-		int yEndAff = (InterfaceConstantes.HAUTEUR_FENETRE/100+ordRect/100)+2;
+		int xStartAff = xviewport/TAILLE_BLOC-2;
+		int xEndAff = (InterfaceConstantes.LARGEUR_FENETRE/TAILLE_BLOC+xviewport/TAILLE_BLOC)+2;
+
+		int yStartAff = yviewport/TAILLE_BLOC-2;
+		int yEndAff = (InterfaceConstantes.HAUTEUR_FENETRE/TAILLE_BLOC+yviewport/TAILLE_BLOC)+2;
 
 		for(int abs=xStartAff;abs<xEndAff;abs++)
 			for(int ord=yStartAff;ord<yEndAff;ord++)
@@ -896,8 +900,8 @@ public class ModelPartie extends AbstractModelPartie{
 				Bloc tempPict= monde.niveau[abs][ord];
 				if(tempPict != null)
 				{
-					int xDraw=tempPict.getXpos()-absRect+xdeplaceEcran;
-					int yDraw=tempPict.getYpos()-ordRect+ydeplaceEcran;
+					int xDraw=tempPict.getXpos()+ xScreendisp- INIT_RECT.x;
+					int yDraw=tempPict.getYpos()+ yScreendisp- INIT_RECT.y;
 					g.drawImage(m.getImage(tempPict,false),xDraw,yDraw, null);
 
 					if(drawHitbox && tempPict.getBloquer())
@@ -916,8 +920,8 @@ public class ModelPartie extends AbstractModelPartie{
 
 		for(Monstre m : tabMonstre )
 		{
-			int xDraw= m.xpos+xdeplaceEcran+xdeplaceEcranBloc;
-			int yDraw= m.ypos+ydeplaceEcran+ydeplaceEcranBloc;
+			int xDraw= m.xpos+xScreendisp;
+			int yDraw= m.ypos+yScreendisp;
 
 			g.drawImage(imMonstre.getImage(m), xDraw ,yDraw ,null);
 
@@ -930,21 +934,86 @@ public class ModelPartie extends AbstractModelPartie{
 
 	}
 
+	/**
+	 * @param pos : position of hitbox
+	 * @param anchor: position of center of rotation relative to top left of hitbox
+	 * @param taille: size of hitbox
+	 * @param rotation
+	 * @return
+	 */
+	public AffineTransform getRotatedTransform(Point pos, Point anchor, Point taille, double rotation)
+	{
+		AffineTransform trans = new AffineTransform();
+		//set to anchor point 
+		//distance of anchor to actual center of image 
+		Point c_anchor=new Point(pos.x+anchor.x-taille.x/2,pos.y+anchor.y-taille.y/2);//due to the fact that position is top left
+		trans.translate(c_anchor.x, c_anchor.y);
+		//set to rotation point  and rotate by desired angle
+		trans.rotate(rotation, taille.x/2, taille.y/2);
+
+		//set to draw position 
+		Point d_pos=new Point(pos.x-c_anchor.x,pos.y-c_anchor.y);
+		trans.translate(d_pos.x, d_pos.y);
+		return trans;
+	}
+	public Point drawPersoTir(Graphics g)
+	{
+		int anim = heros.anim;
+		Point anchor = new Point(heros.xpos+heros.deplacement.x_rot_pos.get(anim), 
+				heros.ypos+heros.deplacement.y_rot_pos.get(anim));
+		Graphics2D g2d = (Graphics2D)g;
+
+		
+		AffineTransform tr = getRotatedTransform(new Point(heros.xpos,heros.ypos), 
+				new Point(heros.deplacement.x_rot_pos.get(anim),heros.deplacement.y_rot_pos.get(anim)),
+				new Point(heros.deplacement.xtaille.get(anim),heros.deplacement.ytaille.get(anim)),
+				heros.rotation_tir);
+		
+
+		ArrayList<Image> l_image = imHeros.getImages(heros);
+		for(int i=0; i<l_image.size(); ++i)
+		{
+			//im_body, im_back, im_head, im_front
+			if(i==0||i==2)
+				g.drawImage(l_image.get(i), heros.xpos,heros.ypos,null);
+			
+			else
+				g2d.drawImage(l_image.get(i), tr,null);
+			
+		}
+		return anchor;
+	}
 	public void drawPerso(Graphics g,boolean drawHitbox) {
 
+		Point anchor = null;
 		if(heros.afficheTouche)
 		{
-			g.drawImage(imHeros.getImages(heros), heros.xpos ,heros.ypos,null);
+			if(heros.deplacement.IsDeplacement(Mouvement_perso.tir))
+				anchor=drawPersoTir(g);
+			else
+			{
+				ArrayList<Image> l_image = imHeros.getImages(heros);
+				for(int i=0; i<l_image.size(); ++i)
+					g.drawImage(l_image.get(i), heros.xpos,heros.ypos,null);
+				
+			}
 		}
 
 		if(drawHitbox)
 		{
 			Hitbox hitbox= heros.getHitbox(INIT_RECT);
 			drawPolygon(g,hitbox.polygon);
+			if(anchor!=null){
+			g.setColor(Color.red);
+			g.drawString("o", anchor.x, anchor.y);
+			g.setColor(Color.black);
+			}
+
 		}
 
 	}
 
+	
 	public void drawFleches(Graphics g,boolean drawHitbox) {
 		//Affichage des flèches
 		if(tabFleche == null)
@@ -952,12 +1021,45 @@ public class ModelPartie extends AbstractModelPartie{
 			return ;	
 		}
 		try{
+			Graphics2D g2d = (Graphics2D)g;
+
 			for(int i=0;i<tabFleche.size();++i) 
 			{
 				Fleche fleche = tabFleche.get(i);
-				int xdraw=  fleche.xpos+xdeplaceEcran+xdeplaceEcranBloc;
-				int ydraw= fleche.ypos+ydeplaceEcran+ydeplaceEcranBloc;
-				g.drawImage(defaultFleche.getImage(fleche),xdraw ,ydraw,null);
+				int anim=fleche.anim;
+				int hanim = heros.anim;
+				Point pos = new Point();
+				Point anchor = new Point(0,0); //only arrows towards its center
+				Point taille = new Point(fleche.deplacement.xtaille.get(anim),fleche.deplacement.ytaille.get(anim));
+				AffineTransform tr;
+				if(fleche.encochee)
+				{
+					Point f_anchor = new Point(fleche.xanchor.get(hanim),fleche.yanchor.get(hanim));
+					pos=new Point(heros.xpos+f_anchor.x,heros.ypos+f_anchor.y);
+					//Anchor is relative to position: true_anchor = world anchor - mypos
+					//world anchor = heros pos + heros anchor, mypos = heros  pos + fleche anchor
+					anchor=new Point(heros.deplacement.x_rot_pos.get(hanim)-f_anchor.x,
+							heros.deplacement.y_rot_pos.get(hanim)-f_anchor.y);
+					tr = getRotatedTransform(pos,anchor, taille, fleche.rotation);
+
+				}
+				else
+				{
+					//Point d_pos=new Point(pos.x-c_anchor.x,pos.y-c_anchor.y);
+					//trans.translate(d_pos.x, d_pos.y);
+					AffineTransform tr_pos = new AffineTransform();
+					tr_pos.translate(fleche.xpos+xScreendisp, fleche.ypos+yScreendisp);
+					tr=new AffineTransform(fleche.draw_tr);
+					double[] flatmat = new double[6];
+					tr.getMatrix(flatmat);
+					tr.setTransform(flatmat[0], flatmat[1], flatmat[2], flatmat[3], fleche.xpos+xScreendisp, fleche.ypos+yScreendisp);
+				}
+				if(fleche.encochee)
+					fleche.draw_tr=tr;
+				ArrayList<Image> images = imFleches.getImage(fleche);
+				for(Image im : images)
+					g2d.drawImage(im,tr,null);
+
 				if(drawHitbox)
 				{
 					Hitbox hitbox= fleche.getWorldHitbox(this);
@@ -980,8 +1082,8 @@ public class ModelPartie extends AbstractModelPartie{
 			for(int i=0; i<tabTirMonstre.size();++i)
 			{
 				TirMonstre tir= tabTirMonstre.get(i);
-				int xdraw=  tir.xpos +xdeplaceEcran+xdeplaceEcranBloc;
-				int ydraw= tir.ypos +ydeplaceEcran+ydeplaceEcranBloc;
+				int xdraw=  tir.xpos +xScreendisp;
+				int ydraw= tir.ypos +yScreendisp;
 				g.drawImage(imTirMonstre.getImage(tir),xdraw,ydraw,null);
 
 				if(drawHitbox)
@@ -1020,9 +1122,9 @@ public class ModelPartie extends AbstractModelPartie{
 		//affichage de la vie des monstres 
 		for(Monstre m : tabMonstre )
 		{
-			int xG= m.xpos+xdeplaceEcran+xdeplaceEcranBloc;
+			int xG= m.xpos+xScreendisp;
 			int xD= xG +m.deplacement.xtaille.get(m.anim);
-			int yH= m.ypos+ydeplaceEcran+ydeplaceEcranBloc;
+			int yH= m.ypos+yScreendisp;
 
 			drawBar(g,xG/2+xD/2-InterfaceConstantes.MAXLIFE/2,yH-10,InterfaceConstantes.MAXLIFE,5,m.getLife(),Color.BLACK,Color.GREEN);
 		}

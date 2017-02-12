@@ -1,5 +1,8 @@
 package deplacement;
 
+import collision.Collidable;
+import partie.AbstractModelPartie;
+
 public abstract class Mouvement_perso extends Mouvement{
 
 	public static String attente= "Attente";
@@ -26,6 +29,22 @@ public abstract class Mouvement_perso extends Mouvement{
 		return this.getClass().getName().equals("deplacement." + s);
 	}
 	
+	public boolean alignTestValid(Collidable object, Mouvement depSuiv, int animSuiv, AbstractModelPartie partie,Deplace deplace)
+	{
+		int prev_anim = object.anim;
+		Mouvement prev_mouv = object.deplacement.Copy(Mouvement_perso.heros);
+		object.anim=animSuiv;
+		object.deplacement=depSuiv;
+
+		boolean valid = false;
+		if(object.deplacement.IsDeplacement(Mouvement_perso.glissade))
+			valid= !deplace.colli.isWorldCollision(partie, deplace, object,false);
+		else
+			valid= !deplace.colli.isWorldCollision(partie, deplace, object,true);
+		object.anim=prev_anim;
+		object.deplacement=prev_mouv;
+		return valid;
+	}
 	public abstract Mouvement Copy(String type);
 
 }

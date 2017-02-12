@@ -8,6 +8,7 @@ import java.util.List;
 import collision.Collidable;
 import deplacement.Deplace;
 import deplacement.Mouvement;
+import types.Vitesse;
 
 public class T_normal extends Mouvement_tir{
 
@@ -22,29 +23,20 @@ public class T_normal extends Mouvement_tir{
 		super();
 		if(type.equals(Mouvement_tir.fleche))
 		{                     
-			xtaille=Arrays.asList(46,37,10,37,46,37,10,37);
-			ytaille=Arrays.asList(10,37,46,37,10,37,46,37);
+			xtaille=Arrays.asList(42,45,42,44);
+			ytaille=Arrays.asList(19,15,19,16);
 
 			List<List<Point>> hitboxCreation = new ArrayList<List<Point>>();
 			//add for every edge, a list of point depending on the animation
-			List<Integer> xgh = Arrays.asList(0 ,6 ,0 ,30,0 ,6 ,0 ,30);
-			List<Integer> ygh = Arrays.asList(0 ,0 ,0 ,0 ,0 ,0 ,0, 0 );
+			List<Integer> xg = Arrays.asList(6,6,6,5);
+			List<Integer> xd = Arrays.asList(37,37,37,36);
+			List<Integer> yh = Arrays.asList(5,5,5,3);
+			List<Integer> yb = Arrays.asList(11,11,11,9);
 
-			List<Integer> xgb = Arrays.asList(0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 );
-			List<Integer> ygb = Arrays.asList(10,6 ,46,30,10,6 ,46,30);
-
-			List<Integer> xdb = Arrays.asList(46,30,10,6 ,46,30,10,6 );
-			List<Integer> ydb = Arrays.asList(10,36,46,36,10,36,46,36);
-
-			List<Integer> xdh = Arrays.asList(46,36,10,36,46,36,10,36);
-			List<Integer> ydh = Arrays.asList(0 ,30,0 ,6 ,0 ,30,0, 6 );
-
-
-
-			hitboxCreation.add(asListPoint(xgh,ygh));
-			hitboxCreation.add(asListPoint(xgb,ygb));
-			hitboxCreation.add(asListPoint(xdb,ydb));
-			hitboxCreation.add(asListPoint(xdh,ydh));
+			hitboxCreation.add(asListPoint(xg,yh));
+			hitboxCreation.add(asListPoint(xd,yh));
+			hitboxCreation.add(asListPoint(xd,yb));
+			hitboxCreation.add(asListPoint(xg,yb));
 
 			hitbox = createHitbox(hitboxCreation);
 		}
@@ -78,48 +70,14 @@ public class T_normal extends Mouvement_tir{
 	public void setSpeed(String type, Collidable object, int anim,Deplace deplace) {
 		if(type.equals(Mouvement_tir.fleche))
 		{
-			int vitesse = 40000;
-			int vitesseReduite= (int) (40000f/(2));
-			switch(anim)
-			{
-			case 0 : 
-				object.vit.x= vitesse;
-				object.vit.y=0;
-				break;
-			case 1 : 
-				object.vit.x= vitesseReduite;
-				object.vit.y= vitesseReduite;
-				break;
-			case 2 : 
-				object.vit.x=0;
-				object.vit.y=vitesse;
-				break;
-			case 3 : 
-				object.vit.x= -1 * vitesseReduite;
-				object.vit.y= vitesseReduite;
-				break;
-			case 4 : 
-				object.vit.x= -1 * vitesse;
-				object.vit.y= 0;
-				break;
-			case 5 : 
-				object.vit.x= -1 * vitesseReduite;
-				object.vit.y= -1 * vitesseReduite;
-				break;
-			case 6 : 
-				object.vit.x=0;
-				object.vit.y= -1 *vitesse;
-				break;
-			case 7 : 
-				object.vit.x= vitesseReduite;
-				object.vit.y= -1 *vitesseReduite;
-				break;
-			default : 	throw new IllegalArgumentException("ERREUR: set position fleche: anim inconnue ");
-			}
+			int norm_speed = 30;
+			Vitesse vit = object.convertSpeed(norm_speed,object.rotation);
+			object.vit.x=vit.x;
+			object.vit.y=vit.y;
 		}
 		else if(type.equals(Mouvement_tir.tir_spirel))
 		{
-			int vitesse=10000;
+			int vitesse=10;
 			switch(anim)
 			{
 			case 0 : object.vit.x= 1*vitesse;break;

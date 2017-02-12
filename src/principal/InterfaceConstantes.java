@@ -14,7 +14,7 @@ public interface InterfaceConstantes {
 	
 	//nombre de fleches max: 
 	static int NB_FLECHES_MAX = 50;
-	static long TEMPS_DESTRUCTION_FLECHE = (long) Math.pow(10, 9); //nanos, 1sec 
+	static long TEMPS_DESTRUCTION_FLECHE = (long) Math.pow(10, 9);//nanos, 1sec 
 	
 	static int NB_MONSTRES_MAX=100;
 	
@@ -40,7 +40,7 @@ public interface InterfaceConstantes {
 		
 	
 	//permet de determiner les vitesses de chute, de deplacement et de saut 
-	long T= 1; // temps de raffraichissement en milliseconde
+	long T= 17; // temps de raffraichissement en milliseconde
 	long TDash= 150;
 	//durée d'invincibilité lorsque le héros est touché 
 	static long INV_TOUCHE = 3000;
