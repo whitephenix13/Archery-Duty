@@ -3,23 +3,22 @@ package deplacement;
 import collision.Collidable;
 import monstre.Monstre;
 import monstre.TirMonstre;
+import option.Config;
 import personnage.Fleche;
 import principal.InterfaceConstantes;
 
 public class Gravite implements InterfaceConstantes
 {
-	public static void gravite(Collidable object, boolean slowDown) {
+	//since gravity takes into account previous speed, the actual division factor is sum_1^{ratio_fps} 1 
+	public static double gravity_norm = 1.0;
+	public int varVitesse = (int)(gravity_norm *Config.i_ratio_fps()*Config.i_ratio_fps());
+	public int limVitesse = (int)(7.0 *Config.i_ratio_fps()*Config.i_ratio_fps()) ;
+	public void gravite(Collidable object, boolean slowDown) {
 		//vitesse max a 195km/h= 54,17 m/s
 		//variation de vitesse : Vnouv= - g * t  
 		// ici g= 10 et t= 17 * 10^-3 s 
-		int coefCorrecteurVar =1 ; //1000
-		int coefCorrecteurLim =7 ;//15000
-		float varVitesse = (float) (coefCorrecteurVar);
-		float limVitesse = (float) (coefCorrecteurLim) ;
 		float varVitesseGlissade = varVitesse;
 		float limVitesseGlissade = limVitesse/2;
-
-
 		if (object.deplacement.IsDeplacement(Mouvement_perso.glissade))
 		{
 			if(object.vit.y<(limVitesseGlissade - varVitesseGlissade))
@@ -38,15 +37,11 @@ public class Gravite implements InterfaceConstantes
 
 		}
 	}
-	public static void gravite(Fleche fleche, boolean slowDown) 
+	public void gravite(Fleche fleche, boolean slowDown) 
 	{
 		//vitesse max a 195km/h= 54,17 m/s
 		//variation de vitesse : Vnouv= - g * t  
 		// ici g= 10 et t= 17 * 10^-3 s 
-		int coefCorrecteurVar =1 ;
-		int coefCorrecteurLim =15 ;
-		float varVitesse = (float) (coefCorrecteurVar);
-		float limVitesse = (float) (coefCorrecteurLim) ;
 		if(!slowDown)
 		{
 			if(fleche.vit.y<(limVitesse - varVitesse))
@@ -61,15 +56,11 @@ public class Gravite implements InterfaceConstantes
 		}
 	}
 
-	public static void gravite(TirMonstre tir) 
+	public void gravite(TirMonstre tir) 
 	{
 		//vitesse max a 195km/h= 54,17 m/s
 		//variation de vitesse : Vnouv= - g * t  
 		// ici g= 10 et t= 17 * 10^-3 s 
-		int coefCorrecteurVar =1 ;
-		int coefCorrecteurLim =15 ;
-		float varVitesse = (float) (coefCorrecteurVar);
-		float limVitesse = (float) (coefCorrecteurLim) ;
 		
 		if(tir.vit.y<(limVitesse - varVitesse))
 		{
@@ -82,15 +73,11 @@ public class Gravite implements InterfaceConstantes
 
 	}
 
-	public static void gravite(Monstre monstre) 
+	public void gravite(Monstre monstre) 
 	{
 		//vitesse max a 195km/h= 54,17 m/s
 		//variation de vitesse : Vnouv= - g * t  
 		// ici g= 10 et t= 17 * 10^-3 s 
-		int coefCorrecteurVar =1 ;
-		int coefCorrecteurLim =15 ;
-		float varVitesse = (float) (coefCorrecteurVar);
-		float limVitesse = (float) (coefCorrecteurLim) ;
 		if(monstre.vit.y<(limVitesse - varVitesse))
 		{
 			monstre.vit.y+= varVitesse;

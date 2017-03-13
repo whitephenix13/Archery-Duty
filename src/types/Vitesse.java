@@ -6,10 +6,10 @@ import javax.vecmath.Vector2d;
 
 @SuppressWarnings("serial")
 public class Vitesse implements Serializable{
-	public int x=0;
-	public int y=0;
+	public double x=0;
+	public double y=0;
 	public Vitesse() {};
-	public Vitesse(int xx, int yy){x=xx; y=yy;}
+	public Vitesse(double xx, double yy){x=xx; y=yy;}
 	public Vector2d vect2d()
 	{
 		return new Vector2d(x,y);

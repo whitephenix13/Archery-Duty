@@ -2,6 +2,7 @@ package deplacement;
 
 import collision.Collidable;
 import partie.AbstractModelPartie;
+import types.TypeObject;
 
 public abstract class Mouvement_perso extends Mouvement{
 
@@ -9,14 +10,11 @@ public abstract class Mouvement_perso extends Mouvement{
 	public static String marche= "Marche";
 	public static String course= "Course";
 	public static String glissade= "Glissade";
+	public static String accroche= "Accroche";
 	public static String saut= "Saut";
 	public static String tir= "Tir";
 	
-	//deplacement pour heros
-	public static String heros= "heros"; //identifier
-	
-	//deplacement pour Spirel
-	public static String m_spirel= "spirel";//identifier
+
 	
 	@Override
 	public boolean IsDeplacement(Mouvement m)
@@ -32,7 +30,7 @@ public abstract class Mouvement_perso extends Mouvement{
 	public boolean alignTestValid(Collidable object, Mouvement depSuiv, int animSuiv, AbstractModelPartie partie,Deplace deplace)
 	{
 		int prev_anim = object.anim;
-		Mouvement prev_mouv = object.deplacement.Copy(Mouvement_perso.heros);
+		Mouvement prev_mouv = object.deplacement.Copy(TypeObject.heros);
 		object.anim=animSuiv;
 		object.deplacement=depSuiv;
 

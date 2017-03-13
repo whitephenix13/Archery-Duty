@@ -23,15 +23,10 @@ import types.Vitesse;
 public abstract class Monstre extends Collidable implements InterfaceConstantes, Serializable{
 	//on définit la position du coin en haut à  gauche de la hitbox
 
-	public String nom ;
-
 	public boolean finSaut;
 	public boolean peutSauter;
 	public boolean glisse;
 		
-	//Variables pour mémoriser la direction de la dernière collision
-	public boolean last_colli_left=false;
-	public boolean last_colli_right=false;
 	
 	public boolean actionReussite;
 	public boolean doitChangMouv;
@@ -62,12 +57,6 @@ public abstract class Monstre extends Collidable implements InterfaceConstantes,
 	public abstract String droite_gauche (int anim);  
 
 	/**
-	 * Ralenti les animations  
-	 * 
-	 * @return le nombre de tour de boucle a attendre avant de redeplacer le monstre
-	 */	
-	public abstract int setReaffiche();
-	/**
 	 * IA pour le deplacement du monstre 
 	 * 
 	 * @param monstre, le monstre a deplacer 
@@ -92,12 +81,6 @@ public abstract class Monstre extends Collidable implements InterfaceConstantes,
 	 */
 	public abstract void alignHitbox(int animActu,Mouvement depSuiv, int animSuiv, AbstractModelPartie partie,Deplace deplace);
 	
-	/**
-	 * Regle la vitesse du monstre en fonction de son mouvement et de son animation
-	 * 
-	 * @param monstre, le monstre a deplacer 
-	 */	
-	public abstract void setSpeed();
 
 	/**
 	 * getter
@@ -130,7 +113,7 @@ public abstract class Monstre extends Collidable implements InterfaceConstantes,
 
 	@Override
 	public Hitbox getHitbox(Point INIT_RECT,Mouvement _dep, int _anim) {
-		Mouvement temp = _dep.Copy(nom); //create the mouvement
+		Mouvement temp = _dep.Copy(type); //create the mouvement
 		return Hitbox.plusPoint(temp.hitbox.get(_anim), new Point(xpos,ypos),true);	
 	}
 	

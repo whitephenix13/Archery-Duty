@@ -19,6 +19,7 @@ import editeur.ModelEditeur;
 import music.Music;
 import music.ThreadMusique;
 import option.AffichageOption;
+import option.Config;
 import option.ControlerOption;
 import option.ModelOption;
 import partie.AffichagePartie;
@@ -262,12 +263,19 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 				{
 					do
 					{
-						partie.play(affich);
-						affichagePartie.repaintPartie();
-						affichagePartie.validateAffichagePartie(affich);
-
+						double deltaTime= (System.nanoTime()-last_update)/Math.pow(10, 6);//delta time in ms
+						if(deltaTime>Config.getDeltaFrame(true)){
+							last_update=System.nanoTime();
+							partie.play(affich);
+							affichagePartie.repaintPartie();
+							affichagePartie.validateAffichagePartie(affich);
+							if(!partie.getinPause())
+								partie.nextFrame();
+						}
 					}
 					while(!partie.getFinPartie());//condition de fin
+					//last draw when partie ends
+					partie.computationDone=true;
 				}
 
 			}
@@ -275,6 +283,7 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 
 			//on lance la partie
 			t2.run();
+			
 			//affich.actuAffichage();
 
 

@@ -90,7 +90,7 @@ public class Collision implements InterfaceConstantes{
 			Vector2d supp1 = GJK_EPA.support(mondeBox.polygon,minSpeed.vect2d() );//fixed one
 			Vector2d supp2 = GJK_EPA.support(objectHitbox.polygon, speed.vect2d());//mobile one
 			Vector2d firstDir = new Vector2d(supp1.x-supp2.x, supp1.y-supp2.y);
-	
+			
 			List<Vector2d> simplex = GJK_EPA.intersects(mondeBox.polygon,objectHitbox.polygon ,firstDir);
 			List<Vector2d> normals = new ArrayList<Vector2d>();
 
@@ -165,6 +165,8 @@ public class Collision implements InterfaceConstantes{
 			for(Bloc mondeBloc : mondeBlocs)
 			{
 				Hitbox mondeBox = mondeBloc.getHitbox(partie.INIT_RECT);
+				//System.out.println(objectHitbox.toString() +" ___ "+ mondeBox.toString());
+
 				//p = new Point( (mondeBloc.fixedWhenScreenMoves? 0 : deplaceEcran.x)+totalInterDist.x,
 				//	(mondeBloc.fixedWhenScreenMoves? 0 : deplaceEcran.y)+totalInterDist.y);
 				//mondeBox= Hitbox.minusPoint(mondeBox, p);
@@ -202,15 +204,17 @@ public class Collision implements InterfaceConstantes{
 					//expected : x>0, out = -3 ,floor: -3 ,value expected = -4  
 					//expected : x<0, out = 2.5 ,floor: 2 ,value expected = 3  
 					//expected : x<0, out = 3 ,floor: 3 ,value expected = 4  
+					vectOut.normalize();
 
+					double x_out = vectOut.x*dInter;
+					double y_out = vectOut.y*dInter;
 					int x = (speed.x<0? 1 : 0);
 					int y = (speed.y<0? 1 : 0);
 					//avoid that the ejected object is exactly on the collided object
-					double xequ = (speed.x>0 && speed.x==(int)speed.x)? -1 : 0;
-					double yequ = (speed.y>0 && speed.y==(int)speed.y)? -1 : 0;
-					vectOut.normalize();
+					double xequ = (speed.x>0 && x_out==(int)x_out)? -1 : 0;
+					double yequ = (speed.y>0 && y_out==(int)y_out)? -1 : 0;
 					//vectOut= new Vector2d(Math.round(vectOut.x*dInter),Math.round(vectOut.y*dInter));
-					vectOut= new Vector2d(Math.floor(vectOut.x*dInter)+x+xequ,Math.floor(vectOut.y*dInter)+y+yequ);
+					vectOut= new Vector2d(Math.floor(x_out)+x+xequ,Math.floor(y_out)+y+yequ);
 					intersectedHitbox=mondeBox;
 					if((Math.abs(maxInterDist.x)-Math.abs((int)vectOut.x))<0 || 
 							((Math.abs(maxInterDist.y)-Math.abs((int)vectOut.y))<0 ))

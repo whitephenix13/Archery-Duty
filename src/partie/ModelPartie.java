@@ -24,6 +24,7 @@ import javax.swing.JPanel;
 import Affichage.Affichage;
 import collision.Collidable;
 import collision.Collision;
+import deplacement.Accroche;
 import deplacement.Attente;
 import deplacement.Course;
 import deplacement.Marche;
@@ -42,6 +43,7 @@ import serialize.Serialize;
 import types.Bloc;
 import types.Hitbox;
 import types.Touches;
+import types.TypeObject;
 
 public class ModelPartie extends AbstractModelPartie{
 
@@ -66,140 +68,135 @@ public class ModelPartie extends AbstractModelPartie{
 	@SuppressWarnings("unchecked")
 	public void play(Affichage affich) 
 	{
-		try 
+		while(!affich.isFocused())
 		{
-			while(!affich.isFocused())
+			if(firstNonFocused)
 			{
-				if(firstNonFocused)
-				{
-					resetTouchesFocus();
-					inPause=true;
-					Toolkit.getDefaultToolkit().setLockingKeyState(KeyEvent.VK_CAPS_LOCK, false);
-					keyAction();
-					AbstractModelPrincipal.changeFrame=true;
-					affich.actuAffichage();
+				resetTouchesFocus();
+				inPause=true;
+				Toolkit.getDefaultToolkit().setLockingKeyState(KeyEvent.VK_CAPS_LOCK, false);
+				keyAction();
+				AbstractModelPrincipal.changeFrame=true;
+				affich.actuAffichage();
 
-					firstNonFocused=false;
+				firstNonFocused=false;
+			}
+
+		}
+		firstNonFocused=true;
+
+		//int x= heros.xPos + heros.deplacement.xdecallsprite[heros.anim]; //la vrai position du heros necessite encore un - variablesPartieRapide.xdeplaceEcran
+		//int y= heros.yPos+ heros.deplacement.ydecallsprite[heros.anim]; 
+
+		//on efface les qui doivent être détruit 
+
+		//on desactive la touche cap au cas ou elle serait utilisée
+		Toolkit.getDefaultToolkit().setLockingKeyState(KeyEvent.VK_CAPS_LOCK, false);
+		keyAction();
+
+		//Lors d'une pause, on ne veut pas réinitaliser la partie en cours mais juste y accéder à nouveau
+		if(!inPause)
+		{
+			//First action is to delete since we want the user to since the colliding object for at least 1 frame 
+			deleteObject(lEffaceFleche,(List<Collidable>)(List<?>) tabFleche);
+			deleteObject(lEffaceTirMonstre,(List<Collidable>)(List<?>)tabTirMonstre);
+			deleteObject(lEffaceMonstre,(List<Collidable>)(List<?>)tabMonstre);
+
+			//on vide les listes
+			lEffaceFleche.clear();
+			lEffaceTirMonstre.clear();
+			lEffaceMonstre.clear();
+
+			//DEPLACEMENT 
+			//Heros
+			deplace.DeplaceObject(heros,heros.nouvMouv,this);
+
+			//Monstre
+
+			for(int i=0 ; i< tabMonstre.size(); i++)
+			{
+				Monstre m = tabMonstre.get(i);
+				//on ne deplace le monstre qui si il est visible
+				boolean monsterOnScreen= InterfaceConstantes.SCREEN.polygon.contains(new Point 
+						(m.xpos+xScreendisp,m.ypos+yScreendisp));
+				if (monsterOnScreen)
+					deplace.DeplaceObject(m,m.deplacement, this);
+
+			}
+
+			//TIRS
+			//Fleche
+			for(int i=0; i<tabFleche.size(); i++)
+			{
+				Fleche f=tabFleche.get(i);
+				deplace.DeplaceObject(f, f.deplacement, this);
+			}
+
+			//Tir Monstre deplace et a effacer
+			for(int i=0 ; i< tabTirMonstre.size(); i++)
+			{
+				TirMonstre tir = tabTirMonstre.get(i);
+				deplace.DeplaceObject(tir,tir.deplacement, this);
+			}
+
+			//tir fleche
+
+			for(int i=0; i<tabFleche.size(); i++)
+			{
+				Fleche fleche = tabFleche.get(i);
+				//on déclenche le timer des fleches qui sont dans le mur 
+				if(fleche.isPlanted && fleche.tempsDetruit==0)
+				{
+					fleche.timer();
+				}
+				long tempsFleche=  System.nanoTime()-fleche.tempsDetruit;
+
+				if(fleche.isPlanted && (tempsFleche >= InterfaceConstantes.TEMPS_DESTRUCTION_FLECHE))
+				{
+					fleche.needDestroy=true;
 				}
 
 			}
-			firstNonFocused=true;
-			Thread.sleep(InterfaceConstantes.T);//T=1ms, permet de faire des tours de boucle à intervalles régulier 
 
-			//int x= heros.xPos + heros.deplacement.xdecallsprite[heros.anim]; //la vrai position du herosnnage necessite encore un - variablesPartieRapide.xdeplaceEcran
-			//int y= heros.yPos+ heros.deplacement.ydecallsprite[heros.anim]; 
 
-			//on efface les qui doivent être détruit 
+			//on gere la collision des tirs/monstre/heros
+			gestionTir();
 
-			//on desactive la touche cap au cas ou elle serait utilisée
-			Toolkit.getDefaultToolkit().setLockingKeyState(KeyEvent.VK_CAPS_LOCK, false);
-			keyAction();
+			//PREPARE OBJECTS FOR DESTRUCTION 
 
-			//Lors d'une pause, on ne veut pas réinitaliser la partie en cours mais juste y accéder à nouveau
-			if(!inPause)
+			for(int i =0; i <tabFleche.size();++i)
+				if(tabFleche.get(i).needDestroy)
+					lEffaceFleche.add(i);
+
+			for(int i =0; i <tabTirMonstre.size();++i)
+				if(tabTirMonstre.get(i).needDestroy)
+					lEffaceTirMonstre.add(i);
+
+			for(int i =0; i <tabMonstre.size();++i)
+				if(tabMonstre.get(i).needDestroy)
+					lEffaceMonstre.add(i);
+
+			//on met a jour le heros si il est touché avant de l'afficher
+			heros.miseAjourTouche();
+			heros.miseAJourSpe(this);
+
+
+			//on test si la partie est finie 
+
+			boolean finPartieAvant= finPartie;
+
+			finPartie= (heros.getLife()==InterfaceConstantes.MINLIFE) || (nombreMonstreRestant==0);
+
+			//on detecte la fin de la partie de la première fois : 
+			if(!finPartieAvant &&finPartie )
 			{
-				//First action is to delete since we want the user to since the colliding object for at least 1 frame 
-				deleteObject(lEffaceFleche,(List<Collidable>)(List<?>) tabFleche);
-				deleteObject(lEffaceTirMonstre,(List<Collidable>)(List<?>)tabTirMonstre);
-				deleteObject(lEffaceMonstre,(List<Collidable>)(List<?>)tabMonstre);
-
-				//on vide les listes
-				lEffaceFleche.clear();
-				lEffaceTirMonstre.clear();
-				lEffaceMonstre.clear();
-
-				//DEPLACEMENT 
-				//Heros
-				deplace.DeplaceObject(heros,heros.nouvMouv,this);
-				//Monstre
-
-				for(int i=0 ; i< tabMonstre.size(); i++)
-				{
-					Monstre m = tabMonstre.get(i);
-					//on ne deplace le monstre qui si il est visible
-					boolean monsterOnScreen= InterfaceConstantes.SCREEN.polygon.contains(new Point 
-							(m.xpos+xScreendisp,m.ypos+yScreendisp));
-					if (monsterOnScreen)
-						deplace.DeplaceObject(m,m.deplacement, this);
-
-				}
-
-				//TIRS
-				//Fleche
-				for(int i=0; i<tabFleche.size(); i++)
-				{
-					Fleche f=tabFleche.get(i);
-					deplace.DeplaceObject(f, f.deplacement, this);
-				}
-
-				//Tir Monstre deplace et a effacer
-				for(int i=0 ; i< tabTirMonstre.size(); i++)
-				{
-					TirMonstre tir = tabTirMonstre.get(i);
-					deplace.DeplaceObject(tir,tir.deplacement, this);
-				}
-
-				//tir fleche
-
-				for(int i=0; i<tabFleche.size(); i++)
-				{
-					Fleche fleche = tabFleche.get(i);
-					//on déclenche le timer des fleches qui sont dans le mur 
-					if(fleche.isPlanted && fleche.tempsDetruit==0)
-					{
-						fleche.timer();
-					}
-					long tempsFleche=  System.nanoTime()-fleche.tempsDetruit;
-
-					if(fleche.isPlanted && (tempsFleche >= InterfaceConstantes.TEMPS_DESTRUCTION_FLECHE))
-					{
-						fleche.needDestroy=true;
-					}
-
-				}
-
-
-				//on gere la collision des tirs/monstre/heros
-				gestionTir();
-
-				//PREPARE OBJECTS FOR DESTRUCTION 
-
-				for(int i =0; i <tabFleche.size();++i)
-					if(tabFleche.get(i).needDestroy)
-						lEffaceFleche.add(i);
-
-				for(int i =0; i <tabTirMonstre.size();++i)
-					if(tabTirMonstre.get(i).needDestroy)
-						lEffaceTirMonstre.add(i);
-
-				for(int i =0; i <tabMonstre.size();++i)
-					if(tabMonstre.get(i).needDestroy)
-						lEffaceMonstre.add(i);
-
-				//on met a jour le heros si il est touché avant de l'afficher
-				heros.miseAjourTouche();
-				heros.miseAJourSpe(this);
-
-
-				//on test si la partie est finie 
-
-				boolean finPartieAvant= finPartie;
-
-				finPartie= (heros.getLife()==InterfaceConstantes.MINLIFE) || (nombreMonstreRestant==0);
-
-				//on detecte la fin de la partie de la première fois : 
-				if(!finPartieAvant &&finPartie )
-				{
-					AbstractModelPrincipal.changeFrame=true;
-				}
-
+				AbstractModelPrincipal.changeFrame=true;
 			}
-			//else "pause"
+
 		}
-		catch (InterruptedException e1)
-		{
-			e1.printStackTrace();
-		}
+		computationDone=true;
+		//else "pause"
+
 	}
 
 	/**
@@ -315,7 +312,7 @@ public class ModelPartie extends AbstractModelPartie{
 				//on convertit les monstres stockés en monstres 
 				if(monde.listMonstreOriginal.get(i).nom.equals("spirel"))
 					tabMonstre.add(new Spirel(monde.listMonstreOriginal.get(i).pos.x,
-							monde.listMonstreOriginal.get(i).pos.y,monde.listMonstreOriginal.get(i).immobile));
+							monde.listMonstreOriginal.get(i).pos.y,monde.listMonstreOriginal.get(i).immobile,frame));
 			}
 			//on optimise la memoire
 			monde.listMonstreOriginal.clear();
@@ -325,7 +322,7 @@ public class ModelPartie extends AbstractModelPartie{
 			int x=0;
 			int y=0;
 			boolean correct= true;
-			Spirel spirel= new Spirel(0, 0,false);
+			Spirel spirel= new Spirel(0, 0,false,frame);
 
 			for (int i=0; i< nombre; i++ )
 			{
@@ -340,14 +337,14 @@ public class ModelPartie extends AbstractModelPartie{
 					x= monde.xStartMap- INIT_RECT.x +x;
 					y= monde.yStartMap- INIT_RECT.y +y;
 					//on créer le monstre à faire apparaitre
-					spirel = new Spirel(x,y,false);
+					spirel = new Spirel(x,y,false,frame);
 					Collision colli = new Collision();
 					correct = !colli.isWorldCollision(this, deplace, spirel,false);
 				}
 				while (!correct); //on attend d'avoir une position correct avant de placer le monstre 
 
 				//on place le monstre
-				tabMonstre.add(new Spirel(x,y,false));
+				tabMonstre.add(new Spirel(x,y,false,frame));
 
 			}
 		}
@@ -367,77 +364,91 @@ public class ModelPartie extends AbstractModelPartie{
 			if(!inPause )
 			{
 				//TIR 
-				if(toucheTirDown && !heros.flecheEncochee)
+				if(toucheTirDown && !heros.flecheEncochee && !heros.doitEncocherFleche)
 				{
 					changeMouv=true;
 					//on ne tir qu'une fleche
 					toucheTirDown=false;
 					heros.doitEncocherFleche=true;
-					heros.nouvMouv= new Tir(); 
-
+					heros.nouvMouv= new Tir(TypeObject.heros,Tir.tir,frame); 
 				}
-
+				boolean heros_shoots = heros.flecheEncochee||heros.doitEncocherFleche;
+				boolean heros_accroche = heros.deplacement.IsDeplacement(Mouvement_perso.accroche);
+				boolean heros_glisse = heros.deplacement.IsDeplacement(Mouvement_perso.glissade);
 				//COURSE DROITE
-				if(courseDroiteDown && !(heros.deplacement.IsDeplacement(Mouvement_perso.glissade))&& !heros.flecheEncochee)
+				if(courseDroiteDown && !heros_glisse && !heros_accroche && !heros_shoots)
 				{
-					changeMouv=true;
 					//si on ne courrait pas vers la droite avant
 					if(! (heros.deplacement.IsDeplacement(Mouvement_perso.course) && heros.anim>=4))
 					{
+						changeMouv=true;
 						heros.nouvAnim= 4; 
-						heros.nouvMouv= new Course(); 
-					}
-					else //on courrait deja avant , il suffit juste de changer de sprite et de le decaller 
-					{
-						heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche"? (heros.anim+1)%4 :(heros.anim+1)%4+4 ); 
-						heros.nouvMouv= heros.deplacement; 
+						heros.nouvMouv= new Course(TypeObject.heros,Course.course_droite,frame); 
 					}
 				}
 
 				//MARCHE DROITE 
-				else if(marcheDroiteDown&& !heros.flecheEncochee)
+				else if(marcheDroiteDown&& !heros_shoots)
 				{
-					changeMouv=true;
-
-					if(heros.deplacement.IsDeplacement(Mouvement_perso.glissade)&& heros.anim==1)
+					if(heros_glisse)
 					{
-						changeMouv=true;
+						if(heros.anim == 1)
+						{
+							changeMouv=true;
 
-						heros.nouvAnim= (heros.vit.y>=0 ? 4 : 3); 
-						heros.nouvMouv= new Saut(); 
+							heros.nouvAnim= (heros.vit.y>=0 ? 4 : 3); 
+							heros.nouvMouv= new Saut(TypeObject.heros,heros.vit.y>=0? Saut.fall_droite:Saut.jump_droite,frame); 
+						}
 					}
-					else if (heros.deplacement.IsDeplacement(Mouvement_perso.glissade))
+					else if(heros_accroche)
 					{
-						//on change rien 				
-						heros.nouvMouv= heros.deplacement;
-						heros.nouvAnim=heros.anim;
+						//leave the border
+
+						if(heros.anim == 0)
+						{
+							changeMouv=true;
+
+							heros.nouvAnim= (heros.vit.y>=0 ? 4 : 3); 
+							heros.nouvMouv= new Saut(TypeObject.heros,heros.vit.y>=0? Saut.fall_droite:Saut.jump_droite,frame); 
+						}
+						//climb the border
+						else if (heros.anim == 2 && heros.deplacement.animEndedOnce())
+						{
+							changeMouv=true;
+
+							heros.nouvAnim= 3; 
+							heros.nouvMouv= new Accroche(TypeObject.heros,Accroche.grimpe_droite,frame); 						
+						}
 					}
 					//si on courrait vers la droite en l'air ou non 
 					else if((heros.deplacement.IsDeplacement(Mouvement_perso.course) && heros.anim>=4))
 					{		
-						heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche" ? (heros.anim+1)%4 :(heros.anim+1)%4+4 ); 
-						heros.nouvMouv= heros.deplacement; 
+						//no change mouv
 					}
 
 					//si on ne marchait pas vers la droite et qu'on est pas en l'air 
 					else if(! (heros.deplacement.IsDeplacement(Mouvement_perso.marche) && heros.anim>=4)&& heros.peutSauter)
 					{
+						changeMouv=true;
 						heros.nouvAnim= 4; 
-						heros.nouvMouv=new Marche();
+						heros.nouvMouv=new Marche(TypeObject.heros,Marche.marche_droite,frame);
 					}
 
 					//si on veut marcher en l'air (donc vers la droite) 
 					else if (!heros.peutSauter) 
 					{
-						heros.deplaceSautDroit=true; // on fait bouger le heros
-						boolean fall = heros.vit.y >=0 ;
-						heros.nouvAnim= fall? 4 : 3 ; 
-						heros.nouvMouv=new Saut();
+						if(heros.deplacement.IsDeplacement(Mouvement_perso.saut) && (heros.deplacement.type_mouv != Saut.land_gauche ) && (heros.deplacement.type_mouv != Saut.land_droite ))
+						{
+							changeMouv=true;
+							heros.deplaceSautDroit=true; // on fait bouger le heros
+							boolean fall = heros.vit.y >=0 ;
+							heros.nouvAnim= fall? 4 : 3 ; 
+							heros.nouvMouv=new Saut(TypeObject.heros,fall?Saut.fall_droite:Saut.jump_droite,frame);
+						}
 					}
 					else if(heros.peutSauter)// si le heros est au sol et veux continuer à marcher vers la droite
 					{
-						heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche" ? (heros.anim+1)%4 :(heros.anim+1)%4+4 ); 
-						heros.nouvMouv= heros.deplacement; 
+						//no change mouv
 					}
 					else
 					{
@@ -445,69 +456,78 @@ public class ModelPartie extends AbstractModelPartie{
 					}
 				}
 				//COURSE GAUCHE
-				if(courseGaucheDown && !(heros.deplacement.IsDeplacement(Mouvement_perso.glissade))&& !heros.flecheEncochee)
+				if(courseGaucheDown && !heros_glisse && !heros_accroche && !heros_shoots)
 				{
-					changeMouv=true;
 					//si on ne courrait pas vers la gauche avant 
 					if(! (heros.deplacement.IsDeplacement(Mouvement_perso.course) && heros.anim<4))
 					{
-
+						changeMouv=true;
 						heros.nouvAnim=0;
-						heros.nouvMouv= new Course();
-					}
-					else // si on courrait vers la gauche avant 
-					{
-
-						heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche" ? (heros.anim+1)%4 :(heros.anim+1)%4+4 ); 
-						heros.nouvMouv= heros.deplacement; 
+						heros.nouvMouv= new Course(TypeObject.heros,Course.course_gauche,frame);
 					}
 				}
 				//MARCHE GAUCHE 
-				else if(marcheGaucheDown&& !heros.flecheEncochee )
+				else if(marcheGaucheDown&& !heros_shoots )
 				{
-					changeMouv=true;
 
-					if(heros.deplacement.IsDeplacement(Mouvement_perso.glissade)&& heros.anim==0)
+					if(heros_glisse)
 					{
-						changeMouv=true;
+						if(heros.anim==0){
+							changeMouv=true;
 
-						heros.nouvAnim= (heros.vit.y>=0 ? 1 : 0); 
-						heros.nouvMouv= new Saut(); 
+							heros.nouvAnim= (heros.vit.y>=0 ? 1 : 0); 
+							heros.nouvMouv= new Saut(TypeObject.heros,heros.vit.y>=0? Saut.fall_gauche:Saut.jump_gauche,frame); 
+						}
 					}
-					else if (heros.deplacement.IsDeplacement(Mouvement_perso.glissade))
+					else if (heros_accroche)
 					{
-						//on change rien 
-						heros.nouvMouv=  heros.deplacement;
-						heros.nouvAnim= heros.anim;
+						//leave the border
+
+						if(heros.anim == 2)
+						{
+							changeMouv=true;
+
+							heros.nouvAnim= (heros.vit.y>=0 ? 4 : 3); 
+							heros.nouvMouv= new Saut(TypeObject.heros,heros.vit.y>=0? Saut.fall_gauche:Saut.jump_gauche,frame); 
+						}
+						//climb the border
+						else if (heros.anim == 0 && heros.deplacement.animEndedOnce())
+						{
+							changeMouv=true;
+
+							heros.nouvAnim= 1; 
+							heros.nouvMouv= new Accroche(TypeObject.heros,Accroche.grimpe_gauche,frame); 						
+						}
 					}
 
 					//si on courrait vers la gauche en l'air ou non 
 					else if((heros.deplacement.IsDeplacement(Mouvement_perso.course) && heros.anim<4))
 					{
-
-						heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche" ? (heros.anim+1)%4 :(heros.anim+1)%4+4 ); 
-						heros.nouvMouv= heros.deplacement; 
+						//no change
 					}
 
 					//si on ne marchait pas vers la gauche et qu'on est pas en l'air 
 					else if(! (heros.deplacement.IsDeplacement(Mouvement_perso.marche) && heros.anim<4)&& heros.peutSauter)
 					{
+						changeMouv=true;
+
 						heros.nouvAnim=0;
-						heros.nouvMouv= new Marche();
+						heros.nouvMouv= new Marche(TypeObject.heros,Marche.marche_gauche,frame);
 					}
 
 					//si on veut marcher en l'air (donc vers la gauche) 
 					else if (!heros.peutSauter)
 					{
-						heros.deplaceSautGauche=true; // on fait bouger le herosnnage
+						changeMouv=true;
+
+						heros.deplaceSautGauche=true; // on fait bouger le heros
 						boolean fall = heros.vit.y >=0 ;
 						heros.nouvAnim=fall? 1 : 0 ; 
-						heros.nouvMouv=new Saut(); 
+						heros.nouvMouv=new Saut(TypeObject.heros,fall? Saut.fall_gauche:Saut.jump_gauche,frame); 
 					}
 					else if(heros.peutSauter) // si le heros est au sol et veux continuer à marcher vers la gauche
 					{
-						heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche"? (heros.anim+1)%4 :(heros.anim+1)%4+4 ); 
-						heros.nouvMouv= heros.deplacement; 
+						//no change
 					}
 					else
 					{
@@ -537,35 +557,41 @@ public class ModelPartie extends AbstractModelPartie{
 				}
 
 				//SAUT 
-				//si le herosnnage saute pour la première fois et qu'il peut sauter et qu'il ne glisse pas
-				if(sautDown && heros.peutSauter && !(heros.deplacement.IsDeplacement(Mouvement_perso.glissade))&& !heros.flecheEncochee)
+				//si le heros saute pour la première fois et qu'il peut sauter et qu'il ne glisse pas
+				if(sautDown &&  !heros_shoots)
 				{
-					courseDroiteDown=false;
-					courseGaucheDown=false;
+					if(heros_glisse)
+					{
+						changeMouv=true;	
+						heros.sautGlisse=true;
 
-					changeMouv=true;
+						heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche"? 0 : 3);
+						heros.nouvMouv=new Saut(TypeObject.heros,heros.nouvAnim==0?Saut.jump_gauche:Saut.jump_droite,frame );
+					}
+					else if(heros_accroche && ( (heros.anim==0) || (heros.anim==2)))
+					{
+						changeMouv=true;	
+						heros.sautAccroche=true;
+						heros.useGravity=true;
+						heros.nouvAnim= ((heros.anim == 0)? 0 : 3);
+						heros.nouvMouv=new Saut(TypeObject.heros,heros.nouvAnim==0?Saut.jump_gauche:Saut.jump_droite,frame );
+					}
+					else if(heros.peutSauter){
+						courseDroiteDown=false;
+						courseGaucheDown=false;
 
-					heros.peutSauter=false;
+						changeMouv=true;
+
+						heros.peutSauter=false;
 
 
-					//le heros saute donc finSaut est faux
-					heros.debutSaut=true;
-					heros.finSaut=false;
+						//le heros saute donc finSaut est faux
+						heros.debutSaut=true;
+						heros.finSaut=false;
 
-					heros.nouvAnim=heros.droite_gauche(heros.anim)=="Gauche" ? 0 : 3 ;
-					heros.nouvMouv= new Saut();
-
-
-				}
-				//on glisse et on veut sauter 
-				else if(sautDown && heros.deplacement.IsDeplacement(Mouvement_perso.glissade)) 
-				{
-					changeMouv=true;	
-					heros.sautGlisse=true;
-
-					heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche"? 0 : 3);
-					heros.nouvMouv=new Saut();
-
+						heros.nouvAnim=heros.droite_gauche(heros.anim)=="Gauche" ? 0 : 3 ;
+						heros.nouvMouv= new Saut(TypeObject.heros,heros.nouvAnim==0?Saut.jump_gauche:Saut.jump_droite,frame );
+					}
 				}
 
 				//touches pour lesquels maintenir appuyé ne change rien
@@ -581,7 +607,7 @@ public class ModelPartie extends AbstractModelPartie{
 		{
 			pauseReleased=false;
 		}
-		//on arrete de deplacer le herosnnage qui saute: 
+		//on arrete de deplacer le heros qui saute: 
 		//TIR 
 		if(toucheTirReleased)
 		{
@@ -594,7 +620,7 @@ public class ModelPartie extends AbstractModelPartie{
 				changeMouv=true;
 
 				heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche" ? 0 : 2) ;
-				heros.nouvMouv= new Attente();
+				heros.nouvMouv= new Attente(TypeObject.heros,heros.nouvAnim==0? Attente.attente_gauche:Attente.attente_droite,frame);
 				tabFleche.get(tabFleche.size()-1).flecheDecochee(this,deplace);
 			}
 
@@ -621,8 +647,10 @@ public class ModelPartie extends AbstractModelPartie{
 				courseGaucheDown=false;courseGaucheReleased=false;heros.runBeforeJump=false;
 			}
 
+			boolean heros_glisse = heros.deplacement.IsDeplacement(Mouvement_perso.glissade);
+			boolean heros_accroche = heros.deplacement.IsDeplacement(Mouvement_perso.accroche);
 
-			if( !heros.deplacement.IsDeplacement(Mouvement_perso.glissade) && !heros.flecheEncochee )
+			if( !heros_glisse && !heros_accroche && !heros.flecheEncochee )
 			{
 				changeMouv=true;
 
@@ -635,7 +663,7 @@ public class ModelPartie extends AbstractModelPartie{
 					//on variablesPartieRapide.affiche l'animation d'attente
 
 					heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Droite" ? 2: 0 );
-					heros.nouvMouv= new Attente();
+					heros.nouvMouv= new Attente(TypeObject.heros,heros.nouvAnim==0? Attente.attente_gauche:Attente.attente_droite,frame);
 
 					//on met sa vitesse à 0:  
 					heros.vit.x=0;
@@ -644,12 +672,12 @@ public class ModelPartie extends AbstractModelPartie{
 
 				else if (heros.deplacement.IsDeplacement(Mouvement_perso.attente))
 				{
-					//on arrete quand meme le herosnnage (exemple si il relache la touche de deplacement sur laquelle il avait appuyé en l'air)
+					//on arrete quand meme le heros (exemple si il relache la touche de deplacement sur laquelle il avait appuyé en l'air)
 					changeMouv=true;
 					//on variablesPartieRapide.affiche l'animation d'attente
 
 					heros.nouvAnim= heros.droite_gauche(heros.anim)=="Droite" ? 2: 0 ;
-					heros.nouvMouv= new Attente();
+					heros.nouvMouv= new Attente(TypeObject.heros,heros.nouvAnim==0? Attente.attente_gauche:Attente.attente_droite,frame);
 
 					//on met sa vitesse à 0:  
 					heros.vit.x=0;
@@ -668,7 +696,8 @@ public class ModelPartie extends AbstractModelPartie{
 					else // le heros tombe 
 						heros.nouvAnim=heros.droite_gauche(heros.anim)=="Gauche" ? 1: 4 ;
 
-					heros.nouvMouv=new Saut();
+					int type_mouv=heros.nouvAnim==0? Saut.jump_gauche: (heros.nouvAnim==3?Saut.jump_droite:  (heros.nouvAnim==1?Saut.fall_gauche:Saut.fall_droite));
+					heros.nouvMouv=new Saut(TypeObject.heros,type_mouv,frame);
 
 				}
 			}
@@ -924,7 +953,9 @@ public class ModelPartie extends AbstractModelPartie{
 			int yDraw= m.ypos+yScreendisp;
 
 			g.drawImage(imMonstre.getImage(m), xDraw ,yDraw ,null);
-
+			int xDraw_d= xDraw +m.deplacement.xtaille.get(m.anim);
+			//draw monster lifebar
+			drawBar(g,xDraw/2+xDraw_d/2-InterfaceConstantes.MAXLIFE/2,yDraw-10,InterfaceConstantes.MAXLIFE,5,m.getLife(),Color.BLACK,Color.GREEN);
 			if(drawHitbox)
 			{
 				Hitbox hitbox= m.getWorldHitbox(this);
@@ -963,12 +994,12 @@ public class ModelPartie extends AbstractModelPartie{
 				heros.ypos+heros.deplacement.y_rot_pos.get(anim));
 		Graphics2D g2d = (Graphics2D)g;
 
-		
+
 		AffineTransform tr = getRotatedTransform(new Point(heros.xpos,heros.ypos), 
 				new Point(heros.deplacement.x_rot_pos.get(anim),heros.deplacement.y_rot_pos.get(anim)),
 				new Point(heros.deplacement.xtaille.get(anim),heros.deplacement.ytaille.get(anim)),
 				heros.rotation_tir);
-		
+
 
 		ArrayList<Image> l_image = imHeros.getImages(heros);
 		for(int i=0; i<l_image.size(); ++i)
@@ -976,10 +1007,10 @@ public class ModelPartie extends AbstractModelPartie{
 			//im_body, im_back, im_head, im_front
 			if(i==0||i==2)
 				g.drawImage(l_image.get(i), heros.xpos,heros.ypos,null);
-			
+
 			else
 				g2d.drawImage(l_image.get(i), tr,null);
-			
+
 		}
 		return anchor;
 	}
@@ -995,7 +1026,7 @@ public class ModelPartie extends AbstractModelPartie{
 				ArrayList<Image> l_image = imHeros.getImages(heros);
 				for(int i=0; i<l_image.size(); ++i)
 					g.drawImage(l_image.get(i), heros.xpos,heros.ypos,null);
-				
+
 			}
 		}
 
@@ -1004,16 +1035,16 @@ public class ModelPartie extends AbstractModelPartie{
 			Hitbox hitbox= heros.getHitbox(INIT_RECT);
 			drawPolygon(g,hitbox.polygon);
 			if(anchor!=null){
-			g.setColor(Color.red);
-			g.drawString("o", anchor.x, anchor.y);
-			g.setColor(Color.black);
+				g.setColor(Color.red);
+				g.drawString("o", anchor.x, anchor.y);
+				g.setColor(Color.black);
 			}
 
 		}
 
 	}
 
-	
+
 	public void drawFleches(Graphics g,boolean drawHitbox) {
 		//Affichage des flèches
 		if(tabFleche == null)
@@ -1119,15 +1150,6 @@ public class ModelPartie extends AbstractModelPartie{
 		//spe
 		drawBar(g,10,40,InterfaceConstantes.MAXSPE,20,heros.getSpe(),Color.BLACK,Color.BLUE);
 
-		//affichage de la vie des monstres 
-		for(Monstre m : tabMonstre )
-		{
-			int xG= m.xpos+xScreendisp;
-			int xD= xG +m.deplacement.xtaille.get(m.anim);
-			int yH= m.ypos+yScreendisp;
-
-			drawBar(g,xG/2+xD/2-InterfaceConstantes.MAXLIFE/2,yH-10,InterfaceConstantes.MAXLIFE,5,m.getLife(),Color.BLACK,Color.GREEN);
-		}
 		//nombre de monstre restant
 		g.setColor(Color.BLACK);
 		g.setFont(new Font(g.getFont().getFontName(),g.getFont().getStyle(), 20 ));

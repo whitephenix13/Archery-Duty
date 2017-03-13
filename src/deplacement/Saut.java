@@ -8,17 +8,24 @@ import java.util.List;
 
 import collision.Collidable;
 import monstre.Spirel;
+import option.Config;
 import personnage.Heros;
+import types.TypeObject;
 
 public class Saut extends Mouvement_perso{
-	//Constructor personnage
-	public Saut() {
-		this(Mouvement_perso.heros);
-	}
-	//constructeur monstre
-	public Saut(String type) {
+
+	public static int jump_gauche = 0;
+	public static int fall_gauche = 1;
+	public static int land_gauche = 2;
+	public static int jump_droite = 3;
+	public static int fall_droite = 4;
+	public static int land_droite = 5;
+
+	//constructeur
+	public Saut(String type,int _type_mouv,int current_frame) {
 		super();
-		if(type.equals(Mouvement_perso.heros))
+		type_mouv=_type_mouv;
+		if(type.equals(TypeObject.heros))
 		{
 			xtaille =  Arrays.asList(85,84,74,85,84,74);
 			ytaille =  Arrays.asList(97,105,91,97,105,91); 
@@ -28,7 +35,7 @@ public class Saut extends Mouvement_perso{
 			List<Integer> xg = Arrays.asList(35,27,27,10,12,4);
 			List<Integer> xd = Arrays.asList(74,71,69,49,56,46);
 			List<Integer> yh = Arrays.asList(8,5,5,8,5,5);
-			List<Integer> yb = Arrays.asList(96,98,90,96,98,90);
+			List<Integer> yb = Arrays.asList(96,98,86,96,98,86);
 
 			hitboxCreation.add(asListPoint(xg,yh));
 			hitboxCreation.add(asListPoint(xd,yh));
@@ -36,8 +43,24 @@ public class Saut extends Mouvement_perso{
 			hitboxCreation.add(asListPoint(xg,yb));
 
 			hitbox = createHitbox(hitboxCreation);
+			//animation frame, current_frame, start_index, end_index
+			int start_index=0;int end_index=0;
+			if(type_mouv==jump_gauche){
+				start_index=0;end_index=1;}
+			else if(type_mouv==fall_gauche){
+				start_index=1;end_index=2;}
+			else if(type_mouv==land_gauche){
+				start_index=2;end_index=3;}
+			else if(type_mouv==jump_droite){
+				start_index=3;end_index=4;}
+			else if(type_mouv==fall_droite){
+				start_index=4;end_index=5;}
+			else if(type_mouv==land_droite){
+				start_index=5;end_index=6;}
+			animation.start(Arrays.asList(1,1,5,1,1,5), current_frame, start_index, end_index);
+
 		}
-		else if(type.equals(Mouvement_perso.m_spirel))
+		else if(type.equals(TypeObject.m_spirel))
 		{
 			xtaille =  Arrays.asList(56,56,-1,-1,-1,-1,-1,-1);
 			ytaille =  Arrays.asList(75,75,-1,-1,-1,-1,-1,-1);
@@ -47,7 +70,7 @@ public class Saut extends Mouvement_perso{
 			List<Integer> xg = Arrays.asList(0,0);
 			List<Integer> xd = Arrays.asList(56,56);
 			List<Integer> yh = Arrays.asList(0,0);
-			List<Integer> yb = Arrays.asList(75,75);
+			List<Integer> yb = Arrays.asList(74,74);
 
 			hitboxCreation.add(asListPoint(xg,yh));
 			hitboxCreation.add(asListPoint(xd,yh));
@@ -55,29 +78,53 @@ public class Saut extends Mouvement_perso{
 			hitboxCreation.add(asListPoint(xg,yb));
 
 			hitbox = createHitbox(hitboxCreation);
+			//animation frame, current_frame, start_index, end_index
+			int start_index=0;int end_index=0;
+			if(type_mouv==jump_gauche){
+				start_index=0;end_index=1;}
+			else if(type_mouv==fall_gauche){
+				start_index=1;end_index=2;}
+			else if(type_mouv==land_gauche){
+				start_index=2;end_index=3;}
+			else if(type_mouv==jump_droite){
+				start_index=3;end_index=4;}
+			else if(type_mouv==fall_droite){
+				start_index=4;end_index=5;}
+			else if(type_mouv==land_droite){
+				start_index=5;end_index=6;}
+			animation.start(Arrays.asList(5,5), current_frame, start_index, end_index);
 		}
 	}
-
+	public Saut(String type,int _type_mouv, int current_frame,Animation _animation){
+		this(type,_type_mouv,current_frame);
+		animation = _animation;
+	}
 	public Mouvement Copy(String type) {
-		return new Saut(type);
+		return new Saut(type,type_mouv,animation.getStartFrame(),animation);
 	}
 	@Override
-	public void setSpeed(String type, Collidable object, int anim,Deplace deplace) {
-		if(type.equals(Mouvement_perso.heros))
+	public void setSpeed(String type, Collidable object, int anim) {
+		if(type.equals(TypeObject.heros))
 		{
 			Heros heros = null; 
 			if (object instanceof Heros) {
 				heros = (Heros) object;
 			}
 			//permet de déplacer le héros sur le cote 
-			final int vitMax = (object.vit.x == 0) ? 8:  Math.abs(object.vit.x) ; 
-			final int varVit = 8 ; 
-			final int vitSaut = -15; //10000 normalement 
+			final double vitMax = (object.vit.x == 0) ? (8.0 / Config.ratio_fps()):  Math.abs(object.vit.x) ; 
+			final int varVit = (int)(8.0 / Config.ratio_fps()) ; 
+			//bit more complicated due to gravity, make sure that jump speed and gravity compensate the same way 
+			final int vitSaut = (int)(Config.i_ratio_fps()*(-16.0) + Config.i_ratio_fps()*(Config.i_ratio_fps()+1)/2 * Gravite.gravity_norm ); //10000 normalement 
 
 			if(heros.sautGlisse)
 			{
-				heros.sautGlisse=false;
 				object.vit.x=varVit * ((heros.droite_gauche(anim)=="Gauche") ? -1 : 1);
+				heros.sautGlisse=false;
+				object.vit.y=vitSaut;
+			}
+			else if(heros.sautAccroche)
+			{
+				heros.sautAccroche=false;
 				object.vit.y=vitSaut;
 			}
 			else
@@ -121,14 +168,14 @@ public class Saut extends Mouvement_perso{
 				}
 			}
 		}
-		else if(type.equals(Mouvement_perso.m_spirel))
+		else if(type.equals(TypeObject.m_spirel))
 		{
 			Spirel spirel=null;
 			if(object instanceof Spirel)
 				spirel=(Spirel) object;
 			
-			int xspeed=10;//10000
-			int yspeed=15;//15000
+			int xspeed=(int)(10.0 / Config.ratio_fps());//10000
+			int yspeed=(int)(15.0 / Config.ratio_fps());//15000
 
 			if(spirel.peutSauter)
 			{
@@ -144,4 +191,22 @@ public class Saut extends Mouvement_perso{
 			}
 		}
 	}
+	@Override
+	public String droite_gauche(String type,int anim) {
+		if(type.equals(TypeObject.heros))
+			if(anim<3)
+				return ("Gauche");
+			else 
+				return("Droite");
+		else if(type.equals(TypeObject.m_spirel))
+			if(anim<1)
+				return ("Gauche");
+			else 
+				return("Droite");
+		else{
+			try {throw new Exception("String droite gauche: type unknown");} catch (Exception e) {e.printStackTrace();}
+			return ("");
+		}
+	}
+	
 }

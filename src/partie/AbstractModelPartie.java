@@ -26,10 +26,16 @@ import personnage.ImagesFleche;
 import personnage.ImagesHeros;
 import principal.InterfaceConstantes;
 import types.Monde;
+import types.TypeObject;
 
 public abstract class AbstractModelPartie implements Observable {
-	//{{Variables	
-
+	//frame flag 
+	protected int frame = 0;
+	public void nextFrame(){frame+=1;}
+	public int getFrame(){return frame;}
+	//repaint flag 
+	public boolean computationDone=false;
+	
 	protected Deplace deplace = new Deplace();
 	public Monde monde = new Monde();
 
@@ -77,7 +83,7 @@ public abstract class AbstractModelPartie implements Observable {
 	
 	protected boolean finPartie =false;
 	protected boolean inPause=false;
-
+	public boolean getinPause(){return inPause;}
 	protected float clickTime1;
 	protected float clickTime2;
 
@@ -111,14 +117,14 @@ public abstract class AbstractModelPartie implements Observable {
 	public int yScreendisp = 0;
 	/**
 	 * 
-	 * @param x: return xScreendispBloc, false: return yScreendispBloc
+	 * @param x return xScreendispBloc, false: return yScreendispBloc
 	 * @return Screendisp grounded to the closest multiple of TAILLE_BLOC
 	 */
 	public int getXYScreendispBloc(boolean x)
 	{return (x?xScreendisp:yScreendisp)/TAILLE_BLOC*TAILLE_BLOC;}
 	/**
 	 * 
-	 * @param x: return xScreendispBloc, false: return yScreendispBloc
+	 * @param x return xScreendispBloc, false: return yScreendispBloc
 	 * @return Screendisp modulo TAILLE_BLOC
 	 */
 	public int getXYScreendispMod(boolean x)
@@ -158,11 +164,10 @@ public abstract class AbstractModelPartie implements Observable {
 
 	public void reset() 
 	{
-		System.out.println("reset");
 		deplace = new Deplace();
 		monde = new Monde();
-
-		heros= new Heros(InterfaceConstantes.LARGEUR_FENETRE/2,InterfaceConstantes.HAUTEUR_FENETRE/2,1,new Attente());
+		frame= 0;
+		heros= new Heros(InterfaceConstantes.LARGEUR_FENETRE/2,InterfaceConstantes.HAUTEUR_FENETRE/2,1,new Attente(TypeObject.heros,Attente.attente_gauche,frame),frame);
 
 		//Action speciale pour ralentir le temps 
 		slowDown=false;

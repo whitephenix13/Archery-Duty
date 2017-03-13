@@ -4,6 +4,7 @@ import java.awt.Point;
 
 import javax.vecmath.Vector2d;
 
+import deplacement.Attente;
 import deplacement.Deplace;
 import deplacement.Mouvement;
 import deplacement_tir.Mouvement_tir;
@@ -12,6 +13,7 @@ import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import principal.InterfaceConstantes;
 import types.Hitbox;
+import types.TypeObject;
 import types.Vitesse;
 
 public class TirSpirel extends TirMonstre implements InterfaceConstantes {
@@ -25,13 +27,13 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	 * 
 	 * @return le nombre de tour de boucle a attendre avant de redeplacer le monstre
 	 */	
-	public TirSpirel(int _xpos, int _ypos,int _anim)
+	public TirSpirel(int _xpos, int _ypos,int _anim,int current_frame)
 	{
-		nom_tir=Mouvement_tir.tir_spirel;
+		type=TypeObject.tir_spirel;
 		xpos=_xpos;
 		ypos=_ypos;
 		anim=_anim;
-		deplacement= new T_normal(Mouvement_tir.tir_spirel);
+		deplacement= new T_normal(type,Attente.attente_gauche,current_frame);
 
 		needDestroy=false;
 		vit = new Vitesse();
@@ -39,7 +41,7 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 		fixedWhenScreenMoves=false ; //true : not influenced by screen displacement (ie: use for the hero)
 
 		useGravity=false;
-		setSpeed(anim);
+		deplacement.setSpeed(TypeObject.tir_spirel,this,anim);
 
 		dommage= -25;
 
@@ -48,26 +50,12 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 		//permet "d'effacer" l'objet au bout de 2000ms
 
 	}
-	/**
-	 * Règle la vitesse du tour   
-	 * 
-	 * @param anim, l'animation en cours du tir
-	 */	
-	public void setSpeed(int anim) {
-		//0:gauche, 4:droite, 6:haut
-		int vitesse=10;
-		switch(anim)
-		{
-		case 0 : vit.x= 1*vitesse;break;
-		case 1 : vit.x= -1*vitesse;break;
-		case 2 : vit.y=-1*vitesse;break;
-		}
-	}
 
 	@Override
-	public boolean deplace(AbstractModelPartie partie,Deplace deplace){
+	public boolean[] deplace(AbstractModelPartie partie,Deplace deplace){
 		//nothing specific to do 
-		return true;
+		boolean[] res = {true,false};
+		return res;
 	}
 	
 	@Override
@@ -102,16 +90,6 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 		//nothing
 	}
 	/**
-	 * Ralenti les animations  
-	 * 
-	 * @return le nombre de tour de boucle a attendre avant de redeplacer le tir
-	 */	
-	@Override
-	public int setReaffiche()
-	{
-		return 2;
-	}
-	/**
 	 * Permet de déclencher des événements lorsque la fleche doit etre détruite   
 	 * 
 	 */
@@ -126,7 +104,7 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	}
 	@Override
 	public Hitbox getHitbox(Point INIT_RECT, Mouvement _dep, int _anim) {
-		Mouvement_tir temp = (Mouvement_tir) _dep.Copy(Mouvement_tir.tir_spirel); //create the mouvement
+		Mouvement_tir temp = (Mouvement_tir) _dep.Copy(TypeObject.tir_spirel); //create the mouvement
 		return Hitbox.plusPoint(temp.hitbox.get(_anim), new Point(xpos,ypos),true);
 	}
 	public Hitbox getWorldHitbox(AbstractModelPartie partie) {
@@ -137,14 +115,15 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,
 			Deplace deplace) {
 		//project speed to ground 
-		//double coef= vit.vect2d().dot(normal)/normal.lengthSquared();
-		//vit = new Vitesse((int)(vit.x-coef*normal.x),(int)(vit.y-coef*normal.y));
+		double coef= vit.vect2d().dot(normal)/normal.lengthSquared();
+		vit = new Vitesse((int)(vit.x-coef*normal.x),(int)(vit.y-coef*normal.y));
 
-		//boolean collision_gauche = (vit.x<=0) && (normal.x>0);
-		//boolean collision_droite = (vit.x>=0) && (normal.x<0);
+		boolean collision_gauche = (vit.x<=0) && (normal.x>0);
+		boolean collision_droite = (vit.x>=0) && (normal.x<0);
 		//boolean collision_haut = (vit.y<=0) && (normal.y>0);
 		//boolean collision_bas = (vit.y>=0) && (normal.y<0);
-		
+		last_colli_left=collision_gauche;
+		last_colli_right=collision_droite;
 		vit=new Vitesse(0,0);
 		needDestroy=true;
 

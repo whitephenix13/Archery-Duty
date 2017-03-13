@@ -13,8 +13,8 @@ import types.Hitbox;
 
 public class Deplace implements InterfaceConstantes{
 	public Collision colli;
-	public double[] delta_ecran= new double[2];
-	public double[] cumul_delta_ecran= new double[2];//cumulate decimal that will add up to integer 
+	private Gravite gravite = new Gravite();
+		
 	public Deplace() 
 	{
 		colli = new Collision();
@@ -23,12 +23,6 @@ public class Deplace implements InterfaceConstantes{
 	public void DeplaceObject(Collidable object, Mouvement nouvMouv, AbstractModelPartie partie)
 	{
 		boolean isHeros = object instanceof Heros;
-		boolean mouvDifferant=false;
-		if(isHeros){
-			Heros heros = (Heros) object;
-			mouvDifferant = (! (heros.deplacement.IsDeplacement(nouvMouv))) && partie.changeMouv ;
-
-		}
 
 		object.memorizeCurrentValue();
 
@@ -37,22 +31,22 @@ public class Deplace implements InterfaceConstantes{
 			partie.slowCount= (partie.slowCount+1) % (object.slowDownFactor);
 		}
 
-		boolean shouldUpdateMove=object.reaffiche<=0 || mouvDifferant;
-		if(shouldUpdateMove){
-			boolean shouldMove=object.deplace(partie, this);
-			if(!shouldMove)
-				return;
-			}
+		boolean[] shouldMov_changedAnim=object.deplace(partie, this);
+		boolean shouldMove= shouldMov_changedAnim[0];
+		boolean changedAnim= shouldMov_changedAnim[1];
+		if(!shouldMove)
+			return;
 
 		boolean useGravity = object.useGravity &&( !partie.slowDown || (partie.slowDown && partie.slowCount==0));
 		if(useGravity)
-			Gravite.gravite(object, partie.slowDown);
+			gravite.gravite(object, partie.slowDown);
 
 		object.applyFriction(0);
 		//deplacement à l'aide de la vitesse  si il n'y a pas collision 
 		//on reset les dernières positions de collisions:
 		object.resetVarBeforeCollision();
 		boolean stuck = !colli.ejectWorldCollision(partie, this, object);
+
 		if(stuck)
 		{
 			object.handleStuck(partie, this);
@@ -61,87 +55,17 @@ public class Deplace implements InterfaceConstantes{
 			object.handleDeplacementSuccess(partie, this);
 		object.resetVarDeplace();
 
-		if(shouldUpdateMove)
-			object.reaffiche=object.setReaffiche();
 
 		if(isHeros){
-			if(shouldUpdateMove){
-			Point delta = getdeplaceEcran(partie,object);
-			delta_ecran[0]=((float)delta.x)/object.reaffiche;
-			delta_ecran[1]=((float)delta.y)/object.reaffiche;
-			interpolateDeplaceEcran(delta_ecran,cumul_delta_ecran,partie,object);
-			}
-			else
-				interpolateDeplaceEcran(delta_ecran,cumul_delta_ecran,partie,object);
-
+			Point delta = getdeplaceEcran(partie,(Heros)object);
+			deplaceEcran(delta,partie,object);
 		}
 
 		object.reaffiche--;
 
 	}
 
-	/*public void DeplaceObject(Collidable object, Mouvement nouvMouv, AbstractModelPartie partie)
-	{
-		boolean isHeros = object instanceof Heros;
-		boolean mouvDifferant=false;
-		if(isHeros){
-			Heros heros = (Heros) object;
-			mouvDifferant = (! (heros.deplacement.IsDeplacement(nouvMouv))) && partie.changeMouv ;
 
-		}
-		if( mouvDifferant || (!mouvDifferant && object.reaffiche<=0 ) )
-		{
-			object.memorizeCurrentValue();
-
-			//on change d'animation avant de deplacer si elle doit etre changee
-			if(isHeros && partie.slowDown){
-				partie.slowCount= (partie.slowCount+1) % (object.slowDownFactor);
-			}
-
-			boolean shouldMove=object.deplace(partie, this);
-			if(shouldMove)
-			{
-				boolean useGravity = object.useGravity &&( !partie.slowDown || (partie.slowDown && partie.slowCount==0));
-				if(useGravity)
-					Gravite.gravite(object, partie.slowDown);
-
-				object.applyFriction(0);
-				//deplacement à l'aide de la vitesse  si il n'y a pas collision 
-				//on reset les dernières positions de collisions:
-				object.resetVarBeforeCollision();
-				boolean stuck = !colli.ejectWorldCollision(partie, this, object);
-				if(stuck)
-				{
-					object.handleStuck(partie, this);
-				}
-				else
-					object.handleDeplacementSuccess(partie, this);
-				object.resetVarDeplace();
-
-				if(object.reaffiche>0 && isHeros){
-					delta_ecran[0]*=object.reaffiche;
-					delta_ecran[1]*=object.reaffiche;
-					interpolateDeplaceEcran(delta_ecran,cumul_delta_ecran,partie,object);
-				}
-
-				object.reaffiche=object.setReaffiche();
-
-				if(isHeros){
-					Point delta = getdeplaceEcran(partie,object);
-					delta_ecran[0]=((float)delta.x)/object.reaffiche;
-					delta_ecran[1]=((float)delta.y)/object.reaffiche;
-					interpolateDeplaceEcran(delta_ecran,cumul_delta_ecran,partie,object);
-				}
-			}
-		}
-		else{
-			object.reaffiche--;
-			if(isHeros){
-				interpolateDeplaceEcran(delta_ecran,cumul_delta_ecran,partie,object);
-			}
-		}
-
-	}*/
 	/**
 	 * Recentre l'ecran autour du heros
 	 * 
@@ -149,42 +73,60 @@ public class Deplace implements InterfaceConstantes{
 	 * @return how much to add to xScreendisp,yScreendisp,object.xpos,object.ypos to get them to the right place
 	 * 
 	 */	
-	public Point getdeplaceEcran(AbstractModelPartie partie, Collidable object) //{{
+	public Point getdeplaceEcran(AbstractModelPartie partie, Heros heros) //{{
 	{
 		int xdelta=0;
 		int ydelta=0;
+
+		int largeur_fenetre=0;
+		int hauteur_fenetre=0;
+
+		int left_xpos_hit = (int) Hitbox.supportPoint(new Vector2d(-1,0), heros.getHitbox(partie.INIT_RECT).polygon).x;
+		int right_xpos_hit = (int) Hitbox.supportPoint(new Vector2d(1,0), heros.getHitbox(partie.INIT_RECT).polygon).x;
+		int up_ypos_hit = (int) Hitbox.supportPoint(new Vector2d(0,-1), heros.getHitbox(partie.INIT_RECT).polygon).y;
+		int down_ypos_hit = (int) Hitbox.supportPoint(new Vector2d(0,1), heros.getHitbox(partie.INIT_RECT).polygon).y;
+		
+		int xpos_hit=0;
+		int ypos_hit=0;
 		//les conditions limites sont aux 3/7
 		//trop à gauche de l'ecran
-		if(object.xpos<2*InterfaceConstantes.LARGEUR_FENETRE/7)
-			xdelta= 2*InterfaceConstantes.LARGEUR_FENETRE/7-object.xpos;
-
+		if(left_xpos_hit<2*InterfaceConstantes.LARGEUR_FENETRE/7){
+			xpos_hit=left_xpos_hit;
+			largeur_fenetre=heros.vit.x<0? 2*InterfaceConstantes.LARGEUR_FENETRE/7 :0;
+		}
 		//trop à droite 
-		else if((object.xpos+object.deplacement.xtaille.get(object.anim))>5*InterfaceConstantes.LARGEUR_FENETRE/7)
-			xdelta= 5*InterfaceConstantes.LARGEUR_FENETRE/7-object.xpos-object.deplacement.xtaille.get(object.anim);
-
+		else if(right_xpos_hit>5*InterfaceConstantes.LARGEUR_FENETRE/7){
+			xpos_hit=right_xpos_hit;
+			largeur_fenetre=heros.vit.x>0 ? 5*InterfaceConstantes.LARGEUR_FENETRE/7:0;
+		}
+				
 		//trop en haut
-		if(object.ypos<2*InterfaceConstantes.HAUTEUR_FENETRE/5)
-			ydelta=2*InterfaceConstantes.HAUTEUR_FENETRE/5-object.ypos;
+		if(up_ypos_hit<2*InterfaceConstantes.HAUTEUR_FENETRE/5){
+			ypos_hit= up_ypos_hit;
+			hauteur_fenetre=heros.vit.y<=0? 2*InterfaceConstantes.HAUTEUR_FENETRE/5:0;
+		}
 
 		//trop bas
-		else if((object.ypos+object.deplacement.ytaille.get(object.anim))>3*InterfaceConstantes.HAUTEUR_FENETRE/5)
-			ydelta=3*InterfaceConstantes.HAUTEUR_FENETRE/5-object.ypos-object.deplacement.ytaille.get(object.anim);
-
+		else if(down_ypos_hit>3*InterfaceConstantes.HAUTEUR_FENETRE/5){
+			ypos_hit =down_ypos_hit;
+			hauteur_fenetre=heros.vit.y>=0? 3*InterfaceConstantes.HAUTEUR_FENETRE/5:0;
+		}
+		
+		if(largeur_fenetre != 0 ){
+			xdelta= largeur_fenetre-xpos_hit;
+		}
+		if(hauteur_fenetre!=0){
+			ydelta= hauteur_fenetre-ypos_hit;
+		}
 		return new Point(xdelta,ydelta);
 	}
-	public void interpolateDeplaceEcran(double[] delta, double[] cumul_delta_ecran, AbstractModelPartie partie, Collidable object)
+	public void deplaceEcran(Point delta,  AbstractModelPartie partie, Collidable object)
 	{
-		int xdelta= (int) (delta[0]+cumul_delta_ecran[0]);
-		int ydelta= (int) (delta[1]+cumul_delta_ecran[1]);
+		partie.xScreendisp+= delta.x;
+		object.xpos+= delta.x; 
 
-		partie.xScreendisp+= xdelta;
-		object.xpos+= xdelta; 
-
-		partie.yScreendisp+=  ydelta;
-		object.ypos+= ydelta; 
-
-		cumul_delta_ecran[0]= delta[0]+cumul_delta_ecran[0]-xdelta;
-		cumul_delta_ecran[1]= delta[1]+cumul_delta_ecran[1]-ydelta;
+		partie.yScreendisp+=  delta.y;
+		object.ypos+= delta.y; 
 
 	}
 	/**

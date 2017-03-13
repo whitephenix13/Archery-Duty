@@ -24,6 +24,9 @@ import editeur.AffichageEditeur;
 
 public abstract class AbstractModelPrincipal implements Observable{
 	
+	//Time in order in order to display only every 1/fps seconds
+	protected long last_update = 0;
+	
 	//booleen permettant de s'assurer qu'un tour de boucle complet a été fait lorsqu'on change de mode 
 	protected boolean debutBoucle;
 

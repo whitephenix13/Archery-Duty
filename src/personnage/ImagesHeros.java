@@ -10,6 +10,7 @@ public class ImagesHeros {
 	
 	ArrayList<Image> attente = new ArrayList<Image>(); // 4
 	ArrayList<Image> glissade = new ArrayList<Image>(); // 2 
+	ArrayList<Image> accroche = new ArrayList<Image>(); // 4
 	ArrayList<Image> saut = new ArrayList<Image>(); // 6
 	ArrayList<Image> marche = new ArrayList<Image>(); // 8
 	ArrayList<Image> course = new ArrayList<Image>(); // 8
@@ -31,6 +32,9 @@ public class ImagesHeros {
 
 		for(int i=0; i<2;++i)
 			glissade.add(Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/deplacement.Glissade/"+i+".png")));
+		
+		for(int i=0; i<4;++i)
+			accroche.add(Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/deplacement.Accroche/"+i+".png")));
 		
 		for(int i=0; i<6;++i)
 			saut.add(Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/deplacement.Saut/"+i+".png")));
@@ -55,7 +59,10 @@ public class ImagesHeros {
 		
 		else if(heros.deplacement.IsDeplacement(Mouvement_perso.glissade))
 			l.add(glissade.get(heros.anim));
-
+		
+		else if(heros.deplacement.IsDeplacement(Mouvement_perso.accroche))
+			l.add(accroche.get(heros.anim));
+		
 		else if(heros.deplacement.IsDeplacement(Mouvement_perso.saut))
 			l.add(saut.get(heros.anim));
 

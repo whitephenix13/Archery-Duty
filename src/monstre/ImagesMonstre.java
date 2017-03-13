@@ -4,6 +4,7 @@ import java.awt.Image;
 import java.awt.Toolkit;
 
 import deplacement.Mouvement_perso;
+import types.TypeObject;
 
 public class ImagesMonstre {
 
@@ -32,7 +33,7 @@ public class ImagesMonstre {
 	 */
 	public Image getImage(Monstre monstre)
 	{
-		if (monstre.nom.equals("spirel"))
+		if (monstre.type.equals(TypeObject.m_spirel))
 		{
 			if(monstre.deplacement.IsDeplacement(Mouvement_perso.attente))
 			{

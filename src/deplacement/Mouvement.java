@@ -19,8 +19,10 @@ public abstract class Mouvement{
 
 	public List<Integer> x_rot_pos = new ArrayList<Integer>();
 	public List<Integer> y_rot_pos = new ArrayList<Integer>();
-
-	public Animation animation= new Animation();
+	
+	protected Animation animation = new Animation();
+	public boolean animEndedOnce(){return animation.isEndedOnce();}
+	public int type_mouv;
 	
 	public List<Point> asListPoint(List<Integer> x, List<Integer> y)
 	{
@@ -60,6 +62,9 @@ public abstract class Mouvement{
 	public abstract Mouvement Copy(String type);
 	public abstract boolean IsDeplacement(Mouvement m);
 	public abstract boolean IsDeplacement(String s);
-	public abstract void setSpeed(String type,Collidable object, int anim,Deplace deplace);
-
-}
+	public abstract void setSpeed(String type,Collidable object, int anim);
+	public abstract String droite_gauche(String type,int anim);
+	public int updateAnimation(String type,int anim,int current_frame) {
+		return animation.update(anim,current_frame);
+	}
+	}

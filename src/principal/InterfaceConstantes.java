@@ -40,7 +40,6 @@ public interface InterfaceConstantes {
 		
 	
 	//permet de determiner les vitesses de chute, de deplacement et de saut 
-	long T= 17; // temps de raffraichissement en milliseconde
 	long TDash= 150;
 	//durée d'invincibilité lorsque le héros est touché 
 	static long INV_TOUCHE = 3000;

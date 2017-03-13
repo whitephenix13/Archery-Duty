@@ -6,6 +6,7 @@ import javax.vecmath.Vector2d;
 
 import partie.AbstractModelPartie;
 import types.Hitbox;
+import types.TypeObject;
 import types.Vitesse;
 import deplacement.Deplace;
 import deplacement.Mouvement;
@@ -15,7 +16,7 @@ import deplacement.Mouvement_perso;
 //Store the information needed to manage a collision
 public abstract class Collidable {
 	
-
+	public String type;
 	public int xpos; 
 	public int ypos; 
 	public double rotation=0;
@@ -31,10 +32,12 @@ public abstract class Collidable {
 	
 	protected CurrentValue currentValue;
 	public boolean useGravity=false;
-	
+	//Variables pour mémoriser la direction de la dernière collision
+	public boolean last_colli_left=false;
+	public boolean last_colli_right=false;
 	public abstract Hitbox getHitbox(Point INIT_RECT);
 	public abstract Hitbox getHitbox(Point INIT_RECT,Mouvement mouv, int _anim);
-
+	
 	public abstract void handleWorldCollision(Vector2d normal,AbstractModelPartie partie,Deplace deplace);
 	public abstract void handleObjectCollision(AbstractModelPartie partie,Deplace deplace);
 	/**
@@ -45,9 +48,10 @@ public abstract class Collidable {
 	 * 
 	 * @param partie
 	 * @param deplace
-	 * @return True if the object needs to be moved
+	 * @return [shouldMove,changedAnimation] shouldMove: if the collision (hence movement) have to be applied to this object. 
+	 * changedAnimation : if the animation changed due to a change of movement or a change in droite_gauche
 	 */
-	public abstract boolean deplace(AbstractModelPartie partie, Deplace deplace);
+	public abstract boolean[] deplace(AbstractModelPartie partie, Deplace deplace);
 	//Use the function trick to memorize the reset values
 	protected class CurrentValue{public void res(){};}
 	public abstract void applyFriction(int minSpeed);
@@ -55,7 +59,6 @@ public abstract class Collidable {
 	public abstract void handleStuck(AbstractModelPartie partie,Deplace deplace);
 	public abstract void handleDeplacementSuccess(AbstractModelPartie partie,Deplace deplace);
 	public abstract void resetVarDeplace();
-	public abstract int setReaffiche();
 
 	public abstract void destroy();
 	
@@ -130,7 +133,7 @@ public abstract class Collidable {
 
 		}
 
-		if(deplacement_type.equals(Mouvement_perso.heros)){
+		if(deplacement_type.equals(TypeObject.heros)){
 			System.out.println(deplacement.getClass().getName() +animActu +" "+depSuiv.getClass().getName()+animSuiv);
 			System.out.println(s);
 		}

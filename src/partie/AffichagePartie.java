@@ -65,6 +65,10 @@ public class AffichagePartie extends JFrame implements Observer{
 
 		public void paint(Graphics g)
 		{
+			if(!controlerPartie.partie.computationDone){
+				return;
+			}
+
 			super.paintComponent(g);
 
 			//on dessine le niveau
@@ -76,6 +80,10 @@ public class AffichagePartie extends JFrame implements Observer{
 				super.paint(g);
 				setOpaque(true); 
 			}
+			//if partie is not done, wait for next computation to finish in order to display next frame 
+			if(!controlerPartie.partie.finPartie)
+				controlerPartie.partie.computationDone=false;
+
 		}
 	}
 
@@ -290,7 +298,7 @@ public class AffichagePartie extends JFrame implements Observer{
 			controlerPartie.controlMousePressed(e);
 		}
 		public void mouseReleased(MouseEvent e) {
-				controlerPartie.controlMouseReleased(e);
+			controlerPartie.controlMouseReleased(e);
 		}
 
 	}
@@ -391,7 +399,7 @@ public class AffichagePartie extends JFrame implements Observer{
 			createOption();
 
 		}
-		controlerPartie.partie. resetVariablesAffichage();
+		controlerPartie.partie.resetVariablesAffichage();
 
 
 	}

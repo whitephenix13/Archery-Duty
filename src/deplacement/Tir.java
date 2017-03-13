@@ -6,26 +6,17 @@ import java.util.Arrays;
 import java.util.List;
 
 import collision.Collidable;
+import types.TypeObject;
 
 public class Tir extends Mouvement_perso
 {
-	/* 0: H
-	 * 1: HD
-	 * 2: D
-	 * 3: BD
-	 * 4: B
-	 * 5: BG
-	 * 6: G 
-	 * 7: HG
-	 * */
-	public Tir() 
-    {
-		this(Mouvement_perso.heros);
-	}
-	public Tir(String type) 
+	public static int tir = 0;
+
+	public Tir(String type, int _type_mouv,int current_frame) 
     {
 		super();
-		if(type.equals(Mouvement_perso.heros))
+		type_mouv=_type_mouv;
+		if(type.equals(TypeObject.heros))
 		{
 			xtaille =  Arrays.asList(50,63,75,75,63,50,57,75,75,57);
 			ytaille =  Arrays.asList(105,97,86,86,97,105,112,101,101,112);
@@ -53,22 +44,44 @@ public class Tir extends Mouvement_perso
 			hitboxCreation.add(asListPoint(xg,yb));
 
 			hitbox = createHitbox(hitboxCreation);
+			//animation frame, current_frame, start_index, end_index
+			animation.start(Arrays.asList(2), current_frame, 0, 1);
+
 		}
 	
 	}
-
+	public Tir(String type,int _type_mouv, int current_frame,Animation _animation){
+		this(type,_type_mouv,current_frame);
+		animation = _animation;
+	}
 	public Mouvement Copy(String type) {
-		return new Tir(type);
+		return new Tir(type,type_mouv,animation.getStartFrame(),animation);
 	}
 	@Override
-	public void setSpeed(String type, Collidable object, int anim,Deplace deplace) {
-		if(type.equals(Mouvement_perso.heros))
+	public void setSpeed(String type, Collidable object, int anim) {
+		if(type.equals(TypeObject.heros))
 		{
 			//nothing
 		}
-		else if(type.equals(Mouvement_perso.m_spirel))
+		else if(type.equals(TypeObject.m_spirel))
 		{
 			//nothing
 		}
+	}
+	@Override
+	public String droite_gauche(String type,int anim) {
+		if(type.equals(TypeObject.heros))
+			if(anim>=3 && anim <= 7 )
+				return ("Gauche");
+			else 
+				return("Droite");
+		else{
+			try {throw new Exception("String droite gauche: type unknown");} catch (Exception e) {e.printStackTrace();}
+			return ("");
+		}
+	}
+	@Override
+	public int updateAnimation(String type,int anim,int current_frame) {
+		return animation.update(0,current_frame);
 	}
 }

@@ -18,6 +18,7 @@ public class Bloc extends Collidable{
  //private static Bloc blocVide =new Bloc("vide",0,0,false,false);
  
 	public Bloc (){
+		type=TypeObject.bloc;
 		this.img="vide";
 		this.xpos=-1;
 		this.ypos=-1;
@@ -28,6 +29,7 @@ public class Bloc extends Collidable{
 		this.background=false;
 	}
 	public Bloc(String str, int x, int y , boolean bl, boolean back) {
+		type=TypeObject.bloc;
 		this.img=str;
 		this.xpos=x;
 		this.ypos=y;
@@ -134,9 +136,10 @@ public class Bloc extends Collidable{
 		//do nothing
 	}
 	@Override
-	public boolean deplace(AbstractModelPartie partie, Deplace deplace) {
+	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
 		//Do nothing
-		return false;
+		boolean[] res = {false,false};
+		return res;
 	}
 	@Override
 	public void applyFriction(int minspeed) {
@@ -159,11 +162,6 @@ public class Bloc extends Collidable{
 	@Override
 	public void resetVarDeplace() {
 		//do nothing
-	}
-	@Override
-	public int setReaffiche() {
-		//default
-		return 0;
 	}
 	@Override
 	public void destroy() {

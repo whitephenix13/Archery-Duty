@@ -11,10 +11,7 @@ public abstract class Mouvement_tir extends Mouvement{
 	 *public static String tir_vent= "T_vent"; 
 	 * */
 	
-	//deplacement pour Tir
-	public static String fleche= "fleche";//identifier
-	//deplacement pour Tir Monstre
-	public static String tir_spirel= "t_spirel";//identifier
+
 	
 	@Override
 	public boolean IsDeplacement(Mouvement m)

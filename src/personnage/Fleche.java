@@ -1,11 +1,8 @@
 package personnage;
 
-import java.awt.Image;
 import java.awt.Point;
 import java.awt.Polygon;
-import java.awt.Toolkit;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,9 +20,11 @@ import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import principal.InterfaceConstantes;
 import types.Hitbox;
+import types.TypeObject;
 import types.Vitesse;
 
 public class Fleche extends Collidable implements InterfaceConstantes{
+	
 	
 	public boolean doitDeplace=false;
 	public boolean isPlanted=false; //fleche plantée dans le sol
@@ -44,10 +43,12 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 	public int degat= -50;
 	 MusicBruitage bruitage;
 
+	 private boolean animationChanged=false;
 		
-	public Fleche()
+	public Fleche(List<Fleche> tabFleche,int current_frame)
 	{
-		nulle= true;
+		type = TypeObject.fleche;
+		anim=0;
 		doitDeplace=false;
 		needDestroy= false;
 		tempsDetruit = 0;
@@ -55,9 +56,13 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 		slowDownFactor=3;
 		fixedWhenScreenMoves=false;
 		vit=new Vitesse(0,0);
-		deplacement = new T_normal();
+		deplacement = new T_normal(TypeObject.fleche,T_normal.tir,current_frame);
+		
+		nulle=false;
+		encochee=true;
+		tabFleche.add(this);
 	}
-	public Fleche(int xF, int yF, Mouvement_tir mouv)
+	/*public Fleche(int xF, int yF, Mouvement_tir mouv,int current_frame)
 	{
 		xpos=xF;
 		ypos=yF;
@@ -69,7 +74,7 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 		fixedWhenScreenMoves=false;
 		vit=new Vitesse(0,0);
 
-	}
+	}*/
 	public void timer()
 	{
 		tempsDetruit=System.nanoTime();
@@ -96,7 +101,7 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 		draw_tr.translate(-xpos, -ypos);
 
 
-		deplacement.setSpeed(Mouvement_tir.fleche, this, anim, deplace);
+		deplacement.setSpeed(TypeObject.fleche, this, anim);
 		bruitage.startBruitage(100);
 		
 	}
@@ -135,7 +140,7 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 	@Override
 	public Hitbox getHitbox(Point INIT_RECT, Mouvement _dep, int _anim) {
 		//ASSUME WE ALWAYS USE THIS WHEN THE ARROW IS SHOT (!encochee)
-		Mouvement_tir temp = (Mouvement_tir) _dep.Copy(Mouvement_tir.fleche); //create the mouvement
+		Mouvement_tir temp = (Mouvement_tir) _dep.Copy(TypeObject.fleche); //create the mouvement
 		return Hitbox.plusPoint(temp.hitbox_rotated.get(_anim), new Point(xpos,ypos),true);
 	}
 	public Hitbox getWorldHitbox(AbstractModelPartie partie) {
@@ -152,14 +157,15 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,
 			Deplace deplace) {
 		
-		//double coef= vit.vect2d().dot(normal)/normal.lengthSquared();
-		//vit = new Vitesse((int)(vit.x-coef*normal.x),(int)(vit.y-coef*normal.y));
+		double coef= vit.vect2d().dot(normal)/normal.lengthSquared();
+		vit = new Vitesse((int)(vit.x-coef*normal.x),(int)(vit.y-coef*normal.y));
 		
-		//boolean collision_gauche = (vit.x<=0) && (normal.x>0);
-		//boolean collision_droite = (vit.x>=0) && (normal.x<0);
+		boolean collision_gauche = (vit.x<=0) && (normal.x>0);
+		boolean collision_droite = (vit.x>=0) && (normal.x<0);
 		//boolean collision_haut = (vit.y<=0) && (normal.y>0);
 		//boolean collision_bas = (vit.y>=0) && (normal.y<0);
-		
+		last_colli_left=collision_gauche;
+		last_colli_right=collision_droite;
 		vit = new Vitesse(0,0);
 		this.doitDeplace=false;
 		this.isPlanted=true;
@@ -177,11 +183,12 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 			{}};*/
 	}
 	@Override
-	public boolean deplace(AbstractModelPartie partie, Deplace deplace) {
+	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
 			try {
 				anim=changeAnim(partie,deplace);} 
 			catch (InterruptedException e) {e.printStackTrace();}
-		return doitDeplace;
+		boolean[] res = {doitDeplace,animationChanged};
+		return res;
 	}
 	public int changeAnim(AbstractModelPartie partie,Deplace deplace) throws InterruptedException//{{
 	{
@@ -189,11 +196,10 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 		{
 			//set the anim 
 			double[] anim_rot = deplace.getAnimRotationTir(partie,true);
-			int animFleche = (anim +1) %4;
+			int animFleche = deplacement.updateAnimation(TypeObject.fleche, anim, partie.getFrame());
 			rotation = anim_rot[1];
-			//set the position of the arrow so that it fits the bow
-			//xpos=(partie.heros.xpos-partie.xScreendisp)+xcenterFleche.get(animFleche);
-			//ypos= (partie.heros.ypos-partie.yScreendisp)+ycenterFleche.get(animFleche);
+			if(animFleche==anim)
+				animationChanged=false;
 			return animFleche;
 		}
 
@@ -202,11 +208,17 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 			if (useGravity)
 			{
 				int animSuivante= gravityAnim();
+				if(animSuivante==anim)
+					animationChanged=false;
 				decallageFleche (animSuivante, partie,deplace );
 				return(animSuivante);
 			}
-			else 
-				return((anim+1)%4);
+			else {
+				int animFleche = deplacement.updateAnimation(TypeObject.fleche, anim, partie.getFrame());
+				if(animFleche==anim)
+					animationChanged=false;
+				return animFleche;
+			}
 			
 		}
 		return (anim+1)%4;
@@ -347,15 +359,8 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 	public void resetVarDeplace() {
 		//nothing
 	}
-	@Override
-	public int setReaffiche() {
-		if(deplacement.IsDeplacement(Mouvement_tir.tir_normal)){
-			return(2);
-		}
-		else {
-			throw new IllegalArgumentException("ERREUR setReaffiche, ACTION INCONNUE  "  +deplacement.getClass().getName());
-		}
-	}
+
+
 
 
 

@@ -2,20 +2,20 @@ package todo;
 
 public class Todo {
 	
-	//Version 0.0.0
-	//TODO: remove the wait for T milli in play. The fps is determined by how frequently you update your display :
-	//Define frame= 1/fps and reason about frames (and not time) for drawing/updating 
-	//TODO: handle own repaint cf http://www.dreamincode.net/forums/topic/113977-java-game-the-fastest-way-to-repaint-bis/
-	//TODO: replace deplaceobject by more fluid one
-	//TODO: marcher sur bord de trou => animation chute 
-	//TODO: creer/modifier classe animation ou on specifie le temps de changement d'animation(remplacer reaffiche)
+	//Version 0.1.0
+	
+	//TODO: Set key binding: replace Touches, Option and Model Partie HandlePressedInput
+	//TODO: can not control windows decoration : remove decoration, constrain mouse inside windows: change to keybinding 
+	//TODO: deplacer fenetre quand heros cours => cours non stop 
+		
+	//TODO: when slow down move: slow down time and do not divide position (collision) by factor
+	//TODO: remove ALL TODO
 	//DONE 
 	
 	//Version 0.1.0
 	//seiery "séyéri" 
 	//TODO: Problème si le jeu est ralenti (t=8), spam touche marche => mouvement rapide
 	//TODO mettre à jour deplaceEcran editeur par rapport a celui de AbstractModelPartie
-	//TODO: when slow down move: slow down time and do not divide position (collision) by factor
 	//TODO: eviter de modifier des variables sur le heros pour revenir a des valeurs antérieurs (anim, mouvement... cela créer des problèmes d'affichages)
 	//TODO: score quand tue un ennemi + combo + temps de fin de niveau // temps 
 	//TODO: effet ralentissement: taille en fonction de la fenetre
