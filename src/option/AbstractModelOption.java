@@ -9,15 +9,20 @@ import javax.swing.event.ChangeEvent;
 import observer.Observable;
 import observer.Observer;
 import option.AffichageOption.CustomClickableLabel;
+import partie.InputPartie;
+import types.Touches;
 
 public abstract class AbstractModelOption implements Observable{
 
+		protected Touches touches;
+	
 		//add Option Model variables 
 		protected Timer blinkField;
 		protected boolean timerFinish =true;
 		protected boolean caseFocus = false;
 		protected CustomClickableLabel memCustomClickableLabel;
-		
+		public InputOption inputOption;
+		protected InputPartie inputPartie;
 		//variables pour l'affichage 
 		protected boolean showInputError=false;
 		protected boolean updateInputText=false;
@@ -29,7 +34,7 @@ public abstract class AbstractModelOption implements Observable{
 		public abstract void blinkCustomClickableLabel();
 		public abstract void setVolumeMusique(ChangeEvent event);
 		public abstract void setVolumeBruitage(ChangeEvent event);
-		public abstract void setModifTouches(int value);
+		public abstract void setModifTouches(String value, InputPartie inpPartie);
 		
 		public void setCaseFocus(boolean _caseFocus){caseFocus=_caseFocus;}
 		public void setShowInputError(boolean value){showInputError=value;}

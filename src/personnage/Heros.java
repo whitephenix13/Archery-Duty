@@ -65,6 +65,12 @@ public class Heros extends Collidable{
 
 	public boolean doitEncocherFleche=false;
 	public boolean flecheEncochee=false;
+	//last time an arrow was shot
+	public long last_shoot_time = -1;
+	//last time I armed an arrow
+	public long last_armed_time = -1;
+	//last time the heros wall jump: use to disable keys 
+	public long last_wall_jump_time = -1;
 
 	//booleen pour savoir si on veut déplacer le personnage sur le côté quand il saut 
 	public boolean deplaceSautDroit = false;
@@ -104,7 +110,7 @@ public class Heros extends Collidable{
 		xpos = xPo;
 		ypos = yPo; 
 		vit = new Vitesse(0,0);
-		slowDownFactor=3;//6
+		slowDownFactor=4;//6
 		fixedWhenScreenMoves=true;
 		deplacement=dep ;
 		anim=_anim;
@@ -200,7 +206,6 @@ public class Heros extends Collidable{
 			return  Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos,ypos),true);}
 		catch(IndexOutOfBoundsException e)
 		{
-			System.out.println(deplacement.getClass().getName()+" "+anim);
 			return new Hitbox();
 		}
 	}
@@ -211,7 +216,6 @@ public class Heros extends Collidable{
 		}
 		catch(IndexOutOfBoundsException e)
 		{
-			System.out.println(_dep.getClass().getName()+" "+_anim);
 			return new Hitbox();
 		}
 	}
@@ -408,7 +412,6 @@ public class Heros extends Collidable{
 	 */	
 	public int changeMouv(Mouvement nouvMouv, int nouvAnim, AbstractModelPartie partie,Deplace deplace) throws InterruptedException
 	{
-		System.out.println(deplacement.getClass().getName() +anim+" "+nouvMouv.getClass().getName()+" "+partie.changeMouv);
 		boolean blocDroitGlisse=false;
 		boolean blocGaucheGlisse=false;
 
@@ -463,8 +466,8 @@ public class Heros extends Collidable{
 		boolean landSliding = finSaut && deplacement.IsDeplacement(Mouvement_perso.glissade);
 		//le heros chute ou cours vers un mur: il commence à glisser sur le mur 
 		boolean[] beginSliding= computeBeginSliding(blocDroitGlisse,blocGaucheGlisse,falling); 
-		boolean beginSliding_r= beginSliding[0];
-		boolean beginSliding_l= beginSliding[1];
+		boolean beginSliding_r= beginSliding[0] ;
+		boolean beginSliding_l= beginSliding[1] ;
 
 		boolean[] beginAccroche= computeAccroche(blocDroitGlisse,blocGaucheGlisse,blocDroitAccroche,blocGaucheAccroche,falling);
 		boolean beginAccroche_r = beginAccroche[1];
@@ -475,7 +478,7 @@ public class Heros extends Collidable{
 						(!blocGaucheGlisse && droite_gauche(animHeros)==("Droite")));
 
 		int anim=animHeros;
-		if(doitEncocherFleche || flecheEncochee)//cas différent puisqu'on ne veut pas que l'avatar ait l'animation de chute en l'air
+		if( (doitEncocherFleche || flecheEncochee))//cas différent puisqu'on ne veut pas que l'avatar ait l'animation de chute en l'air
 		{
 			double[] anim_rotation = deplace.getAnimRotationTir(partie,false);
 			int animSuivante = (int)anim_rotation[0];
@@ -499,7 +502,8 @@ public class Heros extends Collidable{
 			anim = nextAnim;
 			deplacement= nextMouv;
 			deplacement.setSpeed(TypeObject.heros, this, anim);
-
+			deplaceSautGauche=false;
+			deplaceSautDroit=false;
 			return(anim);
 		}
 
@@ -549,7 +553,6 @@ public class Heros extends Collidable{
 				Mouvement mouvSuivant = new Saut(TypeObject.heros,type_mouv,partie.getFrame());
 				int animSuivant = (droite_gauche(animHeros)=="Gauche" ? 0+up :3+up);
 				alignHitbox(animHeros,mouvSuivant,animSuivant,partie,deplace,blocGaucheGlisse );		
-				//TODO: why?
 				animHeros = animSuivant;
 				anim=animSuivant;
 				deplacement=mouvSuivant;
@@ -782,7 +785,8 @@ public class Heros extends Collidable{
 		if(deplacement.IsDeplacement(Mouvement_perso.tir))
 		{
 			boolean neg = vit.x<0;
-			double newVitX= vit.x - (vit.x* InterfaceConstantes.FRICTION);
+			double frict = (useGravity?InterfaceConstantes.AIRFRICTION:InterfaceConstantes.FRICTION);
+			double newVitX= vit.x - (vit.x* frict);
 			if( (!neg && newVitX<minSpeed) || (neg && newVitX>-1*minSpeed) )
 				vit.x=minSpeed;
 			else

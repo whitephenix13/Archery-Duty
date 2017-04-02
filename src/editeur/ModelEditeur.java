@@ -167,6 +167,11 @@ public class ModelEditeur extends AbstractModelEditeur{
 		 int yEndAff=((InterfaceConstantes.HAUTEUR_FENETRE/tailleBloc+yViewPort/InterfaceConstantes.TAILLE_BLOC)+2);
 		 yEndAff= ( yEndAff >= InterfaceConstantes.ORD_MAX )? InterfaceConstantes.ORD_MAX : yEndAff;
 
+		 if(monde.niveau==null){
+			 monde.niveau= new Bloc[InterfaceConstantes.ABS_MAX][InterfaceConstantes.ORD_MAX];
+			 monde.initMonde();
+		 }
+		 
 		for(int abs=xStartAff;abs<xEndAff;abs++)
 		{
 			for(int ord=yStartAff;ord<yEndAff;ord++)

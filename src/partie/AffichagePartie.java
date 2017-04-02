@@ -19,13 +19,14 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import Affichage.Affichage;
 import observer.Observer;
 import option.AbstractControlerOption;
 import option.AbstractModelOption;
 import option.AffichageOption;
 import option.ControlerOption;
 import option.ModelOption;
-import Affichage.Affichage;
+import types.Touches;
 
 @SuppressWarnings("serial")
 public class AffichagePartie extends JFrame implements Observer{
@@ -211,11 +212,12 @@ public class AffichagePartie extends JFrame implements Observer{
 		panelPartie.setLayout(new BorderLayout());		
 		this.getContentPane().add(panelPartie);
 
-
-
 		//on utilise le content pane principal pour dessiner 
 		panelPartie.setFocusable(true);
 		panelPartie.requestFocusInWindow();
+		
+		//initialize input in order for them to be modifier by option
+		controlerPartie.partie.inputPartie.init(panelPartie);
 	}
 
 	public void EnableBoutonsPause(boolean enable)
@@ -246,7 +248,8 @@ public class AffichagePartie extends JFrame implements Observer{
 
 	public void addListenerPartie()
 	{
-		panelPartie.addKeyListener(new ClavierListener());
+		//panelPartie.addKeyListener(new ClavierListener());
+		controlerPartie.partie.inputPartie.init(panelPartie);
 		panelPartie.addMouseListener(new SourisListener());
 		panelPartie.addMouseMotionListener(new SourisMotionListener());
 
@@ -257,7 +260,8 @@ public class AffichagePartie extends JFrame implements Observer{
 	}
 	public void removeListenerPartie()
 	{
-		panelPartie.removeKeyListener(panelPartie.getKeyListeners()[0]);
+		//panelPartie.removeKeyListener(panelPartie.getKeyListeners()[0]);
+		controlerPartie.partie.inputPartie.reset();
 		panelPartie.removeMouseListener(panelPartie.getMouseListeners()[0]);
 		panelPartie.removeMouseMotionListener(panelPartie.getMouseMotionListeners()[0]);
 
@@ -266,24 +270,6 @@ public class AffichagePartie extends JFrame implements Observer{
 			MouseListener[] listeners = mjb.getMouseListeners();
 			mjb.removeMouseListener(listeners[listeners.length-1]);
 		}
-	}
-
-
-
-	public class ClavierListener implements KeyListener
-	{
-		public void keyPressed(KeyEvent event) 
-		{
-			controlerPartie.controlPressedInput(event.getKeyCode());
-		}
-		public void keyReleased(KeyEvent event) 
-		{
-			controlerPartie.controlReleasedInput(event.getKeyCode());
-		}
-
-		public void keyTyped(KeyEvent event) 
-		{
-		}       
 	}
 
 	public class SourisListener implements MouseListener
@@ -344,9 +330,9 @@ public class AffichagePartie extends JFrame implements Observer{
 
 	}
 
-	public void createOption()
+	public void createOption(Touches _touches)
 	{
-		AbstractModelOption option = new ModelOption();
+		AbstractModelOption option = new ModelOption(_touches,controlerPartie.partie.inputPartie);
 		AbstractControlerOption controlerOption = new ControlerOption(option);
 		final AffichageOption affichageOption = new AffichageOption(controlerOption);
 		affichageOption.addListenerOption();
@@ -396,7 +382,7 @@ public class AffichagePartie extends JFrame implements Observer{
 
 		if(controlerPartie.partie.setAffichageOption)
 		{
-			createOption();
+			createOption(controlerPartie.partie.touches);
 
 		}
 		controlerPartie.partie.resetVariablesAffichage();

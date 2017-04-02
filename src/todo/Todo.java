@@ -2,18 +2,13 @@ package todo;
 
 public class Todo {
 	
-	//Version 0.1.0
-	
-	//TODO: Set key binding: replace Touches, Option and Model Partie HandlePressedInput
-	//TODO: can not control windows decoration : remove decoration, constrain mouse inside windows: change to keybinding 
-	//TODO: deplacer fenetre quand heros cours => cours non stop 
-		
-	//TODO: when slow down move: slow down time and do not divide position (collision) by factor
-	//TODO: remove ALL TODO
-	//DONE 
 	
 	//Version 0.1.0
 	//seiery "séyéri" 
+	//TODO: memory error : for config 200 000 000, working for 3 000 000 000 (java -XX:+PrintFlagsFinal -version | findstr /i "HeapSize PermSize ThreadStackSize") 
+	//see java heap space 
+	//=> load correctly the world (with smaller size ? )
+	//TODO: make a load screen: load level in a new thread, make sure that all musics are loaded too 
 	//TODO: Problème si le jeu est ralenti (t=8), spam touche marche => mouvement rapide
 	//TODO mettre à jour deplaceEcran editeur par rapport a celui de AbstractModelPartie
 	//TODO: eviter de modifier des variables sur le heros pour revenir a des valeurs antérieurs (anim, mouvement... cela créer des problèmes d'affichages)

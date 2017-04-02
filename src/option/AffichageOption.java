@@ -39,22 +39,22 @@ public class AffichageOption extends JFrame implements Observer{
 	public CustomLabel lControle = new CustomLabel("CONTROLE"); 
 
 	public CustomLabel lDepDroit = new CustomLabel("Droite: ") ; 
-	public CustomClickableLabel tDepDroit= new CustomClickableLabel(Touches.ToString(Touches.t_droite),"droite");
+	public CustomClickableLabel tDepDroit;
 
 	public CustomLabel lDepGauche = new CustomLabel("Gauche: ") ;  
-	public CustomClickableLabel tDepGauche= new CustomClickableLabel(Touches.ToString(Touches.t_gauche),"gauche");
+	public CustomClickableLabel tDepGauche;
 
 	public CustomLabel lSaut = new CustomLabel("Saut: ") ; 
-	public CustomClickableLabel tSaut= new CustomClickableLabel(Touches.ToString(Touches.t_saut),"saut");
+	public CustomClickableLabel tSaut;
 
 	public CustomLabel lTir = new CustomLabel("Tir: ") ; 
-	public CustomClickableLabel tTir= new CustomClickableLabel(Touches.ToString(Touches.t_tir),"tir");
+	public CustomClickableLabel tTir;
 
 	public CustomLabel lSlow = new CustomLabel("Slow: ") ; 
-	public CustomClickableLabel tSlow= new CustomClickableLabel(Touches.ToString(Touches.t_slow),"slow");
+	public CustomClickableLabel tSlow;
 
 	public CustomLabel lPause = new CustomLabel("Pause: ") ; 
-	public CustomClickableLabel tPause= new CustomClickableLabel(Touches.ToString(Touches.t_pause),"pause");
+	public CustomClickableLabel tPause;
 
 
 	public JButton retour = new JButton("Retour");
@@ -113,13 +113,13 @@ public class AffichageOption extends JFrame implements Observer{
 
 	public void setInputText()
 	{
-
-		tDepDroit.setText(Touches.ToString(Touches.t_droite));
-		tDepGauche.setText(Touches.ToString(Touches.t_gauche));
-		tSaut.setText(Touches.ToString(Touches.t_saut));
-		tTir.setText(Touches.ToString(Touches.t_tir));
-		tSlow.setText(Touches.ToString(Touches.t_slow));
-		tPause.setText(Touches.ToString(Touches.t_pause));
+		Touches touch = controler.opt.touches;
+		tDepDroit.setText(touch.ToString(touch.t_droite));
+		tDepGauche.setText(touch.ToString(touch.t_gauche));
+		tSaut.setText(touch.ToString(touch.t_saut));
+		tTir.setText(touch.ToString(touch.t_tir));
+		tSlow.setText(touch.ToString(touch.t_slow));
+		tPause.setText(touch.ToString(touch.t_pause));
 	}
 	public void addListenerOption()
 	{
@@ -133,11 +133,13 @@ public class AffichageOption extends JFrame implements Observer{
 		for(JPanel p : mapPanel.values())
 		{
 			p.addMouseListener(in);
-			p.addKeyListener(in);
+			controler.opt.inputOption.init(p);
+			//p.addKeyListener(in);
 			for(Component c : p.getComponents())
 			{
 				c.addMouseListener(in);
-				c.addKeyListener(in);
+				//controler.opt.inputOption.init(c);
+				//c.addKeyListener(in);
 			}
 		}
 
@@ -157,18 +159,18 @@ public class AffichageOption extends JFrame implements Observer{
 		for(JPanel p : mapPanel.values())
 		{
 			MouseListener[] ml = p.getMouseListeners();
-			KeyListener[] kl = p.getKeyListeners();
+			//KeyListener[] kl = p.getKeyListeners();
 			
 			p.removeMouseListener(ml[ml.length-1]);
-			p.removeKeyListener(kl[kl.length-1]);
-			
+			//p.removeKeyListener(kl[kl.length-1]);
+			controler.opt.inputOption.reset(p);
 			for(Component c : p.getComponents())
 			{
 				MouseListener[] cml = c.getMouseListeners();
 				KeyListener[] ckl = c.getKeyListeners();
 
 				c.removeMouseListener(cml[cml.length-1]);
-				c.removeKeyListener(ckl[ckl.length-1]);
+				//c.removeKeyListener(ckl[ckl.length-1]);
 			}
 		}
 		CustomClickableLabel[] cls = {tDepDroit,tDepGauche,tSaut,tTir,tSlow,tPause};
@@ -180,6 +182,15 @@ public class AffichageOption extends JFrame implements Observer{
 
 	public void initComposant()
 	{
+		Touches touch = controler.opt.touches;
+		controler.opt.inputOption = new InputOption(controler,controler.opt.inputPartie);
+		tDepDroit= new CustomClickableLabel(touch.ToString(touch.t_droite),"droite");
+		tDepGauche= new CustomClickableLabel(touch.ToString(touch.t_gauche),"gauche");
+		tSaut= new CustomClickableLabel(touch.ToString(touch.t_saut),"saut");
+		tTir= new CustomClickableLabel(touch.ToString(touch.t_tir),"tir");
+		tSlow= new CustomClickableLabel(touch.ToString(touch.t_slow),"slow");
+		tPause= new CustomClickableLabel(touch.ToString(touch.t_pause),"pause");
+
 		retour = new JButton("Retour");
 
 		//on régle les slideur 
@@ -333,14 +344,14 @@ public class AffichageOption extends JFrame implements Observer{
 
 		public void keyPressed(KeyEvent e) 
 		{
-			//on vérifie que la touche du clavier est valide et qu'il y a une case selectionne
+			/*//on vérifie que la touche du clavier est valide et qu'il y a une case selectionne
 			controler.controlKeyboardInput(e);
 			//Comme la touche a ete modifiée, plus aucune case n'est selectionne
 			controler.opt.setCaseFocus(false);
 			//On arrete le clignotement de la case
 			controler.opt.blinkCustomClickableLabel();
 			//on retire la case memorise
-			controler.controlCustomClickableLabel(null);
+			controler.controlCustomClickableLabel(null);*/
 
 		}
 		public void keyReleased(KeyEvent e) {}

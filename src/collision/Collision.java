@@ -81,7 +81,7 @@ public class Collision implements InterfaceConstantes{
 
 		Vitesse speed= object.vit;
 		Vitesse minSpeed= new Vitesse(-1*speed.x,-1*speed.y);
-		
+
 		mondeBlocs = getMondeBlocs(partie.monde,objectHitbox, partie.INIT_RECT,
 				partie.TAILLE_BLOC);
 		for(Bloc mondeBloc : mondeBlocs)
@@ -90,7 +90,7 @@ public class Collision implements InterfaceConstantes{
 			Vector2d supp1 = GJK_EPA.support(mondeBox.polygon,minSpeed.vect2d() );//fixed one
 			Vector2d supp2 = GJK_EPA.support(objectHitbox.polygon, speed.vect2d());//mobile one
 			Vector2d firstDir = new Vector2d(supp1.x-supp2.x, supp1.y-supp2.y);
-			
+
 			List<Vector2d> simplex = GJK_EPA.intersects(mondeBox.polygon,objectHitbox.polygon ,firstDir);
 			List<Vector2d> normals = new ArrayList<Vector2d>();
 
@@ -120,16 +120,8 @@ public class Collision implements InterfaceConstantes{
 		Vitesse speed= object.vit;
 		Vitesse minSpeed= new Vitesse(-1*speed.x,-1*speed.y);
 
-		if(partie.slowDown)
-		{
-			xDeplacement=(int) (speed.x/object.slowDownFactor);
-			yDeplacement=(int) (speed.y/object.slowDownFactor);
-		}
-		else
-		{
-			xDeplacement=(int) (speed.x);
-			yDeplacement=(int) (speed.y);
-		}
+		xDeplacement=(int) (speed.x);
+		yDeplacement=(int) (speed.y);
 
 		boolean noIntersection = false;
 		//distance which must move the object to avoid any collisions
@@ -189,7 +181,7 @@ public class Collision implements InterfaceConstantes{
 					dInter= GJK_EPA.EPA(mondeBox.polygon, objectHitbox.polygon, simplex, minSpeed.vect2d(), normals);
 				}
 				collision_type =  GJK_EPA.isIntersect(dInter,dNull);
-				
+
 				boolean inTouch= collision_type == GJK_EPA.TOUCH;
 				boolean inCollision = collision_type==GJK_EPA.INTER; 
 				if(inTouch || inCollision)
@@ -213,7 +205,6 @@ public class Collision implements InterfaceConstantes{
 					//avoid that the ejected object is exactly on the collided object
 					double xequ = (speed.x>0 && x_out==(int)x_out)? -1 : 0;
 					double yequ = (speed.y>0 && y_out==(int)y_out)? -1 : 0;
-					//vectOut= new Vector2d(Math.round(vectOut.x*dInter),Math.round(vectOut.y*dInter));
 					vectOut= new Vector2d(Math.floor(x_out)+x+xequ,Math.floor(y_out)+y+yequ);
 					intersectedHitbox=mondeBox;
 					if((Math.abs(maxInterDist.x)-Math.abs((int)vectOut.x))<0 || 
@@ -264,7 +255,7 @@ public class Collision implements InterfaceConstantes{
 	 */
 	public boolean collisionObjects(AbstractModelPartie partie,Deplace deplace, Collidable object1,Collidable object2)
 	{
-		
+
 		Hitbox objectHitbox1 = null;
 		Hitbox objectHitbox2 = null;
 
@@ -290,7 +281,7 @@ public class Collision implements InterfaceConstantes{
 
 		Vector2d deltaSpeed = new Vector2d(object1.vit.x-object2.vit.x,object1.vit.y-object2.vit.y);
 		Vector2d m_deltaSpeed= new Vector2d(-deltaSpeed.x,-deltaSpeed.y);
-		
+
 		Vector2d supp1 = GJK_EPA.support(objectHitbox1.polygon,deltaSpeed );//fixed one
 		Vector2d supp2 = GJK_EPA.support(objectHitbox2.polygon, m_deltaSpeed);//mobile one
 		Vector2d firstDir = new Vector2d(supp1.x-supp2.x, supp1.y-supp2.y);

@@ -14,13 +14,59 @@ import types.Hitbox;
 public class Deplace implements InterfaceConstantes{
 	public Collision colli;
 	private Gravite gravite = new Gravite();
-		
+
 	public Deplace() 
 	{
 		colli = new Collision();
 	}
 
 	public void DeplaceObject(Collidable object, Mouvement nouvMouv, AbstractModelPartie partie)
+	{
+		boolean isHeros = object instanceof Heros;
+
+		if(isHeros && partie.slowDown){
+			partie.slowCount= (partie.slowCount+1) % (object.slowDownFactor);
+		}
+
+		object.memorizeCurrentValue();
+
+		boolean update_with_speed = ( !partie.slowDown || (partie.slowDown && partie.slowCount==0));
+		boolean[] shouldMov_changedAnim=object.deplace(partie, this);
+		boolean shouldMove= shouldMov_changedAnim[0];
+		boolean changedAnim= shouldMov_changedAnim[1];
+		if(!shouldMove)
+			return;
+
+		boolean useGravity = object.useGravity && update_with_speed;
+		if(useGravity)
+			gravite.gravite(object, partie.slowDown);
+
+		object.applyFriction(0);
+		//deplacement à l'aide de la vitesse  si il n'y a pas collision 
+		//on reset les dernières positions de collisions:
+		object.resetVarBeforeCollision();
+		if(update_with_speed)
+		{
+			boolean stuck = !colli.ejectWorldCollision(partie, this, object);
+
+			if(stuck)
+			{
+				object.handleStuck(partie, this);
+			}
+			else
+				object.handleDeplacementSuccess(partie, this);
+		}
+		object.resetVarDeplace();
+
+		if(isHeros){
+			Point delta = getdeplaceEcran(partie,(Heros)object);
+			deplaceEcran(delta,partie,object);
+		}
+
+		object.reaffiche--;
+
+	}
+	/*public void DeplaceObject(Collidable object, Mouvement nouvMouv, AbstractModelPartie partie)
 	{
 		boolean isHeros = object instanceof Heros;
 
@@ -63,7 +109,7 @@ public class Deplace implements InterfaceConstantes{
 
 		object.reaffiche--;
 
-	}
+	}*/
 
 
 	/**
@@ -85,7 +131,7 @@ public class Deplace implements InterfaceConstantes{
 		int right_xpos_hit = (int) Hitbox.supportPoint(new Vector2d(1,0), heros.getHitbox(partie.INIT_RECT).polygon).x;
 		int up_ypos_hit = (int) Hitbox.supportPoint(new Vector2d(0,-1), heros.getHitbox(partie.INIT_RECT).polygon).y;
 		int down_ypos_hit = (int) Hitbox.supportPoint(new Vector2d(0,1), heros.getHitbox(partie.INIT_RECT).polygon).y;
-		
+
 		int xpos_hit=0;
 		int ypos_hit=0;
 		//les conditions limites sont aux 3/7
@@ -99,7 +145,7 @@ public class Deplace implements InterfaceConstantes{
 			xpos_hit=right_xpos_hit;
 			largeur_fenetre=heros.vit.x>0 ? 5*InterfaceConstantes.LARGEUR_FENETRE/7:0;
 		}
-				
+
 		//trop en haut
 		if(up_ypos_hit<2*InterfaceConstantes.HAUTEUR_FENETRE/5){
 			ypos_hit= up_ypos_hit;
@@ -111,7 +157,7 @@ public class Deplace implements InterfaceConstantes{
 			ypos_hit =down_ypos_hit;
 			hauteur_fenetre=heros.vit.y>=0? 3*InterfaceConstantes.HAUTEUR_FENETRE/5:0;
 		}
-		
+
 		if(largeur_fenetre != 0 ){
 			xdelta= largeur_fenetre-xpos_hit;
 		}

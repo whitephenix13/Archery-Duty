@@ -10,12 +10,17 @@ import javax.swing.event.ChangeEvent;
 import menuPrincipal.AbstractModelPrincipal;
 import music.Music;
 import music.MusicBruitage;
+import partie.InputPartie;
 import types.Touches;
 
 
 public class ModelOption extends AbstractModelOption{
 
-
+	public ModelOption(Touches _touches, InputPartie _inputPartie)
+	{
+		touches=_touches;
+		inputPartie=_inputPartie;
+	}
 	public void retourMenuPrincipal() {
 		AbstractModelPrincipal.changeFrame=true;
 		AbstractModelPrincipal.modeSuivant="Principal";
@@ -66,31 +71,39 @@ public class ModelOption extends AbstractModelOption{
 	}
 	
 
-	public void setModifTouches(int touch)
+	public void setModifTouches(String touch,InputPartie inpPartie)
 	{
+		if(memCustomClickableLabel == null)
+			return;
 		if(memCustomClickableLabel.getName().equals("droite"))
 		{
-			Touches.t_droite=touch;
+			inpPartie.rebindKey(touch, touches.t_droite);
+			touches.t_droite=touch;
 		}
 		else if(memCustomClickableLabel.getName().equals("gauche"))
 		{
-			Touches.t_gauche=touch;
+			inpPartie.rebindKey(touch, touches.t_gauche);
+			touches.t_gauche=touch;
 		}
 		else if(memCustomClickableLabel.getName().equals("saut"))
 		{
-			Touches.t_saut=touch;
+			inpPartie.rebindKey(touch, touches.t_saut);
+			touches.t_saut=touch;
 		}
 		else if(memCustomClickableLabel.getName().equals("tir"))
 		{
-			Touches.t_tir=touch;
+			inpPartie.rebindKey(touch, touches.t_tir);
+			touches.t_tir=touch;
 		}
 		else if(memCustomClickableLabel.getName().equals("slow"))
 		{
-			Touches.t_slow=touch;
+			inpPartie.rebindKey(touch, touches.t_slow);
+			touches.t_slow=touch;
 		}
 		else if(memCustomClickableLabel.getName().equals("pause"))
 		{
-			Touches.t_pause=touch;
+			inpPartie.rebindKey(touch, touches.t_pause);
+			touches.t_pause=touch;
 		}
 		else 
 		{

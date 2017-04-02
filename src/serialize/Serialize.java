@@ -23,7 +23,6 @@ public class Serialize implements InterfaceConstantes{
 	
 	public static String erreurMsgChargement="";
 	
-	 static byte[] buffer ;
 	public static String serializeStockageMonstre(FileOutputStream fos,StockageMonstre monstre ) 
 	{
 		//string, x,y , bool
@@ -173,17 +172,12 @@ public class Serialize implements InterfaceConstantes{
 		//int,4,position en x du bloc
 		bytes = new byte[4];
 		is.read(bytes);
-		//TODO:erreur? 
 		bloc.setPos(bytesToInt(bytes), bloc.getYpos());
-		//TODO 
-		//bloc.setxPos(bytesToInt(bytes));
 
 		//int,4,position en y du bloc
 		bytes = new byte[4];
 		is.read(bytes);
 		bloc.setPos( bloc.getXpos(),bytesToInt(bytes));
-		//TODO
-		//bloc.setyPos(bytesToInt(bytes));
 
 		//bool,1,peut-on passer au travers du bloc?
 		bytes = new byte[1];

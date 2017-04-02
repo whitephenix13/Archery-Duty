@@ -31,7 +31,7 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 	public boolean nulle =false;
 	public boolean encochee =false;
 	public static String SLOW_AURA="slow";
-	public String aura="";
+	public String aura="slow";
 	public AffineTransform draw_tr;
 	//relative to heros position
 	public List<Integer> xanchor=Arrays.asList(28,20,45,45,40,30,55,52,70,35);

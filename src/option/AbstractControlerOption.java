@@ -15,6 +15,6 @@ public abstract class AbstractControlerOption {
 	
 	public abstract void controlRetourMenuPrincipal();
 	public abstract void controlMouseInput(MouseEvent e);
-	public abstract void controlKeyboardInput(KeyEvent e);
+	//public abstract void controlKeyboardInput(KeyEvent e);
 	public abstract void controlCustomClickableLabel(CustomClickableLabel l);
 }

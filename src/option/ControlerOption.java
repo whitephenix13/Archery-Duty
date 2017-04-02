@@ -25,29 +25,29 @@ public class ControlerOption extends AbstractControlerOption{
 	{
 		if(opt.caseFocus)
 		{
-		int input=Touches.ERROR;
+		String input=opt.touches.ERROR;
 		
 		if(SwingUtilities.isLeftMouseButton(e))
-			input = Touches.LEFT_MOUSE;
+			input = opt.touches.LEFT_MOUSE;
 		
 		if(SwingUtilities.isRightMouseButton(e))
-			input = Touches.RIGHT_MOUSE;
+			input = opt.touches.RIGHT_MOUSE;
 		
 		if(SwingUtilities.isMiddleMouseButton(e))
-			input = Touches.MIDDLE_MOUSE;
+			input = opt.touches.MIDDLE_MOUSE;
 		
-		if(input !=Touches.ERROR)
-			opt.setModifTouches(input);
+		if(input !=opt.touches.ERROR)
+			opt.setModifTouches(input,opt.inputPartie);
 		else
 			opt.setShowInputError(true);
 		}
 	}
 
-	public void controlKeyboardInput(KeyEvent e) 
+	/*public void controlKeyboardInput(KeyEvent e) 
 	{
 		if(opt.caseFocus)
 		{
-			int input = Touches.ERROR;
+			String input = opt.touches.ERROR;
 			if( ((e.getKeyCode() >= KeyEvent.VK_A) && (e.getKeyCode() <= KeyEvent.VK_Z)) || ((e.getKeyCode() >= KeyEvent.VK_0) && (e.getKeyCode() <= KeyEvent.VK_9)) )
 				input=e.getKeyCode();
 			
@@ -117,13 +117,13 @@ public class ControlerOption extends AbstractControlerOption{
 			if(e.getKeyCode() == KeyEvent.VK_F12)
 				input=e.getKeyCode();
 			
-			if(input !=Touches.ERROR)
+			if(input !=opt.touches.ERROR)
 				opt.setModifTouches(input);
 			else
 				opt.setShowInputError(true);
 			}
 		
-		}
+		}*/
 
 	public void controlCustomClickableLabel(CustomClickableLabel t) {
 		opt.setMemCustomClickableLabel(t);

@@ -133,10 +133,10 @@ public abstract class Collidable {
 
 		}
 
-		if(deplacement_type.equals(TypeObject.heros)){
+		/*if(deplacement_type.equals(TypeObject.heros)){
 			System.out.println(deplacement.getClass().getName() +animActu +" "+depSuiv.getClass().getName()+animSuiv);
 			System.out.println(s);
-		}
+		}*/
 	}
 	
 	public boolean alignTestValid(Mouvement depSuiv, int animSuiv, AbstractModelPartie partie,Deplace deplace, 

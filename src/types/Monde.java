@@ -10,7 +10,7 @@ import principal.InterfaceConstantes;
 
 @SuppressWarnings("serial")
 public class Monde implements InterfaceConstantes, Serializable{
-public Bloc[][] niveau = new Bloc[ABS_MAX][ORD_MAX];
+public Bloc[][] niveau;
 
 private Bloc blocVide =new Bloc("vide",0,0,false,false);
 public int xStartMap=0;
@@ -78,10 +78,12 @@ public Monde(String s)
 /**
  * initialiser le monde avec des blocs vides
  */	
-private void initMonde () {
-	for(int abs=0;abs<ABS_MAX;abs++)
+public void initMonde () {
+	if(niveau == null)
+		return;
+	for(int abs=0;abs<niveau.length;abs++)
 	{
-		for(int ord=0;ord<ORD_MAX;ord++)
+		for(int ord=0;ord<niveau[abs].length;ord++)
 		{
 			blocVide.setPos(abs*100,ord*100);
 			niveau[abs][ord]=blocVide;

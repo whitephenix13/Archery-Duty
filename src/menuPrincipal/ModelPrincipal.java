@@ -48,11 +48,6 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		affichagePrincipal = new AffichagePrincipal(controlerPrincipal);
 		principal.addObserver(affichagePrincipal);
 
-		option = new ModelOption();
-		controlerOption = new ControlerOption(option);
-		affichageOption = new AffichageOption(controlerOption);
-		option.addObserver(affichageOption);
-
 		edit = new ModelEditeur();
 		controlerEditeur = new ControlerEditeur(edit);
 		affichageEditeur = new AffichageEditeur(controlerEditeur);
@@ -66,12 +61,16 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		choix.addObserver(affichageChoix);
 		affichageChoix.init();
 
-		partie = new ModelPartie();
+		partie = new ModelPartie(touches);
 		controlerPartie= new ControlerPartie(partie) ;
 		affichagePartie = new AffichagePartie(controlerPartie);
 		partie.addObserver(affichagePartie);
 		partie.init();
 
+		option = new ModelOption(touches,partie.inputPartie);
+		controlerOption = new ControlerOption(option);
+		affichageOption = new AffichageOption(controlerOption);
+		option.addObserver(affichageOption);
 		//try 
 		//{
 		//	partieRap= new PartieRapide(touches,variablesAffichage, variablesDeplace);
@@ -219,6 +218,9 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		}
 		else if (modeSuivant=="Partie")
 		{
+			//not drawing at first 
+			partie.computationDone=false;
+			
 			//musique 
 			int numMus = (int) (Math.random()*InterfaceConstantes.musiquePartie.length);
 			String nextMusic = InterfaceConstantes.musiquePartie[numMus];
@@ -253,9 +255,9 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 			affich.addListener(modeActuel);
 
 			//on lance la partie rapide si elle n'est pas deja en cours ie: le jeu n'est pas en pause
-
 			partie.startPartie(InterfaceConstantes.SPAWN_PROGRAMME,choix.getNiveauSelectionne());//SPAWN_ALEATOIRE, SPAWN_PROGRAMME
 
+			
 			//définition du thread d'affichage qui fait tourner partie rapide.play() en continue 
 			class ThreadAffichage implements Runnable
 			{
@@ -269,7 +271,7 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 							partie.play(affich);
 							affichagePartie.repaintPartie();
 							affichagePartie.validateAffichagePartie(affich);
-							if(!partie.getinPause())
+							if(!partie.getinPause() && (!partie.slowDown || (partie.slowDown && partie.slowCount==0)))
 								partie.nextFrame();
 						}
 					}
@@ -282,8 +284,8 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 			ThreadAffichage t2= new ThreadAffichage();
 
 			//on lance la partie
+			partie.computationDone=true;
 			t2.run();
-			
 			//affich.actuAffichage();
 
 

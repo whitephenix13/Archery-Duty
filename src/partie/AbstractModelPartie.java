@@ -26,6 +26,7 @@ import personnage.ImagesFleche;
 import personnage.ImagesHeros;
 import principal.InterfaceConstantes;
 import types.Monde;
+import types.Touches;
 import types.TypeObject;
 
 public abstract class AbstractModelPartie implements Observable {
@@ -58,24 +59,8 @@ public abstract class AbstractModelPartie implements Observable {
 	protected List<Integer> lEffaceTirMonstre= new ArrayList<Integer>();
 
 	//INPUT 
-	//pressed
-	protected boolean marcheDroiteDown ;
-	protected boolean marcheGaucheDown ;
-	protected boolean sautDown ;
-	protected boolean toucheTirDown ;
-	protected boolean courseDroiteDown;
-	protected boolean courseGaucheDown;
-	protected boolean toucheSlowDown;
-	protected boolean pauseDown;
-	//release
-	protected boolean marcheDroiteReleased ;
-	protected boolean marcheGaucheReleased ;
-	protected boolean sautReleased ;
-	protected boolean toucheTirReleased ;
-	protected boolean courseDroiteReleased;
-	protected boolean courseGaucheReleased;
-	protected boolean toucheSlowReleased;
-	protected boolean pauseReleased;
+	Touches touches;
+	public InputPartie inputPartie;
 
 	//Variables de déplacement 
 	//booleen pour savoir si on change de mouvement et donc qu'on doit reequilibre la hitbox du heros
@@ -84,11 +69,7 @@ public abstract class AbstractModelPartie implements Observable {
 	protected boolean finPartie =false;
 	protected boolean inPause=false;
 	public boolean getinPause(){return inPause;}
-	protected float clickTime1;
-	protected float clickTime2;
 
-	protected boolean clickRight = false;
-	protected boolean clickLeft=false;
 
 	protected boolean firstNonFocused=true;
 
@@ -183,35 +164,11 @@ public abstract class AbstractModelPartie implements Observable {
 		lEffaceTirMonstre= new ArrayList<Integer>();
 
 		//INPUT 
-		//pressed
-		marcheDroiteDown=false ;
-		marcheGaucheDown =false ;
-		sautDown =false ;
-		toucheTirDown =false ;
-		courseDroiteDown=false ;
-		courseGaucheDown=false ;
-		toucheSlowDown=false ;
-		pauseDown=false ;
-		//release
-		marcheDroiteReleased =false ;
-		marcheGaucheReleased =false ;
-		sautReleased =false ;
-		toucheTirReleased =false ;
-		courseDroiteReleased=false ;
-		courseGaucheReleased=false ;
-		toucheSlowReleased=false ;
-		pauseReleased=false ;
-
 		changeMouv=false;
 		
 		finPartie =false;
 		inPause=false;
 
-		clickTime1=0;
-		clickTime2=0;
-
-		clickRight = false;
-		clickLeft=false;
 
 		firstNonFocused=true;
 
@@ -240,15 +197,11 @@ public abstract class AbstractModelPartie implements Observable {
 		setAffichageOption=false;
 	}
 
-	public abstract void HandlePressedInput(int input);
-	public abstract void HandleReleasedInput(int input);
+	//public abstract void HandlePressedInput(int input);
+	//public abstract void HandleReleasedInput(int input);
 	public abstract void HandleBoutonsPressed(JButton button);
 
-	public abstract void keyDownAction ();
-	public abstract void keyReleasedAction ();
-	public abstract void keyAction();
 	public abstract void startPartie(int typeDeSpawn,String nomPartie);
-	public abstract void resetTouchesFocus();
 	public abstract void play(Affichage affich) ;
 	public abstract void charger(String nomFichier);
 

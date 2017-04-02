@@ -112,9 +112,10 @@ public class Saut extends Mouvement_perso{
 			}
 			//permet de déplacer le héros sur le cote 
 			final double vitMax = (object.vit.x == 0) ? (8.0 / Config.ratio_fps()):  Math.abs(object.vit.x) ; 
-			final int varVit = (int)(8.0 / Config.ratio_fps()) ; 
+			final double varVit = (8.0 / Config.ratio_fps()) ; 
 			//bit more complicated due to gravity, make sure that jump speed and gravity compensate the same way 
-			final int vitSaut = (int)(Config.i_ratio_fps()*(-16.0) + Config.i_ratio_fps()*(Config.i_ratio_fps()+1)/2 * Gravite.gravity_norm ); //10000 normalement 
+			//jump speed ~ 4.5 m/s = 7.5 wu / frame 
+			final double vitSaut = (Config.i_ratio_fps()*(-11) + Config.i_ratio_fps()*(Config.i_ratio_fps()+1)/2 * Gravite.gravity_norm ); //-16 normalement 
 
 			if(heros.sautGlisse)
 			{
@@ -138,7 +139,7 @@ public class Saut extends Mouvement_perso{
 				{
 					object.vit.y=0;
 				}
-				if (heros.deplaceSautDroit  && !heros.last_colli_right)
+				if (heros.deplaceSautDroit  && !heros.last_colli_right && !heros.sautGlisse)
 				{
 					if(object.vit.x<0)//change direction in air
 						heros.runBeforeJump=false;
@@ -152,7 +153,7 @@ public class Saut extends Mouvement_perso{
 					heros.deplaceSautDroit= false;
 					return;
 				}
-				if (heros.deplaceSautGauche && ! heros.last_colli_left)
+				if (heros.deplaceSautGauche && ! heros.last_colli_left  && !heros.sautGlisse)
 				{
 					if(object.vit.x>0)//change direction in air
 						heros.runBeforeJump=false;

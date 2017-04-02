@@ -47,9 +47,12 @@ import types.TypeObject;
 
 public class ModelPartie extends AbstractModelPartie{
 
-	/**
-	 * gère l'action dans le jeu liée à l'appui d'une touche
-	 */	
+
+	public ModelPartie(Touches _touches)
+	{
+		touches = _touches;
+		inputPartie = new InputPartie(this);
+	}
 
 	public void startPartie(int typeDeSpawn,String nomPartie)
 	{
@@ -72,7 +75,7 @@ public class ModelPartie extends AbstractModelPartie{
 		{
 			if(firstNonFocused)
 			{
-				resetTouchesFocus();
+				inputPartie.resetTouchesFocus();
 				inPause=true;
 				Toolkit.getDefaultToolkit().setLockingKeyState(KeyEvent.VK_CAPS_LOCK, false);
 				keyAction();
@@ -355,40 +358,50 @@ public class ModelPartie extends AbstractModelPartie{
 	{
 		if(!finPartie)
 		{
-			if(pauseDown )
+			if(inputPartie.pauseDown )
 			{
 				AbstractModelPrincipal.changeFrame=true;
 				inPause=!inPause;
-				pauseDown=false;
+				inputPartie.pauseDown=false;
 			}
 			if(!inPause )
 			{
 				//TIR 
-				if(toucheTirDown && !heros.flecheEncochee && !heros.doitEncocherFleche)
+				if(inputPartie.toucheTirDown && !heros.flecheEncochee && !heros.doitEncocherFleche 
+						&& ((System.nanoTime()-heros.last_shoot_time)>InterfaceConstantes.FLECHE_TIR_COOLDOWN))
 				{
-					changeMouv=true;
-					//on ne tir qu'une fleche
-					toucheTirDown=false;
-					heros.doitEncocherFleche=true;
-					heros.nouvMouv= new Tir(TypeObject.heros,Tir.tir,frame); 
+					//if not just wall jump 
+					if(!(heros.deplacement.IsDeplacement(Mouvement_perso.saut) && ((System.nanoTime()-heros.last_wall_jump_time)<=InterfaceConstantes.WALL_JUMP_DISABLE_TIME)))
+					{
+						changeMouv=true;
+						//on ne tir qu'une fleche
+						inputPartie.toucheTirDown=false;
+						heros.doitEncocherFleche=true;
+						heros.nouvMouv= new Tir(TypeObject.heros,Tir.tir,frame); 
+						heros.last_armed_time=System.nanoTime();
+					}
 				}
 				boolean heros_shoots = heros.flecheEncochee||heros.doitEncocherFleche;
 				boolean heros_accroche = heros.deplacement.IsDeplacement(Mouvement_perso.accroche);
 				boolean heros_glisse = heros.deplacement.IsDeplacement(Mouvement_perso.glissade);
 				//COURSE DROITE
-				if(courseDroiteDown && !heros_glisse && !heros_accroche && !heros_shoots)
+				if(inputPartie.courseDroiteDown && !heros_glisse && !heros_accroche && !heros_shoots)
 				{
 					//si on ne courrait pas vers la droite avant
 					if(! (heros.deplacement.IsDeplacement(Mouvement_perso.course) && heros.anim>=4))
 					{
-						changeMouv=true;
-						heros.nouvAnim= 4; 
-						heros.nouvMouv= new Course(TypeObject.heros,Course.course_droite,frame); 
+						//do not run if we just wall jump
+						if(! (heros.deplacement.IsDeplacement(Mouvement_perso.saut) && (System.nanoTime()-heros.last_wall_jump_time)<= InterfaceConstantes.WALL_JUMP_DISABLE_TIME ))
+						{
+							changeMouv=true;
+							heros.nouvAnim= 4; 
+							heros.nouvMouv= new Course(TypeObject.heros,Course.course_droite,frame); 
+						}
 					}
 				}
 
 				//MARCHE DROITE 
-				else if(marcheDroiteDown&& !heros_shoots)
+				else if(inputPartie.marcheDroiteDown&& !heros_shoots)
 				{
 					if(heros_glisse)
 					{
@@ -437,7 +450,10 @@ public class ModelPartie extends AbstractModelPartie{
 					//si on veut marcher en l'air (donc vers la droite) 
 					else if (!heros.peutSauter) 
 					{
-						if(heros.deplacement.IsDeplacement(Mouvement_perso.saut) && (heros.deplacement.type_mouv != Saut.land_gauche ) && (heros.deplacement.type_mouv != Saut.land_droite ))
+						//do not move if we just wall jump
+						if(heros.deplacement.IsDeplacement(Mouvement_perso.saut)&& 
+								(heros.deplacement.type_mouv != Saut.land_gauche ) && (heros.deplacement.type_mouv != Saut.land_droite ) && 
+								((System.nanoTime()-heros.last_wall_jump_time)> InterfaceConstantes.WALL_JUMP_DISABLE_TIME))
 						{
 							changeMouv=true;
 							heros.deplaceSautDroit=true; // on fait bouger le heros
@@ -456,18 +472,23 @@ public class ModelPartie extends AbstractModelPartie{
 					}
 				}
 				//COURSE GAUCHE
-				if(courseGaucheDown && !heros_glisse && !heros_accroche && !heros_shoots)
+				if(inputPartie.courseGaucheDown && !heros_glisse && !heros_accroche && !heros_shoots)
 				{
 					//si on ne courrait pas vers la gauche avant 
 					if(! (heros.deplacement.IsDeplacement(Mouvement_perso.course) && heros.anim<4))
 					{
-						changeMouv=true;
-						heros.nouvAnim=0;
-						heros.nouvMouv= new Course(TypeObject.heros,Course.course_gauche,frame);
+						//do not run if we just wall jump
+						if(! (heros.deplacement.IsDeplacement(Mouvement_perso.saut) && 
+								((System.nanoTime()-heros.last_wall_jump_time)<= InterfaceConstantes.WALL_JUMP_DISABLE_TIME)))
+						{
+							changeMouv=true;
+							heros.nouvAnim=0;
+							heros.nouvMouv= new Course(TypeObject.heros,Course.course_gauche,frame);
+						}
 					}
 				}
 				//MARCHE GAUCHE 
-				else if(marcheGaucheDown&& !heros_shoots )
+				else if(inputPartie.marcheGaucheDown&& !heros_shoots )
 				{
 
 					if(heros_glisse)
@@ -509,6 +530,7 @@ public class ModelPartie extends AbstractModelPartie{
 					//si on ne marchait pas vers la gauche et qu'on est pas en l'air 
 					else if(! (heros.deplacement.IsDeplacement(Mouvement_perso.marche) && heros.anim<4)&& heros.peutSauter)
 					{
+
 						changeMouv=true;
 
 						heros.nouvAnim=0;
@@ -518,12 +540,18 @@ public class ModelPartie extends AbstractModelPartie{
 					//si on veut marcher en l'air (donc vers la gauche) 
 					else if (!heros.peutSauter)
 					{
-						changeMouv=true;
+						//do not move if we just wall jump
+						if(heros.deplacement.IsDeplacement(Mouvement_perso.saut)&& 
+								(heros.deplacement.type_mouv != Saut.land_gauche ) && (heros.deplacement.type_mouv != Saut.land_droite ) && 
+								((System.nanoTime()-heros.last_wall_jump_time)> InterfaceConstantes.WALL_JUMP_DISABLE_TIME))
+						{
+							changeMouv=true;
 
-						heros.deplaceSautGauche=true; // on fait bouger le heros
-						boolean fall = heros.vit.y >=0 ;
-						heros.nouvAnim=fall? 1 : 0 ; 
-						heros.nouvMouv=new Saut(TypeObject.heros,fall? Saut.fall_gauche:Saut.jump_gauche,frame); 
+							heros.deplaceSautGauche=true; // on fait bouger le heros
+							boolean fall = heros.vit.y >=0 ;
+							heros.nouvAnim=fall? 1 : 0 ; 
+							heros.nouvMouv=new Saut(TypeObject.heros,fall? Saut.fall_gauche:Saut.jump_gauche,frame); 
+						}
 					}
 					else if(heros.peutSauter) // si le heros est au sol et veux continuer à marcher vers la gauche
 					{
@@ -538,11 +566,11 @@ public class ModelPartie extends AbstractModelPartie{
 
 				//SLOW DOWN 
 
-				if(toucheSlowDown)
+				if(inputPartie.toucheSlowDown)
 				{
 					slowCount=0;
 					slowDown= ! slowDown;
-					toucheSlowDown=false;
+					inputPartie.toucheSlowDown=false;
 
 					Music music = new Music();
 					try {
@@ -558,7 +586,7 @@ public class ModelPartie extends AbstractModelPartie{
 
 				//SAUT 
 				//si le heros saute pour la première fois et qu'il peut sauter et qu'il ne glisse pas
-				if(sautDown &&  !heros_shoots)
+				if(inputPartie.sautDown &&  !heros_shoots)
 				{
 					if(heros_glisse)
 					{
@@ -567,6 +595,7 @@ public class ModelPartie extends AbstractModelPartie{
 
 						heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche"? 0 : 3);
 						heros.nouvMouv=new Saut(TypeObject.heros,heros.nouvAnim==0?Saut.jump_gauche:Saut.jump_droite,frame );
+						heros.last_wall_jump_time=System.nanoTime();
 					}
 					else if(heros_accroche && ( (heros.anim==0) || (heros.anim==2)))
 					{
@@ -577,8 +606,8 @@ public class ModelPartie extends AbstractModelPartie{
 						heros.nouvMouv=new Saut(TypeObject.heros,heros.nouvAnim==0?Saut.jump_gauche:Saut.jump_droite,frame );
 					}
 					else if(heros.peutSauter){
-						courseDroiteDown=false;
-						courseGaucheDown=false;
+						inputPartie.courseDroiteDown=false;
+						inputPartie.courseGaucheDown=false;
 
 						changeMouv=true;
 
@@ -595,24 +624,23 @@ public class ModelPartie extends AbstractModelPartie{
 				}
 
 				//touches pour lesquels maintenir appuyé ne change rien
-				sautDown =false;
-				toucheTirDown =false;
+				inputPartie.sautDown =false;
 			}
 		}
 	}
 
 	public void keyReleasedAction ()
 	{
-		if(pauseReleased)
+		if(inputPartie.pauseReleased)
 		{
-			pauseReleased=false;
+			inputPartie.pauseReleased=false;
 		}
 		//on arrete de deplacer le heros qui saute: 
 		//TIR 
-		if(toucheTirReleased)
+		if(inputPartie.toucheTirReleased && ((System.nanoTime()-heros.last_armed_time)>InterfaceConstantes.ARMED_MIN_TIME))
 		{
-			toucheTirDown=false;
-			toucheTirReleased=false;
+			inputPartie.toucheTirDown=false;
+			inputPartie.toucheTirReleased=false;
 
 			if(heros.flecheEncochee)
 			{
@@ -622,29 +650,32 @@ public class ModelPartie extends AbstractModelPartie{
 				heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche" ? 0 : 2) ;
 				heros.nouvMouv= new Attente(TypeObject.heros,heros.nouvAnim==0? Attente.attente_gauche:Attente.attente_droite,frame);
 				tabFleche.get(tabFleche.size()-1).flecheDecochee(this,deplace);
+				heros.last_shoot_time= System.nanoTime();
+
 			}
 
 		}
 
+		boolean just_wall_jump= heros.deplacement.IsDeplacement(Mouvement_perso.saut) && (((System.nanoTime()-heros.last_wall_jump_time)<=InterfaceConstantes.WALL_JUMP_DISABLE_TIME));
 		//MARCHE
-		if ((marcheDroiteReleased||marcheGaucheReleased
-				||courseDroiteReleased||courseGaucheReleased))
+		if ((inputPartie.marcheDroiteReleased||inputPartie.marcheGaucheReleased
+				||inputPartie.courseDroiteReleased||inputPartie.courseGaucheReleased) && !just_wall_jump)
 		{
-			if(marcheDroiteReleased)
+			if(inputPartie.marcheDroiteReleased)
 			{
-				marcheDroiteDown=false;marcheDroiteReleased=false;heros.runBeforeJump=false;
+				inputPartie.marcheDroiteDown=false;inputPartie.marcheDroiteReleased=false;heros.runBeforeJump=false;
 			}
-			if(courseDroiteReleased)
+			if(inputPartie.courseDroiteReleased)
 			{
-				courseDroiteDown=false;courseDroiteReleased=false;heros.runBeforeJump=false;
+				inputPartie.courseDroiteDown=false;inputPartie.courseDroiteReleased=false;heros.runBeforeJump=false;
 			}
-			if(marcheGaucheReleased)
+			if(inputPartie.marcheGaucheReleased)
 			{
-				marcheGaucheDown=false;marcheGaucheReleased=false;heros.runBeforeJump=false;
+				inputPartie.marcheGaucheDown=false;inputPartie.marcheGaucheReleased=false;heros.runBeforeJump=false;
 			}
-			if(courseGaucheReleased)
+			if(inputPartie.courseGaucheReleased)
 			{
-				courseGaucheDown=false;courseGaucheReleased=false;heros.runBeforeJump=false;
+				inputPartie.courseGaucheDown=false;inputPartie.courseGaucheReleased=false;heros.runBeforeJump=false;
 			}
 
 			boolean heros_glisse = heros.deplacement.IsDeplacement(Mouvement_perso.glissade);
@@ -703,15 +734,15 @@ public class ModelPartie extends AbstractModelPartie{
 			}
 		}
 		//SLOW DOWN
-		if(toucheSlowReleased)
+		if(inputPartie.toucheSlowReleased)
 		{
-			toucheSlowReleased=false;
+			inputPartie.toucheSlowReleased=false;
 		}
 		//SAUT 
-		if(sautReleased&& !heros.flecheEncochee )
+		if(inputPartie.sautReleased&& !heros.flecheEncochee )
 		{
-			sautDown=false;
-			sautReleased=false;
+			inputPartie.sautDown=false;
+			inputPartie.sautReleased=false;
 		}
 	}
 
@@ -721,38 +752,38 @@ public class ModelPartie extends AbstractModelPartie{
 		keyReleasedAction();
 	}
 
-	public void HandlePressedInput(int input) {
+	/*	public void HandlePressedInput(int input) {
 
-		if( input==Touches.t_pause)
+		if( input==touches.t_pause)
 		{
 			pauseDown=true;
 		}
-		if(input==Touches.t_tir)
+		if(input==touches.t_tir)
 		{
 			toucheTirDown=true;
 		}
-		if(input==Touches.t_slow)
+		if(input==touches.t_slow)
 		{
 			toucheSlowDown=true;
 		}
-		if(input==Touches.t_saut)
+		if(input==touches.t_saut)
 		{
 			sautDown=true;
 		}
-		if(input==Touches.t_droite || input==Touches.t_gauche )
+		if(input==touches.t_droite || input==touches.t_gauche )
 		{
 			clickTime2 = System.nanoTime();
 			float delta = (float) ((clickTime2-clickTime1)*Math.pow(10, -6));
 			boolean dash = delta<InterfaceConstantes.TDash ; // no tmin dash 
 
-			if(dash && clickRight==true && input==Touches.t_droite)
+			if(dash && clickRight==true && input==touches.t_droite)
 			{
 				courseDroiteDown=true;
 				marcheDroiteDown=true;
 				clickRight=true;
 				clickLeft=false;
 			}
-			else if(dash && clickLeft==true && input==Touches.t_gauche)
+			else if(dash && clickLeft==true && input==touches.t_gauche)
 			{
 				courseGaucheDown=true;
 				marcheGaucheDown=true;
@@ -761,14 +792,14 @@ public class ModelPartie extends AbstractModelPartie{
 			}
 			else
 			{
-				if(input==Touches.t_droite)
+				if(input==touches.t_droite)
 				{
 					//deplacement normal
 					marcheDroiteDown=true;
 					clickRight=true;
 					clickLeft=false;
 				}
-				if(input==Touches.t_gauche)
+				if(input==touches.t_gauche)
 				{
 					//deplacement normal
 					marcheGaucheDown=true;
@@ -780,22 +811,22 @@ public class ModelPartie extends AbstractModelPartie{
 	}
 
 	public void HandleReleasedInput(int input) {
-		if(input==Touches.t_pause)
+		if(input==touches.t_pause)
 		{
 			pauseDown=false;
 			pauseReleased=true;
 		}
-		if(input==Touches.t_tir)
+		if(input==touches.t_tir)
 		{
 			toucheTirDown=false;
 			toucheTirReleased=true;
 		}
-		if(input==Touches.t_slow)
+		if(input==touches.t_slow)
 		{
 			toucheSlowDown=false;
 			toucheSlowReleased=true;
 		}
-		if (input==Touches.t_droite)
+		if (input==touches.t_droite)
 		{
 			heros.deplaceSautDroit=false;
 
@@ -807,7 +838,7 @@ public class ModelPartie extends AbstractModelPartie{
 			//on retient le temps de relachement de la touche
 			clickTime1 = System.nanoTime();
 		}
-		if(input==Touches.t_gauche)
+		if(input==touches.t_gauche)
 		{
 			heros.deplaceSautGauche=false;
 
@@ -820,7 +851,7 @@ public class ModelPartie extends AbstractModelPartie{
 			clickTime1 = System.nanoTime();
 		}
 	}
-
+	 */
 	public void HandleBoutonsPressed(JButton button) {
 		if(button.getText().equals("Option"))
 		{
@@ -875,27 +906,7 @@ public class ModelPartie extends AbstractModelPartie{
 	/**
 	 * Permet de reinitialiser tout les appuis de touches, utile notamment lors de la perte de focus de la fenetre
 	 */	
-	public void resetTouchesFocus()
-	{
 
-		if (marcheDroiteDown) { marcheDroiteReleased=true;};
-		if (marcheGaucheDown) { marcheGaucheReleased=true;};
-		if (sautDown) { sautReleased=true;};
-		if (toucheTirDown) { toucheTirReleased=true;};
-		if (courseDroiteDown) {courseDroiteReleased=true;};
-		if (courseGaucheDown) { courseGaucheReleased=true;};
-		if (toucheSlowDown) { toucheSlowReleased=true;};
-		if (pauseDown) { pauseReleased=true;};
-
-		marcheDroiteDown= false;
-		marcheGaucheDown = false;
-		sautDown = false;
-		toucheTirDown = false;
-		courseDroiteDown= false;
-		courseGaucheDown= false;
-		toucheSlowDown= false;
-		pauseDown= false;
-	}
 
 	//DRAW
 	public void drawPartie(Graphics g,JPanel pan) {
@@ -926,7 +937,7 @@ public class ModelPartie extends AbstractModelPartie{
 		for(int abs=xStartAff;abs<xEndAff;abs++)
 			for(int ord=yStartAff;ord<yEndAff;ord++)
 			{
-				Bloc tempPict= monde.niveau[abs][ord];
+				Bloc tempPict =  monde.niveau[abs][ord];
 				if(tempPict != null)
 				{
 					int xDraw=tempPict.getXpos()+ xScreendisp- INIT_RECT.x;

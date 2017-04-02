@@ -15,7 +15,10 @@ public interface InterfaceConstantes {
 	//nombre de fleches max: 
 	static int NB_FLECHES_MAX = 50;
 	static long TEMPS_DESTRUCTION_FLECHE = (long) Math.pow(10, 9);//nanos, 1sec 
-	
+	static long FLECHE_TIR_COOLDOWN = (long) ( 2* Math.pow(10, 8));//nanos, 0.2 sec 
+	static long ARMED_MIN_TIME = (long) (2* Math.pow(10, 8));//nanos, 0.2 sec 
+	static long WALL_JUMP_DISABLE_TIME = (long) (2* Math.pow(10, 8));//nanos, 0.2 sec 
+
 	static int NB_MONSTRES_MAX=100;
 	
 	//type de spawn
@@ -50,8 +53,10 @@ public interface InterfaceConstantes {
 	static int MINLIFE= 0;
 	static int MAXSPE= 100;
 	static int MINSPE= 0;
-	static double FRICTION = 0.1;
 	
+	static double FRICTION = 0.1;
+	static double AIRFRICTION = 0.01;
+
 	//vitesse a laquelle la spe diminue de 1 lors du slow down//augmente de 1 en dehors du slow down
 	static long TEMPS_VAR_SPE=100; 
 	
