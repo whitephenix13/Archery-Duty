@@ -1,9 +1,11 @@
 package monstre;
 
 import java.awt.Point;
+import java.util.ArrayList;
 
 import javax.vecmath.Vector2d;
 
+import collision.Collidable;
 import deplacement.Attente;
 import deplacement.Deplace;
 import deplacement.Mouvement;
@@ -17,7 +19,6 @@ import types.TypeObject;
 import types.Vitesse;
 
 public class TirSpirel extends TirMonstre implements InterfaceConstantes {
-	MusicBruitage bruitage = new MusicBruitage("laser");
 	/**
 	 * Instancie un TirSpirel
 	 * 
@@ -36,18 +37,18 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 		deplacement= new T_normal(type,Attente.attente_gauche,current_frame);
 
 		needDestroy=false;
-		vit = new Vitesse();
+		localVit = new Vitesse();
+		envirVit = new Vitesse();
 		slowDownFactor=3; 
 		fixedWhenScreenMoves=false ; //true : not influenced by screen displacement (ie: use for the hero)
 
 		useGravity=false;
 		deplacement.setSpeed(TypeObject.tir_spirel,this,anim);
 
-		dommage= -25;
+		dommage= 0;//-25
 
 		//on active la musique car le tir part directement 
-		bruitage.startBruitage(700);
-		//permet "d'effacer" l'objet au bout de 2000ms
+		MusicBruitage.me.startBruitage("laser");
 
 	}
 
@@ -77,7 +78,7 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 		
 	}
 	@Override
-	public void applyFriction(int minspeed) {
+	public void applyFriction(double minLocalspeed, double minEnvirSpeed) {
 		//do nothing
 	}
 	@Override
@@ -115,23 +116,25 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,
 			Deplace deplace) {
 		//project speed to ground 
-		double coef= vit.vect2d().dot(normal)/normal.lengthSquared();
-		vit = new Vitesse((int)(vit.x-coef*normal.x),(int)(vit.y-coef*normal.y));
-
-		boolean collision_gauche = (vit.x<=0) && (normal.x>0);
-		boolean collision_droite = (vit.x>=0) && (normal.x<0);
+		double coef1= localVit.vect2d().dot(normal)/normal.lengthSquared();
+		localVit = new Vitesse((int)(localVit.x-coef1*normal.x),(int)(localVit.y-coef1*normal.y));
+		double coef2= envirVit.vect2d().dot(normal)/normal.lengthSquared();
+		envirVit = new Vitesse((int)(envirVit.x-coef2*normal.x),(int)(envirVit.y-coef2*normal.y));
+		
+		boolean collision_gauche = (localVit.x<=0) && (normal.x>0);
+		boolean collision_droite = (localVit.x>=0) && (normal.x<0);
 		//boolean collision_haut = (vit.y<=0) && (normal.y>0);
 		//boolean collision_bas = (vit.y>=0) && (normal.y<0);
 		last_colli_left=collision_gauche;
 		last_colli_right=collision_droite;
-		vit=new Vitesse(0,0);
+		localVit=new Vitesse(0,0);
+		envirVit=new Vitesse(0,0);
 		needDestroy=true;
 
 	}
 	@Override
 	public void handleObjectCollision(AbstractModelPartie partie,
 			Deplace deplace) {needDestroy=true;}
-
 
 
 }

@@ -3,6 +3,7 @@ package personnage;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.sound.sampled.LineUnavailableException;
@@ -21,6 +22,23 @@ import deplacement.Mouvement;
 import deplacement.Mouvement_perso;
 import deplacement.Saut;
 import deplacement.Tir;
+import fleches.Fleche;
+import fleches.Fleche_auto_teleguidee;
+import fleches.Fleche_bogue;
+import fleches.Fleche_cac;
+import fleches.Fleche_chargee;
+import fleches.Fleche_electrique;
+import fleches.Fleche_explosive;
+import fleches.Fleche_feu;
+import fleches.Fleche_foudre;
+import fleches.Fleche_glace;
+import fleches.Fleche_grappin;
+import fleches.Fleche_ombre;
+import fleches.Fleche_retard;
+import fleches.Fleche_roche;
+import fleches.Fleche_trou_noir;
+import fleches.Fleche_v_fleche;
+import fleches.Fleche_vent;
 import music.Music;
 import partie.AbstractModelPartie;
 import principal.InterfaceConstantes;
@@ -65,6 +83,25 @@ public class Heros extends Collidable{
 
 	public boolean doitEncocherFleche=false;
 	public boolean flecheEncochee=false;
+	//Which arrow is currently armed: changed in model partie
+	public String tir_type = Fleche.NORMAL;
+	
+	//In order to determine affinity: 1=Materiel, 2=Spirituel, 3=Destructeur 4=Ruse
+	public int current_slot = 2;
+	//Which arrows are equiped per affinity
+	private String[] slots = {Fleche.SPIRITUELLE.VENT,Fleche.SPIRITUELLE.VENT,Fleche.SPIRITUELLE.VENT,Fleche.SPIRITUELLE.VENT};
+	
+	/**
+	 * 
+	 * @param special is the arrow special or regular
+	 */
+	public void set_tir_type(boolean special){
+		if(special)
+			tir_type=slots[current_slot];
+		else
+			tir_type=Fleche.NORMAL;
+		} 
+	
 	//last time an arrow was shot
 	public long last_shoot_time = -1;
 	//last time I armed an arrow
@@ -109,7 +146,8 @@ public class Heros extends Collidable{
 		type=TypeObject.heros;
 		xpos = xPo;
 		ypos = yPo; 
-		vit = new Vitesse(0,0);
+		localVit = new Vitesse(0,0);
+		envirVit = new Vitesse(0,0);
 		slowDownFactor=4;//6
 		fixedWhenScreenMoves=true;
 		deplacement=dep ;
@@ -228,8 +266,8 @@ public class Heros extends Collidable{
 	public Hitbox getGliss_Accroch_Hitbox(Point INIT_RECT, boolean gliss, boolean right)//used to get slide hitbox
 	{
 		//Hand coded, only two possible deplacement: Course or Saut 
-		int up = vit.y<0? 0 : (deplacement.IsDeplacement(Mouvement_perso.saut)?4 : -3); //if gliss: up of hand
-		int down = vit.y<0? 27 : (deplacement.IsDeplacement(Mouvement_perso.saut)?31 : 24);//if gliss: down of hand
+		int up = getGlobalVit().y<0? 0 : (deplacement.IsDeplacement(Mouvement_perso.saut)?4 : -3); //if gliss: up of hand
+		int down = getGlobalVit().y<0? 27 : (deplacement.IsDeplacement(Mouvement_perso.saut)?31 : 24);//if gliss: down of hand
 		if(!gliss)
 		{
 			//small square below hand: if it is in collision while the hand is not: heros should change to Accroche
@@ -325,13 +363,15 @@ public class Heros extends Collidable{
 	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,
 			Deplace deplace) {
 		//project speed to ground 
-		double coef= vit.vect2d().dot(normal)/normal.lengthSquared();
-		vit = new Vitesse((int)(vit.x-coef*normal.x),(int)(vit.y-coef*normal.y));
+		double coef1= localVit.vect2d().dot(normal)/normal.lengthSquared();
+		localVit = new Vitesse((int)(localVit.x-coef1*normal.x),(int)(localVit.y-coef1*normal.y));
+		double coef2= envirVit.vect2d().dot(normal)/normal.lengthSquared();
+		envirVit = new Vitesse((int)(envirVit.x-coef2*normal.x),(int)(envirVit.y-coef2*normal.y));
 
-		boolean collision_gauche = (vit.x<=0) && (normal.x>0);
-		boolean collision_droite = (vit.x>=0) && (normal.x<0);
-		boolean collision_haut = (vit.y<=0) && (normal.y>0);
-		boolean collision_bas = (vit.y>=0) && (normal.y<0);
+		boolean collision_gauche = (localVit.x<=0) && (normal.x>0);
+		boolean collision_droite = (localVit.x>=0) && (normal.x<0);
+		boolean collision_haut = (localVit.y<=0) && (normal.y>0);
+		boolean collision_bas = (localVit.y>=0) && (normal.y<0);
 		//System.out.println("collision "+ (collision_gauche?"gauche ": "" )+(collision_droite?"droite ": "")+(collision_bas?"bas ": "")+(collision_haut?"haut ": "") + 
 		//		vit.x +" "+vit.y);
 		last_colli_left=collision_gauche;
@@ -373,11 +413,12 @@ public class Heros extends Collidable{
 		final Point memPos= new Point(xpos,ypos); 
 		final Mouvement_perso memDep = (Mouvement_perso) deplacement.Copy(TypeObject.heros);
 		final int memAnim = anim;
-		final Vitesse memVit = vit.Copy();
+		final Vitesse memVitloca = localVit.Copy();
+		final Vitesse memVitenvir = envirVit.Copy();
 		currentValue=new CurrentValue(){		
 			@Override
 			public void res()
-			{xpos=memPos.x;ypos=memPos.y;deplacement=memDep;anim=memAnim;vit=memVit;}};
+			{xpos=memPos.x;ypos=memPos.y;deplacement=memDep;anim=memAnim;localVit=memVitloca;envirVit=memVitenvir;}};
 	}
 	@Override
 	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
@@ -434,10 +475,10 @@ public class Heros extends Collidable{
 			Polygon p_accroche_g= Hitbox.minusPoint(getGliss_Accroch_Hitbox(partie.INIT_RECT,false,false),deplaceEcran,false).polygon;
 
 			Polygon p_monde= mondeBox.polygon;
-			int a = GJK_EPA.intersectsB(p_glissade_d,p_monde, vit.vect2d());
-			int b = GJK_EPA.intersectsB(p_glissade_g,p_monde, vit.vect2d());
-			int c = GJK_EPA.intersectsB(p_accroche_d,p_monde, vit.vect2d());
-			int d = GJK_EPA.intersectsB(p_accroche_g,p_monde, vit.vect2d());
+			int a = GJK_EPA.intersectsB(p_glissade_d,p_monde, getGlobalVit().vect2d());
+			int b = GJK_EPA.intersectsB(p_glissade_g,p_monde, getGlobalVit().vect2d());
+			int c = GJK_EPA.intersectsB(p_accroche_d,p_monde, getGlobalVit().vect2d());
+			int d = GJK_EPA.intersectsB(p_accroche_g,p_monde, getGlobalVit().vect2d());
 
 			blocDroitGlisse=blocDroitGlisse||
 					((a==GJK_EPA.TOUCH) || (a==GJK_EPA.INTER ));
@@ -460,10 +501,7 @@ public class Heros extends Collidable{
 		boolean falling = !isGrounded(partie);
 		if(falling)
 			useGravity=falling && !this.deplacement.IsDeplacement(Mouvement_perso.accroche);
-		//le heros atteri alors qu'il était en chute libre,
-		boolean landing = (finSaut||!falling) && deplacement.IsDeplacement(Mouvement_perso.saut) && (animHeros ==1 || animHeros ==4);
-		//le heros touche le sol en glissant
-		boolean landSliding = finSaut && deplacement.IsDeplacement(Mouvement_perso.glissade);
+
 		//le heros chute ou cours vers un mur: il commence à glisser sur le mur 
 		boolean[] beginSliding= computeBeginSliding(blocDroitGlisse,blocGaucheGlisse,falling); 
 		boolean beginSliding_r= beginSliding[0] ;
@@ -472,6 +510,22 @@ public class Heros extends Collidable{
 		boolean[] beginAccroche= computeAccroche(blocDroitGlisse,blocGaucheGlisse,blocDroitAccroche,blocGaucheAccroche,falling);
 		boolean beginAccroche_r = beginAccroche[1];
 		boolean beginAccroche_l = beginAccroche[0];
+		
+		//update some values because player might have been ejected due to a fleche vent
+		updateVarSaut(falling, beginAccroche_r || beginAccroche_l, beginSliding_r || beginSliding_l);
+
+		//le heros atteri alors qu'il était en chute libre,
+		boolean landing = (finSaut||!falling) && deplacement.IsDeplacement(Mouvement_perso.saut) && (animHeros ==1 || animHeros ==4);
+		boolean standup = deplacement.IsDeplacement(Mouvement_perso.saut) && (animHeros ==2 || animHeros ==5)  && deplacement.animEndedOnce();
+		//deal with the case where the heros was ejected while standing up
+		if(standup && falling)
+		{
+			standup=false;
+			finSaut=false;
+		}
+		//le heros touche le sol en glissant
+		boolean landSliding = finSaut && deplacement.IsDeplacement(Mouvement_perso.glissade);
+		
 		//le heros décroche du mur
 		boolean endSliding = deplacement.IsDeplacement(Mouvement_perso.glissade) && 
 				((!blocDroitGlisse && droite_gauche(animHeros)==("Gauche")) ||
@@ -538,6 +592,8 @@ public class Heros extends Collidable{
 			deplacement=nextMouv;
 			anim=nextAnim;
 			deplacement.setSpeed(TypeObject.heros, this, nextAnim);
+			envirVit=new Vitesse(0,0);
+
 			return anim;
 		}
 
@@ -547,7 +603,7 @@ public class Heros extends Collidable{
 			peutSauter=false;
 			if(!(deplacement.IsDeplacement(Mouvement_perso.glissade)||deplacement.IsDeplacement(Mouvement_perso.course)||deplacement.IsDeplacement(Mouvement_perso.accroche)))
 			{
-				int up = vit.y>=0 ? 1 : 0;
+				int up = getGlobalVit().y>=0 ? 1 : 0;
 				int type_mouv = droite_gauche(animHeros)=="Gauche" ? (up==0?Saut.jump_gauche:Saut.fall_gauche) :
 					(up==0?Saut.jump_droite:Saut.fall_droite);
 				Mouvement mouvSuivant = new Saut(TypeObject.heros,type_mouv,partie.getFrame());
@@ -588,6 +644,7 @@ public class Heros extends Collidable{
 		}
 		else if(landing) //atterrissage: accroupi 
 		{
+
 			Mouvement mouvSuiv = new Saut(TypeObject.heros,droite_gauche(animHeros)=="Gauche" ?Saut.land_gauche:Saut.land_droite,partie.getFrame());
 			int animSuiv = (droite_gauche(animHeros)=="Gauche"? 2 : 5 );
 			//on ajuste la position du personnage pour qu'il soit centré 
@@ -601,15 +658,16 @@ public class Heros extends Collidable{
 
 
 		}
-		else if(deplacement.IsDeplacement(Mouvement_perso.saut) && (animHeros ==2 || animHeros ==5)  && deplacement.animEndedOnce())//atterissage: se relève
+		else if(standup)//atterissage: se relève
 		{
+
 			int nextAnim = runBeforeJump? (droite_gauche(animHeros)=="Gauche" ? 0 : 4 ) : (droite_gauche(animHeros)=="Gauche" ? 0 : 2 );
 			Mouvement_perso nextDep=  runBeforeJump? new Course(TypeObject.heros,droite_gauche(animHeros)=="Gauche" ?Course.course_gauche:Course.course_droite,partie.getFrame()) 
 					: new Attente(TypeObject.heros,droite_gauche(animHeros)=="Gauche" ?Attente.attente_gauche:Attente.attente_droite,partie.getFrame());
 			//on ajuste la position du personnage pour qu'il soit centré 
 			alignHitbox(animHeros,nextDep,nextAnim,partie,deplace,blocGaucheGlisse);
 			//on choisit la direction d'attente			
-			vit.x=0;	
+			localVit.x=0;	
 			finSaut=false;
 			peutSauter=true;
 			anim=nextAnim;
@@ -620,6 +678,7 @@ public class Heros extends Collidable{
 		}
 		else if(landSliding)
 		{
+
 			Mouvement nextMouv = new Attente(TypeObject.heros,droite_gauche(animHeros)=="Gauche" ?Attente.attente_gauche: Attente.attente_droite,partie.getFrame());
 			int nextAnim = (droite_gauche(animHeros)=="Gauche" ? 0 : 2 );
 			alignHitbox(animHeros,nextMouv,nextAnim,partie ,deplace,blocGaucheGlisse);
@@ -627,20 +686,21 @@ public class Heros extends Collidable{
 			//on ajuste la position du personnage pour qu'il soit centré 
 			anim= nextAnim;
 			deplacement=nextMouv;
-			vit.y=0;
+			localVit.y=0;
 			return(anim);
 
 		}
 
 		else if(endSliding)
 		{
+
 			int nextAnim= (droite_gauche(animHeros)=="Gauche" ? 1 :4);
 			Mouvement nextMouv = new Saut(TypeObject.heros,droite_gauche(animHeros)=="Gauche" ?Saut.fall_gauche: Saut.fall_droite,partie.getFrame());
 			alignHitbox(animHeros,nextMouv,nextAnim,partie,deplace,blocGaucheGlisse);
 			anim = nextAnim;
 			deplacement= nextMouv;
 			deplacement.setSpeed(TypeObject.heros, this, anim);
-			vit.x=0;
+			localVit.x=0;
 			nouvAnim=anim;	
 			return(anim);
 
@@ -652,6 +712,7 @@ public class Heros extends Collidable{
 		{
 			if(nouvMouv.IsDeplacement(Mouvement_perso.accroche) && ( (nouvAnim == 1) || (nouvAnim == 3)))
 			{
+
 				//manually align hitbox 
 				int xdir = (nouvAnim == 1) ? -1 :1;
 				int ydir_up = -1; //get upper part of hitbox
@@ -694,7 +755,6 @@ public class Heros extends Collidable{
 		else
 		//if(!partie.changeMouv ) // MEME MOUVEMENT QUE PRECEDEMMENT , otherwise problem with landing 
 		{
-
 			animationChanged=false;
 			int nextAnim = deplacement.updateAnimation(TypeObject.heros, animHeros, partie.getFrame());
 			alignHitbox(animHeros,deplacement,nextAnim,partie,deplace,blocGaucheGlisse);
@@ -713,9 +773,9 @@ public class Heros extends Collidable{
 		boolean blocGauche = slide? blocGaucheGlisse : (!blocGaucheGlisse && blocGaucheAccroche);
 		boolean blocDroit = slide? blocDroitGlisse:  (!blocDroitGlisse && blocDroitAccroche);
 		boolean res_d = (deplacement.IsDeplacement(Mouvement_perso.saut)||deplacement.IsDeplacement(Mouvement_perso.course)) 
-				&& (blocGauche&&(last_colli_left||vit.x<0)) && falling; 
+				&& (blocGauche&&(last_colli_left||getGlobalVit().x<0)) && falling; 
 		boolean res_g = (deplacement.IsDeplacement(Mouvement_perso.saut)||deplacement.IsDeplacement(Mouvement_perso.course)) 
-				&& (blocDroit && (last_colli_right||vit.x>0)) && falling; 
+				&& (blocDroit && (last_colli_right||getGlobalVit().x>0)) && falling; 
 		boolean[] res ={res_d,res_g};
 		//caution for accroche, res_d is actually res_l, and res_l res_d
 		return res;
@@ -736,8 +796,8 @@ public class Heros extends Collidable{
 
 		boolean allowed=true;
 
-		//Unexpected behavious: attente/marche while being in the air(ie current move being saut/glissade )
-		//Unexpected behavious: going right/left in the air while landing
+		//Unexpected behaviour: attente/marche while being in the air(ie current move being saut/glissade )
+		//Unexpected behaviour: going right/left in the air while landing
 
 		boolean inAirAllowed = !( (currentM.IsDeplacement(Mouvement_perso.saut) || currentM.IsDeplacement(Mouvement_perso.glissade)) &&
 				(nextMove.IsDeplacement(Mouvement_perso.attente) || nextMove.IsDeplacement(Mouvement_perso.marche) ));
@@ -753,16 +813,16 @@ public class Heros extends Collidable{
 	public void alignHitbox(int animActu,Mouvement depSuiv, int animSuiv, AbstractModelPartie partie,Deplace deplace,boolean blocGaucheGlisse )
 	{
 		boolean isGlissade = deplacement.IsDeplacement(Mouvement_perso.glissade);
-		boolean going_left = vit.x<0;
+		boolean going_left = getGlobalVit().x<0;
 
-		boolean facing_left_still= vit.x==0 &&(droite_gauche(animActu)=="Gauche"|| last_colli_left)&& !isGlissade;
+		boolean facing_left_still= getGlobalVit().x==0 &&(droite_gauche(animActu)=="Gauche"|| last_colli_left)&& !isGlissade;
 		boolean sliding_left_wall = (droite_gauche(animActu)=="Droite") && isGlissade;
 		boolean start_falling_face_right = (!deplacement.IsDeplacement(Mouvement_perso.saut) && depSuiv.IsDeplacement(Mouvement_perso.saut)) 
 				&& (droite_gauche(animActu)=="Droite");
 		boolean start_falling_face_left = (!deplacement.IsDeplacement(Mouvement_perso.saut) && depSuiv.IsDeplacement(Mouvement_perso.saut)) 
 				&& (droite_gauche(animActu)=="Gauche");
 		boolean left = ! start_falling_face_left && ( going_left|| facing_left_still ||sliding_left_wall || blocGaucheGlisse || start_falling_face_right) ; 
-		boolean down = vit.y>=0; 
+		boolean down = getGlobalVit().y>=0; 
 
 		last_align_left=left;
 		last_align_down=down;
@@ -780,18 +840,32 @@ public class Heros extends Collidable{
 	 * @param minSpeed : minimum speed to which the hero can be slowed down
 	 */
 	@Override
-	public void applyFriction(int minSpeed)
+	public void applyFriction(double minlocalSpeed,double minEnvirSpeed)
 	{
-		if(deplacement.IsDeplacement(Mouvement_perso.tir))
+		if(deplacement.IsDeplacement(Mouvement_perso.tir) && !useGravity)
 		{
-			boolean neg = vit.x<0;
-			double frict = (useGravity?InterfaceConstantes.AIRFRICTION:InterfaceConstantes.FRICTION);
-			double newVitX= vit.x - (vit.x* frict);
-			if( (!neg && newVitX<minSpeed) || (neg && newVitX>-1*minSpeed) )
-				vit.x=minSpeed;
+			boolean neg = localVit.x<0;
+			double frict = InterfaceConstantes.FRICTION;
+			double newVitX= localVit.x - (localVit.x* frict);
+			if( (!neg && newVitX<minlocalSpeed) || (neg && newVitX>-1*minlocalSpeed) )
+				localVit.x=minlocalSpeed;
 			else
-				vit.x=newVitX;
+				localVit.x=newVitX;
 		}
+		
+		boolean negx = envirVit.x<0;
+		boolean negy = envirVit.y<0;
+		double frict = (useGravity?InterfaceConstantes.AIRFRICTION:InterfaceConstantes.FRICTION);
+		double newVitX= envirVit.x - (envirVit.x* frict);
+		double newVitY= envirVit.y - (envirVit.y* frict);
+		if( (!negx && newVitX<minEnvirSpeed) || (negx && newVitX>-1*minEnvirSpeed) )
+			envirVit.x=minEnvirSpeed;
+		else
+			envirVit.x=newVitX;
+		if( (!negy && newVitY<minEnvirSpeed) || (negy && newVitY>-1*minEnvirSpeed) )
+			envirVit.y=minEnvirSpeed;
+		else
+			envirVit.y=newVitY;
 	}
 	@Override
 	public void handleStuck(AbstractModelPartie partie, Deplace deplace) {
@@ -825,15 +899,60 @@ public class Heros extends Collidable{
 	}
 
 	public void shootArrow(AbstractModelPartie partie)
-	{
-		new Fleche(partie.tabFleche,partie.getFrame());
+	{	
+		if(tir_type.equals(Fleche.NORMAL))
+			new Fleche(partie.tabFleche,partie.getFrame());
+		//MATERIEL
+		else if(tir_type.equals(Fleche.MATERIELLE.FOUDRE))
+			new Fleche_foudre(partie.tabFleche,partie.getFrame());//TODO
+		else if(tir_type.equals(Fleche.MATERIELLE.ELECTRIQUE))
+			new Fleche_electrique(partie.tabFleche,partie.getFrame());//TODO
+		else if(tir_type.equals(Fleche.MATERIELLE.GLACE))
+			new Fleche_glace(partie.tabFleche,partie.getFrame());//TODO
+		else if(tir_type.equals(Fleche.MATERIELLE.ROCHE))
+			new Fleche_roche(partie.tabFleche,partie.getFrame());//TODO
+		//SPIRITUELLE
+		else if(tir_type.equals(Fleche.SPIRITUELLE.FEU))
+			new Fleche_feu(partie.tabFleche,partie.getFrame());//TODO
+		else if(tir_type.equals(Fleche.SPIRITUELLE.GRAPPIN))
+			new Fleche_grappin(partie.tabFleche,partie.getFrame());//TODO
+		else if(tir_type.equals(Fleche.SPIRITUELLE.OMBRE))
+			new Fleche_ombre(partie.tabFleche,partie.getFrame());//TODO
+		else if(tir_type.equals(Fleche.SPIRITUELLE.VENT))
+			new Fleche_vent(partie.tabFleche,partie.getFrame());//TODO
+		//DESTRUCTEUR
+		else if(tir_type.equals(Fleche.DESTRUCTRICE.BOGUE))
+			new Fleche_bogue(partie.tabFleche,partie.getFrame());//TODO
+		else if(tir_type.equals(Fleche.DESTRUCTRICE.CHARGEE))
+			new Fleche_chargee(partie.tabFleche,partie.getFrame());//TODO
+		else if(tir_type.equals(Fleche.DESTRUCTRICE.EXPLOSIVE))
+			new Fleche_explosive(partie.tabFleche,partie.getFrame());//TODO
+		else if(tir_type.equals(Fleche.DESTRUCTRICE.TROU_NOIR))
+			new Fleche_trou_noir(partie.tabFleche,partie.getFrame());//TODO
+		//RUSE
+		else if(tir_type.equals(Fleche.RUSEE.AUTO_TELEGUIDEE))
+			new Fleche_auto_teleguidee(partie.tabFleche,partie.getFrame());//TODO
+		else if(tir_type.equals(Fleche.RUSEE.CAC))
+			new Fleche_cac(partie.tabFleche,partie.getFrame());//TODO
+		else if(tir_type.equals(Fleche.RUSEE.RETARD))
+			new Fleche_retard(partie.tabFleche,partie.getFrame());//TODO
+		else if(tir_type.equals(Fleche.RUSEE.V_FLECHE))
+			new Fleche_v_fleche(partie.tabFleche,partie.getFrame());//TODO
+
 	}
 	@Override
 	public void destroy() {
 		//Do nothing
 	}
 
-
+	private void updateVarSaut(boolean falling, boolean accroche, boolean glisse) {
+		this.peutSauter=!falling;
+		//this.sautAccroche=this.sautAccroche && accroche;
+		//this.sautGlisse=this.sautGlisse;
+		this.debutSaut=this.debutSaut && ! falling;
+		this.finSaut=this.finSaut && !falling;
+	}
+		
 
 }
 

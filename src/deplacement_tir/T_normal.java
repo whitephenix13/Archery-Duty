@@ -39,7 +39,8 @@ public class T_normal extends Mouvement_tir{
 
 			hitbox = createHitbox(hitboxCreation);
 			//animation frame, current_frame, start_index, end_index
-			animation.start(Arrays.asList(2,4,6,8), current_frame, 0, 4);
+			int delta= 5;
+			animation.start(Arrays.asList(delta,2*delta,3*delta,4*delta), current_frame, 0, 4);
 
 		}
 		else if(type.equals(TypeObject.tir_spirel))
@@ -79,8 +80,8 @@ public class T_normal extends Mouvement_tir{
 		{
 			int speed_norm = (int)(30.0 / Config.ratio_fps());
 			Vitesse vit = object.convertSpeed(speed_norm,object.rotation);
-			object.vit.x=vit.x;
-			object.vit.y=vit.y;
+			object.localVit.x=vit.x;
+			object.localVit.y=vit.y;
 		}
 		else if(type.equals(TypeObject.tir_spirel))
 		{
@@ -88,9 +89,9 @@ public class T_normal extends Mouvement_tir{
 
 			switch(anim)
 			{
-			case 0 : object.vit.x= 1*speed_norm;break;
-			case 1 : object.vit.x= -1*speed_norm;break;
-			case 2 : object.vit.y=-1*speed_norm;break;
+			case 0 : object.localVit.x= 1*speed_norm;break;
+			case 1 : object.localVit.x= -1*speed_norm;break;
+			case 2 : object.localVit.y=-1*speed_norm;break;
 			}
 		}
 	}

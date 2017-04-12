@@ -111,7 +111,7 @@ public class Saut extends Mouvement_perso{
 				heros = (Heros) object;
 			}
 			//permet de déplacer le héros sur le cote 
-			final double vitMax = (object.vit.x == 0) ? (8.0 / Config.ratio_fps()):  Math.abs(object.vit.x) ; 
+			final double vitMax = (object.localVit.x == 0) ? (8.0 / Config.ratio_fps()):  Math.abs(object.localVit.x) ; 
 			final double varVit = (8.0 / Config.ratio_fps()) ; 
 			//bit more complicated due to gravity, make sure that jump speed and gravity compensate the same way 
 			//jump speed ~ 4.5 m/s = 7.5 wu / frame 
@@ -119,35 +119,35 @@ public class Saut extends Mouvement_perso{
 
 			if(heros.sautGlisse)
 			{
-				object.vit.x=varVit * ((heros.droite_gauche(anim)=="Gauche") ? -1 : 1);
+				object.localVit.x=varVit * ((heros.droite_gauche(anim)=="Gauche") ? -1 : 1);
 				heros.sautGlisse=false;
-				object.vit.y=vitSaut;
+				object.localVit.y=vitSaut;
 			}
 			else if(heros.sautAccroche)
 			{
 				heros.sautAccroche=false;
-				object.vit.y=vitSaut;
+				object.localVit.y=vitSaut;
 			}
 			else
 			{
 				if(heros.debutSaut) 
 				{
-					object.vit.y=vitSaut;
+					object.localVit.y=vitSaut;
 					heros.debutSaut =false;
 				}
 				else if(heros.finSaut)
 				{
-					object.vit.y=0;
+					object.localVit.y=0;
 				}
 				if (heros.deplaceSautDroit  && !heros.last_colli_right && !heros.sautGlisse)
 				{
-					if(object.vit.x<0)//change direction in air
+					if(object.localVit.x<0)//change direction in air
 						heros.runBeforeJump=false;
 
-					if(object.vit.x<(vitMax- varVit))
-						object.vit.x+= varVit;
+					if(object.localVit.x<(vitMax- varVit))
+						object.localVit.x+= varVit;
 					else 
-						object.vit.x= vitMax;
+						object.localVit.x= vitMax;
 
 					//on attend que le joueur réappui sur la touche de direction pour redeplacer
 					heros.deplaceSautDroit= false;
@@ -155,13 +155,13 @@ public class Saut extends Mouvement_perso{
 				}
 				if (heros.deplaceSautGauche && ! heros.last_colli_left  && !heros.sautGlisse)
 				{
-					if(object.vit.x>0)//change direction in air
+					if(object.localVit.x>0)//change direction in air
 						heros.runBeforeJump=false;
 
-					if(object.vit.x>(-1*vitMax+ varVit))
-						object.vit.x-= varVit;
+					if(object.localVit.x>(-1*vitMax+ varVit))
+						object.localVit.x-= varVit;
 					else 
-						object.vit.x= -1*vitMax;
+						object.localVit.x= -1*vitMax;
 
 					//on attend que le joueur réappui sur la touche de direction pour redeplacer
 					heros.deplaceSautGauche= false;
@@ -180,15 +180,15 @@ public class Saut extends Mouvement_perso{
 
 			if(spirel.peutSauter)
 			{
-				object.vit.y=-1*yspeed;
+				object.localVit.y=-1*yspeed;
 			}
 			if(spirel.sautGauche && ! spirel.sautDroit)
 			{
-				object.vit.x= -1*xspeed;
+				object.localVit.x= -1*xspeed;
 			}
 			if(spirel.sautDroit && ! spirel.sautGauche)
 			{
-				object.vit.x= xspeed;
+				object.localVit.x= xspeed;
 			}
 		}
 	}

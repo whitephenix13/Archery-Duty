@@ -1,10 +1,10 @@
 package deplacement;
 
 import collision.Collidable;
+import fleches.Fleche;
 import monstre.Monstre;
 import monstre.TirMonstre;
 import option.Config;
-import personnage.Fleche;
 import principal.InterfaceConstantes;
 
 public class Gravite implements InterfaceConstantes
@@ -14,25 +14,25 @@ public class Gravite implements InterfaceConstantes
 	//g=10 m/s^2 = 0.3 wu / frame^2 with 1 wu = 1cm
 	//vitesse max a 195km/h= 54,17 m/s = 90 wu/frame
 	public float varVitesse = (float) (gravity_norm *Config.i_ratio_fps()*Config.i_ratio_fps());
-	public float limVitesse = (float) (90.0 *Config.i_ratio_fps()*Config.i_ratio_fps()) ; // 7
+	public float limVitesse = (float) (10.0 *Config.i_ratio_fps()*Config.i_ratio_fps()) ; // 7
 	public void gravite(Collidable object, boolean slowDown) {
 		float varVitesseGlissade = varVitesse;
 		float limVitesseGlissade = limVitesse/2;
 		if (object.deplacement.IsDeplacement(Mouvement_perso.glissade))
 		{
-			if(object.vit.y<(limVitesseGlissade - varVitesseGlissade))
-				object.vit.y+= varVitesseGlissade;
+			if(object.localVit.y<(limVitesseGlissade - varVitesseGlissade))
+				object.localVit.y+= varVitesseGlissade;
 
 			else 
-				object.vit.y= limVitesseGlissade;
+				object.localVit.y= limVitesseGlissade;
 		}
 		else 
 		{
-			if(object.vit.y<(limVitesse - varVitesse))
-				object.vit.y+= varVitesse;
+			if(object.localVit.y<(limVitesse - varVitesse))
+				object.localVit.y+= varVitesse;
 
 			else 
-				object.vit.y= limVitesse;
+				object.localVit.y= limVitesse;
 
 		}
 	}

@@ -1,35 +1,41 @@
 package collision;
 
 import java.awt.Point;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.vecmath.Vector2d;
 
-import partie.AbstractModelPartie;
-import types.Hitbox;
-import types.TypeObject;
-import types.Vitesse;
 import deplacement.Deplace;
 import deplacement.Mouvement;
 import deplacement.Mouvement_perso;
+import monstre.Monstre;
+import partie.AbstractModelPartie;
+import personnage.Heros;
+import types.Hitbox;
+import types.TypeObject;
+import types.Vitesse;
 
 //Specify that an object can enter in collision. 
 //Store the information needed to manage a collision
 public abstract class Collidable {
-	
+
 	public String type;
 	public int xpos; 
 	public int ypos; 
 	public double rotation=0;
 	public int anim; 
 	public Mouvement deplacement;
-	public int reaffiche;
-	
+
 	public boolean needDestroy=false;
-	public Vitesse vit;
-	
+	public Vitesse localVit;
+	public Vitesse envirVit; 
+	public Vitesse getLocalVit(){return localVit;}
+	public Vitesse getGlobalVit(){return new Vitesse(localVit.x+envirVit.x,localVit.y+envirVit.y);}
+
 	public int slowDownFactor; 
 	public boolean fixedWhenScreenMoves ; //true : not influenced by screen displacement (ie: use for the hero)
-	
+
 	protected CurrentValue currentValue;
 	public boolean useGravity=false;
 	//Variables pour mémoriser la direction de la dernière collision
@@ -37,7 +43,7 @@ public abstract class Collidable {
 	public boolean last_colli_right=false;
 	public abstract Hitbox getHitbox(Point INIT_RECT);
 	public abstract Hitbox getHitbox(Point INIT_RECT,Mouvement mouv, int _anim);
-	
+
 	public abstract void handleWorldCollision(Vector2d normal,AbstractModelPartie partie,Deplace deplace);
 	public abstract void handleObjectCollision(AbstractModelPartie partie,Deplace deplace);
 	/**
@@ -54,19 +60,19 @@ public abstract class Collidable {
 	public abstract boolean[] deplace(AbstractModelPartie partie, Deplace deplace);
 	//Use the function trick to memorize the reset values
 	protected class CurrentValue{public void res(){};}
-	public abstract void applyFriction(int minSpeed);
+	public abstract void applyFriction(double minlocalSpeed, double minEnvirSpeed);
 	public abstract void resetVarBeforeCollision();
 	public abstract void handleStuck(AbstractModelPartie partie,Deplace deplace);
 	public abstract void handleDeplacementSuccess(AbstractModelPartie partie,Deplace deplace);
 	public abstract void resetVarDeplace();
 
 	public abstract void destroy();
-	
+
 	public void alignHitbox(int animActu,Mouvement depSuiv, int animSuiv, AbstractModelPartie partie,Deplace deplace, boolean left, boolean down,
 			String deplacement_type, boolean useTouchCollision)
 	{
 		Mouvement depActu= deplacement;
-		
+
 		int xdir = left ? -1 :1;
 		int ydir = down ? 1 :-1;
 		double dx= Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,depActu, animActu).polygon).x -
@@ -88,7 +94,7 @@ public abstract class Collidable {
 		String s_mx =!left? "left":"right";
 		String s_y =down? " down":" up";
 		String s_my =!down? " down":" up";
-
+		
 		boolean valid=alignTestValid(depSuiv, animSuiv, partie,deplace,deplacement_type,useTouchCollision);
 
 		s+= (valid && s=="") ? s_x+s_y : "";
@@ -96,12 +102,13 @@ public abstract class Collidable {
 		//test the opposite y 
 		if(!valid)
 		{
-			m_dy=Hitbox.supportPoint(new Vector2d(-ydir,0), getHitbox(partie.INIT_RECT,depActu, animActu).polygon).y -
-					Hitbox.supportPoint(new Vector2d(-ydir,0), getHitbox(partie.INIT_RECT,depSuiv, animSuiv).polygon).y;
+			m_dy=Hitbox.supportPoint(new Vector2d(0,-ydir), getHitbox(partie.INIT_RECT,depActu, animActu).polygon).y -
+					Hitbox.supportPoint(new Vector2d(0,-ydir), getHitbox(partie.INIT_RECT,depSuiv, animSuiv).polygon).y;
 			xpos+=dx-xadded;
 			ypos+=m_dy-yadded;
 			xadded=dx;
 			yadded=m_dy;
+			
 			valid=alignTestValid(depSuiv, animSuiv, partie,deplace,deplacement_type,useTouchCollision);
 			s+= (valid && s=="") ? s_x+s_my : "";
 
@@ -111,13 +118,14 @@ public abstract class Collidable {
 		if(!valid && !n_glisse)
 		{
 			m_dx=Hitbox.supportPoint(new Vector2d(-xdir,0), getHitbox(partie.INIT_RECT,depActu, animActu).polygon).x -
-					Hitbox.supportPoint(new Vector2d(-xdir,0), getHitbox(partie.INIT_RECT,depSuiv, animSuiv).polygon).x;;
-					xpos+=m_dx-xadded;
-					ypos+=dy-yadded;
-					xadded=m_dx;
-					yadded=dy;
-					valid=alignTestValid(depSuiv, animSuiv, partie,deplace,deplacement_type,useTouchCollision);
-					s+= (valid && s=="") ? s_mx+s_y : "";
+					Hitbox.supportPoint(new Vector2d(-xdir,0), getHitbox(partie.INIT_RECT,depSuiv, animSuiv).polygon).x;
+			xpos+=m_dx-xadded;
+			ypos+=dy-yadded;
+			xadded=m_dx;
+			yadded=dy;
+		
+			valid=alignTestValid(depSuiv, animSuiv, partie,deplace,deplacement_type,useTouchCollision);
+			s+= (valid && s=="") ? s_mx+s_y : "";
 
 		}
 
@@ -138,7 +146,7 @@ public abstract class Collidable {
 			System.out.println(s);
 		}*/
 	}
-	
+
 	public boolean alignTestValid(Mouvement depSuiv, int animSuiv, AbstractModelPartie partie,Deplace deplace, 
 			String deplacement_type, boolean useTouchCollision)
 	{
@@ -152,7 +160,7 @@ public abstract class Collidable {
 		this.deplacement=prev_mouv;
 		return valid;
 	}
-	
+
 	public Vitesse convertSpeed(double norm_speed, double angle)
 	{
 		double cos_angle = Math.cos(angle);
@@ -162,6 +170,14 @@ public abstract class Collidable {
 		double y = norm_speed * sin_angle;
 		return new Vitesse((int)x,(int)y);
 	}
-		
-	
+
+	//get all relevant collidable,ie: the one that are affected by the effect of the arrows 
+	public static ArrayList<Collidable> getAllCollidable(AbstractModelPartie partie, boolean getHeros, boolean getMonsters)
+	{
+		ArrayList<Collidable> objects = new ArrayList<Collidable>();
+		objects.add(partie.heros);
+		for(Monstre m : partie.tabMonstre)
+			objects.add(m);
+		return objects;
+	}
 }

@@ -33,8 +33,7 @@ public class ModelOption extends AbstractModelOption{
 	}
 
 	public void setVolumeBruitage(ChangeEvent event) {
-		MusicBruitage bruit= new MusicBruitage();
-		bruit.volumeControl((double)((JSlider)event.getSource()).getValue()/100);
+		MusicBruitage.me.volumeControl((double)((JSlider)event.getSource()).getValue()/100);
 	}
 
 
@@ -94,6 +93,11 @@ public class ModelOption extends AbstractModelOption{
 		{
 			inpPartie.rebindKey(touch, touches.t_tir);
 			touches.t_tir=touch;
+		}
+		else if(memCustomClickableLabel.getName().equals("tir secondaire"))
+		{
+			inpPartie.rebindKey(touch, touches.t_2tir);
+			touches.t_2tir=touch;
 		}
 		else if(memCustomClickableLabel.getName().equals("slow"))
 		{

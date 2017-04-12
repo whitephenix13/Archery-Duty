@@ -16,6 +16,7 @@ public class Touches {
 	public String t_gauche = "Q";
 	public String t_saut ="SPACE";
 	public String t_tir =LEFT_MOUSE;
+	public String t_2tir =RIGHT_MOUSE;
 	public String t_slow="Z";
 	public String t_pause= "ESCAPE";
 

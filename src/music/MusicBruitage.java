@@ -16,27 +16,22 @@ import principal.InterfaceConstantes;
 
 public class MusicBruitage implements InterfaceConstantes{
 
-	static double gain;
-	AudioInputStream audioInputStream;
+	public static MusicBruitage me;
+	double gain;
+	int nombreBruitage =0 ;
+	Map<String,Clip> mapClips = new HashMap<String,Clip>();
 
-	static int nombreBruitage =0 ;
-
-
-	static Map<String,Clip> mapClips = new HashMap<String,Clip>();
-
-	String typeBruitage;
-
-	long startTime;
-	long time;
-
-
+	public MusicBruitage()
+	{
+	}
+	
 	public void initMusicBruitage()
 	{
 		gain = Config.bruitageVolume;
 		addToMap(bruitagesArray);
 
 	}
-	public void addToMap(String nom)
+	private void addToMap(String nom)
 	{
 		Clip c;
 		AudioInputStream audio; 
@@ -52,21 +47,12 @@ public class MusicBruitage implements InterfaceConstantes{
 		}
 
 	}
-	public void addToMap(String[] noms)
+	private void addToMap(String[] noms)
 	{
 		for(String s : noms)
 		{
 			addToMap(s);
 		}
-	}
-	public MusicBruitage()
-	{
-	}
-
-	public MusicBruitage(String bruitage) {
-
-		typeBruitage=bruitage;
-		volumeControl(gain);
 	}
 
 	public void volumeControl(double nouvGain)
@@ -82,33 +68,19 @@ public class MusicBruitage implements InterfaceConstantes{
 		}
 	}
 
-	public void startBruitage(long _time)
+	public void startBruitage(String typeBruitage)
 	{
-		time=_time*1000;
-
-		startTime=System.nanoTime();
 		volumeControl(gain);
 
 		Clip c = mapClips.get(typeBruitage);
-		c.stop();
-		c.setMicrosecondPosition(0);
-		c.start();
+		if(!c.isRunning() || (c.isRunning() && (c.getFramePosition()>0)) )
+		{
+			c.stop();
+			c.setMicrosecondPosition(0);
+			while(c.isRunning())
+			{}
+			c.start();
+		}
 
 	}
-	public void setBruitage(String bruitage, Music music) throws UnsupportedAudioFileException, IOException, LineUnavailableException
-	{
-		typeBruitage=bruitage;
-	}
-	public boolean doitDetruire()
-	{
-		if((System.nanoTime()- startTime)*Math.pow(10, -6) > time )
-		{
-			return(true);
-		}
-		else
-		{
-			return(false);
-		}
-	}
-
 }

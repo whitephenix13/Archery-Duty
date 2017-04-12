@@ -31,13 +31,14 @@ import deplacement.Marche;
 import deplacement.Mouvement_perso;
 import deplacement.Saut;
 import deplacement.Tir;
+import effects.Effect;
+import fleches.Fleche;
 import menuPrincipal.AbstractModelPrincipal;
 import monstre.Monstre;
 import monstre.Spirel;
 import monstre.TirMonstre;
 import music.Music;
 import music.MusicBruitage;
-import personnage.Fleche;
 import principal.InterfaceConstantes;
 import serialize.Serialize;
 import types.Bloc;
@@ -100,7 +101,7 @@ public class ModelPartie extends AbstractModelPartie{
 		//Lors d'une pause, on ne veut pas réinitaliser la partie en cours mais juste y accéder à nouveau
 		if(!inPause)
 		{
-			//First action is to delete since we want the user to since the colliding object for at least 1 frame 
+			//First action is to delete since we want the user to see the colliding objects for at least 1 frame 
 			deleteObject(lEffaceFleche,(List<Collidable>)(List<?>) tabFleche);
 			deleteObject(lEffaceTirMonstre,(List<Collidable>)(List<?>)tabTirMonstre);
 			deleteObject(lEffaceMonstre,(List<Collidable>)(List<?>)tabMonstre);
@@ -154,17 +155,17 @@ public class ModelPartie extends AbstractModelPartie{
 				}
 				long tempsFleche=  System.nanoTime()-fleche.tempsDetruit;
 
-				if(fleche.isPlanted && (tempsFleche >= InterfaceConstantes.TEMPS_DESTRUCTION_FLECHE))
+				if(fleche.isPlanted && (tempsFleche >= fleche.TEMPS_DESTRUCTION_FLECHE))
 				{
 					fleche.needDestroy=true;
 				}
 
 			}
 
-
 			//on gere la collision des tirs/monstre/heros
 			gestionTir();
-
+			//update effects anim or delete them 
+			gestionEffect();
 			//PREPARE OBJECTS FOR DESTRUCTION 
 
 			for(int i =0; i <tabFleche.size();++i)
@@ -235,10 +236,11 @@ public class ModelPartie extends AbstractModelPartie{
 
 					if(!tirM.needDestroy && this.deplace.colli.collisionObjects(this, deplace, fleche, tirM))
 					{
+						ArrayList<Collidable> objects = Collidable.getAllCollidable(this,true,true);
 						fleche.handleObjectCollision(this, deplace);
 						tirM.handleObjectCollision(this, deplace);
 						//bruit de collision tir/tir 
-						(new MusicBruitage("annulation tir")).startBruitage(100);
+						MusicBruitage.me.startBruitage("annulation tir");
 					}
 				}
 			}
@@ -274,13 +276,38 @@ public class ModelPartie extends AbstractModelPartie{
 			{
 				if(!heros.invincible)
 					heros.touche(tabTirMonstre.get(j).dommage);
-
+				ArrayList<Collidable> objects = Collidable.getAllCollidable(this,true,true);
 				heros.handleObjectCollision(this, deplace);
 				tirM.handleObjectCollision(this, deplace);					
 			}
 		}
 	}
 
+	void gestionEffect()
+	{
+		List<Integer> deleteIndex = new ArrayList<Integer>();
+		for(int i=0;i<arrowsEffects.size();++i)
+		{
+			Effect eff = arrowsEffects.get(i);
+			//if anim ended: delete
+			if(eff.isEnded())
+			{
+				eff.onDestroy();
+				deleteIndex.add(i);
+			}
+			//increment anim 
+			else
+			{
+				eff.anim=eff.animation.update(eff.anim, this.getFrame());
+			}
+		}
+		//Collections.sort(deleteIndex);
+		for(int j = 0 ; j< deleteIndex.size(); ++j)
+		{
+			arrowsEffects.remove(deleteIndex.get(j)-j);
+		}
+	
+	}
 	void deleteObject(List<Integer> indexList, List<Collidable> objectList )
 	{
 		Collections.sort(indexList);
@@ -367,15 +394,27 @@ public class ModelPartie extends AbstractModelPartie{
 			if(!inPause )
 			{
 				//TIR 
-				if(inputPartie.toucheTirDown && !heros.flecheEncochee && !heros.doitEncocherFleche 
+				if( (inputPartie.toucheTirDown|| inputPartie.touche2TirDown) && !heros.flecheEncochee && !heros.doitEncocherFleche 
 						&& ((System.nanoTime()-heros.last_shoot_time)>InterfaceConstantes.FLECHE_TIR_COOLDOWN))
 				{
 					//if not just wall jump 
 					if(!(heros.deplacement.IsDeplacement(Mouvement_perso.saut) && ((System.nanoTime()-heros.last_wall_jump_time)<=InterfaceConstantes.WALL_JUMP_DISABLE_TIME)))
 					{
+						//Normal tir 
+						if(inputPartie.toucheTirDown)
+						{
+							inputPartie.toucheTirDown=false;
+							heros.set_tir_type(false);
+						}
+						//Special tir
+						else
+						{
+							//TODO: 
+							inputPartie.touche2TirDown=false;
+							heros.set_tir_type(true);
+						}
 						changeMouv=true;
 						//on ne tir qu'une fleche
-						inputPartie.toucheTirDown=false;
 						heros.doitEncocherFleche=true;
 						heros.nouvMouv= new Tir(TypeObject.heros,Tir.tir,frame); 
 						heros.last_armed_time=System.nanoTime();
@@ -409,8 +448,8 @@ public class ModelPartie extends AbstractModelPartie{
 						{
 							changeMouv=true;
 
-							heros.nouvAnim= (heros.vit.y>=0 ? 4 : 3); 
-							heros.nouvMouv= new Saut(TypeObject.heros,heros.vit.y>=0? Saut.fall_droite:Saut.jump_droite,frame); 
+							heros.nouvAnim= (heros.getGlobalVit().y>=0 ? 4 : 3); 
+							heros.nouvMouv= new Saut(TypeObject.heros,heros.getGlobalVit().y>=0? Saut.fall_droite:Saut.jump_droite,frame); 
 						}
 					}
 					else if(heros_accroche)
@@ -421,8 +460,8 @@ public class ModelPartie extends AbstractModelPartie{
 						{
 							changeMouv=true;
 
-							heros.nouvAnim= (heros.vit.y>=0 ? 4 : 3); 
-							heros.nouvMouv= new Saut(TypeObject.heros,heros.vit.y>=0? Saut.fall_droite:Saut.jump_droite,frame); 
+							heros.nouvAnim= (heros.getGlobalVit().y>=0 ? 4 : 3); 
+							heros.nouvMouv= new Saut(TypeObject.heros,heros.getGlobalVit().y>=0? Saut.fall_droite:Saut.jump_droite,frame); 
 						}
 						//climb the border
 						else if (heros.anim == 2 && heros.deplacement.animEndedOnce())
@@ -457,7 +496,7 @@ public class ModelPartie extends AbstractModelPartie{
 						{
 							changeMouv=true;
 							heros.deplaceSautDroit=true; // on fait bouger le heros
-							boolean fall = heros.vit.y >=0 ;
+							boolean fall = heros.getGlobalVit().y >=0 ;
 							heros.nouvAnim= fall? 4 : 3 ; 
 							heros.nouvMouv=new Saut(TypeObject.heros,fall?Saut.fall_droite:Saut.jump_droite,frame);
 						}
@@ -496,8 +535,8 @@ public class ModelPartie extends AbstractModelPartie{
 						if(heros.anim==0){
 							changeMouv=true;
 
-							heros.nouvAnim= (heros.vit.y>=0 ? 1 : 0); 
-							heros.nouvMouv= new Saut(TypeObject.heros,heros.vit.y>=0? Saut.fall_gauche:Saut.jump_gauche,frame); 
+							heros.nouvAnim= (heros.getGlobalVit().y>=0 ? 1 : 0); 
+							heros.nouvMouv= new Saut(TypeObject.heros,heros.getGlobalVit().y>=0? Saut.fall_gauche:Saut.jump_gauche,frame); 
 						}
 					}
 					else if (heros_accroche)
@@ -508,8 +547,8 @@ public class ModelPartie extends AbstractModelPartie{
 						{
 							changeMouv=true;
 
-							heros.nouvAnim= (heros.vit.y>=0 ? 4 : 3); 
-							heros.nouvMouv= new Saut(TypeObject.heros,heros.vit.y>=0? Saut.fall_gauche:Saut.jump_gauche,frame); 
+							heros.nouvAnim= (heros.getGlobalVit().y>=0 ? 4 : 3); 
+							heros.nouvMouv= new Saut(TypeObject.heros,heros.getGlobalVit().y>=0? Saut.fall_gauche:Saut.jump_gauche,frame); 
 						}
 						//climb the border
 						else if (heros.anim == 0 && heros.deplacement.animEndedOnce())
@@ -548,7 +587,7 @@ public class ModelPartie extends AbstractModelPartie{
 							changeMouv=true;
 
 							heros.deplaceSautGauche=true; // on fait bouger le heros
-							boolean fall = heros.vit.y >=0 ;
+							boolean fall = heros.getGlobalVit().y >=0 ;
 							heros.nouvAnim=fall? 1 : 0 ; 
 							heros.nouvMouv=new Saut(TypeObject.heros,fall? Saut.fall_gauche:Saut.jump_gauche,frame); 
 						}
@@ -637,10 +676,19 @@ public class ModelPartie extends AbstractModelPartie{
 		}
 		//on arrete de deplacer le heros qui saute: 
 		//TIR 
-		if(inputPartie.toucheTirReleased && ((System.nanoTime()-heros.last_armed_time)>InterfaceConstantes.ARMED_MIN_TIME))
+		boolean normal_tir_R= inputPartie.toucheTirReleased;
+		boolean normal_2tir_R= inputPartie.touche2TirReleased;
+
+		if( (normal_tir_R|| normal_2tir_R) && ((System.nanoTime()-heros.last_armed_time)>InterfaceConstantes.ARMED_MIN_TIME))
 		{
-			inputPartie.toucheTirDown=false;
-			inputPartie.toucheTirReleased=false;
+			if(normal_tir_R){
+				inputPartie.toucheTirDown=false;
+				inputPartie.toucheTirReleased=false;
+			}
+			else{
+				inputPartie.touche2TirDown=false;
+				inputPartie.touche2TirReleased=false;
+			}
 
 			if(heros.flecheEncochee)
 			{
@@ -650,6 +698,9 @@ public class ModelPartie extends AbstractModelPartie{
 				heros.nouvAnim= (heros.droite_gauche(heros.anim)=="Gauche" ? 0 : 2) ;
 				heros.nouvMouv= new Attente(TypeObject.heros,heros.nouvAnim==0? Attente.attente_gauche:Attente.attente_droite,frame);
 				tabFleche.get(tabFleche.size()-1).flecheDecochee(this,deplace);
+				//TODO:
+				if(normal_2tir_R)
+				{}
 				heros.last_shoot_time= System.nanoTime();
 
 			}
@@ -697,7 +748,7 @@ public class ModelPartie extends AbstractModelPartie{
 					heros.nouvMouv= new Attente(TypeObject.heros,heros.nouvAnim==0? Attente.attente_gauche:Attente.attente_droite,frame);
 
 					//on met sa vitesse à 0:  
-					heros.vit.x=0;
+					heros.localVit.x=0;
 
 				}
 
@@ -711,17 +762,17 @@ public class ModelPartie extends AbstractModelPartie{
 					heros.nouvMouv= new Attente(TypeObject.heros,heros.nouvAnim==0? Attente.attente_gauche:Attente.attente_droite,frame);
 
 					//on met sa vitesse à 0:  
-					heros.vit.x=0;
+					heros.localVit.x=0;
 				}
 				//en l'air et glisse pas
 				else if(!heros.peutSauter)
 				{
 
-					heros.vit.x=0;
+					heros.localVit.x=0;
 					changeMouv=true;
 					// tout dépend si le heros tombe ou non 
 
-					if (heros.vit.y<0)//il ne tombe pas donc on met les premières animations de saut
+					if (heros.getGlobalVit().y<0)//il ne tombe pas donc on met les premières animations de saut
 						heros.nouvAnim= heros.droite_gauche(heros.anim)=="Gauche" ? 0: 3 ;
 
 					else // le heros tombe 
@@ -1145,6 +1196,25 @@ public class ModelPartie extends AbstractModelPartie{
 
 	public void drawEffects(Graphics g, JPanel pan,boolean drawHitbox) {
 		//Affichage du slow motion 
+		Graphics2D g2d = (Graphics2D)g;
+
+		for(int i =0; i< arrowsEffects.size(); ++i)
+		{
+			Effect eff = arrowsEffects.get(i);
+			int anim = eff.anim;
+			Point pos = new Point();
+			Point anchor = new Point(0,0); //only arrows towards its center
+			Point taille = new Point(eff.xtaille.get(anim),eff.ytaille.get(anim));
+			AffineTransform tr= new AffineTransform();
+			int xprojectedanchor = (int) ((eff.xanchor.get(anim) - eff.yanchor.get(anim)) * Math.cos(eff.rotation));
+			int yprojectedanchor = (int) ((eff.xanchor.get(anim) + eff.yanchor.get(anim)) * Math.sin(eff.rotation));
+			pos=new Point(eff.xpos+xScreendisp-eff.xtaille.get(anim)/2+xprojectedanchor,eff.ypos+yScreendisp-eff.ytaille.get(anim)/2+yprojectedanchor);
+			anchor = new Point(eff.xtaille.get(anim)/2,eff.ytaille.get(anim)/2); //only arrows towards its center
+			tr = getRotatedTransform(pos,anchor, taille, eff.rotation);
+			ArrayList<Image> images = imEffect.getImage(eff);
+			for(Image im : images)
+				g2d.drawImage(im,tr,null);
+		}
 		if(slowDown )
 		{
 			//la taille de l'image fait 1500

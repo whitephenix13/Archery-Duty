@@ -79,7 +79,7 @@ public class Collision implements InterfaceConstantes{
 		Point p = new Point(CompScreenMove1.x,CompScreenMove1.y);
 		objectHitbox= Hitbox.minusPoint(object.getHitbox(partie.INIT_RECT),p,false);
 
-		Vitesse speed= object.vit;
+		Vitesse speed= object.getGlobalVit();
 		Vitesse minSpeed= new Vitesse(-1*speed.x,-1*speed.y);
 
 		mondeBlocs = getMondeBlocs(partie.monde,objectHitbox, partie.INIT_RECT,
@@ -117,7 +117,7 @@ public class Collision implements InterfaceConstantes{
 		List<Bloc> mondeBlocs = null;
 		Hitbox objectHitbox = null;
 
-		Vitesse speed= object.vit;
+		Vitesse speed= object.getGlobalVit();
 		Vitesse minSpeed= new Vitesse(-1*speed.x,-1*speed.y);
 
 		xDeplacement=(int) (speed.x);
@@ -279,7 +279,7 @@ public class Collision implements InterfaceConstantes{
 		Point p2 = new Point(CompScreenMove2.x,CompScreenMove2.y);
 		objectHitbox2= Hitbox.minusPoint(object2.getHitbox(partie.INIT_RECT),p2,false);
 
-		Vector2d deltaSpeed = new Vector2d(object1.vit.x-object2.vit.x,object1.vit.y-object2.vit.y);
+		Vector2d deltaSpeed = new Vector2d(object1.getGlobalVit().x-object2.getGlobalVit().x,object1.getGlobalVit().y-object2.getGlobalVit().y);
 		Vector2d m_deltaSpeed= new Vector2d(-deltaSpeed.x,-deltaSpeed.y);
 
 		Vector2d supp1 = GJK_EPA.support(objectHitbox1.polygon,deltaSpeed );//fixed one

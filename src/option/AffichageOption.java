@@ -50,6 +50,9 @@ public class AffichageOption extends JFrame implements Observer{
 	public CustomLabel lTir = new CustomLabel("Tir: ") ; 
 	public CustomClickableLabel tTir;
 
+	public CustomLabel l2Tir = new CustomLabel("Tir secondaire: ") ; 
+	public CustomClickableLabel t2Tir;
+	
 	public CustomLabel lSlow = new CustomLabel("Slow: ") ; 
 	public CustomClickableLabel tSlow;
 
@@ -60,7 +63,7 @@ public class AffichageOption extends JFrame implements Observer{
 	public JButton retour = new JButton("Retour");
 
 	public LinkedHashMap<String,JPanel> mapPanel = new LinkedHashMap<String,JPanel>();
-	String[] nomMapPanel = {"SON","son","CONTROLE","droite","gauche","saut","tir","slow","pause","retour"};
+	String[] nomMapPanel = {"SON","son","CONTROLE","droite","gauche","saut","tir","tir secondaire","slow","pause","retour"};
 
 	private AbstractControlerOption controler;
 
@@ -118,6 +121,7 @@ public class AffichageOption extends JFrame implements Observer{
 		tDepGauche.setText(touch.ToString(touch.t_gauche));
 		tSaut.setText(touch.ToString(touch.t_saut));
 		tTir.setText(touch.ToString(touch.t_tir));
+		t2Tir.setText(touch.ToString(touch.t_2tir));
 		tSlow.setText(touch.ToString(touch.t_slow));
 		tPause.setText(touch.ToString(touch.t_pause));
 	}
@@ -144,7 +148,7 @@ public class AffichageOption extends JFrame implements Observer{
 		}
 
 		//On ajoute les listeners pour selectionner la touche à changer
-		CustomClickableLabel[] cls = {tDepDroit,tDepGauche,tSaut,tTir,tSlow,tPause};
+		CustomClickableLabel[] cls = {tDepDroit,tDepGauche,tSaut,tTir,t2Tir,tSlow,tPause};
 		for(CustomClickableLabel cl : cls ){
 			cl.addMouseListener(new optionCliqueListener());
 		}
@@ -173,7 +177,7 @@ public class AffichageOption extends JFrame implements Observer{
 				//c.removeKeyListener(ckl[ckl.length-1]);
 			}
 		}
-		CustomClickableLabel[] cls = {tDepDroit,tDepGauche,tSaut,tTir,tSlow,tPause};
+		CustomClickableLabel[] cls = {tDepDroit,tDepGauche,tSaut,tTir,t2Tir,tSlow,tPause};
 		for(CustomClickableLabel cl : cls ){
 			MouseListener[] mls = cl.getMouseListeners();
 			cl.removeMouseListener(mls[mls.length-1]);
@@ -188,6 +192,7 @@ public class AffichageOption extends JFrame implements Observer{
 		tDepGauche= new CustomClickableLabel(touch.ToString(touch.t_gauche),"gauche");
 		tSaut= new CustomClickableLabel(touch.ToString(touch.t_saut),"saut");
 		tTir= new CustomClickableLabel(touch.ToString(touch.t_tir),"tir");
+		t2Tir= new CustomClickableLabel(touch.ToString(touch.t_2tir),"tir secondaire");
 		tSlow= new CustomClickableLabel(touch.ToString(touch.t_slow),"slow");
 		tPause= new CustomClickableLabel(touch.ToString(touch.t_pause),"pause");
 
@@ -231,7 +236,11 @@ public class AffichageOption extends JFrame implements Observer{
 		JPanel panelTir = mapPanel.get("tir");
 		panelTir.add(lTir);
 		panelTir.add(tTir);
-
+		
+		JPanel panel2Tir = mapPanel.get("tir secondaire");
+		panel2Tir.add(l2Tir);
+		panel2Tir.add(t2Tir);
+		
 		JPanel panelSlow = mapPanel.get("slow");
 		panelSlow.add(lSlow);
 		panelSlow.add(tSlow);
@@ -243,7 +252,7 @@ public class AffichageOption extends JFrame implements Observer{
 		retour.setForeground(Color.white);
 		mapPanel.get("retour").add(retour);
 
-		this.getContentPane().setLayout(new GridLayout(10,1));
+		this.getContentPane().setLayout(new GridLayout(11,1));
 		for(JPanel pan : mapPanel.values())
 		{
 			this.getContentPane().add(pan);

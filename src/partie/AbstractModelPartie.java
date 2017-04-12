@@ -13,6 +13,10 @@ import javax.swing.JPanel;
 import Affichage.Affichage;
 import deplacement.Attente;
 import deplacement.Deplace;
+import effects.Effect;
+import effects.ImagesEffect;
+import fleches.Fleche;
+import fleches.ImagesFleche;
 import monstre.ImagesMonstre;
 import monstre.ImagesTirMonstre;
 import monstre.Monstre;
@@ -20,9 +24,7 @@ import monstre.TirMonstre;
 import music.MusicBruitage;
 import observer.Observable;
 import observer.Observer;
-import personnage.Fleche;
 import personnage.Heros;
-import personnage.ImagesFleche;
 import personnage.ImagesHeros;
 import principal.InterfaceConstantes;
 import types.Monde;
@@ -50,7 +52,10 @@ public abstract class AbstractModelPartie implements Observable {
 
 	public List<Fleche> tabFleche= new ArrayList<Fleche>();
 	public List<TirMonstre> tabTirMonstre = new ArrayList<TirMonstre>();
-	protected List<Monstre> tabMonstre= new ArrayList <Monstre> ();
+	public List<Monstre> tabMonstre= new ArrayList <Monstre> ();
+	
+	public List<Effect> arrowsEffects = new ArrayList<Effect>();
+	
 	protected int nombreMonstreRestant= 0;
 
 	//Permet de stocker les éléments de la liste à supprimer.On les supprimera à la frame suivante
@@ -88,6 +93,7 @@ public abstract class AbstractModelPartie implements Observable {
 	protected ImagesHeros imHeros = new ImagesHeros();
 	protected ImagesTirMonstre imTirMonstre= new ImagesTirMonstre();
 	protected ImagesFleche imFleches = new ImagesFleche();
+	protected ImagesEffect imEffect = new ImagesEffect();
 
 	public Point INIT_RECT= new Point(50000,50000); //(abs,ord)
 	//public int absRect =INIT_RECT.x;
@@ -137,7 +143,9 @@ public abstract class AbstractModelPartie implements Observable {
 	public void init()
 	{
 		//pour initaliser variables partie rapide dans music bruitage
-		(new MusicBruitage()).initMusicBruitage();
+		MusicBruitage mus_bruit = new MusicBruitage();
+		mus_bruit.initMusicBruitage();
+		MusicBruitage.me= mus_bruit;
 
 		reset();
 		resetVariablesAffichage();

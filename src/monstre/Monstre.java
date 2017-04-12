@@ -124,13 +124,16 @@ public abstract class Monstre extends Collidable implements InterfaceConstantes,
 	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,
 			Deplace deplace) {
 		//project speed to ground 
-		double coef= vit.vect2d().dot(normal)/normal.lengthSquared();
-		vit = new Vitesse((int)(vit.x-coef*normal.x),(int)(vit.y-coef*normal.y));
-
-		boolean collision_gauche = (vit.x<=0) && (normal.x>0);
-		boolean collision_droite = (vit.x>=0) && (normal.x<0);
+		double coef1= localVit.vect2d().dot(normal)/normal.lengthSquared();
+		localVit = new Vitesse((int)(localVit.x-coef1*normal.x),(int)(localVit.y-coef1*normal.y));
+		
+		double coef2= envirVit.vect2d().dot(normal)/normal.lengthSquared();
+		envirVit = new Vitesse((int)(envirVit.x-coef2*normal.x),(int)(envirVit.y-coef2*normal.y));
+		
+		boolean collision_gauche = (localVit.x<=0) && (normal.x>0);
+		boolean collision_droite = (localVit.x>=0) && (normal.x<0);
 		//boolean collision_haut = (vit.y<=0) && (normal.y>0);
-		boolean collision_bas = (vit.y>=0) && (normal.y<0);
+		boolean collision_bas = (localVit.y>=0) && (normal.y<0);
 		last_colli_left=collision_gauche;
 		last_colli_right=collision_droite;
 		

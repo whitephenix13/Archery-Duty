@@ -29,7 +29,6 @@ public class Deplace implements InterfaceConstantes{
 		}
 
 		object.memorizeCurrentValue();
-
 		boolean update_with_speed = ( !partie.slowDown || (partie.slowDown && partie.slowCount==0));
 		boolean[] shouldMov_changedAnim=object.deplace(partie, this);
 		boolean shouldMove= shouldMov_changedAnim[0];
@@ -38,10 +37,13 @@ public class Deplace implements InterfaceConstantes{
 			return;
 
 		boolean useGravity = object.useGravity && update_with_speed;
+
 		if(useGravity)
 			gravite.gravite(object, partie.slowDown);
 
-		object.applyFriction(0);
+		if(update_with_speed)
+			object.applyFriction(0,0);
+
 		//deplacement à l'aide de la vitesse  si il n'y a pas collision 
 		//on reset les dernières positions de collisions:
 		object.resetVarBeforeCollision();
@@ -57,59 +59,13 @@ public class Deplace implements InterfaceConstantes{
 				object.handleDeplacementSuccess(partie, this);
 		}
 		object.resetVarDeplace();
-
 		if(isHeros){
 			Point delta = getdeplaceEcran(partie,(Heros)object);
 			deplaceEcran(delta,partie,object);
 		}
-
-		object.reaffiche--;
 
 	}
-	/*public void DeplaceObject(Collidable object, Mouvement nouvMouv, AbstractModelPartie partie)
-	{
-		boolean isHeros = object instanceof Heros;
 
-		object.memorizeCurrentValue();
-
-		//on change d'animation avant de deplacer si elle doit etre changee
-		if(isHeros && partie.slowDown){
-			partie.slowCount= (partie.slowCount+1) % (object.slowDownFactor);
-		}
-
-		boolean[] shouldMov_changedAnim=object.deplace(partie, this);
-		boolean shouldMove= shouldMov_changedAnim[0];
-		boolean changedAnim= shouldMov_changedAnim[1];
-		if(!shouldMove)
-			return;
-
-		boolean useGravity = object.useGravity &&( !partie.slowDown || (partie.slowDown && partie.slowCount==0));
-		if(useGravity)
-			gravite.gravite(object, partie.slowDown);
-
-		object.applyFriction(0);
-		//deplacement à l'aide de la vitesse  si il n'y a pas collision 
-		//on reset les dernières positions de collisions:
-		object.resetVarBeforeCollision();
-		boolean stuck = !colli.ejectWorldCollision(partie, this, object);
-
-		if(stuck)
-		{
-			object.handleStuck(partie, this);
-		}
-		else
-			object.handleDeplacementSuccess(partie, this);
-		object.resetVarDeplace();
-
-
-		if(isHeros){
-			Point delta = getdeplaceEcran(partie,(Heros)object);
-			deplaceEcran(delta,partie,object);
-		}
-
-		object.reaffiche--;
-
-	}*/
 
 
 	/**
@@ -138,24 +94,24 @@ public class Deplace implements InterfaceConstantes{
 		//trop à gauche de l'ecran
 		if(left_xpos_hit<2*InterfaceConstantes.LARGEUR_FENETRE/7){
 			xpos_hit=left_xpos_hit;
-			largeur_fenetre=heros.vit.x<0? 2*InterfaceConstantes.LARGEUR_FENETRE/7 :0;
+			largeur_fenetre=heros.getGlobalVit().x<0? 2*InterfaceConstantes.LARGEUR_FENETRE/7 :0;
 		}
 		//trop à droite 
 		else if(right_xpos_hit>5*InterfaceConstantes.LARGEUR_FENETRE/7){
 			xpos_hit=right_xpos_hit;
-			largeur_fenetre=heros.vit.x>0 ? 5*InterfaceConstantes.LARGEUR_FENETRE/7:0;
+			largeur_fenetre=heros.getGlobalVit().x>0 ? 5*InterfaceConstantes.LARGEUR_FENETRE/7:0;
 		}
 
 		//trop en haut
 		if(up_ypos_hit<2*InterfaceConstantes.HAUTEUR_FENETRE/5){
 			ypos_hit= up_ypos_hit;
-			hauteur_fenetre=heros.vit.y<=0? 2*InterfaceConstantes.HAUTEUR_FENETRE/5:0;
+			hauteur_fenetre=heros.getGlobalVit().y<=0? 2*InterfaceConstantes.HAUTEUR_FENETRE/5:0;
 		}
 
 		//trop bas
 		else if(down_ypos_hit>3*InterfaceConstantes.HAUTEUR_FENETRE/5){
 			ypos_hit =down_ypos_hit;
-			hauteur_fenetre=heros.vit.y>=0? 3*InterfaceConstantes.HAUTEUR_FENETRE/5:0;
+			hauteur_fenetre=heros.getGlobalVit().y>=0? 3*InterfaceConstantes.HAUTEUR_FENETRE/5:0;
 		}
 
 		if(largeur_fenetre != 0 ){

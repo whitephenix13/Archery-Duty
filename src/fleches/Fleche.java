@@ -1,4 +1,4 @@
-package personnage;
+package fleches;
 
 import java.awt.Point;
 import java.awt.Polygon;
@@ -16,6 +16,7 @@ import deplacement.Deplace;
 import deplacement.Mouvement;
 import deplacement_tir.Mouvement_tir;
 import deplacement_tir.T_normal;
+import monstre.Monstre;
 import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import principal.InterfaceConstantes;
@@ -25,13 +26,50 @@ import types.Vitesse;
 
 public class Fleche extends Collidable implements InterfaceConstantes{
 	
+	public static String NORMAL="";
+	
+	public static class MATERIELLE
+	{
+		public static String FOUDRE="foudre";
+		public static String ELECTRIQUE="electrique";
+		public static String GLACE="glace";
+		public static String ROCHE="roche";
+
+	}
+	public static class SPIRITUELLE
+	{
+		public static String FEU="feu";
+		public static String OMBRE="ombre";
+		public static String VENT="vent";
+		public static String GRAPPIN="grappin";
+
+	}
+	public static class DESTRUCTRICE
+	{
+		public static String CHARGEE="chargee";
+		public static String EXPLOSIVE="explosive";
+		public static String TROU_NOIR="trou_noir";
+		public static String BOGUE="bogue";
+
+	}
+	public static class RUSEE
+	{
+		public static String AUTO_TELEGUIDEE="auto_teleguidee";
+		public static String RETARD="retard";
+		public static String V_FLECHE="v_fleche";
+		public static String CAC="corps_a_corps";
+
+	}
 	
 	public boolean doitDeplace=false;
 	public boolean isPlanted=false; //fleche plantée dans le sol
+	public boolean generatedEffect = false;
+	public long TEMPS_DESTRUCTION_FLECHE = (long) Math.pow(10, 9);//nanos, 1sec 
 	public boolean nulle =false;
 	public boolean encochee =false;
-	public static String SLOW_AURA="slow";
-	public String aura="slow";
+	
+	public String type_fleche= NORMAL;
+
 	public AffineTransform draw_tr;
 	//relative to heros position
 	public List<Integer> xanchor=Arrays.asList(28,20,45,45,40,30,55,52,70,35);
@@ -41,40 +79,28 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 	public long tempsDetruit = 0;
 	
 	public int degat= -50;
-	 MusicBruitage bruitage;
-
-	 private boolean animationChanged=false;
+	private boolean animationChanged=false;
 		
 	public Fleche(List<Fleche> tabFleche,int current_frame)
 	{
 		type = TypeObject.fleche;
+		type_fleche=NORMAL;
 		anim=0;
 		doitDeplace=false;
 		needDestroy= false;
 		tempsDetruit = 0;
-		bruitage = new MusicBruitage("arc");
 		slowDownFactor=3;
 		fixedWhenScreenMoves=false;
-		vit=new Vitesse(0,0);
+		localVit=new Vitesse(0,0);
+		envirVit=new Vitesse(0,0);
+
 		deplacement = new T_normal(TypeObject.fleche,T_normal.tir,current_frame);
 		
 		nulle=false;
 		encochee=true;
 		tabFleche.add(this);
 	}
-	/*public Fleche(int xF, int yF, Mouvement_tir mouv,int current_frame)
-	{
-		xpos=xF;
-		ypos=yF;
-		deplacement=mouv;
-		nulle = false;
-		tempsDetruit = 0;
-		bruitage = new MusicBruitage("arc");
-		slowDownFactor=3;
-		fixedWhenScreenMoves=false;
-		vit=new Vitesse(0,0);
 
-	}*/
 	public void timer()
 	{
 		tempsDetruit=System.nanoTime();
@@ -102,14 +128,15 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 
 
 		deplacement.setSpeed(TypeObject.fleche, this, anim);
-		bruitage.startBruitage(100);
+		MusicBruitage.me.startBruitage("arc");
 		
 	}
 	@Override
 	public void destroy(){
 		//do nothing when detroyed 
 	}
-	
+	protected void onPlanted(List<Collidable> objects,AbstractModelPartie partie)
+	{}
 	public void convertHitbox(Point INIT_RECT,AffineTransform tr,Point pos,Point screendisp) {
 		List<Hitbox> current = deplacement.hitbox;
 		List<Hitbox> new_rotated_hit = new ArrayList<Hitbox>();
@@ -157,22 +184,33 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,
 			Deplace deplace) {
 		
-		double coef= vit.vect2d().dot(normal)/normal.lengthSquared();
-		vit = new Vitesse((int)(vit.x-coef*normal.x),(int)(vit.y-coef*normal.y));
-		
-		boolean collision_gauche = (vit.x<=0) && (normal.x>0);
-		boolean collision_droite = (vit.x>=0) && (normal.x<0);
+		double coef1= localVit.vect2d().dot(normal)/normal.lengthSquared();
+		localVit = new Vitesse((int)(localVit.x-coef1*normal.x),(int)(localVit.y-coef1*normal.y));
+		double coef2= envirVit.vect2d().dot(normal)/normal.lengthSquared();
+		envirVit = new Vitesse((int)(envirVit.x-coef2*normal.x),(int)(envirVit.y-coef2*normal.y));
+
+		boolean collision_gauche = (localVit.x<=0) && (normal.x>0);
+		boolean collision_droite = (localVit.x>=0) && (normal.x<0);
 		//boolean collision_haut = (vit.y<=0) && (normal.y>0);
 		//boolean collision_bas = (vit.y>=0) && (normal.y<0);
 		last_colli_left=collision_gauche;
 		last_colli_right=collision_droite;
-		vit = new Vitesse(0,0);
+		localVit = new Vitesse(0,0);
+		envirVit = new Vitesse(0,0);
 		this.doitDeplace=false;
 		this.isPlanted=true;
+		ArrayList<Collidable> objects = Collidable.getAllCollidable(partie,true,true);
+
+		onPlanted(objects,partie);
 	}
 	@Override
 	public void handleObjectCollision(AbstractModelPartie partie,
-			Deplace deplace) {this.needDestroy=true;}
+			Deplace deplace) 
+	{
+		this.needDestroy=true;
+		ArrayList<Collidable> objects = Collidable.getAllCollidable(partie, true, true);
+		onPlanted(objects,partie);
+	}
 
 	@Override
 	public void memorizeCurrentValue() {
@@ -225,39 +263,40 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 	}
 	public int gravityAnim()
 	{
-		if(vit.y ==0 && vit.x==0)
+		Vitesse gvit = getGlobalVit();
+		if(gvit.y ==0 && gvit.x==0)
 		{
 			return(anim);//on garde la même animation
 		}
-		else if(vit.x>0 && Math.abs((float)vit.y/vit.x)<=Math.abs(Math.tan(Math.PI/ 8)))
+		else if(gvit.x>0 && Math.abs((float)gvit.y/gvit.x)<=Math.abs(Math.tan(Math.PI/ 8)))
 		{
 			return(0);
 		}
-		else if(vit.y > 0 && vit.x>0 && Math.abs((float)vit.y/vit.x)>=Math.abs(Math.tan(Math.PI/ 8)))
+		else if(gvit.y > 0 && gvit.x>0 && Math.abs((float)gvit.y/gvit.x)>=Math.abs(Math.tan(Math.PI/ 8)))
 		{
 			return(1);
 		}
-		else if(vit.y > 0  && Math.abs((float)vit.y/vit.x)>=Math.abs(Math.tan(3* Math.PI/ 8)))
+		else if(gvit.y > 0  && Math.abs((float)gvit.y/gvit.x)>=Math.abs(Math.tan(3* Math.PI/ 8)))
 		{
 			return(2);
 		}
-		else if(vit.y > 0 && vit.x<0 && Math.abs((float)vit.y/vit.x)>=Math.abs(Math.tan(Math.PI/ 8)))
+		else if(gvit.y > 0 && gvit.x<0 && Math.abs((float)gvit.y/gvit.x)>=Math.abs(Math.tan(Math.PI/ 8)))
 		{
 			return(3);
 		}
-		else if(vit.x<0 && Math.abs((float)vit.y/vit.x)<= Math.abs(Math.tan(Math.PI/ 8)))
+		else if(gvit.x<0 && Math.abs((float)gvit.y/gvit.x)<= Math.abs(Math.tan(Math.PI/ 8)))
 		{
 			return(4);
 		}
-		else if(vit.y <0 && vit.x<0 && Math.abs((float)vit.y/vit.x)>=Math.abs(Math.tan(Math.PI/ 8)))
+		else if(gvit.y <0 && gvit.x<0 && Math.abs((float)gvit.y/gvit.x)>=Math.abs(Math.tan(Math.PI/ 8)))
 		{
 			return(5);
 		}
-		else if(vit.y <0 && Math.abs((float)vit.y/vit.x)>=Math.abs(Math.tan(3* Math.PI/ 8)))
+		else if(gvit.y <0 && Math.abs((float)gvit.y/gvit.x)>=Math.abs(Math.tan(3* Math.PI/ 8)))
 		{
 			return(6);
 		}
-		else if(vit.y <0 && vit.x>0 && Math.abs((float)vit.y/vit.x)>=Math.abs(Math.tan(Math.PI/ 8)))
+		else if(gvit.y <0 && gvit.x>0 && Math.abs((float)gvit.y/gvit.x)>=Math.abs(Math.tan(Math.PI/ 8)))
 		{
 			return(7);
 		}
@@ -347,10 +386,6 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 		
 	}
 	@Override
-	public void applyFriction(int minspeed) {
-		//do nothing
-	}
-	@Override
 	public void resetVarBeforeCollision()
 	{
 		//nothing
@@ -360,8 +395,10 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 		//nothing
 	}
 
-
-
+	@Override
+	public void applyFriction(double minlocalSpeed, double minEnvirSpeed) {
+		//nothing
+	}
 
 
 

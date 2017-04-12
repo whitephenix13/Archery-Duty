@@ -20,6 +20,7 @@ public class InputPartie {
 	protected boolean marcheGaucheDown ;
 	protected boolean sautDown ;
 	protected boolean toucheTirDown ;
+	protected boolean touche2TirDown ;
 	protected boolean courseDroiteDown;
 	protected boolean courseGaucheDown;
 	protected boolean toucheSlowDown;
@@ -29,6 +30,7 @@ public class InputPartie {
 	protected boolean marcheGaucheReleased ;
 	protected boolean sautReleased ;
 	protected boolean toucheTirReleased ;
+	protected boolean touche2TirReleased ;
 	protected boolean courseDroiteReleased;
 	protected boolean courseGaucheReleased;
 	protected boolean toucheSlowReleased;
@@ -47,6 +49,7 @@ public class InputPartie {
 		if (marcheGaucheDown) { marcheGaucheReleased=true;};
 		if (sautDown) { sautReleased=true;};
 		if (toucheTirDown) { toucheTirReleased=true;};
+		if (touche2TirDown) { touche2TirReleased=true;};
 		if (courseDroiteDown) {courseDroiteReleased=true;};
 		if (courseGaucheDown) { courseGaucheReleased=true;};
 		if (toucheSlowDown) { toucheSlowReleased=true;};
@@ -56,6 +59,7 @@ public class InputPartie {
 		marcheGaucheDown = false;
 		sautDown = false;
 		toucheTirDown = false;
+		touche2TirDown = false;
 		courseDroiteDown= false;
 		courseGaucheDown= false;
 		toucheSlowDown= false;
@@ -67,6 +71,7 @@ public class InputPartie {
 	private static final String MOVE_LEFT = "move left";
 	private static final String SLOW = "slow";
 	private static final String SHOOT = "shoot";
+	private static final String SPE_SHOOT = "special shoot";
 	private static final String JUMP = "jump";
 	private static final String PAUSE = "pause";
 	//released
@@ -74,6 +79,7 @@ public class InputPartie {
 	private static final String R_MOVE_LEFT = "released move left";
 	private static final String R_SLOW = "released slow";
 	private static final String R_SHOOT = "released shoot";
+	private static final String R_SPE_SHOOT = "released special shoot";
 	private static final String R_JUMP = "released jump";
 	private static final String R_PAUSE = "released pause";
 	AbstractModelPartie partie;
@@ -96,7 +102,10 @@ public class InputPartie {
 
 		inputMapPut(partie.touches.t_tir,SHOOT);
 		actionMapPut(SHOOT);
-
+		
+		inputMapPut(partie.touches.t_2tir,SPE_SHOOT);
+		actionMapPut(SPE_SHOOT);
+		
 		inputMapPut(partie.touches.t_saut,JUMP);
 		actionMapPut(JUMP);
 
@@ -116,6 +125,9 @@ public class InputPartie {
 		inputMapPut(buildReleaseKeyStroke(partie.touches.t_tir),R_SHOOT);
 		actionMapPut(R_SHOOT);
 
+		inputMapPut(buildReleaseKeyStroke(partie.touches.t_2tir),R_SPE_SHOOT);
+		actionMapPut(R_SPE_SHOOT);
+		
 		inputMapPut(buildReleaseKeyStroke(partie.touches.t_saut),R_JUMP);
 		actionMapPut(R_JUMP);
 
@@ -151,13 +163,15 @@ public class InputPartie {
 		if(a == MOVE_RIGHT ) {comp.getActionMap().put(a, new MoveAction(1));}
 		else if(a == MOVE_LEFT){comp.getActionMap().put(a, new MoveAction(-1));}
 		else if(a == SLOW){comp.getActionMap().put(a, new SlowAction());}
-		else if(a == SHOOT){comp.getActionMap().put(a, new ShootAction());}
+		else if(a == SHOOT){comp.getActionMap().put(a, new ShootAction(1));}
+		else if(a == SPE_SHOOT){comp.getActionMap().put(a, new ShootAction(2));}
 		else if(a == JUMP){comp.getActionMap().put(a, new JumpAction());}
 		else if(a == PAUSE){comp.getActionMap().put(a, new PauseAction());}
 		else if(a == R_MOVE_RIGHT ) {comp.getActionMap().put(a, new R_MoveAction(1));}
 		else if(a == R_MOVE_LEFT){comp.getActionMap().put(a, new R_MoveAction(-1));}
 		else if(a == R_SLOW){comp.getActionMap().put(a, new R_SlowAction());}
-		else if(a == R_SHOOT){comp.getActionMap().put(a, new R_ShootAction());}
+		else if(a == R_SHOOT){comp.getActionMap().put(a, new R_ShootAction(1));}
+		else if(a == R_SPE_SHOOT){comp.getActionMap().put(a, new R_ShootAction(2));}
 		else if(a == R_JUMP){comp.getActionMap().put(a, new R_JumpAction());}
 		else if(a == R_PAUSE){comp.getActionMap().put(a, new R_PauseAction());}
 		else
@@ -279,10 +293,14 @@ public class InputPartie {
 		 * 
 		 */
 		private static final long serialVersionUID = 1L;
-		ShootAction(){};
+		private int type_tir=0;//1 normal, 2 special
+		ShootAction(int _type){type_tir=_type;};
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			toucheTirDown=true;			
+			if(type_tir==1)
+				toucheTirDown=true;
+			else if(type_tir==2)
+				touche2TirDown=true;
 		}}
 	private class JumpAction extends AbstractAction{
 		/**
@@ -368,11 +386,20 @@ public class InputPartie {
 		 * 
 		 */
 		private static final long serialVersionUID = 1L;
-		R_ShootAction(){};
+		private int type_tir = 0; //1 for regular, 2 for special
+		R_ShootAction(int _type){type_tir=_type;};
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			toucheTirDown=false;
-			toucheTirReleased=true;
+			if(type_tir==1)
+			{
+				toucheTirDown=false;
+				toucheTirReleased=true;
+			}
+			else if(type_tir==2)
+			{
+				touche2TirDown=false;
+				touche2TirReleased=true;
+			}
 		}}
 	private class R_JumpAction extends AbstractAction{
 		/**

@@ -15,7 +15,8 @@ public class Animation {
 	public int getStartIndex(){return start_index;};
 	public int getEndIndex(){return end_index;};
 	public boolean isEndedOnce(){return animation_ended;}
-	
+	public void resetEndedOnce(){animation_ended=false;}
+
 	private List<Integer> animationFrame = new ArrayList<Integer>();//pos i indicates max frame of animation i
 	public int num_anim=0;
 	public Animation()

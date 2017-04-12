@@ -22,7 +22,8 @@ public class Bloc extends Collidable{
 		this.img="vide";
 		this.xpos=-1;
 		this.ypos=-1;
-		vit=new Vitesse(0,0);
+		localVit=new Vitesse(0,0);
+		envirVit=new Vitesse(0,0);
 		slowDownFactor=1;
 		fixedWhenScreenMoves=false;
 		this.bloquer=false;
@@ -33,7 +34,8 @@ public class Bloc extends Collidable{
 		this.img=str;
 		this.xpos=x;
 		this.ypos=y;
-		vit=new Vitesse(0,0);
+		localVit=new Vitesse(0,0);
+		envirVit=new Vitesse(0,0);
 		slowDownFactor=1;
 		fixedWhenScreenMoves=false;
 		this.bloquer=bl;
@@ -142,7 +144,7 @@ public class Bloc extends Collidable{
 		return res;
 	}
 	@Override
-	public void applyFriction(int minspeed) {
+	public void applyFriction(double minLocalspeed, double minEnvirSpeed) {
 		//do nothing
 	}
 	@Override
@@ -167,6 +169,5 @@ public class Bloc extends Collidable{
 	public void destroy() {
 		//do nothing
 	}
-
 
 }

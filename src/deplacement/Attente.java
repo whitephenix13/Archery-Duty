@@ -81,10 +81,10 @@ public class Attente extends Mouvement_perso{
 	@Override
 	public void setSpeed(String type, Collidable object, int anim) {
 		if(type.equals(TypeObject.heros))
-			object.vit=new Vitesse(0,0);
+			object.localVit=new Vitesse(0,0);
 		
 		else if(type.equals(TypeObject.m_spirel))
-			object.vit=new Vitesse(0,0);
+			object.localVit=new Vitesse(0,0);
 	}
 
 	@Override

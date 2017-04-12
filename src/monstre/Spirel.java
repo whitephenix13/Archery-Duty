@@ -17,6 +17,7 @@ import deplacement.Saut;
 import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import personnage.Heros;
+import principal.InterfaceConstantes;
 import types.Bloc;
 import types.Hitbox;
 import types.TypeObject;
@@ -33,7 +34,7 @@ public class Spirel extends Monstre{
 	private static long delaiMouv= 400;
 	private long tempsAncienTir=0;
 	private static long delaiTir= 2000;
-	private int distanceAttaque= 400;
+	private int distanceAttaque= 160000; // 400^2
 	private boolean cooldown=true;
 
 	public boolean peutSauter = true;
@@ -55,17 +56,16 @@ public class Spirel extends Monstre{
 
 		xpos = xPo;
 		ypos = yPo; 
-		vit=new Vitesse(0,0);
+		localVit=new Vitesse(0,0);
+		envirVit=new Vitesse(0,0);
 		deplacement=new Attente(type,Attente.attente_gauche,current_frame) ;
 		anim=1;
 		tempsAncienMouv= System.nanoTime();
 		actionReussite=false;
-		reaffiche=0;
 
 		finSaut=false;
 		peutSauter=false;
 		glisse=false;
-		reaffiche=0;
 
 		//Param from Collidable
 		slowDownFactor=3;
@@ -169,7 +169,7 @@ public class Spirel extends Monstre{
 			
 			herosAGauche= monstreXmiddle-herosXmiddle>=0;
 
-			boolean herosInRange= (deltaX+deltaY)<distanceAttaque && ! cooldown;
+			boolean herosInRange= deltaX*deltaX+deltaY*deltaY<distanceAttaque && ! cooldown;
 
 			//on test si le heros est dans le cercle d'attaque
 			if(herosInRange)
@@ -337,6 +337,10 @@ public class Spirel extends Monstre{
 		boolean landing= (finSaut||!falling) && deplacement.IsDeplacement(Mouvement_perso.saut);
 		if(falling)
 			useGravity=falling;
+		//update variable since the spirel can be ejected 
+		this.peutSauter=!falling;
+		this.finSaut=this.finSaut && !falling;
+		
 		//chute
 		if(falling)
 		{
@@ -402,11 +406,11 @@ public class Spirel extends Monstre{
 	 */
 	public void alignHitbox(int animActu,Mouvement depSuiv, int animSuiv, AbstractModelPartie partie, Deplace deplace)
 	{
-		boolean going_left = vit.x<0;
-		boolean facing_left_still= vit.x==0 &&(droite_gauche(animActu)=="Gauche"|| last_colli_left);
+		boolean going_left = getGlobalVit().x<0;
+		boolean facing_left_still= getGlobalVit().x==0 &&(droite_gauche(animActu)=="Gauche"|| last_colli_left);
 		boolean sliding_left_wall = (droite_gauche(animActu)=="Droite") ;
 		boolean left = ( going_left|| facing_left_still ||sliding_left_wall) ; 
-		boolean down = vit.y>=0; 
+		boolean down = getGlobalVit().y>=0; 
 
 		super.alignHitbox(animActu,depSuiv, animSuiv, partie,deplace,left, down,TypeObject.m_spirel,true);
 
@@ -453,12 +457,13 @@ public class Spirel extends Monstre{
 		final Point memPos= new Point(xpos,ypos); 
 		final Mouvement_perso memDep = (Mouvement_perso) deplacement.Copy(TypeObject.m_spirel);
 		final int memAnim = anim;
-		final Vitesse memVit = vit.Copy();
-		
+		final Vitesse memVitloca = localVit.Copy();
+		final Vitesse memVitenvir = envirVit.Copy();
+
 		currentValue=new CurrentValue(){		
 			@Override
 			public void res()
-			{xpos=memPos.x;ypos=memPos.y;deplacement=memDep;anim=memAnim;vit=memVit;}};
+			{xpos=memPos.x;ypos=memPos.y;deplacement=memDep;anim=memAnim;localVit=memVitloca;envirVit=memVitenvir;}};
 	}
 	@Override
 	public void handleStuck(AbstractModelPartie partie,Deplace deplace)
@@ -475,10 +480,7 @@ public class Spirel extends Monstre{
 		// TODO Auto-generated method stub
 		
 	}
-	@Override
-	public void applyFriction(int minspeed) {
-		//do nothing
-	}
+	
 	@Override
 	public void resetVarBeforeCollision()
 	{
@@ -495,10 +497,24 @@ public class Spirel extends Monstre{
 	@Override
 	public void destroy()
 	{
-		(new MusicBruitage("destruction robot")).startBruitage(1000);
+		MusicBruitage.me.startBruitage("destruction robot");
 	}
-
-
-
+	@Override
+	public void applyFriction(double minlocalSpeed, double minEnvirSpeed) {
+		boolean negx = envirVit.x<0;
+		boolean negy = envirVit.y<0;
+		double frict = (useGravity?InterfaceConstantes.AIRFRICTION:InterfaceConstantes.FRICTION);
+		double newVitX= envirVit.x - (envirVit.x* frict);
+		double newVitY= envirVit.y - (envirVit.y* frict);
+		if( (!negx && newVitX<minEnvirSpeed) || (negx && newVitX>-1*minEnvirSpeed) )
+			envirVit.x=minEnvirSpeed;
+		else
+			envirVit.x=newVitX;
+		if( (!negy && newVitY<minEnvirSpeed) || (negy && newVitY>-1*minEnvirSpeed) )
+			envirVit.y=minEnvirSpeed;
+		else
+			envirVit.y=newVitY;
+		
+	}
 
 }
