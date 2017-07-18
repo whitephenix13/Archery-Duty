@@ -2,8 +2,6 @@
 package Affichage;
 import java.awt.Image;
 import java.awt.Toolkit;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,12 +19,13 @@ import credit.AffichageCredit;
 import editeur.AffichageEditeur;
 import menuPrincipal.AbstractModelPrincipal;
 import menuPrincipal.AffichagePrincipal;
+import observer.Observer;
 import option.AffichageOption;
 import partie.AffichagePartie;
 import principal.InterfaceConstantes;
 
 @SuppressWarnings("serial")
-public class Affichage extends JFrame implements InterfaceConstantes
+public class Affichage extends JFrame implements InterfaceConstantes, Observer
 {	
 	public boolean changeVariable= false;
 	
@@ -192,6 +191,9 @@ public class Affichage extends JFrame implements InterfaceConstantes
 		}
 	}
 	//}}
-
+	public void update() {
+		this.repaint();
+		this.getContentPane().repaint();
+	}
 }
 

@@ -5,36 +5,38 @@ public class Todo {
 	//Version 0.1.0
 	//seiery "séyéri" 
 	//TODO: fleches speciales
-	//TODO: fleche vent graphics :
-	//TODO: create animations and set correct values in Vent_effect
-	//TODO: handle destruction in play()
-	//TODO: handle display in ModelPartie 
 	
+	//PUSH 
 	
-	//TODO: bruitage vent 
-
+	//TODO: investigate random lag when using grappin + charger image ralentissement? 
+	//TODO: add sound when arrow shot 
+	//TODO: set seyeri to float and set loss of seyeri when slow down to -0.5
+	
+	//TODO: error after usage of grappin, arrows deal no damage 
+	//TODO: modify heros so that it can be considered as a collidable, mainly make sure that its xpos/ypos are in the same coordinate system as collidable
+	
 	//MATERIEL
-	//TODO: Foudre : lightning going through enemies  
-	//TODO: Electrique: stun enemy
-	//TODO: Glace : slow down enemies
-	//TODO: Roche: Crée une colonne de roche collidable
-	
+	//TODO: Electrique: Object: create area that paralyse ennemy: can't shoot for a while. Ennemi: damage + create a electic ball moving back to the player
+	//TODO: Glace : Object: create a stalactite submitted to gravity                       Ennemi: damage + slow down
+	//TODO: Roche: Object : create a pillar                                                Ennemi: damage + vulnerable
+	//TODO: Feu: Object: create a wave of fire pillar                                      Ennemi: damage + burn
+
 	//SPIRITUEL
-	//TODO: Feu: crée une colonne de feu détruisant certains projectiles 
-	//TODO: Ombre: baisse les statistiques 
+	//TODO: Lumiere: boost surrounding beings : speed, jump, damage x2 
+	//TODO: Ombre: teleport
 	//TODO: Vent: projette en l'air
 	//TODO: Grappin
 	
 	//DESTRUCTREUR
-	//TODO: chargée: charge x sec, fleche rapide, cause recul
-	//TODO: Explosif 
-	//TODO: Trou noir
-	//TODO: Bogue (mur de fleche)
+	//TODO: Foudre : lightning going through enemies  
+	//TODO: Explosif : huge damage (+ projection? )
+	//TODO: Trou noir: suck ennemis + damage 
+	//TODO: Bogue: arrows all around player 
 	
 	//RUSE
-	//TODO: auto-teleguidée
-	//TODO: retard: reste sur place avant de partir et provoquer recul
-	//TODO:v-fleche 
+	//TODO: auto-teleguidée: goes to nearest ennemi
+	//TODO: retard: stay where shot then move fast + push ennemis 
+	//TODO: v-fleche 
 	//TODO: cac: tire 3 flèches à portée réduite 
 	
 	//TODO: quand heros ralenti et saut pied contre un bord: il ne tombe pas 
@@ -73,4 +75,10 @@ public class Todo {
 	//TODO: version multijoueur: gérer les manettes, compatibilité multijoueur des variables, classe joeur 
 	//~TODO: permettre la sauvegarde des fichiers par l'utilisateur
 	//TODO:  faire ses propres boutons jolis
+	//TODO:bullet time ? 
+	
+	//USEFULL INFOS: 
+	//09/07/2017: all Thread : Main, ThreadAffichage, ThreadMusique
+	//All loading needed MusicBruitage, Music, ImagesHeros, ImagesEffect, ImagesFleche, ImagesMonstre, ImagesTirMonstre, world
+	
 }

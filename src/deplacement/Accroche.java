@@ -72,9 +72,9 @@ public class Accroche extends Mouvement_perso{
 	public String droite_gauche(String type,int anim) {
 		if(type.equals(TypeObject.heros))
 			if(anim<2)
-				return ("Gauche");
+				return (Mouvement.GAUCHE);
 			else 
-				return("Droite");
+				return(Mouvement.DROITE);
 		else{
 			try {throw new Exception("String droite gauche: type unknown");} catch (Exception e) {e.printStackTrace();}
 			return ("");

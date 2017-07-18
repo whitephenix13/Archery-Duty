@@ -12,6 +12,8 @@ import collision.Collidable;
 import deplacement.Deplace;
 import deplacement.Mouvement;
 import deplacement.Mouvement_perso;
+import effects.Effect;
+import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import personnage.Heros;
 import principal.InterfaceConstantes;
@@ -52,7 +54,7 @@ public abstract class Monstre extends Collidable implements InterfaceConstantes,
 	 * 
 	 * @param anim, l'animation du monstre
 	 * 
-	 * @return String , "Droite" ou "Gauche", direction dans laquelle le monstre est tourné
+	 * @return String , Mouvement.DROITE ou Mouvement.GAUCHE, direction dans laquelle le monstre est tourné
 	 */
 	public abstract String droite_gauche (int anim);  
 
@@ -81,7 +83,14 @@ public abstract class Monstre extends Collidable implements InterfaceConstantes,
 	 */
 	public abstract void alignHitbox(int animActu,Mouvement depSuiv, int animSuiv, AbstractModelPartie partie,Deplace deplace);
 	
+	//TODO: DELETE
+	@Override
+	public void registerEffect(Effect eff)
+	{
+		super.registerEffect(eff);
+	}
 
+	
 	/**
 	 * getter
 	 */	
@@ -108,32 +117,25 @@ public abstract class Monstre extends Collidable implements InterfaceConstantes,
 
 	@Override
 	public Hitbox getHitbox(Point INIT_RECT) {
-		return  Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos,ypos),true);
+		return  Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos(),ypos()),true);
 	}
 
 	@Override
 	public Hitbox getHitbox(Point INIT_RECT,Mouvement _dep, int _anim) {
 		Mouvement temp = _dep.Copy(type); //create the mouvement
-		return Hitbox.plusPoint(temp.hitbox.get(_anim), new Point(xpos,ypos),true);	
+		return Hitbox.plusPoint(temp.hitbox.get(_anim), new Point(xpos(),ypos()),true);	
 	}
 	
 	public Hitbox getWorldHitbox(AbstractModelPartie partie) {
-		Hitbox hit1  =Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos,ypos),true);
+		Hitbox hit1  =Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos(),ypos()),true);
 		return Hitbox.plusPoint(hit1, new Point(partie.xScreendisp,partie.yScreendisp),true);	}
 	@Override
-	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,
-			Deplace deplace) {
-		//project speed to ground 
-		double coef1= localVit.vect2d().dot(normal)/normal.lengthSquared();
-		localVit = new Vitesse((int)(localVit.x-coef1*normal.x),(int)(localVit.y-coef1*normal.y));
+	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie) {
+		boolean collision_gauche = normal.x>0;
+		boolean collision_droite = normal.x<0;
+		//boolean collision_haut = normal.y>0;
+		boolean collision_bas = normal.y<0;
 		
-		double coef2= envirVit.vect2d().dot(normal)/normal.lengthSquared();
-		envirVit = new Vitesse((int)(envirVit.x-coef2*normal.x),(int)(envirVit.y-coef2*normal.y));
-		
-		boolean collision_gauche = (localVit.x<=0) && (normal.x>0);
-		boolean collision_droite = (localVit.x>=0) && (normal.x<0);
-		//boolean collision_haut = (vit.y<=0) && (normal.y>0);
-		boolean collision_bas = (localVit.y>=0) && (normal.y<0);
 		last_colli_left=collision_gauche;
 		last_colli_right=collision_droite;
 		
@@ -162,13 +164,13 @@ public abstract class Monstre extends Collidable implements InterfaceConstantes,
 		}
 	}
 	@Override
-	public void handleObjectCollision(AbstractModelPartie partie,
-			Deplace deplace) {}
+	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider) {}
 	public class ResetHandleCollision
 	{
 		public void reset()
 		{};
 	}
+	
 }
 
 

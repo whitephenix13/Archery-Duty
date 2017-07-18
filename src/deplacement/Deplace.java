@@ -6,29 +6,35 @@ import javax.vecmath.Vector2d;
 
 import collision.Collidable;
 import collision.Collision;
+import debug.Debug_time;
 import partie.AbstractModelPartie;
 import personnage.Heros;
 import principal.InterfaceConstantes;
 import types.Hitbox;
 
 public class Deplace implements InterfaceConstantes{
-	public Collision colli;
 	private Gravite gravite = new Gravite();
 
 	public Deplace() 
 	{
-		colli = new Collision();
 	}
 
 	public void DeplaceObject(Collidable object, Mouvement nouvMouv, AbstractModelPartie partie)
 	{
+		Debug_time debugTime = new Debug_time();
+		debugTime.init();
 		boolean isHeros = object instanceof Heros;
 
+		debugTime.elapsed("test memorize values", 3);
+		
 		if(isHeros && partie.slowDown){
 			partie.slowCount= (partie.slowCount+1) % (object.slowDownFactor);
 		}
 
 		object.memorizeCurrentValue();
+
+		debugTime.elapsed("object.deplace", 3);
+		
 		boolean update_with_speed = ( !partie.slowDown || (partie.slowDown && partie.slowCount==0));
 		boolean[] shouldMov_changedAnim=object.deplace(partie, this);
 		boolean shouldMove= shouldMov_changedAnim[0];
@@ -37,28 +43,41 @@ public class Deplace implements InterfaceConstantes{
 			return;
 
 		boolean useGravity = object.useGravity && update_with_speed;
+		
+		debugTime.elapsed("gravity and friction", 3);
 
+		
 		if(useGravity)
 			gravite.gravite(object, partie.slowDown);
 
+		debugTime.elapsed("after gravity and before friction", 4);
+
 		if(update_with_speed)
 			object.applyFriction(0,0);
+		debugTime.elapsed("after friction and before reset", 4);
 
 		//deplacement à l'aide de la vitesse  si il n'y a pas collision 
 		//on reset les dernières positions de collisions:
 		object.resetVarBeforeCollision();
+		
+		debugTime.elapsed("collision", 3);
+
 		if(update_with_speed)
 		{
-			boolean stuck = !colli.ejectWorldCollision(partie, this, object);
+			boolean stuck = !Collision.ejectWorldCollision(partie, object);
 
 			if(stuck)
 			{
-				object.handleStuck(partie, this);
+				object.handleStuck(partie);
 			}
 			else
-				object.handleDeplacementSuccess(partie, this);
+				object.handleDeplacementSuccess(partie);
 		}
 		object.resetVarDeplace();
+		
+		debugTime.elapsed("deplace ecran", 3);
+
+		
 		if(isHeros){
 			Point delta = getdeplaceEcran(partie,(Heros)object);
 			deplaceEcran(delta,partie,object);
@@ -94,24 +113,24 @@ public class Deplace implements InterfaceConstantes{
 		//trop à gauche de l'ecran
 		if(left_xpos_hit<2*InterfaceConstantes.LARGEUR_FENETRE/7){
 			xpos_hit=left_xpos_hit;
-			largeur_fenetre=heros.getGlobalVit().x<0? 2*InterfaceConstantes.LARGEUR_FENETRE/7 :0;
+			largeur_fenetre=heros.getGlobalVit(partie).x<0? 2*InterfaceConstantes.LARGEUR_FENETRE/7 :0;
 		}
 		//trop à droite 
 		else if(right_xpos_hit>5*InterfaceConstantes.LARGEUR_FENETRE/7){
 			xpos_hit=right_xpos_hit;
-			largeur_fenetre=heros.getGlobalVit().x>0 ? 5*InterfaceConstantes.LARGEUR_FENETRE/7:0;
+			largeur_fenetre=heros.getGlobalVit(partie).x>0 ? 5*InterfaceConstantes.LARGEUR_FENETRE/7:0;
 		}
 
 		//trop en haut
 		if(up_ypos_hit<2*InterfaceConstantes.HAUTEUR_FENETRE/5){
 			ypos_hit= up_ypos_hit;
-			hauteur_fenetre=heros.getGlobalVit().y<=0? 2*InterfaceConstantes.HAUTEUR_FENETRE/5:0;
+			hauteur_fenetre=heros.getGlobalVit(partie).y<=0? 2*InterfaceConstantes.HAUTEUR_FENETRE/5:0;
 		}
 
 		//trop bas
 		else if(down_ypos_hit>3*InterfaceConstantes.HAUTEUR_FENETRE/5){
 			ypos_hit =down_ypos_hit;
-			hauteur_fenetre=heros.getGlobalVit().y>=0? 3*InterfaceConstantes.HAUTEUR_FENETRE/5:0;
+			hauteur_fenetre=heros.getGlobalVit(partie).y>=0? 3*InterfaceConstantes.HAUTEUR_FENETRE/5:0;
 		}
 
 		if(largeur_fenetre != 0 ){
@@ -125,17 +144,49 @@ public class Deplace implements InterfaceConstantes{
 	public void deplaceEcran(Point delta,  AbstractModelPartie partie, Collidable object)
 	{
 		partie.xScreendisp+= delta.x;
-		object.xpos+= delta.x; 
+		object.pxpos(delta.x,object.fixedWhenScreenMoves); 
 
 		partie.yScreendisp+=  delta.y;
-		object.ypos+= delta.y; 
-
+		object.pypos(delta.y,object.fixedWhenScreenMoves); 
+		
 	}
 	/**
 	 * Renvoie l'animation d'une fleche encochée/du héros en fonction de la position de la souris 
 	 * @return l'animation de la fleche/du heros
 	 */	
 
+	public static double XYtoAngle(double xPosRelative, double yPosRelative)
+	{
+		double angle= Math.atan(yPosRelative/xPosRelative);
+		if(xPosRelative<0 && yPosRelative>0)
+			angle= Math.PI + angle;
+		if(xPosRelative<0 && yPosRelative<=0)
+			angle= Math.PI + angle;
+		if(xPosRelative>=0 && yPosRelative<=0)
+			angle= 2*Math.PI + angle;
+		return angle;
+	}
+	public static double[] angleToXY(double angle)
+	{
+		double[] XY = new double[2];
+		double tol = Math.PI/10;
+		boolean close_270 = Math.abs(angle-3*Math.PI/2)<tol;
+		boolean close_90 = Math.abs(angle-Math.PI/2)<tol;
+		boolean direction_up = !(angle>=Math.PI && angle <= 2* Math.PI)  ;
+		boolean direction_left = (angle>=Math.PI/2 && angle <= 1.5 * Math.PI);
+
+		if( close_90||close_270 )
+		{
+			XY[1]=direction_up ? 1 : -1;
+			XY[0]= Math.abs(XY[1]/Math.tan(angle)) * (direction_left? -1 : 1);
+		}
+		else
+		{
+			XY[0]=direction_left? -1:1;
+			XY[1]=Math.abs(XY[0]*Math.tan(angle))*(direction_up ? 1 : -1);
+		}
+		return XY;
+	}
 
 	public double[] getAnimRotationTir(AbstractModelPartie partie, boolean getForArrow)
 	{
@@ -154,21 +205,15 @@ public class Deplace implements InterfaceConstantes{
 		double tolerance = 0;
 		Heros heros = partie.heros;
 		boolean isFiring = heros.deplacement.IsDeplacement(Mouvement_perso.tir);
-		double xcenter= heros.xpos+ (isFiring? heros.deplacement.x_center_tir.get(heros.anim) : 
+		double xcenter= heros.xpos()+ (isFiring? heros.deplacement.x_center_tir.get(heros.anim) : 
 			(heros.deplacement.xtaille.get(heros.anim)/2));
 
-		double ycenter= heros.ypos+(isFiring? heros.deplacement.y_center_tir.get(heros.anim):
+		double ycenter= heros.ypos()+(isFiring? heros.deplacement.y_center_tir.get(heros.anim):
 			(heros.deplacement.ytaille.get(heros.anim)/4));//arms at neck level
 
 		double xPosRelative= partie.getXPositionSouris()-xcenter; 
 		double yPosRelative= partie.getYPositionSouris()-ycenter;
-		double angle= Math.atan(yPosRelative/xPosRelative);
-		if(xPosRelative<0 && yPosRelative>0)
-			angle= Math.PI + angle;
-		if(xPosRelative<0 && yPosRelative<=0)
-			angle= Math.PI + angle;
-		if(xPosRelative>=0 && yPosRelative<=0)
-			angle= 2*Math.PI + angle;
+		double angle= XYtoAngle(xPosRelative, yPosRelative);
 		double range = 2 * Math.PI / 8;
 		double left_range= 15 * Math.PI / 8;
 		double right_range=  Math.PI / 8;

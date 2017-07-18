@@ -3,6 +3,7 @@ package menuPrincipal;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
@@ -12,22 +13,26 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import loading.OnLoadingCallback;
 import observer.Observer;
 import principal.TypeApplication;
 
 @SuppressWarnings("serial")
-public class AffichagePrincipal extends JFrame implements Observer{
+public class AffichagePrincipal extends JFrame implements Observer, OnLoadingCallback{
 
 	@SuppressWarnings("unused")
 	private AbstractControlerPrincipal controlerPrincipal;
-
+	
 	private	PanelPrincipal panelBoutons = new PanelPrincipal();
 	private BoutonPrincipal bPartieRapide=new BoutonPrincipal("Partie Rapide");
 	private BoutonPrincipal bCredit=new BoutonPrincipal("Credit");
 	private BoutonPrincipal bEditeur=new BoutonPrincipal("Editeur");
 	private BoutonPrincipal bOption=new BoutonPrincipal("Option");
 	private BoutonPrincipal bQuitter=new BoutonPrincipal("Quitter");
-
+	
+	@Override
+	public void execute(){panelBoutons.repaint();};
+	
 	public class BoutonPrincipal extends JButton
 	{
 		public BoutonPrincipal(String s)
@@ -46,16 +51,25 @@ public class AffichagePrincipal extends JFrame implements Observer{
 		{
 			super();
 		}
-		public void paint(Graphics g)
+		//change paint to paintcomponent 27/05/17
+		public void paintComponent(Graphics g)
 		{
 			super.paintComponent(g);
-
-			g.drawImage(getToolkit().getImage(getClass().getClassLoader().getResource("resources/Principal.png")),0,0,this);		
-
-			//methode pour faire apparaitre les boutons au dessus de l'image 
-			setOpaque(false);
-			super.paint(g);
-			setOpaque(true);
+			
+			if(controlerPrincipal.principal.all_media_loaded)
+			{
+				g.drawImage(controlerPrincipal.principal.imPrincipal.getImage("background"),0,0,this);		
+	
+				//methode pour faire apparaitre les boutons au dessus de l'image 
+				setOpaque(false);
+				//change paint to paintcomponent 27/05/17
+				super.paintComponent(g);
+				setOpaque(true);
+			}
+			else
+			{
+				controlerPrincipal.principal.showLoading(g);
+			}
 		}
 	}
 
@@ -64,17 +78,9 @@ public class AffichagePrincipal extends JFrame implements Observer{
 		controlerPrincipal=_controlerPrincipal;
 		Init();
 	}
-	public void Init()
+	
+	public void setButtons()
 	{
-		bPartieRapide.setBounds(90, 260, 320, 50);
-		bCredit.setBounds(90, 560, 290, 50);
-		bEditeur.setBounds(90, 560, 290, 50);
-		bOption.setBounds(990, 260, 290, 50);
-		bQuitter.setBounds(990, 560, 290, 50);
-
-		//Set the application icon 
-
-
 		panelBoutons.setLayout(null);
 		panelBoutons.add(bPartieRapide);
 		if(TypeApplication.isJar)
@@ -83,7 +89,23 @@ public class AffichagePrincipal extends JFrame implements Observer{
 			panelBoutons.add(bEditeur);
 		panelBoutons.add(bOption);
 		panelBoutons.add(bQuitter);
+	}
+	public void removeButtons()
+	{
+		panelBoutons.removeAll();
+	}
+	public void Init()
+	{
+		bPartieRapide.setBounds(90, 260, 320, 50);
+		bCredit.setBounds(90, 560, 290, 50);
+		bEditeur.setBounds(90, 560, 290, 50);
+		bOption.setBounds(990, 260, 290, 50);
+		bQuitter.setBounds(990, 560, 290, 50);
+		
+		panelBoutons.setBackground(Color.black);
 		this.setContentPane(panelBoutons);
+		
+		controlerPrincipal.principal.imPrincipal.loadMedia();
 	}
 
 	public class boutonsPrincipalListener implements MouseListener 
@@ -167,7 +189,7 @@ public class AffichagePrincipal extends JFrame implements Observer{
 	}
 
 	public void update() {
-
+		this.repaint();
 	}
 
 }

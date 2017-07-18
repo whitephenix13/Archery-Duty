@@ -62,7 +62,7 @@ public class Course extends Mouvement_perso{
 			assert (anim>=0 && anim <8);
 
 			int speed_norm = (int)(8.0 / Config.ratio_fps());
-			if(object.deplacement.droite_gauche(type, object.anim)=="Gauche")
+			if(object.deplacement.droite_gauche(type, object.anim).equals(Mouvement.GAUCHE))
 			{if(object.last_colli_left){speed_norm = 0;}}
 			else
 			{if(object.last_colli_right){speed_norm = 0;}}
@@ -77,9 +77,9 @@ public class Course extends Mouvement_perso{
 	public String droite_gauche(String type,int anim) {
 		if(type.equals(TypeObject.heros))
 			if(anim<4)
-				return ("Gauche");
+				return (Mouvement.GAUCHE);
 			else 
-				return("Droite");
+				return(Mouvement.DROITE);
 		else{
 			try {throw new Exception("String droite gauche: type unknown");} catch (Exception e) {e.printStackTrace();}
 			return ("");

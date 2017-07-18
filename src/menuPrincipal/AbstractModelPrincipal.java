@@ -2,8 +2,17 @@ package menuPrincipal;
 
 import java.util.ArrayList;
 
-import music.Music;
-import music.ThreadMusique;
+import Affichage.Affichage;
+import choixNiveau.AbstractControlerChoixNiveau;
+import choixNiveau.AbstractModelChoixNiveau;
+import choixNiveau.AffichageChoixNiveau;
+import credit.AffichageCredit;
+import editeur.AbstractControlerEditeur;
+import editeur.AbstractModelEditeur;
+import editeur.AffichageEditeur;
+import images.ImagesPrincipal;
+import loading.DisplayLoader;
+import loading.LoadAllMedias;
 import observer.Observable;
 import observer.Observer;
 import option.AbstractControlerOption;
@@ -13,16 +22,8 @@ import partie.AbstractControlerPartie;
 import partie.AbstractModelPartie;
 import partie.AffichagePartie;
 import types.Touches;
-import Affichage.Affichage;
-import choixNiveau.AbstractControlerChoixNiveau;
-import choixNiveau.AbstractModelChoixNiveau;
-import choixNiveau.AffichageChoixNiveau;
-import credit.AffichageCredit;
-import editeur.AbstractControlerEditeur;
-import editeur.AbstractModelEditeur;
-import editeur.AffichageEditeur;
 
-public abstract class AbstractModelPrincipal implements Observable{
+public abstract class AbstractModelPrincipal extends DisplayLoader implements Observable{
 	
 	//Time in order in order to display only every 1/fps seconds
 	protected long last_update = 0;
@@ -32,12 +33,11 @@ public abstract class AbstractModelPrincipal implements Observable{
 
 	//touches de deplacement
 	protected Touches touches ;
+			
+	LoadAllMedias allMediaLoader = null;
 	
-	//musique 
-	protected Music music;
-	protected ThreadMusique threadMusique;
-	protected Thread t;
-		
+	public ImagesPrincipal imPrincipal= new ImagesPrincipal();
+
 	public static String modeActuel="Principal";
 	public static String modeSuivant="";
 	public static boolean changeMode=false;
@@ -76,24 +76,27 @@ public abstract class AbstractModelPrincipal implements Observable{
 	//Implémentation du pattern observer
 
 	  public void addObserver(Observer obs) {
-
 	    this.listObserver.add(obs);
-
 	  }
-
 
 	  public void notifyObserver() {
 
 	    for(Observer obs : listObserver)
-
 	      obs.update();
-
 	  }
-
-
 	  public void removeObserver() {
-
 	    listObserver = new ArrayList<Observer>();
-
 	  }  
+	  
+		private Observer mainObserver;
+
+		public void addMainObserver(Observer obs) {
+			mainObserver=obs;
+		}
+		public void notifyMainObserver() {
+			mainObserver.update();
+		}
+		public void removeMainObserver() {
+			mainObserver=null;
+		}  
 }

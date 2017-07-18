@@ -8,7 +8,9 @@ import collision.Collidable;
 import types.Hitbox;
 
 public abstract class Mouvement{
-	
+	public static String DROITE = "DROITE";
+	public static String GAUCHE = "GAUCHE";
+
 	public List<Integer> xtaille= new ArrayList<Integer>() ;
 	public List<Integer> ytaille= new ArrayList<Integer>() ;
 	public List<Hitbox> hitbox = new ArrayList<Hitbox>();

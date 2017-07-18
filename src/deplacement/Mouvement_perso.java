@@ -1,6 +1,7 @@
 package deplacement;
 
 import collision.Collidable;
+import collision.Collision;
 import partie.AbstractModelPartie;
 import types.TypeObject;
 
@@ -27,7 +28,7 @@ public abstract class Mouvement_perso extends Mouvement{
 		return this.getClass().getName().equals("deplacement." + s);
 	}
 	
-	public boolean alignTestValid(Collidable object, Mouvement depSuiv, int animSuiv, AbstractModelPartie partie,Deplace deplace)
+	public boolean alignTestValid(Collidable object, Mouvement depSuiv, int animSuiv, AbstractModelPartie partie)
 	{
 		int prev_anim = object.anim;
 		Mouvement prev_mouv = object.deplacement.Copy(TypeObject.heros);
@@ -36,9 +37,9 @@ public abstract class Mouvement_perso extends Mouvement{
 
 		boolean valid = false;
 		if(object.deplacement.IsDeplacement(Mouvement_perso.glissade))
-			valid= !deplace.colli.isWorldCollision(partie, deplace, object,false);
+			valid= !Collision.isWorldCollision(partie, object,false);
 		else
-			valid= !deplace.colli.isWorldCollision(partie, deplace, object,true);
+			valid= !Collision.isWorldCollision(partie, object,true);
 		object.anim=prev_anim;
 		object.deplacement=prev_mouv;
 		return valid;

@@ -188,7 +188,7 @@ public class AffichageChoixNiveau extends JFrame implements Observer{
 			fillPanelBoutons();
 		}	
 		controlerChoix.choix.resetVariablesAffichages();
-
+		this.repaint();
 	}
 
 }

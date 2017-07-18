@@ -16,9 +16,10 @@ import deplacement.Deplace;
 import deplacement.Mouvement;
 import deplacement_tir.Mouvement_tir;
 import deplacement_tir.T_normal;
-import monstre.Monstre;
+import effects.Effect;
 import music.MusicBruitage;
 import partie.AbstractModelPartie;
+import personnage.Heros;
 import principal.InterfaceConstantes;
 import types.Hitbox;
 import types.TypeObject;
@@ -26,7 +27,7 @@ import types.Vitesse;
 
 public class Fleche extends Collidable implements InterfaceConstantes{
 	
-	public static String NORMAL="";
+	public static String NORMAL="normal";
 	
 	public static class MATERIELLE
 	{
@@ -60,83 +61,130 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 		public static String CAC="corps_a_corps";
 
 	}
-	
+	public Heros shooter;
+
 	public boolean doitDeplace=false;
 	public boolean isPlanted=false; //fleche plantée dans le sol
 	public boolean generatedEffect = false;
-	public long TEMPS_DESTRUCTION_FLECHE = (long) Math.pow(10, 9);//nanos, 1sec 
 	public boolean nulle =false;
 	public boolean encochee =false;
 	
 	public String type_fleche= NORMAL;
-
-	public AffineTransform draw_tr;
+	public boolean no_more_than_one=false;
+	public boolean destroy_on_click=false;
+	
+	public AffineTransform draw_tr=null;
 	//relative to heros position
 	public List<Integer> xanchor=Arrays.asList(28,20,45,45,40,30,55,52,70,35);
 	public List<Integer> yanchor=Arrays.asList(30,20,22,25,45,50,65,42,30,40);
-
-	//timer pour savoir quand est ce que la fleche doit disparaitre (voir interface constante)
-	public long tempsDetruit = 0;
-	
-	public int degat= -50;
-	private boolean animationChanged=false;
 		
-	public Fleche(List<Fleche> tabFleche,int current_frame)
+	public int degat= -50;
+	public int seyeri_cost = -5;
+	private boolean animationChanged=false;
+	
+	public Effect flecheEffect;
+
+	public Fleche(List<Fleche> tabFleche,int current_frame,Heros _shooter,boolean add_to_list)
 	{
 		type = TypeObject.fleche;
 		type_fleche=NORMAL;
+		shooter=_shooter;
 		anim=0;
 		doitDeplace=false;
-		needDestroy= false;
 		tempsDetruit = 0;
 		slowDownFactor=3;
 		fixedWhenScreenMoves=false;
 		localVit=new Vitesse(0,0);
-		envirVit=new Vitesse(0,0);
 
 		deplacement = new T_normal(TypeObject.fleche,T_normal.tir,current_frame);
 		
 		nulle=false;
 		encochee=true;
-		tabFleche.add(this);
+		checkCollision=false;
+		if(add_to_list)
+			tabFleche.add(this);
+		
+		TEMPS_DESTRUCTION = (long) Math.pow(10, 9);//nanos, 1sec 
+		
+		//effect properties
+		this.draggable=false;
+	}
+	public Fleche(List<Fleche> tabFleche,int current_frame,Heros _shooter)
+	{
+		this(tabFleche,current_frame,_shooter,true);
 	}
 
-	public void timer()
-	{
-		tempsDetruit=System.nanoTime();
-	}
 	public void setPosition(int x, int y)
 	{
-		xpos=x;
-		ypos=y;
+		xpos(x);
+		ypos(y);
 	}
 	
 	public void flecheDecochee(AbstractModelPartie partie,Deplace deplace)
 	{
 		doitDeplace=true;
 		encochee=false;
-		
+		checkCollision=true;
 		//get current position
 		Point2D newpos= draw_tr.transform(new Point(0,0), null);
-		xpos=(int) newpos.getX()-partie.xScreendisp;
-		ypos=(int) newpos.getY()-partie.yScreendisp;
+		xpos((int) newpos.getX()-partie.xScreendisp);
+		ypos((int) newpos.getY()-partie.yScreendisp);
 		
-		convertHitbox(partie.INIT_RECT,draw_tr,new Point(xpos,ypos),new Point(partie.xScreendisp,partie.yScreendisp));
+		convertHitbox(partie.INIT_RECT,draw_tr,new Point(xpos(),ypos()),new Point(partie.xScreendisp,partie.yScreendisp));
 
 		//reset the 0 of the transformation. usefull since the position changed from 0 to its drawing position (~700,400)
-		draw_tr.translate(-xpos, -ypos);
+		draw_tr.translate(-xpos(), -ypos());
 
 
 		deplacement.setSpeed(TypeObject.fleche, this, anim);
-		MusicBruitage.me.startBruitage("arc");
+		MusicBruitage.startBruitage("arc");
 		
 	}
+	/**
+	 * Called when the effect created by this arrow ends
+	 */
+	public void OnFlecheEffectDestroy(AbstractModelPartie partie,boolean destroyNow)
+	{
+		//Default behaviour is to destroy the arrow if the related effect is detroyed 
+		this.destroy(partie, destroyNow);
+	}
+	
+	//Method to redefined. Action to execute before an arrow is detroyed. Mainly, stop the effect before all references are lost 
+	public void beforeFlecheDestroyed(AbstractModelPartie partie){};
 	@Override
-	public void destroy(){
+	public void destroy(AbstractModelPartie partie,boolean destroyNow)
+	{
+		beforeFlecheDestroyed(partie);
+		super.destroy(partie, destroyNow);
+		//remove itself from created effect 
+		flecheEffect.onRemoveRefFleche(partie,destroyNow);
+	}
+	@Override
+	public void onDestroy(AbstractModelPartie partie){
 		//do nothing when detroyed 
 	}
+	
 	protected void onPlanted(List<Collidable> objects,AbstractModelPartie partie)
-	{}
+	{
+		this.timer();
+	}
+	/**
+	 * 
+	 * @param objects
+	 * @param partie
+	 * @param collider
+	 * @return true if need immediate destroy
+	 */
+	protected boolean OnObjectsCollision (List<Collidable> objects,AbstractModelPartie partie,Collidable collider)
+	{
+		return true;
+	}
+	
+	public Vector2d getNormCollision()
+	{
+		return null;
+	}
+	
 	public void convertHitbox(Point INIT_RECT,AffineTransform tr,Point pos,Point screendisp) {
 		List<Hitbox> current = deplacement.hitbox;
 		List<Hitbox> new_rotated_hit = new ArrayList<Hitbox>();
@@ -159,57 +207,51 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 	@Override
 	public Hitbox getHitbox(Point INIT_RECT) {
 		if(!encochee)
-			return  Hitbox.plusPoint(deplacement.hitbox_rotated.get(anim), new Point(xpos,ypos),true);	
+			return  Hitbox.plusPoint(deplacement.hitbox_rotated.get(anim), new Point(xpos(),ypos()),true);	
 		else
-			return  Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos,ypos),true);	
+			return  Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos(),ypos()),true);	
 	}
 	
 	@Override
 	public Hitbox getHitbox(Point INIT_RECT, Mouvement _dep, int _anim) {
 		//ASSUME WE ALWAYS USE THIS WHEN THE ARROW IS SHOT (!encochee)
 		Mouvement_tir temp = (Mouvement_tir) _dep.Copy(TypeObject.fleche); //create the mouvement
-		return Hitbox.plusPoint(temp.hitbox_rotated.get(_anim), new Point(xpos,ypos),true);
+		return Hitbox.plusPoint(temp.hitbox_rotated.get(_anim), new Point(xpos(),ypos()),true);
 	}
 	public Hitbox getWorldHitbox(AbstractModelPartie partie) {
 		Hitbox hit1 = getHitbox(partie.INIT_RECT);
 		/*if(encochee)
-			hit1=Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos,ypos),true);
+			hit1=Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos(),ypos()),true);
 		else
-			hit1=Hitbox.plusPoint(deplacement.hitbox_rotated.get(anim), new Point(xpos,ypos),true);*/
+			hit1=Hitbox.plusPoint(deplacement.hitbox_rotated.get(anim), new Point(xpos(),ypos()),true);*/
 		return Hitbox.plusPoint(hit1, new Point(partie.xScreendisp,partie.yScreendisp),true);
 	}
 		
 		
 	@Override
-	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,
-			Deplace deplace) {
+	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie) {
 		
-		double coef1= localVit.vect2d().dot(normal)/normal.lengthSquared();
-		localVit = new Vitesse((int)(localVit.x-coef1*normal.x),(int)(localVit.y-coef1*normal.y));
-		double coef2= envirVit.vect2d().dot(normal)/normal.lengthSquared();
-		envirVit = new Vitesse((int)(envirVit.x-coef2*normal.x),(int)(envirVit.y-coef2*normal.y));
-
-		boolean collision_gauche = (localVit.x<=0) && (normal.x>0);
-		boolean collision_droite = (localVit.x>=0) && (normal.x<0);
-		//boolean collision_haut = (vit.y<=0) && (normal.y>0);
-		//boolean collision_bas = (vit.y>=0) && (normal.y<0);
-		last_colli_left=collision_gauche;
+		boolean collision_gauche = normal.x>0;
+		boolean collision_droite = normal.x<0;
+		//boolean collision_haut = normal.y>0;
+		//boolean collision_bas = normal.y<0;	last_colli_left=collision_gauche;
 		last_colli_right=collision_droite;
 		localVit = new Vitesse(0,0);
-		envirVit = new Vitesse(0,0);
 		this.doitDeplace=false;
 		this.isPlanted=true;
-		ArrayList<Collidable> objects = Collidable.getAllCollidable(partie,true,true);
+		ArrayList<Collidable> objects = Collidable.getAllEntitiesCollidable(partie);
 
 		onPlanted(objects,partie);
+		
+		
 	}
 	@Override
 	public void handleObjectCollision(AbstractModelPartie partie,
-			Deplace deplace) 
+			Collidable collider) 
 	{
-		this.needDestroy=true;
-		ArrayList<Collidable> objects = Collidable.getAllCollidable(partie, true, true);
-		onPlanted(objects,partie);
+		ArrayList<Collidable> objects = Collidable.getAllEntitiesCollidable(partie);
+
+		this.needDestroy = OnObjectsCollision(objects,partie,collider);
 	}
 
 	@Override
@@ -245,10 +287,10 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 		{
 			if (useGravity)
 			{
-				int animSuivante= gravityAnim();
+				int animSuivante= gravityAnim(partie);
 				if(animSuivante==anim)
 					animationChanged=false;
-				decallageFleche (animSuivante, partie,deplace );
+				decallageFleche (animSuivante, partie );
 				return(animSuivante);
 			}
 			else {
@@ -261,9 +303,9 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 		}
 		return (anim+1)%4;
 	}
-	public int gravityAnim()
+	public int gravityAnim(AbstractModelPartie partie)
 	{
-		Vitesse gvit = getGlobalVit();
+		Vitesse gvit = getGlobalVit(partie);
 		if(gvit.y ==0 && gvit.x==0)
 		{
 			return(anim);//on garde la même animation
@@ -305,20 +347,19 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 		}
 	}
 	
-	public void decallageFleche(int animSuivante, AbstractModelPartie partie,Deplace deplace)
+	public void decallageFleche(int animSuivante, AbstractModelPartie partie)
 	{
 		// on veut que le centre bas des flèches coincident 
 		Point positionFinal=placerCentreBasFleche(this,animSuivante,partie.INIT_RECT);
 
 		// on effectue le decallage
-		xpos=positionFinal.x;
-		ypos=positionFinal.y;
+		xpos(positionFinal.x);
+		ypos(positionFinal.y);
 
-		Collision colli = new Collision();
 		//si il y a collision lors du changement d'animation, on doit arreter la fleche
-		if (!colli.ejectWorldCollision(partie,deplace , this))
+		if (!Collision.ejectWorldCollision(partie , this))
 		{
-			handleWorldCollision(new Vector2d(), partie,deplace);
+			handleWorldCollision(new Vector2d(), partie);
 		}
 
 	}
@@ -376,12 +417,11 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 
 	}
 	@Override
-	public void handleStuck(AbstractModelPartie partie, Deplace deplace) {
-		handleWorldCollision( new Vector2d(), partie, deplace );
+	public void handleStuck(AbstractModelPartie partie) {
+		handleWorldCollision( new Vector2d(), partie );
 	}
 	@Override
-	public void handleDeplacementSuccess(AbstractModelPartie partie,
-			Deplace deplace) {
+	public void handleDeplacementSuccess(AbstractModelPartie partie) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -399,6 +439,7 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 	public void applyFriction(double minlocalSpeed, double minEnvirSpeed) {
 		//nothing
 	}
+
 
 
 

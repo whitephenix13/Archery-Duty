@@ -141,4 +141,8 @@ public class AffichageCredit extends JFrame{
 	    this.getContentPane().add(panel);
 
 	}
+	public void update() {
+		this.repaint();
+	
+	}
 }

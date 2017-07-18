@@ -2,17 +2,14 @@ package personnage;
 
 import java.awt.Point;
 import java.awt.Polygon;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.vecmath.Vector2d;
 
 import collision.Collidable;
 import collision.Collision;
 import collision.GJK_EPA;
+import debug.Debug_time;
 import deplacement.Accroche;
 import deplacement.Attente;
 import deplacement.Course;
@@ -54,13 +51,29 @@ public class Heros extends Collidable{
 	//on définit son type de déplacement 
 
 	private int life=InterfaceConstantes.MAXLIFE;
-	private int spe=InterfaceConstantes.MAXSPE;
+	private int seyeri=InterfaceConstantes.MAXSEYERI;
+	private int not_enough_seyeri=0; // variable to keep track of the amount of seyeri that a rejected action required (used for visual effect)
+	public void setNotEnoughSeyeri(int val){not_enough_seyeri=val;not_enough_seyeri_counter=10;}
+	public int getNotEnoughSeyeri(){return not_enough_seyeri;}
+	private int not_enough_seyeri_counter; // use this to let the red indicaters appear longuer
+	public void decreaseNotEnoughSeyeriCounter()
+	{
+		if(not_enough_seyeri<=0)
+			return;
+		not_enough_seyeri_counter=Math.max(not_enough_seyeri_counter-1,0);
+		//reset counter
+		if(not_enough_seyeri_counter==0)
+		{
+			not_enough_seyeri_counter=3;
+			not_enough_seyeri=0;
+		}
+	}
 
 	private long tempsTouche;
 	private long tempsClignote;
 	//derniere fois que la spe a été baissé à cause du slow down ou augmenté hors du slow down
 	private long tempsSpe;
-	public boolean invincible=true;
+	public boolean invincible=false;
 
 	//lorsque le personnage est touche, on le fait clignoter, ce booleen permet de savoir si on l'affiche ou non
 	public boolean afficheTouche=true; 
@@ -78,19 +91,18 @@ public class Heros extends Collidable{
 	//booleen pour savoir si le personnage veut sauter alors qu'il glisse/accroche
 	public boolean sautGlisse = false;
 	public boolean sautAccroche = false;
-
-	//public boolean glisse =false;
+	private boolean wasGrounded =false;
 
 	public boolean doitEncocherFleche=false;
 	public boolean flecheEncochee=false;
 	//Which arrow is currently armed: changed in model partie
 	public String tir_type = Fleche.NORMAL;
-	
+
 	//In order to determine affinity: 1=Materiel, 2=Spirituel, 3=Destructeur 4=Ruse
-	public int current_slot = 2;
+	public int current_slot = 0;
 	//Which arrows are equiped per affinity
-	private String[] slots = {Fleche.SPIRITUELLE.VENT,Fleche.SPIRITUELLE.VENT,Fleche.SPIRITUELLE.VENT,Fleche.SPIRITUELLE.VENT};
-	
+	private String[] slots = {Fleche.SPIRITUELLE.VENT,Fleche.SPIRITUELLE.GRAPPIN,Fleche.SPIRITUELLE.GRAPPIN,Fleche.SPIRITUELLE.VENT};
+
 	/**
 	 * 
 	 * @param special is the arrow special or regular
@@ -100,8 +112,18 @@ public class Heros extends Collidable{
 			tir_type=slots[current_slot];
 		else
 			tir_type=Fleche.NORMAL;
-		} 
-	
+	} 
+	/**
+	 * 
+	 * @param special: true to return the special arrow name 
+	 * @return
+	 */
+	public String get_tir_type(boolean special){
+		if(special)
+			return slots[current_slot];
+		else
+			return Fleche.NORMAL;
+	} 
 	//last time an arrow was shot
 	public long last_shoot_time = -1;
 	//last time I armed an arrow
@@ -130,25 +152,12 @@ public class Heros extends Collidable{
 	private boolean last_align_down=true;
 	public boolean getLast_align_d(){return last_align_down;}
 
-	/*public Heros(){
-		xpos = 0;
-		ypos = 0;
-		vit = new Vitesse(0,0);
-		slowDownFactor=3;//6
-		fixedWhenScreenMoves=true;
-		anim=0;
-		nouvAnim= 0;
-		deplacement=new Attente(TypeObject.heros,Attente.attente_gauche,0);
-		nouvMouv = new Attente(TypeObject.heros,Attente.attente_gauche,0);
-		tempsTouche=System.nanoTime();
-	};*/
 	public Heros( int xPo,int yPo, int _anim, Mouvement_perso dep,int current_frame){
 		type=TypeObject.heros;
-		xpos = xPo;
-		ypos = yPo; 
+		xpos(xPo);
+		ypos(yPo); 
 		localVit = new Vitesse(0,0);
-		envirVit = new Vitesse(0,0);
-		slowDownFactor=4;//6
+		slowDownFactor=4;//4
 		fixedWhenScreenMoves=true;
 		deplacement=dep ;
 		anim=_anim;
@@ -169,7 +178,7 @@ public class Heros extends Collidable{
 	}
 	public void miseAjourTouche()
 	{
-		if((System.nanoTime()-tempsTouche)*Math.pow(10, -6)<=InterfaceConstantes.INV_TOUCHE)//heros invincible
+		if((System.nanoTime()-tempsTouche)*Math.pow(10, -6)<=InterfaceConstantes.INV_TOUCHE && invincible)//heros invincible
 		{
 			if((System.nanoTime()-tempsClignote)*Math.pow(10, -6)>InterfaceConstantes.CLIGNOTE)
 			{
@@ -188,13 +197,26 @@ public class Heros extends Collidable{
 		if((System.nanoTime()-tempsSpe)*Math.pow(10, -6)>InterfaceConstantes.TEMPS_VAR_SPE)
 		{
 			tempsSpe=System.nanoTime();
+			boolean continueSlow = true;
 			if(partie.slowDown)
 			{
-				addSpe(partie,-1);
+				continueSlow=addSeyeri(partie,-1);
 			}
 			else
 			{
-				addSpe(partie,1);
+				continueSlow=addSeyeri(partie,1);
+			}
+
+			if(!continueSlow)
+			{
+				partie.slowDown=false;
+				partie.slowCount=0;
+
+				if(partie.slowDown)
+					Music.me.slowDownMusic();
+				else
+					Music.me.endSlowDownMusic();
+
 			}
 		}
 	}
@@ -209,39 +231,50 @@ public class Heros extends Collidable{
 		if(life<InterfaceConstantes.MINLIFE){life=InterfaceConstantes.MINLIFE;}
 
 	}
-	public int getSpe()
+	public int getSeyeri()
 	{
-		return(spe);
+		return(seyeri);
 	}
 
-	public void addSpe(AbstractModelPartie partie,int add)
+	/**
+	 * 
+	 * @param partie
+	 * @param add
+	 * @return false if reached minSeyeri
+	 */
+	public boolean seyeriActionPossible(int cost)
 	{
-		spe += add;
-		if(spe>InterfaceConstantes.MAXSPE){spe=InterfaceConstantes.MAXSPE;}
-		if(spe<InterfaceConstantes.MINSPE)
+		if((seyeri+cost)<InterfaceConstantes.MINSEYERI)
+			return false;
+		else 
+			return true;
+
+	}
+	public boolean addSeyeri(AbstractModelPartie partie,int add)
+	{
+		seyeri += add;
+		if(seyeri>InterfaceConstantes.MAXSEYERI){seyeri=InterfaceConstantes.MAXSEYERI;}
+		if(seyeri<InterfaceConstantes.MINSEYERI)
 		{
-			spe=InterfaceConstantes.MINSPE;
-			partie.slowDown=false;
-			partie.slowCount=0;
-			Music music = new Music();
-
-			try {
-				if(partie.slowDown)
-					music.slowDownMusic();
-				else
-					music.endSlowDownMusic();
-			} catch (UnsupportedAudioFileException | IOException
-					| LineUnavailableException e) {
-				e.printStackTrace();
-			}
-
+			seyeri=InterfaceConstantes.MINSEYERI;
+			return false;
 		}
+		return true;
 
 	}
+	
+	public Vector2d getNormCollision()
+	{
+		if(wasGrounded)
+			return new Vector2d(0,-1);
+		else
+			return normCollision;
+	}
 
+	
 	public Hitbox getHitbox(Point INIT_RECT) {
 		try{
-			return  Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos,ypos),true);}
+			return  Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos(),ypos()),true);}
 		catch(IndexOutOfBoundsException e)
 		{
 			return new Hitbox();
@@ -249,8 +282,8 @@ public class Heros extends Collidable{
 	}
 	public Hitbox getHitbox(Point INIT_RECT, Mouvement _dep, int _anim) {
 		try{
-		Mouvement_perso temp = (Mouvement_perso) _dep.Copy(TypeObject.heros); //create the mouvement
-		return Hitbox.plusPoint(temp.hitbox.get(_anim), new Point(xpos,ypos),true);
+			Mouvement_perso temp = (Mouvement_perso) _dep.Copy(TypeObject.heros); //create the mouvement
+			return Hitbox.plusPoint(temp.hitbox.get(_anim), new Point(xpos(),ypos()),true);
 		}
 		catch(IndexOutOfBoundsException e)
 		{
@@ -263,11 +296,11 @@ public class Heros extends Collidable{
 	 * @param right True: get the right slide hitbox False: the left one
 	 * @return
 	 */
-	public Hitbox getGliss_Accroch_Hitbox(Point INIT_RECT, boolean gliss, boolean right)//used to get slide hitbox
+	public Hitbox getGliss_Accroch_Hitbox(AbstractModelPartie partie, boolean gliss, boolean right)//used to get slide hitbox
 	{
 		//Hand coded, only two possible deplacement: Course or Saut 
-		int up = getGlobalVit().y<0? 0 : (deplacement.IsDeplacement(Mouvement_perso.saut)?4 : -3); //if gliss: up of hand
-		int down = getGlobalVit().y<0? 27 : (deplacement.IsDeplacement(Mouvement_perso.saut)?31 : 24);//if gliss: down of hand
+		int up = getGlobalVit(partie).y<0? 0 : (deplacement.IsDeplacement(Mouvement_perso.saut)?4 : -3); //if gliss: up of hand
+		int down = getGlobalVit(partie).y<0? 27 : (deplacement.IsDeplacement(Mouvement_perso.saut)?31 : 24);//if gliss: down of hand
 		if(!gliss)
 		{
 			//small square below hand: if it is in collision while the hand is not: heros should change to Accroche
@@ -275,7 +308,7 @@ public class Heros extends Collidable{
 			down = down + 15;
 		}
 		//assume the Heros hitbox is a square/rectangle not rotated 
-		Hitbox herosHit = this.getHitbox(INIT_RECT);
+		Hitbox herosHit = this.getHitbox(partie.INIT_RECT);
 
 		List<Vector2d> upLeftP = Hitbox.supportsPoint(new Vector2d(-1,-1), herosHit.polygon);
 		List<Vector2d> downLeftP = Hitbox.supportsPoint(new Vector2d(-1,1), herosHit.polygon);
@@ -359,19 +392,12 @@ public class Heros extends Collidable{
 			}}
 		return false;
 	}
-
-	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,
-			Deplace deplace) {
-		//project speed to ground 
-		double coef1= localVit.vect2d().dot(normal)/normal.lengthSquared();
-		localVit = new Vitesse((int)(localVit.x-coef1*normal.x),(int)(localVit.y-coef1*normal.y));
-		double coef2= envirVit.vect2d().dot(normal)/normal.lengthSquared();
-		envirVit = new Vitesse((int)(envirVit.x-coef2*normal.x),(int)(envirVit.y-coef2*normal.y));
-
-		boolean collision_gauche = (localVit.x<=0) && (normal.x>0);
-		boolean collision_droite = (localVit.x>=0) && (normal.x<0);
-		boolean collision_haut = (localVit.y<=0) && (normal.y>0);
-		boolean collision_bas = (localVit.y>=0) && (normal.y<0);
+	@Override
+	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie) {
+		boolean collision_gauche = normal.x>0;
+		boolean collision_droite = normal.x<0;
+		//boolean collision_haut = normal.y>0;
+		boolean collision_bas = normal.y<0;
 		//System.out.println("collision "+ (collision_gauche?"gauche ": "" )+(collision_droite?"droite ": "")+(collision_bas?"bas ": "")+(collision_haut?"haut ": "") + 
 		//		vit.x +" "+vit.y);
 		last_colli_left=collision_gauche;
@@ -383,7 +409,7 @@ public class Heros extends Collidable{
 
 		resetHandleCollision = new ResetHandleCollision(){
 			@Override
-			public void reset(Deplace deplace,AbstractModelPartie partie)
+			public void reset()
 			{
 				finSaut=mem_finSaut;
 				peutSauter=mem_peutSauter;
@@ -396,29 +422,28 @@ public class Heros extends Collidable{
 				peutSauter=true;
 				useGravity=false;
 			}
+			
 	}
 	public class ResetHandleCollision
 	{
-		public void reset(Deplace deplace,AbstractModelPartie partie)
+		public void reset()
 		{};
 	}
 
 	@Override
-	public void handleObjectCollision(AbstractModelPartie partie,
-			Deplace deplace) {}
+	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider) {}
 
 	@Override
 	public void memorizeCurrentValue() {
 
-		final Point memPos= new Point(xpos,ypos); 
+		final Point memPos= new Point(xpos(),ypos()); 
 		final Mouvement_perso memDep = (Mouvement_perso) deplacement.Copy(TypeObject.heros);
 		final int memAnim = anim;
 		final Vitesse memVitloca = localVit.Copy();
-		final Vitesse memVitenvir = envirVit.Copy();
 		currentValue=new CurrentValue(){		
 			@Override
 			public void res()
-			{xpos=memPos.x;ypos=memPos.y;deplacement=memDep;anim=memAnim;localVit=memVitloca;envirVit=memVitenvir;}};
+			{xpos(memPos.x);ypos(memPos.y);deplacement=memDep;anim=memAnim;localVit=memVitloca;}};
 	}
 	@Override
 	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
@@ -453,6 +478,9 @@ public class Heros extends Collidable{
 	 */	
 	public int changeMouv(Mouvement nouvMouv, int nouvAnim, AbstractModelPartie partie,Deplace deplace) throws InterruptedException
 	{
+		Debug_time debugTime = new Debug_time();
+		debugTime.init();
+
 		boolean blocDroitGlisse=false;
 		boolean blocGaucheGlisse=false;
 
@@ -463,22 +491,28 @@ public class Heros extends Collidable{
 		//translate all object hitboxes, see collision to get full formula
 		Point deplaceEcran =new Point(partie.xScreendisp,partie.yScreendisp);
 		Hitbox herosHitbox= Hitbox.minusPoint(getHitbox(partie.INIT_RECT),deplaceEcran,false);
+		debugTime.elapsed("monde bloc", 4);
 
 		List<Bloc> mondeBlocs = Collision.getMondeBlocs(partie.monde,herosHitbox, partie.INIT_RECT,partie.TAILLE_BLOC);
 
+		debugTime.elapsed("loop collision", 4);
+
 		for(Bloc mondeBloc : mondeBlocs)
 		{
+			debugTime.elapsed("get hitbox", 5);
+
 			Hitbox mondeBox = mondeBloc.getHitbox(partie.INIT_RECT);
-			Polygon p_glissade_d= Hitbox.minusPoint(getGliss_Accroch_Hitbox(partie.INIT_RECT,true,true),deplaceEcran,false).polygon;
-			Polygon p_glissade_g= Hitbox.minusPoint(getGliss_Accroch_Hitbox(partie.INIT_RECT,true,false),deplaceEcran,false).polygon;
-			Polygon p_accroche_d= Hitbox.minusPoint(getGliss_Accroch_Hitbox(partie.INIT_RECT,false,true),deplaceEcran,false).polygon;
-			Polygon p_accroche_g= Hitbox.minusPoint(getGliss_Accroch_Hitbox(partie.INIT_RECT,false,false),deplaceEcran,false).polygon;
+			Polygon p_glissade_d= Hitbox.minusPoint(getGliss_Accroch_Hitbox(partie,true,true),deplaceEcran,false).polygon;
+			Polygon p_glissade_g= Hitbox.minusPoint(getGliss_Accroch_Hitbox(partie,true,false),deplaceEcran,false).polygon;
+			Polygon p_accroche_d= Hitbox.minusPoint(getGliss_Accroch_Hitbox(partie,false,true),deplaceEcran,false).polygon;
+			Polygon p_accroche_g= Hitbox.minusPoint(getGliss_Accroch_Hitbox(partie,false,false),deplaceEcran,false).polygon;
+
 
 			Polygon p_monde= mondeBox.polygon;
-			int a = GJK_EPA.intersectsB(p_glissade_d,p_monde, getGlobalVit().vect2d());
-			int b = GJK_EPA.intersectsB(p_glissade_g,p_monde, getGlobalVit().vect2d());
-			int c = GJK_EPA.intersectsB(p_accroche_d,p_monde, getGlobalVit().vect2d());
-			int d = GJK_EPA.intersectsB(p_accroche_g,p_monde, getGlobalVit().vect2d());
+			int a = GJK_EPA.intersectsB(p_glissade_d,p_monde, getGlobalVit(partie).vect2d());
+			int b = GJK_EPA.intersectsB(p_glissade_g,p_monde, getGlobalVit(partie).vect2d());
+			int c = GJK_EPA.intersectsB(p_accroche_d,p_monde, getGlobalVit(partie).vect2d());
+			int d = GJK_EPA.intersectsB(p_accroche_g,p_monde, getGlobalVit(partie).vect2d());
 
 			blocDroitGlisse=blocDroitGlisse||
 					((a==GJK_EPA.TOUCH) || (a==GJK_EPA.INTER ));
@@ -497,20 +531,23 @@ public class Heros extends Collidable{
 				break;
 			}
 		}
+		debugTime.elapsed("after init 1", 4);
+
+
 		// le heros est en chute libre
 		boolean falling = !isGrounded(partie);
+		wasGrounded=!falling;
 		if(falling)
-			useGravity=falling && !this.deplacement.IsDeplacement(Mouvement_perso.accroche);
-
+			useGravity=falling && !this.deplacement.IsDeplacement(Mouvement_perso.accroche) && !isDragged();
 		//le heros chute ou cours vers un mur: il commence à glisser sur le mur 
-		boolean[] beginSliding= computeBeginSliding(blocDroitGlisse,blocGaucheGlisse,falling); 
+		boolean[] beginSliding= computeBeginSliding(partie,blocDroitGlisse,blocGaucheGlisse,falling); 
 		boolean beginSliding_r= beginSliding[0] ;
 		boolean beginSliding_l= beginSliding[1] ;
 
-		boolean[] beginAccroche= computeAccroche(blocDroitGlisse,blocGaucheGlisse,blocDroitAccroche,blocGaucheAccroche,falling);
+		boolean[] beginAccroche= computeAccroche(partie,blocDroitGlisse,blocGaucheGlisse,blocDroitAccroche,blocGaucheAccroche,falling);
 		boolean beginAccroche_r = beginAccroche[1];
 		boolean beginAccroche_l = beginAccroche[0];
-		
+
 		//update some values because player might have been ejected due to a fleche vent
 		updateVarSaut(falling, beginAccroche_r || beginAccroche_l, beginSliding_r || beginSliding_l);
 
@@ -523,15 +560,19 @@ public class Heros extends Collidable{
 			standup=false;
 			finSaut=false;
 		}
+
 		//le heros touche le sol en glissant
 		boolean landSliding = finSaut && deplacement.IsDeplacement(Mouvement_perso.glissade);
-		
+
 		//le heros décroche du mur
 		boolean endSliding = deplacement.IsDeplacement(Mouvement_perso.glissade) && 
-				((!blocDroitGlisse && droite_gauche(animHeros)==("Gauche")) ||
-						(!blocGaucheGlisse && droite_gauche(animHeros)==("Droite")));
+				((!blocDroitGlisse && droite_gauche(animHeros).equals(Mouvement.GAUCHE)) ||
+						(!blocGaucheGlisse && droite_gauche(animHeros)==(Mouvement.DROITE)));
 
 		int anim=animHeros;
+
+		debugTime.elapsed("after init 2, fleche", 4);
+
 		if( (doitEncocherFleche || flecheEncochee))//cas différent puisqu'on ne veut pas que l'avatar ait l'animation de chute en l'air
 		{
 			double[] anim_rotation = deplace.getAnimRotationTir(partie,false);
@@ -545,6 +586,7 @@ public class Heros extends Collidable{
 			return(animSuivante);
 
 		}
+		debugTime.elapsed("slide", 4);
 
 		//SPECIAL CASE that comes from computation on the current Mouvement 
 		if( (beginSliding_r||beginSliding_l) && !deplacement.IsDeplacement(Mouvement_perso.glissade))
@@ -560,6 +602,7 @@ public class Heros extends Collidable{
 			deplaceSautDroit=false;
 			return(anim);
 		}
+		debugTime.elapsed("accroche", 4);
 
 		if((beginAccroche_r || beginAccroche_l) && !deplacement.IsDeplacement(Mouvement_perso.accroche))
 		{
@@ -578,60 +621,73 @@ public class Heros extends Collidable{
 			double dy= ycurrentup -
 					Hitbox.supportPoint(new Vector2d(0,ydir), getHitbox(partie.INIT_RECT,nextMouv, nextAnim).polygon).y;
 
-			xpos+= dx;
-			ypos+= dy;
+			pxpos((int) dx);
+			pypos((int)dy);	
 			
 			//align to lower bloc
 			double yScreenDispMod= partie.getXYScreendispMod(false);
 			double align_to_ground =(int) (ycurrentup- yScreenDispMod)/ InterfaceConstantes.TAILLE_BLOC * InterfaceConstantes.TAILLE_BLOC + InterfaceConstantes.TAILLE_BLOC
 					-(ycurrentup -yScreenDispMod) ;
 
-			ypos += align_to_ground;
+			pypos((int) align_to_ground);
+			
 			useGravity=false;
 
 			deplacement=nextMouv;
 			anim=nextAnim;
 			deplacement.setSpeed(TypeObject.heros, this, nextAnim);
-			envirVit=new Vitesse(0,0);
 
 			return anim;
 		}
+
+		debugTime.elapsed("fall", 4);
 
 		//attention, falling est le seul bloc de code à ne pas avoir de return 
 		if(falling)
 		{
 			peutSauter=false;
+			debugTime.elapsed("a", 5);
+
 			if(!(deplacement.IsDeplacement(Mouvement_perso.glissade)||deplacement.IsDeplacement(Mouvement_perso.course)||deplacement.IsDeplacement(Mouvement_perso.accroche)))
 			{
-				int up = getGlobalVit().y>=0 ? 1 : 0;
-				int type_mouv = droite_gauche(animHeros)=="Gauche" ? (up==0?Saut.jump_gauche:Saut.fall_gauche) :
+				debugTime.elapsed("b", 5);
+				int up = getGlobalVit(partie).y>=0 ? 1 : 0;
+				debugTime.elapsed("c", 5);
+				int type_mouv = droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? (up==0?Saut.jump_gauche:Saut.fall_gauche) :
 					(up==0?Saut.jump_droite:Saut.fall_droite);
+				debugTime.elapsed("d", 5);
 				Mouvement mouvSuivant = new Saut(TypeObject.heros,type_mouv,partie.getFrame());
-				int animSuivant = (droite_gauche(animHeros)=="Gauche" ? 0+up :3+up);
+				debugTime.elapsed("e", 5);
+				int animSuivant = (droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? 0+up :3+up);
+				debugTime.elapsed("f", 5);
 				alignHitbox(animHeros,mouvSuivant,animSuivant,partie,deplace,blocGaucheGlisse );		
+				debugTime.elapsed("g", 5);
 				animHeros = animSuivant;
 				anim=animSuivant;
 				deplacement=mouvSuivant;
 				deplacement.setSpeed(TypeObject.heros, this, anim);
-
+				debugTime.elapsed("h", 5);
 				//landing = partie.finSaut;
-				beginSliding= computeBeginSliding(blocDroitGlisse,blocGaucheGlisse,(falling&&!landing));
+				beginSliding= computeBeginSliding(partie,blocDroitGlisse,blocGaucheGlisse,(falling&&!landing));
+				debugTime.elapsed("i", 5);
 
 			}
 		}
-		
+
+		debugTime.elapsed("big if ", 4);
+
 		if(deplacement.IsDeplacement(Mouvement_perso.accroche))
-		{
+		{			
 			if( (anim == 1 || anim == 3) && deplacement.animEndedOnce())
 			{
-				int next_anim = (droite_gauche(animHeros)=="Gauche" ? 0 :2);
-				Mouvement nextMouv = new Attente(TypeObject.heros,droite_gauche(animHeros)=="Gauche" ?Attente.attente_gauche: Attente.attente_droite,partie.getFrame());
+				int next_anim = (droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? 0 :2);
+				Mouvement nextMouv = new Attente(TypeObject.heros,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?Attente.attente_gauche: Attente.attente_droite,partie.getFrame());
 
 				alignHitbox(animHeros,nextMouv,next_anim,partie,deplace,blocGaucheGlisse);
 				anim= next_anim;
 				deplacement=nextMouv;
 				deplacement.setSpeed(TypeObject.heros, this, anim);
-				
+
 				//on reinitialise les variables de saut 
 				debutSaut = false;
 				finSaut = false;
@@ -645,8 +701,8 @@ public class Heros extends Collidable{
 		else if(landing) //atterrissage: accroupi 
 		{
 
-			Mouvement mouvSuiv = new Saut(TypeObject.heros,droite_gauche(animHeros)=="Gauche" ?Saut.land_gauche:Saut.land_droite,partie.getFrame());
-			int animSuiv = (droite_gauche(animHeros)=="Gauche"? 2 : 5 );
+			Mouvement mouvSuiv = new Saut(TypeObject.heros,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?Saut.land_gauche:Saut.land_droite,partie.getFrame());
+			int animSuiv = (droite_gauche(animHeros).equals(Mouvement.GAUCHE)? 2 : 5 );
 			//on ajuste la position du personnage pour qu'il soit centré 
 			alignHitbox(animHeros,mouvSuiv,animSuiv,partie,deplace,blocGaucheGlisse );
 			finSaut=false;//set landing to false
@@ -661,9 +717,9 @@ public class Heros extends Collidable{
 		else if(standup)//atterissage: se relève
 		{
 
-			int nextAnim = runBeforeJump? (droite_gauche(animHeros)=="Gauche" ? 0 : 4 ) : (droite_gauche(animHeros)=="Gauche" ? 0 : 2 );
-			Mouvement_perso nextDep=  runBeforeJump? new Course(TypeObject.heros,droite_gauche(animHeros)=="Gauche" ?Course.course_gauche:Course.course_droite,partie.getFrame()) 
-					: new Attente(TypeObject.heros,droite_gauche(animHeros)=="Gauche" ?Attente.attente_gauche:Attente.attente_droite,partie.getFrame());
+			int nextAnim = runBeforeJump? (droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? 0 : 4 ) : (droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? 0 : 2 );
+			Mouvement_perso nextDep=  runBeforeJump? new Course(TypeObject.heros,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?Course.course_gauche:Course.course_droite,partie.getFrame()) 
+					: new Attente(TypeObject.heros,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?Attente.attente_gauche:Attente.attente_droite,partie.getFrame());
 			//on ajuste la position du personnage pour qu'il soit centré 
 			alignHitbox(animHeros,nextDep,nextAnim,partie,deplace,blocGaucheGlisse);
 			//on choisit la direction d'attente			
@@ -679,8 +735,8 @@ public class Heros extends Collidable{
 		else if(landSliding)
 		{
 
-			Mouvement nextMouv = new Attente(TypeObject.heros,droite_gauche(animHeros)=="Gauche" ?Attente.attente_gauche: Attente.attente_droite,partie.getFrame());
-			int nextAnim = (droite_gauche(animHeros)=="Gauche" ? 0 : 2 );
+			Mouvement nextMouv = new Attente(TypeObject.heros,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?Attente.attente_gauche: Attente.attente_droite,partie.getFrame());
+			int nextAnim = (droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? 0 : 2 );
 			alignHitbox(animHeros,nextMouv,nextAnim,partie ,deplace,blocGaucheGlisse);
 			finSaut=false;
 			//on ajuste la position du personnage pour qu'il soit centré 
@@ -694,8 +750,8 @@ public class Heros extends Collidable{
 		else if(endSliding)
 		{
 
-			int nextAnim= (droite_gauche(animHeros)=="Gauche" ? 1 :4);
-			Mouvement nextMouv = new Saut(TypeObject.heros,droite_gauche(animHeros)=="Gauche" ?Saut.fall_gauche: Saut.fall_droite,partie.getFrame());
+			int nextAnim= (droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? 1 :4);
+			Mouvement nextMouv = new Saut(TypeObject.heros,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?Saut.fall_gauche: Saut.fall_droite,partie.getFrame());
 			alignHitbox(animHeros,nextMouv,nextAnim,partie,deplace,blocGaucheGlisse);
 			anim = nextAnim;
 			deplacement= nextMouv;
@@ -708,6 +764,8 @@ public class Heros extends Collidable{
 		//Call function to check if move is allowed
 		boolean allowed = moveAllowed(nouvMouv,nouvAnim);
 		//CHANGEMENT DE MOUVEMENT
+		debugTime.elapsed("move allow", 4);
+
 		if(partie.changeMouv && allowed)
 		{
 			if(nouvMouv.IsDeplacement(Mouvement_perso.accroche) && ( (nouvAnim == 1) || (nouvAnim == 3)))
@@ -720,24 +778,24 @@ public class Heros extends Collidable{
 
 				//top of hitbox should now be bottom of next hitbox 
 				//Manually align hitbox 
-	
+
 
 				double ycurrentup = Hitbox.supportPoint(new Vector2d(0,ydir_up), getHitbox(partie.INIT_RECT,deplacement, animHeros).polygon).y;
 				//get value to align hitbox 
 				double dx= Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,deplacement, animHeros).polygon).x -
-					Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,nouvMouv, nouvAnim).polygon).x;
+						Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,nouvMouv, nouvAnim).polygon).x;
 
-				
+
 				double dy= ycurrentup -
 						Hitbox.supportPoint(new Vector2d(0,ydir_down), getHitbox(partie.INIT_RECT,nouvMouv, nouvAnim).polygon).y;
 
 				int xdecall = 12 *  ((nouvAnim==1)? -1:1);
-				xpos+= dx + xdecall;
-				ypos+= dy-1;
-				
+				pxpos((int) (dx + xdecall));
+				pypos( (int) (dy-1));
+
 			}
 			else{
-			alignHitbox(animHeros,nouvMouv,nouvAnim,partie,deplace,blocGaucheGlisse);
+				alignHitbox(animHeros,nouvMouv,nouvAnim,partie,deplace,blocGaucheGlisse);
 			}
 			if(nouvMouv.IsDeplacement(Mouvement_perso.saut) && debutSaut)
 			{
@@ -750,10 +808,10 @@ public class Heros extends Collidable{
 			anim=nouvAnim;
 			deplacement=nouvMouv;
 			deplacement.setSpeed(TypeObject.heros, this, anim);
-			
+
 		}
 		else
-		//if(!partie.changeMouv ) // MEME MOUVEMENT QUE PRECEDEMMENT , otherwise problem with landing 
+			//if(!partie.changeMouv ) // MEME MOUVEMENT QUE PRECEDEMMENT , otherwise problem with landing 
 		{
 			animationChanged=false;
 			int nextAnim = deplacement.updateAnimation(TypeObject.heros, animHeros, partie.getFrame());
@@ -762,32 +820,35 @@ public class Heros extends Collidable{
 			deplacement.setSpeed(TypeObject.heros, this, anim);
 
 		}
+		debugTime.elapsed("end", 4);
+
 		partie.changeMouv=false;
 
 		return(anim);
 
 	}
 
-	private boolean[] computeSlide_Accroche(boolean slide, boolean blocDroitGlisse, boolean blocGaucheGlisse, boolean blocDroitAccroche, boolean blocGaucheAccroche, boolean falling)
+	private boolean[] computeSlide_Accroche(AbstractModelPartie partie,boolean slide, boolean blocDroitGlisse, boolean blocGaucheGlisse, boolean blocDroitAccroche, boolean blocGaucheAccroche, boolean falling)
 	{
 		boolean blocGauche = slide? blocGaucheGlisse : (!blocGaucheGlisse && blocGaucheAccroche);
 		boolean blocDroit = slide? blocDroitGlisse:  (!blocDroitGlisse && blocDroitAccroche);
+		boolean should_not_be_dragged= slide? false  : this.isDragged();
 		boolean res_d = (deplacement.IsDeplacement(Mouvement_perso.saut)||deplacement.IsDeplacement(Mouvement_perso.course)) 
-				&& (blocGauche&&(last_colli_left||getGlobalVit().x<0)) && falling; 
+				&& (blocGauche&&(last_colli_left||getGlobalVit(partie).x<0)) && falling && !should_not_be_dragged; 
 		boolean res_g = (deplacement.IsDeplacement(Mouvement_perso.saut)||deplacement.IsDeplacement(Mouvement_perso.course)) 
-				&& (blocDroit && (last_colli_right||getGlobalVit().x>0)) && falling; 
+				&& (blocDroit && (last_colli_right||getGlobalVit(partie).x>0)) && falling && !should_not_be_dragged; 
 		boolean[] res ={res_d,res_g};
 		//caution for accroche, res_d is actually res_l, and res_l res_d
 		return res;
 	}
-	public boolean[] computeBeginSliding(boolean blocDroitGlisse, boolean blocGaucheGlisse,boolean falling)
+	public boolean[] computeBeginSliding(AbstractModelPartie partie,boolean blocDroitGlisse, boolean blocGaucheGlisse,boolean falling)
 	{
-		return computeSlide_Accroche(true,blocDroitGlisse,blocGaucheGlisse,false,false,falling);
+		return computeSlide_Accroche(partie,true,blocDroitGlisse,blocGaucheGlisse,false,false,falling);
 	}
 
-	public boolean[] computeAccroche(boolean blocDroitGlisse, boolean blocGaucheGlisse, boolean blocDroitAccroche, boolean blocGaucheAccroche, boolean falling)
+	public boolean[] computeAccroche(AbstractModelPartie partie,boolean blocDroitGlisse, boolean blocGaucheGlisse, boolean blocDroitAccroche, boolean blocGaucheAccroche, boolean falling)
 	{
-		return computeSlide_Accroche(false,blocDroitGlisse,blocGaucheGlisse,blocDroitAccroche,blocGaucheAccroche,falling);
+		return computeSlide_Accroche(partie,false,blocDroitGlisse,blocGaucheGlisse,blocDroitAccroche,blocGaucheAccroche,falling);
 	}
 
 	private boolean moveAllowed(Mouvement nextMove, int nextAnim)
@@ -810,20 +871,29 @@ public class Heros extends Collidable{
 	}
 
 	//Move the character to center it before the animation change.
-	public void alignHitbox(int animActu,Mouvement depSuiv, int animSuiv, AbstractModelPartie partie,Deplace deplace,boolean blocGaucheGlisse )
+	public void alignHitbox(int animActu,Mouvement depSuiv, int animSuiv, AbstractModelPartie partie,Deplace deplace,boolean blocGaucheGlisse)
+	{
+		alignHitbox(animActu, depSuiv, animSuiv, partie, deplace, blocGaucheGlisse,null,null);
+	}
+	public void alignHitbox(int animActu,Mouvement depSuiv, int animSuiv, AbstractModelPartie partie,Deplace deplace,boolean blocGaucheGlisse, Boolean forcedleft,
+			Boolean forcedDown )
 	{
 		boolean isGlissade = deplacement.IsDeplacement(Mouvement_perso.glissade);
-		boolean going_left = getGlobalVit().x<0;
+		boolean going_left = getGlobalVit(partie).x<0;
 
-		boolean facing_left_still= getGlobalVit().x==0 &&(droite_gauche(animActu)=="Gauche"|| last_colli_left)&& !isGlissade;
-		boolean sliding_left_wall = (droite_gauche(animActu)=="Droite") && isGlissade;
+		boolean facing_left_still= getGlobalVit(partie).x==0 &&(droite_gauche(animActu).equals(Mouvement.GAUCHE)|| last_colli_left)&& !isGlissade;
+		boolean sliding_left_wall = (droite_gauche(animActu)==Mouvement.DROITE) && isGlissade;
 		boolean start_falling_face_right = (!deplacement.IsDeplacement(Mouvement_perso.saut) && depSuiv.IsDeplacement(Mouvement_perso.saut)) 
-				&& (droite_gauche(animActu)=="Droite");
+				&& (droite_gauche(animActu).equals(Mouvement.DROITE));
 		boolean start_falling_face_left = (!deplacement.IsDeplacement(Mouvement_perso.saut) && depSuiv.IsDeplacement(Mouvement_perso.saut)) 
-				&& (droite_gauche(animActu)=="Gauche");
+				&& (droite_gauche(animActu).equals(Mouvement.GAUCHE));
 		boolean left = ! start_falling_face_left && ( going_left|| facing_left_still ||sliding_left_wall || blocGaucheGlisse || start_falling_face_right) ; 
-		boolean down = getGlobalVit().y>=0; 
-
+		boolean down = getGlobalVit(partie).y>=0; 
+		
+		if(forcedleft!=null)
+			left=forcedleft;
+		if(forcedDown!=null)
+			down=forcedDown;
 		last_align_left=left;
 		last_align_down=down;
 		super.alignHitbox(animActu,depSuiv, animSuiv, partie,deplace,left, down,TypeObject.heros,!depSuiv.IsDeplacement(Mouvement_perso.glissade));
@@ -852,36 +922,22 @@ public class Heros extends Collidable{
 			else
 				localVit.x=newVitX;
 		}
-		
-		boolean negx = envirVit.x<0;
-		boolean negy = envirVit.y<0;
-		double frict = (useGravity?InterfaceConstantes.AIRFRICTION:InterfaceConstantes.FRICTION);
-		double newVitX= envirVit.x - (envirVit.x* frict);
-		double newVitY= envirVit.y - (envirVit.y* frict);
-		if( (!negx && newVitX<minEnvirSpeed) || (negx && newVitX>-1*minEnvirSpeed) )
-			envirVit.x=minEnvirSpeed;
-		else
-			envirVit.x=newVitX;
-		if( (!negy && newVitY<minEnvirSpeed) || (negy && newVitY>-1*minEnvirSpeed) )
-			envirVit.y=minEnvirSpeed;
-		else
-			envirVit.y=newVitY;
+
 	}
 	@Override
-	public void handleStuck(AbstractModelPartie partie, Deplace deplace) {
+	public void handleStuck(AbstractModelPartie partie) {
 		System.out.println("heros stuck");
 		if(currentValue!=null)
 			currentValue.res();
 
 		if(resetHandleCollision != null){
-			resetHandleCollision.reset(deplace, partie);
+			resetHandleCollision.reset();
 		}
 		doitEncocherFleche=false;
 	}
 
 	@Override
-	public void handleDeplacementSuccess(AbstractModelPartie partie,
-			Deplace deplace) {
+	public void handleDeplacementSuccess(AbstractModelPartie partie) {
 		//The animation change is successful: create arrow
 		if(doitEncocherFleche && deplacement.IsDeplacement(Mouvement_perso.tir))
 		{
@@ -897,51 +953,110 @@ public class Heros extends Collidable{
 	public void resetVarDeplace() {
 		resetHandleCollision=null;
 	}
+	/**
+	 * 
+	 * @param partie
+	 * @param special
+	 * @param add_to_list
+	 * @return
+	 */
+	public Fleche getArrowInstance(AbstractModelPartie partie, boolean special,boolean add_to_list)
+	{
+		Fleche fleche = null;
+		String tir_type_ =get_tir_type(special);
+		//Only give the shooter information in the fleche constructor if it is needed 
+		if(tir_type_.equals(Fleche.NORMAL))
+			fleche =new Fleche(partie.tabFleche,partie.getFrame(),null,add_to_list);
+
+		//MATERIEL
+		else if(tir_type_.equals(Fleche.MATERIELLE.FOUDRE))
+			fleche =new Fleche_foudre(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+		else if(tir_type_.equals(Fleche.MATERIELLE.ELECTRIQUE))
+			fleche =new Fleche_electrique(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+		else if(tir_type_.equals(Fleche.MATERIELLE.GLACE))
+			fleche =new Fleche_glace(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+		else if(tir_type_.equals(Fleche.MATERIELLE.ROCHE))
+			fleche =new Fleche_roche(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+
+		//SPIRITUELLE
+		else if(tir_type_.equals(Fleche.SPIRITUELLE.FEU))
+			fleche =new Fleche_feu(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+		else if(tir_type_.equals(Fleche.SPIRITUELLE.GRAPPIN))
+			fleche =new Fleche_grappin(partie.tabFleche,partie.getFrame(),this,add_to_list);//TODO
+		else if(tir_type_.equals(Fleche.SPIRITUELLE.OMBRE))
+			fleche =new Fleche_ombre(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+		else if(tir_type_.equals(Fleche.SPIRITUELLE.VENT))
+			fleche =new Fleche_vent(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+
+		//DESTRUCTEUR
+		else if(tir_type_.equals(Fleche.DESTRUCTRICE.BOGUE))
+			fleche =new Fleche_bogue(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+		else if(tir_type_.equals(Fleche.DESTRUCTRICE.CHARGEE))
+			fleche =new Fleche_chargee(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+		else if(tir_type_.equals(Fleche.DESTRUCTRICE.EXPLOSIVE))
+			fleche =new Fleche_explosive(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+		else if(tir_type_.equals(Fleche.DESTRUCTRICE.TROU_NOIR))
+			fleche =new Fleche_trou_noir(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+
+		//RUSE
+		else if(tir_type_.equals(Fleche.RUSEE.AUTO_TELEGUIDEE))
+			fleche =new Fleche_auto_teleguidee(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+		else if(tir_type_.equals(Fleche.RUSEE.CAC))
+			fleche =new Fleche_cac(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+		else if(tir_type_.equals(Fleche.RUSEE.RETARD))
+			fleche =new Fleche_retard(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+		else if(tir_type_.equals(Fleche.RUSEE.V_FLECHE))
+			fleche =new Fleche_v_fleche(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+
+		return fleche;
+	}
+
+	/**
+	 * Test if the Heros can shoot an arrow (enough seyeri, can shoot several instance of this arrow...) 
+	 */
+	public boolean canShootArrow(AbstractModelPartie partie)
+	{
+		List<Fleche> tabFleche= partie.tabFleche;
+		Fleche f = getArrowInstance(partie,!tir_type.equals(Fleche.NORMAL),false);
+
+		boolean enough_seyeri=seyeriActionPossible(f.seyeri_cost);
+		if(!enough_seyeri)
+			setNotEnoughSeyeri(-1*f.seyeri_cost);
+		boolean can_shoot_more_than_one = true;
+
+		//Only create the arrow if none other arrows of this type were shot by shooter 
+		if(f.no_more_than_one){
+			boolean arrow_already_shot = false; // a similar arrow was shot but never destroyed 
+			for(int i=tabFleche.size()-1; i>=0;--i)
+			{
+				Fleche fl = tabFleche.get(i);
+				//If a similar arrow was shot           && I was the shooter
+				if(fl.type_fleche.equals(f.type_fleche) && fl.shooter==this)
+				{
+					arrow_already_shot=true;
+					if(f.destroy_on_click)
+					{
+						tabFleche.get(i).destroy(partie,true);
+					}
+					break;
+				}
+			}
+
+			can_shoot_more_than_one=!arrow_already_shot;
+		}
+
+
+		return (enough_seyeri && can_shoot_more_than_one);
+	}
 
 	public void shootArrow(AbstractModelPartie partie)
 	{	
-		if(tir_type.equals(Fleche.NORMAL))
-			new Fleche(partie.tabFleche,partie.getFrame());
-		//MATERIEL
-		else if(tir_type.equals(Fleche.MATERIELLE.FOUDRE))
-			new Fleche_foudre(partie.tabFleche,partie.getFrame());//TODO
-		else if(tir_type.equals(Fleche.MATERIELLE.ELECTRIQUE))
-			new Fleche_electrique(partie.tabFleche,partie.getFrame());//TODO
-		else if(tir_type.equals(Fleche.MATERIELLE.GLACE))
-			new Fleche_glace(partie.tabFleche,partie.getFrame());//TODO
-		else if(tir_type.equals(Fleche.MATERIELLE.ROCHE))
-			new Fleche_roche(partie.tabFleche,partie.getFrame());//TODO
-		//SPIRITUELLE
-		else if(tir_type.equals(Fleche.SPIRITUELLE.FEU))
-			new Fleche_feu(partie.tabFleche,partie.getFrame());//TODO
-		else if(tir_type.equals(Fleche.SPIRITUELLE.GRAPPIN))
-			new Fleche_grappin(partie.tabFleche,partie.getFrame());//TODO
-		else if(tir_type.equals(Fleche.SPIRITUELLE.OMBRE))
-			new Fleche_ombre(partie.tabFleche,partie.getFrame());//TODO
-		else if(tir_type.equals(Fleche.SPIRITUELLE.VENT))
-			new Fleche_vent(partie.tabFleche,partie.getFrame());//TODO
-		//DESTRUCTEUR
-		else if(tir_type.equals(Fleche.DESTRUCTRICE.BOGUE))
-			new Fleche_bogue(partie.tabFleche,partie.getFrame());//TODO
-		else if(tir_type.equals(Fleche.DESTRUCTRICE.CHARGEE))
-			new Fleche_chargee(partie.tabFleche,partie.getFrame());//TODO
-		else if(tir_type.equals(Fleche.DESTRUCTRICE.EXPLOSIVE))
-			new Fleche_explosive(partie.tabFleche,partie.getFrame());//TODO
-		else if(tir_type.equals(Fleche.DESTRUCTRICE.TROU_NOIR))
-			new Fleche_trou_noir(partie.tabFleche,partie.getFrame());//TODO
-		//RUSE
-		else if(tir_type.equals(Fleche.RUSEE.AUTO_TELEGUIDEE))
-			new Fleche_auto_teleguidee(partie.tabFleche,partie.getFrame());//TODO
-		else if(tir_type.equals(Fleche.RUSEE.CAC))
-			new Fleche_cac(partie.tabFleche,partie.getFrame());//TODO
-		else if(tir_type.equals(Fleche.RUSEE.RETARD))
-			new Fleche_retard(partie.tabFleche,partie.getFrame());//TODO
-		else if(tir_type.equals(Fleche.RUSEE.V_FLECHE))
-			new Fleche_v_fleche(partie.tabFleche,partie.getFrame());//TODO
+		Fleche fleche =getArrowInstance(partie,!tir_type.equals(Fleche.NORMAL),true);
+		addSeyeri(partie, fleche.seyeri_cost);
 
 	}
 	@Override
-	public void destroy() {
+	public void onDestroy(AbstractModelPartie partie) {
 		//Do nothing
 	}
 
@@ -952,7 +1067,33 @@ public class Heros extends Collidable{
 		this.debutSaut=this.debutSaut && ! falling;
 		this.finSaut=this.finSaut && !falling;
 	}
-		
+	@Override
+	public void destroy(AbstractModelPartie partie,boolean destroyNow) {
+		//Remove all related effects 
+		if(destroyNow)
+			this.needDestroy=true;
+		else 
+			timer();
+		for(int i=currentEffects.size()-1;i>=0;--i)
+		{
+			unregisterEffect(partie,currentEffects.get(i));
+		}
+
+		//Remove all reference:
+		//_shooter from fleche
+		for(int j= partie.tabFleche.size()-1; j>=0;j--)
+		{
+			Heros _shooter = partie.tabFleche.get(j).shooter;
+			if(_shooter==this)
+			{
+				_shooter=null;
+			}
+		}
+		//from partie
+		if(partie.heros==this)
+			partie.heros=null;
+	}
+
 
 }
 

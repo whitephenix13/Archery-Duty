@@ -57,7 +57,8 @@ public class AffichageEditeur extends JFrame implements Observer{
 
 	public class PanelDraw extends JPanel
 	{
-		public void paint(Graphics g)
+		//changed paint to paintComponent 27/05/17
+		public void paintComponent(Graphics g)
 		{
 			super.paintComponent(g);
 			controlerEditeur.edit.draw(g, this);

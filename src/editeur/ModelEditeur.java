@@ -113,9 +113,9 @@ public class ModelEditeur extends AbstractModelEditeur{
 		int xMonstrePos = calculateDrawPos(xpos,xViewPort);
 		int yMonstrePos= calculateDrawPos(ypos,yViewPort);
 		
-		if(texture=="spirel")
+		if(texture==Bloc.SPIREL)
 		{
-			tabEditeurMonstre.add(new StockageMonstre("spirel",new Point(xMonstrePos,yMonstrePos),staticMonstre));
+			tabEditeurMonstre.add(new StockageMonstre(Bloc.SPIREL,new Point(xMonstrePos,yMonstrePos),staticMonstre));
 		}
 		
 		repaint=true;
@@ -180,7 +180,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 				//xViewPort= xViewPortNonDécallé - x decallage 
 				int xdraw = (int) ((tempPict.getXpos() -xViewPort)*((loupe) ? dezoomFactor : 1 ));
 				int ydraw=(int) ((tempPict.getYpos()-yViewPort)*((loupe) ? dezoomFactor : 1 ));
-				g.drawImage(m.getImage(tempPict,loupe),xdraw,ydraw, null);
+				g.drawImage(imMonde.getImages(tempPict,loupe),xdraw,ydraw, null);
 				
 				//on dessine les limites de la carte 
 				 g2.setStroke(new BasicStroke(2));
@@ -209,7 +209,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 		if(texture != "")
 		{
 		image = pan.getToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/"+texture +((loupe) ? "_p" : "" )+".png"));
-		if(texture.equals("Delete"))
+		if(texture.equals(Bloc.DELETE))
 		{
 			g.drawImage(image, xMousePos-10, yMousePos-7, null);
 		}
@@ -307,39 +307,39 @@ public class ModelEditeur extends AbstractModelEditeur{
 			setBloquant(false);
 			setBackground(false);
 		}
-		else if (_texture.equals("Delete"))
+		else if (_texture.equals(Bloc.DELETE))
 		{
 			setBloquant(false);
 		}
-		else if (_texture.equals("vide"))
+		else if (_texture.equals(Bloc.VIDE))
 		{
 			setBloquant(false);
 		}
-		else if (_texture.equals("sol"))
+		else if (_texture.equals(Bloc.SOL))
 		{
 			setBloquant(true);
 		}
-		else if (_texture.equals("terre"))
+		else if (_texture.equals(Bloc.TERRE))
 		{
 			setBloquant(true);
 		}
-		else if (_texture.equals("ciel"))
+		else if (_texture.equals(Bloc.CIEL))
 		{
 			setBloquant(false);
 		}
-		else if (_texture.equals("perso"))
+		else if (_texture.equals(Bloc.PERSO))
 		{
 			perso=true;
 		}
-		else if (_texture.equals("start"))
+		else if (_texture.equals(Bloc.START))
 		{
 			start=true;
 		}
-		else if (_texture.equals("end"))
+		else if (_texture.equals(Bloc.END))
 		{
 			end=true;
 		}
-		else if (_texture.equals("spirel"))
+		else if (_texture.equals(Bloc.SPIREL))
 		{
 			monstreActive=true;
 			showStaticMonsters=true;

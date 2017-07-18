@@ -48,4 +48,16 @@ public abstract class AbstractModelChoixNiveau implements Observable{
 	  public void removeObserver() {
 	    listObserver = new ArrayList<Observer>();
 	  }  
+	  
+		private Observer mainObserver;
+
+		public void addMainObserver(Observer obs) {
+			mainObserver=obs;
+		}
+		public void notifyMainObserver() {
+			mainObserver.update();
+		}
+		public void removeMainObserver() {
+			mainObserver=null;
+		}  
 }

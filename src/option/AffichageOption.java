@@ -382,6 +382,7 @@ public class AffichageOption extends JFrame implements Observer{
 
 		//Remet à 0 les variables demandant d'updater un composant
 		controler.opt.resetVariablesAffichage();
+		this.repaint();
 	}
 
 

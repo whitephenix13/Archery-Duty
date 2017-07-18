@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import choixNiveau.ModelChoixNiveau;
+import loading.LoadMediaThread;
 import principal.InterfaceConstantes;
 import principal.TypeApplication;
 import types.Bloc;
@@ -20,7 +21,9 @@ public class Serialize implements InterfaceConstantes{
 
 	//OPTIMAL BUFFER SIZE: try 64K, 256K, 512KB or 1MB*/
 	// Données à sérializer 
-	
+	public static int loadPercentage=0;
+	public static boolean niveauLoaded = false;
+
 	public static String erreurMsgChargement="";
 	
 	public static String serializeStockageMonstre(FileOutputStream fos,StockageMonstre monstre ) 
@@ -120,6 +123,8 @@ public class Serialize implements InterfaceConstantes{
 		for(int i =0; i<nb; i++)
 		{
 			l.add(deserializeStockageMonstre(is));
+			loadPercentage = (int) (75 + ((float)i)/nb * 25);
+			
 		}
 		return(l);
 		}
@@ -288,27 +293,30 @@ public class Serialize implements InterfaceConstantes{
 		bytes=new byte[4];
 		is.read(bytes);
 		nbBloc=bytesToInt(bytes);
+		loadPercentage=1;
 		
 		//int,4, indice x minimal du début du monde 
 		bytes=new byte[4];
 		is.read(bytes);
 		xoffset=bytesToInt(bytes);
+		loadPercentage=2;
 		
 		//int,4,indice y minimal du début du monde 
 		bytes=new byte[4];
 		is.read(bytes);
 		yoffset=bytesToInt(bytes);
+		loadPercentage=3;
 		
 		//int,4, longueur en x du monde
 		bytes=new byte[4];
 		is.read(bytes);
 		xlength=bytesToInt(bytes);
-
+		
 		//int,4,longueur en y du monde 
 		bytes=new byte[4];
 		is.read(bytes);
 		ylength=bytesToInt(bytes);
-
+		
 		//Bloc[][], nbBloc, matrice de bloc
 
 		//TODO
@@ -326,7 +334,8 @@ public class Serialize implements InterfaceConstantes{
 			}
 			
 		}
-		
+		loadPercentage=5;
+
 		for(int i=0; i<nbBloc; i++)
 		{
 			bytes=new byte[4];
@@ -341,8 +350,10 @@ public class Serialize implements InterfaceConstantes{
 
 			
 			monde[x][y]=deserializeBloc(is);
+			loadPercentage=(int) (5 + ((float)i)/nbBloc * 50.0);
 
 		}
+		loadPercentage =55;
 		return(monde);
 		}
 		catch (IOException | ArrayIndexOutOfBoundsException e )
@@ -393,7 +404,6 @@ public class Serialize implements InterfaceConstantes{
 		{
 		//Bloc[][], ..., la matrice des blocs du monde
 		m.niveau=deserializeMatrixBloc(is);
-		
 		if(!erreurMsgChargement.equals(""))
 			return null;
 		//int, 4, l'indice de début en x où faire spawner des monstres 
@@ -401,31 +411,43 @@ public class Serialize implements InterfaceConstantes{
 		is.read(bytes);
 		m.xStartMap=bytesToInt(bytes);
 		
+		loadPercentage =(int) (50 + 1.0/6*25);
+		
 		//int, 4, l'indice de début en y où faire spawner des monstres 
 		bytes=new byte[4];
 		is.read(bytes);
 		m.yStartMap=bytesToInt(bytes);
 		
+		loadPercentage =(int) (50 + 2.0/6*25);
+
 		//int, 4, l'indice de fin en x où faire spawner des monstres 
 		bytes=new byte[4];
 		is.read(bytes);
 		m.xEndMap=bytesToInt(bytes);
 		
+		loadPercentage =(int) (50 + 3.0/6*25);
+
 		//int, 4, l'indice de fin en x où faire spawner des monstres 
 		bytes=new byte[4];
 		is.read(bytes);
 		m.yEndMap=bytesToInt(bytes);
 		
+		loadPercentage =(int) (50 + 4.0/6*25);
+
 		//int, 4, l'indice de début en x du perso
 		bytes=new byte[4];
 		is.read(bytes);
 		m.xStartPerso=bytesToInt(bytes);
 		
+		loadPercentage =(int) (50 + 5.0/6*25);
+	
 		//int, 4, l'indice de début en y du perso
 		bytes=new byte[4];
 		is.read(bytes);
 		m.yStartPerso=bytesToInt(bytes);
 		
+		loadPercentage =(int) (75);
+
 		m.listMonstreOriginal=deserializeListStockageMonstre(is);
 		
 		return(m);
@@ -458,7 +480,11 @@ public class Serialize implements InterfaceConstantes{
 		return(err);
 	}
 	
+	
 	public static Monde charger(String name){
+		loadPercentage=0;
+		niveauLoaded = false;
+		
 		InputStream is;
 		String path = ModelChoixNiveau.getPath()+ name;
 		byte[] bytes= new byte[5];
@@ -466,7 +492,6 @@ public class Serialize implements InterfaceConstantes{
 		erreurMsgChargement="";
 		
 		Monde m= new Monde();
-		
 		try {
 			if(TypeApplication.isJar)
 				is = Serialize.class.getResourceAsStream(path);
@@ -484,8 +509,12 @@ public class Serialize implements InterfaceConstantes{
 			
 			erreurMsgChargement=err;
 		System.out.println(err);
+		loadPercentage=100;
+		niveauLoaded=true;
 		return null;
 		}
+		loadPercentage=100;
+		niveauLoaded=true;
 		return(m);
 
 	}
@@ -511,6 +540,7 @@ public class Serialize implements InterfaceConstantes{
 	{
 		return(b[0] == (byte)1 );
 	}
+
 	
 	
 }

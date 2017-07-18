@@ -1,6 +1,7 @@
 package music;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,36 +12,57 @@ import javax.sound.sampled.FloatControl;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
+import debug.Debug_time;
+import loading.LoadMediaThread;
 import option.Config;
 import principal.InterfaceConstantes;
 
-public class MusicBruitage implements InterfaceConstantes{
+public class MusicBruitage extends LoadMediaThread implements InterfaceConstantes{
 
 	public static MusicBruitage me;
 	double gain;
 	int nombreBruitage =0 ;
 	Map<String,Clip> mapClips = new HashMap<String,Clip>();
 
-	public MusicBruitage()
-	{
+	private MusicBruitage()
+	{		
+		gain = Config.bruitageVolume;
+	}
+	public static void init()
+	{			
+		if(me==null)
+			me = new MusicBruitage();
 	}
 	
-	public void initMusicBruitage()
-	{
-		gain = Config.bruitageVolume;
-		addToMap(bruitagesArray);
-
+	@Override
+	public void loadMedia() {
+		if(mediaLoaded)
+			return;
+		addToMap(bruitagesArray);		
+		setPercentage(100);
+		mediaLoaded=true;
 	}
+	@Override
+	public void loadMedia(String media_categorie, String filename) {
+		URL url = getClass().getClassLoader().getResource("resources/musique/"+filename+".wav");
+		if(url!=null) { 
+			addToMap(filename);
+		}		
+	}
+	
 	private void addToMap(String nom)
 	{
 		Clip c;
 		AudioInputStream audio; 
+		
 		try {
+			if(me==null || !me.mapClips.containsKey(nom)){
 			audio= AudioSystem.getAudioInputStream(
 					getClass().getClassLoader().getResource("resources/musique/"+nom+".wav"));
 			c=AudioSystem.getClip();
 			c.open(audio);
 			mapClips.put(nom,c);
+			}
 
 		} catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
 			e.printStackTrace();
@@ -55,24 +77,24 @@ public class MusicBruitage implements InterfaceConstantes{
 		}
 	}
 
-	public void volumeControl(double nouvGain)
+	public static void volumeControl(double nouvGain)
 	{
-		gain=nouvGain;
-		Config.bruitageVolume=gain;
+		me.gain=nouvGain;
+		Config.bruitageVolume=me.gain;
 
-		for(Clip c : mapClips.values())
+		for(Clip c : me.mapClips.values())
 		{
 			FloatControl gainControl = (FloatControl) c.getControl(FloatControl.Type.MASTER_GAIN);
-			float dB = (float) (Math.log(gain) / Math.log(10.0) * 30.0);
+			float dB = (float) (Math.log(me.gain) / Math.log(10.0) * 30.0);
 			gainControl.setValue(dB);
 		}
 	}
 
-	public void startBruitage(String typeBruitage)
+	public static void startBruitage(String typeBruitage)
 	{
-		volumeControl(gain);
+		volumeControl(me.gain);
 
-		Clip c = mapClips.get(typeBruitage);
+		Clip c = me.mapClips.get(typeBruitage);
 		if(!c.isRunning() || (c.isRunning() && (c.getFramePosition()>0)) )
 		{
 			c.stop();
@@ -83,4 +105,5 @@ public class MusicBruitage implements InterfaceConstantes{
 		}
 
 	}
+
 }

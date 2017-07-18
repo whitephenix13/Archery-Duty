@@ -2,8 +2,10 @@ package partie;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Image;
 import java.awt.Point;
 import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,24 +16,27 @@ import Affichage.Affichage;
 import deplacement.Attente;
 import deplacement.Deplace;
 import effects.Effect;
-import effects.ImagesEffect;
 import fleches.Fleche;
-import fleches.ImagesFleche;
-import monstre.ImagesMonstre;
-import monstre.ImagesTirMonstre;
+import images.ImagesEffect;
+import images.ImagesFleche;
+import images.ImagesHeros;
+import images.ImagesMonde;
+import images.ImagesMonstre;
+import images.ImagesPrincipal;
+import images.ImagesTirMonstre;
+import loading.DisplayLoader;
 import monstre.Monstre;
 import monstre.TirMonstre;
 import music.MusicBruitage;
 import observer.Observable;
 import observer.Observer;
 import personnage.Heros;
-import personnage.ImagesHeros;
 import principal.InterfaceConstantes;
 import types.Monde;
 import types.Touches;
 import types.TypeObject;
 
-public abstract class AbstractModelPartie implements Observable {
+public abstract class AbstractModelPartie extends DisplayLoader implements Observable {
 	//frame flag 
 	protected int frame = 0;
 	public void nextFrame(){frame+=1;}
@@ -62,6 +67,7 @@ public abstract class AbstractModelPartie implements Observable {
 	protected List<Integer> lEffaceFleche= new ArrayList<Integer>();
 	protected List<Integer> lEffaceMonstre= new ArrayList<Integer>();
 	protected List<Integer> lEffaceTirMonstre= new ArrayList<Integer>();
+	protected List<Integer> lEffaceEffect= new ArrayList<Integer>();
 
 	//INPUT 
 	Touches touches;
@@ -88,12 +94,12 @@ public abstract class AbstractModelPartie implements Observable {
 	//}}
 	///AFFICHAGE 
 	//pour pouvoir acceder aux images chargées 
-	protected Monde m= new Monde("default");
-	protected ImagesMonstre imMonstre =new ImagesMonstre();
-	protected ImagesHeros imHeros = new ImagesHeros();
-	protected ImagesTirMonstre imTirMonstre= new ImagesTirMonstre();
-	protected ImagesFleche imFleches = new ImagesFleche();
-	protected ImagesEffect imEffect = new ImagesEffect();
+	public ImagesMonde imMonde= new ImagesMonde();
+	public ImagesMonstre imMonstre= new ImagesMonstre();
+	public ImagesHeros imHeros= new ImagesHeros();
+	public ImagesTirMonstre imTirMonstre= new ImagesTirMonstre();
+	public ImagesFleche imFleches = new ImagesFleche();
+	public ImagesEffect imEffect= new ImagesEffect();
 
 	public Point INIT_RECT= new Point(50000,50000); //(abs,ord)
 	//public int absRect =INIT_RECT.x;
@@ -143,16 +149,15 @@ public abstract class AbstractModelPartie implements Observable {
 	public void init()
 	{
 		//pour initaliser variables partie rapide dans music bruitage
-		MusicBruitage mus_bruit = new MusicBruitage();
-		mus_bruit.initMusicBruitage();
-		MusicBruitage.me= mus_bruit;
-
+		MusicBruitage.init();
+		
 		reset();
 		resetVariablesAffichage();
 	}
-
+	
 	public void reset() 
 	{
+		super.reset();
 		deplace = new Deplace();
 		monde = new Monde();
 		frame= 0;
@@ -165,12 +170,13 @@ public abstract class AbstractModelPartie implements Observable {
 		tabFleche= new ArrayList<Fleche>();
 		tabTirMonstre = new ArrayList<TirMonstre>();
 		tabMonstre= new ArrayList <Monstre> ();
+		arrowsEffects = new ArrayList<Effect>();
 		nombreMonstreRestant= 0;
 
 		lEffaceFleche= new ArrayList<Integer>();
 		lEffaceMonstre= new ArrayList<Integer>();
 		lEffaceTirMonstre= new ArrayList<Integer>();
-
+		lEffaceEffect= new ArrayList<Integer>();
 		//INPUT 
 		changeMouv=false;
 		
@@ -185,15 +191,7 @@ public abstract class AbstractModelPartie implements Observable {
 
 		///AFFICHAGE 
 		//pour pouvoir acceder aux images chargées 
-		m= new Monde("default");
-		if(imHeros==null)
-			imHeros= new ImagesHeros();
-		if(imMonstre==null)
-			imMonstre =new ImagesMonstre();
-		if(imTirMonstre==null)
-			imTirMonstre= new ImagesTirMonstre();
-		if(imFleches==null)
-			imFleches = new ImagesFleche();
+		//loadImages();
 
 		INIT_RECT= new Point(50000,50000); //(abs,ord)
 		xScreendisp = 0;
@@ -209,9 +207,8 @@ public abstract class AbstractModelPartie implements Observable {
 	//public abstract void HandleReleasedInput(int input);
 	public abstract void HandleBoutonsPressed(JButton button);
 
-	public abstract void startPartie(int typeDeSpawn,String nomPartie);
+	public abstract void startPartie(int typeDeSpawn);
 	public abstract void play(Affichage affich) ;
-	public abstract void charger(String nomFichier);
 
 	public abstract void drawPartie(Graphics g,JPanel pan);
 
@@ -233,7 +230,11 @@ public abstract class AbstractModelPartie implements Observable {
 	public abstract void drawHitbox(Graphics g,int xdraw, int draw,int width, int height);
 	public abstract void drawHitbox(Graphics g,int xdraw, int draw,int width, int height,Integer angle);
 	public abstract void drawHitbox(Graphics g,int xdraw, int draw,int width, int height,Integer angle,Point origine);
-	public abstract void drawBar(Graphics g,int x, int y, int width, int height, int value ,Color background, Color foreground);
+	public abstract void drawBar(Graphics g,int number_rectangles, int[] x, int[] y, int[] width, int[] height,Color[] colors);
+	
+	public abstract BufferedImage apply_width_mask(BufferedImage original,BufferedImage previousMaskedIm, int w_start, int last_start,float transparency);
+	public abstract BufferedImage toBufferedImage(Image img);
+
 	//Implémentation du pattern observer
 	public void addObserver(Observer obs) {
 		this.listObserver.add(obs);
@@ -244,5 +245,17 @@ public abstract class AbstractModelPartie implements Observable {
 	}
 	public void removeObserver() {
 		listObserver = new ArrayList<Observer>();
+	}  
+	
+	private Observer mainObserver;
+
+	public void addMainObserver(Observer obs) {
+		mainObserver=obs;
+	}
+	public void notifyMainObserver() {
+		mainObserver.update();
+	}
+	public void removeMainObserver() {
+		mainObserver=null;
 	}  
 }

@@ -40,7 +40,8 @@ public class Spirel extends Monstre{
 	public boolean peutSauter = true;
 	public boolean sautDroit= false;
 	public boolean sautGauche= false;
-
+	private boolean wasGrounded=false;
+	
 	public boolean staticSpirel=false;
 
 	/**
@@ -54,10 +55,9 @@ public class Spirel extends Monstre{
 		type = TypeObject.m_spirel;
 		staticSpirel=_staticSpirel;
 
-		xpos = xPo;
-		ypos = yPo; 
+		xpos(xPo);
+		ypos(yPo); 
 		localVit=new Vitesse(0,0);
-		envirVit=new Vitesse(0,0);
 		deplacement=new Attente(type,Attente.attente_gauche,current_frame) ;
 		anim=1;
 		tempsAncienMouv= System.nanoTime();
@@ -79,7 +79,7 @@ public class Spirel extends Monstre{
 	 * 
 	 * @param anim, l'animation du monstre
 	 * 
-	 * @return String , "Droite" ou "Gauche", direction dans laquelle le monstre est tourné
+	 * @return String , Mouvement.DROITE ou Mouvement.GAUCHE, direction dans laquelle le monstre est tourné
 	 */
 	public String droite_gauche (int anim)
 	{
@@ -87,30 +87,39 @@ public class Spirel extends Monstre{
 		{
 			if(anim <2)
 			{
-				return ("Gauche");
+				return (Mouvement.GAUCHE);
 			}
-			else return("Droite");
+			else return(Mouvement.DROITE);
 		}
 		else if(deplacement.IsDeplacement(Mouvement_perso.attente))
 		{
 			if(anim <1)
 			{
-				return ("Gauche");
+				return (Mouvement.GAUCHE);
 			}
-			else return("Droite");
+			else return(Mouvement.DROITE);
 		}
 		else if(deplacement.IsDeplacement(Mouvement_perso.saut))
 		{
 			if(anim <1)
 			{
-				return ("Gauche");
+				return (Mouvement.GAUCHE);
 			}
-			else return("Droite");
+			else return(Mouvement.DROITE);
 		}
 
 		else 
 			throw new IllegalArgumentException("Spirel/droite_gauche: ERREUR deplacement inconnu");
 	}
+	
+	public Vector2d getNormCollision()
+	{
+		if(wasGrounded)
+			return new Vector2d(0,-1);
+		else
+			return normCollision;
+	}
+	
 	/**
 	 * Gère l'ensemble des événements lié au deplacement d'un monstre 
 	 * 
@@ -142,7 +151,7 @@ public class Spirel extends Monstre{
 
 		boolean herosAGauche;
 		boolean canShoot = (System.nanoTime()-tempsAncienTir)*Math.pow(10, -6)>delaiTir * (partie.slowDown ? 2:1);
-		boolean canMove= (System.nanoTime()-tempsAncienMouv)*Math.pow(10, -6)>delaiMouv * (partie.slowDown ? 2:1);
+		boolean canAction= (System.nanoTime()-tempsAncienMouv)*Math.pow(10, -6)>delaiMouv * (partie.slowDown ? 2:1);
 		//On test le cooldown de tir
 		if(canShoot)
 		{
@@ -150,7 +159,7 @@ public class Spirel extends Monstre{
 			tempsAncienTir=System.nanoTime();
 		}
 		//on test le cooldown de mouvement
-		if(canMove)
+		if(canAction)
 		{
 			Hitbox heros_hit = heros.getWorldPosition(partie);
 			Vector2d heros_left_up_hit  = Hitbox.supportPoint(new Vector2d(-1,-1), heros_hit.polygon) ;
@@ -170,7 +179,10 @@ public class Spirel extends Monstre{
 			herosAGauche= monstreXmiddle-herosXmiddle>=0;
 
 			boolean herosInRange= deltaX*deltaX+deltaY*deltaY<distanceAttaque && ! cooldown;
-
+			
+			//If drag and can't shoot, exit 
+			if(this.isDragged() && !herosInRange)
+				return;
 			//on test si le heros est dans le cercle d'attaque
 			if(herosInRange)
 			{
@@ -182,19 +194,12 @@ public class Spirel extends Monstre{
 
 				//changeMouv (monstre,partie);
 				//envoie du projectile
-				if(droite_gauche(anim).equals("Gauche"))
-				{
-					//tir à gauche, anim=1
-					tabTirMonstre.add(new TirSpirel((xpos+xDecallagePlacementTir.get(1)),(ypos+yDecallagePlacementTir.get(1)),1,partie.getFrame()));	
-				}
-				else
-				{
-					//tir à droite, anim=0
-					tabTirMonstre.add(new TirSpirel((xpos+xDecallagePlacementTir.get(0)),(ypos+yDecallagePlacementTir.get(0)),0,partie.getFrame()));	
+				int xtir_dir = droite_gauche(anim).equals(Mouvement.GAUCHE)? 1 : 0;
+				int ytir_dir = 2;
 
-				}
-				//tir en haut, anim= 2
-				tabTirMonstre.add(new TirSpirel((xpos+xDecallagePlacementTir.get(2)),(ypos+yDecallagePlacementTir.get(2)),2,partie.getFrame()));	
+				tabTirMonstre.add(new TirSpirel((xpos()+xDecallagePlacementTir.get(xtir_dir)),(ypos()+yDecallagePlacementTir.get(xtir_dir)),xtir_dir,partie.getFrame()));	
+				tabTirMonstre.add(new TirSpirel((xpos()+xDecallagePlacementTir.get(ytir_dir)),(ypos()+yDecallagePlacementTir.get(ytir_dir)),ytir_dir,partie.getFrame()));	
+
 				cooldown=true;
 
 			}
@@ -212,10 +217,10 @@ public class Spirel extends Monstre{
 				boolean blocRightUp= nearObstacle(partie,1,jumpHeight);
 				boolean blocLeftUp= nearObstacle(partie,-1,jumpHeight);
 				
-				boolean jumpAbove= (droite_gauche(anim).equals("Gauche")? (blocLeft && !blocLeftUp) : (blocRight && !blocRightUp) ) && peutSauter;
+				boolean jumpAbove= (droite_gauche(anim).equals(Mouvement.GAUCHE)? (blocLeft && !blocLeftUp) : (blocRight && !blocRightUp) ) && peutSauter;
 				boolean inAir= deplacement.IsDeplacement(Mouvement_perso.saut);
-				boolean moveInAir=droite_gauche(anim).equals("Gauche")?(!blocLeft) :(!blocRight); 
-				boolean holeClose= (droite_gauche(anim).equals("Gauche")? (!blocGaucheBas) : (!blocDroitBas) );
+				boolean moveInAir=droite_gauche(anim).equals(Mouvement.GAUCHE)?(!blocLeft) :(!blocRight); 
+				boolean holeClose= (droite_gauche(anim).equals(Mouvement.GAUCHE)? (!blocGaucheBas) : (!blocDroitBas) );
 				//on saute au dessus d'un obstacle si possible
 				if( jumpAbove)
 				{
@@ -332,8 +337,9 @@ public class Spirel extends Monstre{
 	 */	
 	public void changeMouv (AbstractModelPartie partie,Deplace deplace)
 	{
-		boolean herosAGauche= xpos-(partie.heros.xpos-partie.xScreendisp)>=0;
+		boolean herosAGauche= xpos()-(partie.heros.xpos()-partie.xScreendisp)>=0;
 		boolean falling= !isGrounded(partie);
+		wasGrounded = !falling;
 		boolean landing= (finSaut||!falling) && deplacement.IsDeplacement(Mouvement_perso.saut);
 		if(falling)
 			useGravity=falling;
@@ -406,11 +412,11 @@ public class Spirel extends Monstre{
 	 */
 	public void alignHitbox(int animActu,Mouvement depSuiv, int animSuiv, AbstractModelPartie partie, Deplace deplace)
 	{
-		boolean going_left = getGlobalVit().x<0;
-		boolean facing_left_still= getGlobalVit().x==0 &&(droite_gauche(animActu)=="Gauche"|| last_colli_left);
-		boolean sliding_left_wall = (droite_gauche(animActu)=="Droite") ;
+		boolean going_left = getGlobalVit(partie).x<0;
+		boolean facing_left_still= getGlobalVit(partie).x==0 &&(droite_gauche(animActu).equals(Mouvement.GAUCHE)|| last_colli_left);
+		boolean sliding_left_wall = (droite_gauche(animActu).equals(Mouvement.DROITE)) ;
 		boolean left = ( going_left|| facing_left_still ||sliding_left_wall) ; 
-		boolean down = getGlobalVit().y>=0; 
+		boolean down = getGlobalVit(partie).y>=0; 
 
 		super.alignHitbox(animActu,depSuiv, animSuiv, partie,deplace,left, down,TypeObject.m_spirel,true);
 
@@ -454,19 +460,18 @@ public class Spirel extends Monstre{
 	@Override
 	public void memorizeCurrentValue()
 	{
-		final Point memPos= new Point(xpos,ypos); 
+		final Point memPos= new Point(xpos(),ypos()); 
 		final Mouvement_perso memDep = (Mouvement_perso) deplacement.Copy(TypeObject.m_spirel);
 		final int memAnim = anim;
 		final Vitesse memVitloca = localVit.Copy();
-		final Vitesse memVitenvir = envirVit.Copy();
 
 		currentValue=new CurrentValue(){		
 			@Override
 			public void res()
-			{xpos=memPos.x;ypos=memPos.y;deplacement=memDep;anim=memAnim;localVit=memVitloca;envirVit=memVitenvir;}};
+			{xpos(memPos.x);ypos(memPos.y);deplacement=memDep;anim=memAnim;localVit=memVitloca;}};
 	}
 	@Override
-	public void handleStuck(AbstractModelPartie partie,Deplace deplace)
+	public void handleStuck(AbstractModelPartie partie)
 	{
 		if(currentValue!=null)
 			currentValue.res();
@@ -475,8 +480,7 @@ public class Spirel extends Monstre{
 			resetHandleCollision.reset();
 	}
 	@Override
-	public void handleDeplacementSuccess(AbstractModelPartie partie,
-			Deplace deplace) {
+	public void handleDeplacementSuccess(AbstractModelPartie partie) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -495,25 +499,13 @@ public class Spirel extends Monstre{
 	
 	
 	@Override
-	public void destroy()
+	public void onDestroy(AbstractModelPartie partie)
 	{
-		MusicBruitage.me.startBruitage("destruction robot");
+		MusicBruitage.startBruitage("destruction robot");
 	}
 	@Override
 	public void applyFriction(double minlocalSpeed, double minEnvirSpeed) {
-		boolean negx = envirVit.x<0;
-		boolean negy = envirVit.y<0;
-		double frict = (useGravity?InterfaceConstantes.AIRFRICTION:InterfaceConstantes.FRICTION);
-		double newVitX= envirVit.x - (envirVit.x* frict);
-		double newVitY= envirVit.y - (envirVit.y* frict);
-		if( (!negx && newVitX<minEnvirSpeed) || (negx && newVitX>-1*minEnvirSpeed) )
-			envirVit.x=minEnvirSpeed;
-		else
-			envirVit.x=newVitX;
-		if( (!negy && newVitY<minEnvirSpeed) || (negy && newVitY>-1*minEnvirSpeed) )
-			envirVit.y=minEnvirSpeed;
-		else
-			envirVit.y=newVitY;
+
 		
 	}
 

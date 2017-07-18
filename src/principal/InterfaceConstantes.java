@@ -7,6 +7,9 @@ import types.Hitbox;
 
 public interface InterfaceConstantes {
 	static String VERSION ="0.0.0";
+	
+	static int DEBUG_TIME_VERBOSE=0;// 0 for none, 1 for more , ...until 4
+	
 	//taille maximum de la matrice 
 	static int ABS_MAX = 1000;
 	static int ORD_MAX = 1000;
@@ -50,8 +53,8 @@ public interface InterfaceConstantes {
 	
 	static int MAXLIFE= 100;
 	static int MINLIFE= 0;
-	static int MAXSPE= 100;
-	static int MINSPE= 0;
+	static int MAXSEYERI= 100;
+	static int MINSEYERI= 0;
 	
 	static double FRICTION = 0.1;
 	static double AIRFRICTION = 0.05;

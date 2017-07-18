@@ -8,6 +8,7 @@ import java.util.List;
 import collision.Collidable;
 import deplacement.Animation;
 import deplacement.Mouvement;
+import fleches.Fleche;
 import option.Config;
 import types.TypeObject;
 import types.Vitesse;
@@ -22,15 +23,15 @@ public class T_normal extends Mouvement_tir{
 		type_mouv=_type_mouv;
 		if(type.equals(TypeObject.fleche))
 		{                     
-			xtaille=Arrays.asList(42,45,42,44);
-			ytaille=Arrays.asList(19,15,19,16);
+			xtaille=Arrays.asList(45,45,45,45);
+			ytaille=Arrays.asList(19,19,19,19);
 
 			List<List<Point>> hitboxCreation = new ArrayList<List<Point>>();
 			//add for every edge, a list of point depending on the animation
-			List<Integer> xg = Arrays.asList(6,6,6,5);
-			List<Integer> xd = Arrays.asList(37,37,37,36);
-			List<Integer> yh = Arrays.asList(5,5,5,3);
-			List<Integer> yb = Arrays.asList(11,11,11,9);
+			List<Integer> xg = Arrays.asList(6,6,6,6);
+			List<Integer> xd = Arrays.asList(37,37,37,37);
+			List<Integer> yh = Arrays.asList(5,5,5,5);
+			List<Integer> yb = Arrays.asList(11,11,11,11);
 
 			hitboxCreation.add(asListPoint(xg,yh));
 			hitboxCreation.add(asListPoint(xd,yh));
@@ -78,7 +79,10 @@ public class T_normal extends Mouvement_tir{
 	public void setSpeed(String type, Collidable object, int anim) {
 		if(type.equals(TypeObject.fleche))
 		{
+			Fleche f = (Fleche)object;
 			int speed_norm = (int)(30.0 / Config.ratio_fps());
+			if(f.type_fleche.equals(Fleche.SPIRITUELLE.GRAPPIN))
+				speed_norm = (int)(60.0 / Config.ratio_fps());//60
 			Vitesse vit = object.convertSpeed(speed_norm,object.rotation);
 			object.localVit.x=vit.x;
 			object.localVit.y=vit.y;
@@ -99,15 +103,15 @@ public class T_normal extends Mouvement_tir{
 	public String droite_gauche(String type,int anim) {
 		if(type.equals(TypeObject.fleche))
 			if(anim<2)
-				return ("Gauche");
+				return (Mouvement.GAUCHE);
 			else 
-				return("Droite");
+				return(Mouvement.DROITE);
 		//ARBITRARY
 		else if(type.equals(TypeObject.tir_spirel))
 			if(anim<2)
-				return ("Gauche");
+				return (Mouvement.GAUCHE);
 			else 
-				return("Droite");
+				return(Mouvement.DROITE);
 		else{
 			try {throw new Exception("String droite gauche: type unknown");} catch (Exception e) {e.printStackTrace();}
 			return ("");

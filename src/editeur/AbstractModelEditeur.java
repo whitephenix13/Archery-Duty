@@ -6,13 +6,14 @@ import java.util.List;
 
 import javax.swing.JPanel;
 
+import editeur.BarreOutil.BarreOutil;
+import editeur.Menu.menuEditeur;
+import images.ImagesMonde;
 import observer.Observable;
 import observer.Observer;
 import principal.InterfaceConstantes;
 import types.Monde;
 import types.StockageMonstre;
-import editeur.BarreOutil.BarreOutil;
-import editeur.Menu.menuEditeur;
 
 public abstract class AbstractModelEditeur implements Observable{
 
@@ -28,7 +29,7 @@ public abstract class AbstractModelEditeur implements Observable{
 	protected List<StockageMonstre> tabEditeurMonstre;
 	
 	//Utilisé pour charger les images 
-	protected Monde m;
+	protected ImagesMonde imMonde;
 	protected String texture;
 	
 	//monstres
@@ -124,8 +125,8 @@ public abstract class AbstractModelEditeur implements Observable{
 		monde=new Monde();
 		tabEditeurMonstre= new ArrayList <StockageMonstre> ();
 				
-		if(m==null)
-		m=new Monde("");
+		if(imMonde==null)
+			imMonde= new ImagesMonde();
 		
 		texture="";
 				
@@ -252,5 +253,17 @@ public abstract class AbstractModelEditeur implements Observable{
 	    listObserver = new ArrayList<Observer>();
 
 	  }  
+	  
+		private Observer mainObserver;
+
+		public void addMainObserver(Observer obs) {
+			mainObserver=obs;
+		}
+		public void notifyMainObserver() {
+			mainObserver.update();
+		}
+		public void removeMainObserver() {
+			mainObserver=null;
+		}  
 
 }

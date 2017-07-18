@@ -8,38 +8,46 @@ import javax.vecmath.Vector2d;
 import collision.Collidable;
 import deplacement.Deplace;
 import deplacement.Mouvement;
+import effects.Effect;
 import partie.AbstractModelPartie;
 
 public class Bloc extends Collidable{
- private String img ="vide";
- private boolean bloquer = false;
- private boolean background=false;
- 
- //private static Bloc blocVide =new Bloc("vide",0,0,false,false);
- 
+
+	public static String VIDE = "vide";
+	public static String CIEL = "ciel";
+	public static String DELETE = "delete";
+	public static String END = "end";
+	public static String LOUPE = "loupe";
+	public static String PERSO = "perso";
+	public static String SOL = "sol";
+	public static String SOURIS = "souris";
+	public static String SPIREL = "spirel";
+	public static String START = "start";
+	public static String TERRE = "tree";
+
+
+	private String img =VIDE;
+	private boolean bloquer = false;
+	private boolean background=false;
+
+	//private static Bloc blocVide =new Bloc(VIDE,0,0,false,false);
+
 	public Bloc (){
-		type=TypeObject.bloc;
-		this.img="vide";
-		this.xpos=-1;
-		this.ypos=-1;
-		localVit=new Vitesse(0,0);
-		envirVit=new Vitesse(0,0);
-		slowDownFactor=1;
-		fixedWhenScreenMoves=false;
-		this.bloquer=false;
-		this.background=false;
+		this(VIDE,-1,-1,false,false);
 	}
 	public Bloc(String str, int x, int y , boolean bl, boolean back) {
 		type=TypeObject.bloc;
 		this.img=str;
-		this.xpos=x;
-		this.ypos=y;
+		this.xpos(x);
+		this.ypos(y);
 		localVit=new Vitesse(0,0);
-		envirVit=new Vitesse(0,0);
 		slowDownFactor=1;
 		fixedWhenScreenMoves=false;
 		this.bloquer=bl;
 		this.background=back;
+
+		//effect properties
+		this.draggable=false;
 	}
 	/*public static Bloc[][] InitBlocMatrix(int xsize, int ysize)
 	{
@@ -51,29 +59,29 @@ public class Bloc extends Collidable{
 				blocVide.setPos(abs*100,ord*100);
 				res[abs][ord]=blocVide;
 			}
-			
+
 		}
 		return(res);
 	}
-	*//*
+	 *//*
 	public boolean isEmpty()
 	{
-		return (this.img=="vide");
+		return (this.img==VIDE);
 	}*//*
-	
+
 	public String ToString()
 	{
 		return("Bloc de "+img+" en pos " + xpos +","+ypos+" bloquant: "+ bloquer +" background: "+ background);
 	}*/
-	
+
 	//mutateur
 	public void setImg(String str){
 		this.img=str;
 	}
-	
+
 	public void setPos(int x,int y){
-	xpos=x;
-	ypos=y;
+		xpos(x);
+		ypos(y);
 	}
 
 	public void setBloquer(boolean bloque){
@@ -82,19 +90,19 @@ public class Bloc extends Collidable{
 	public void setBackground(boolean back){
 		this.background=back;
 	}
-	
-	
+
+
 	//accesseur
 	public String getImg(){
 		return(this.img);
 	}
-	
+
 	public int getXpos(){
-	return(this.xpos);
+		return(xpos());
 	}
 
 	public int getYpos(){
-		return(this.ypos);
+		return(ypos());
 	}
 	public boolean getBloquer(){
 		return(this.bloquer);
@@ -102,30 +110,37 @@ public class Bloc extends Collidable{
 	public boolean getBack(){
 		return(this.background);
 	}
-	
-	
+
+	public Vector2d getNormCollision()
+	{
+		return null;
+	}
 	public Hitbox getHitbox(Point INIT_RECT) {
 		if(!bloquer)
 			return null;
-		
+
 		Polygon p = new Polygon();
-		int xposlocal = (xpos-INIT_RECT.x);
-		int yposlocal = (ypos-INIT_RECT.y);
+		int xposlocal = (xpos()-INIT_RECT.x);
+		int yposlocal = (ypos()-INIT_RECT.y);
 		p.addPoint(xposlocal, yposlocal);
 		p.addPoint(xposlocal+99, yposlocal);
 		p.addPoint(xposlocal+99, yposlocal+99);
 		p.addPoint(xposlocal, yposlocal+99);
 		return new Hitbox(p);
-		
+
 	}
 	public Hitbox getHitbox(Point INIT_RECT, Mouvement mouv, int _anim) {
 		return getHitbox(INIT_RECT);
 	}
-	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,Deplace deplace) {
+	@Override
+	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie) {
 		//no collision handle: this bloc si currently static which means that the only objects that can collides with it are
 		//mobile objects. We'll rather call the handleCollision of the mobile objects 
+		//REMOVEfor(int i= currentEffects.size()-1;i>=0;i--)
+			//currentEffects.get(i).onAffectedObjectCollide(partie,this,normal);
 	}
-	public void handleObjectCollision(AbstractModelPartie partie,Deplace deplace) {
+	@Override
+	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider) {
 		try {
 			throw new Exception("Calling handleObjectCollision for a bloc is forbidden");
 		} catch (Exception e) {
@@ -152,21 +167,20 @@ public class Bloc extends Collidable{
 		//do nothing
 	}
 	@Override
-	public void handleStuck(AbstractModelPartie partie, Deplace deplace) {
+	public void handleStuck(AbstractModelPartie partie) {
 		//do nothing
 	}
 	@Override
-	public void handleDeplacementSuccess(AbstractModelPartie partie,
-			Deplace deplace) {
+	public void handleDeplacementSuccess(AbstractModelPartie partie) {
 		// TODO Auto-generated method stub
-		
+
 	}
 	@Override
 	public void resetVarDeplace() {
 		//do nothing
 	}
 	@Override
-	public void destroy() {
+	public void onDestroy(AbstractModelPartie partie) {
 		//do nothing
 	}
 

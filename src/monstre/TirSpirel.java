@@ -1,7 +1,6 @@
 package monstre;
 
 import java.awt.Point;
-import java.util.ArrayList;
 
 import javax.vecmath.Vector2d;
 
@@ -31,14 +30,13 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	public TirSpirel(int _xpos, int _ypos,int _anim,int current_frame)
 	{
 		type=TypeObject.tir_spirel;
-		xpos=_xpos;
-		ypos=_ypos;
+		xpos(_xpos);
+		ypos(_ypos);
 		anim=_anim;
 		deplacement= new T_normal(type,Attente.attente_gauche,current_frame);
 
 		needDestroy=false;
 		localVit = new Vitesse();
-		envirVit = new Vitesse();
 		slowDownFactor=3; 
 		fixedWhenScreenMoves=false ; //true : not influenced by screen displacement (ie: use for the hero)
 
@@ -47,11 +45,19 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 
 		dommage= 0;//-25
 
+		//effect properties
+		this.draggable=false;
+		
 		//on active la musique car le tir part directement 
-		MusicBruitage.me.startBruitage("laser");
+		MusicBruitage.startBruitage("laser");
 
+		
 	}
-
+	
+	public Vector2d getNormCollision()
+	{
+		return null;
+	}
 	@Override
 	public boolean[] deplace(AbstractModelPartie partie,Deplace deplace){
 		//nothing specific to do 
@@ -68,12 +74,11 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 			{}};*/
 	}
 	@Override
-	public void handleStuck(AbstractModelPartie partie,Deplace deplace) {
-		handleWorldCollision(new Vector2d(0,0), partie, deplace);
+	public void handleStuck(AbstractModelPartie partie) {
+		handleWorldCollision(new Vector2d(0,0), partie);
 	}
 	@Override
-	public void handleDeplacementSuccess(AbstractModelPartie partie,
-			Deplace deplace) {
+	public void handleDeplacementSuccess(AbstractModelPartie partie) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -95,46 +100,39 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	 * 
 	 */
 	@Override
-	public void destroy() {
+	public void onDestroy(AbstractModelPartie partie) {
 		//on ne fait rien à la destruction
 	}
 
 	@Override
 	public Hitbox getHitbox(Point INIT_RECT) {
-		return  Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos,ypos),true);
+		return  Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos(),ypos()),true);
 	}
 	@Override
 	public Hitbox getHitbox(Point INIT_RECT, Mouvement _dep, int _anim) {
 		Mouvement_tir temp = (Mouvement_tir) _dep.Copy(TypeObject.tir_spirel); //create the mouvement
-		return Hitbox.plusPoint(temp.hitbox.get(_anim), new Point(xpos,ypos),true);
+		return Hitbox.plusPoint(temp.hitbox.get(_anim), new Point(xpos(),ypos()),true);
 	}
 	public Hitbox getWorldHitbox(AbstractModelPartie partie) {
-		Hitbox hit1  =Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos,ypos),true);
+		Hitbox hit1  =Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos(),ypos()),true);
 		return Hitbox.plusPoint(hit1, new Point(partie.xScreendisp,partie.yScreendisp),true);
 	}
 	@Override
-	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,
-			Deplace deplace) {
+	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie) {
 		//project speed to ground 
-		double coef1= localVit.vect2d().dot(normal)/normal.lengthSquared();
-		localVit = new Vitesse((int)(localVit.x-coef1*normal.x),(int)(localVit.y-coef1*normal.y));
-		double coef2= envirVit.vect2d().dot(normal)/normal.lengthSquared();
-		envirVit = new Vitesse((int)(envirVit.x-coef2*normal.x),(int)(envirVit.y-coef2*normal.y));
+		boolean collision_gauche = normal.x>0;
+		boolean collision_droite = normal.x<0;
+		//boolean collision_haut = normal.y>0;
+		//boolean collision_bas = normal.y<0;
 		
-		boolean collision_gauche = (localVit.x<=0) && (normal.x>0);
-		boolean collision_droite = (localVit.x>=0) && (normal.x<0);
-		//boolean collision_haut = (vit.y<=0) && (normal.y>0);
-		//boolean collision_bas = (vit.y>=0) && (normal.y<0);
 		last_colli_left=collision_gauche;
 		last_colli_right=collision_droite;
 		localVit=new Vitesse(0,0);
-		envirVit=new Vitesse(0,0);
 		needDestroy=true;
-
+		
 	}
 	@Override
-	public void handleObjectCollision(AbstractModelPartie partie,
-			Deplace deplace) {needDestroy=true;}
+	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider) {needDestroy=true;}
 
 
 }

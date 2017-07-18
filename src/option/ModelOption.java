@@ -33,7 +33,7 @@ public class ModelOption extends AbstractModelOption{
 	}
 
 	public void setVolumeBruitage(ChangeEvent event) {
-		MusicBruitage.me.volumeControl((double)((JSlider)event.getSource()).getValue()/100);
+		MusicBruitage.volumeControl((double)((JSlider)event.getSource()).getValue()/100);
 	}
 
 

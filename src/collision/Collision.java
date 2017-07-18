@@ -17,14 +17,16 @@ import java.util.List;
 import javax.vecmath.Vector2d;
 
 import deplacement.Deplace;
+import effects.Effect;
 import partie.AbstractModelPartie;
 import principal.InterfaceConstantes;
 import types.Bloc;
 import types.Hitbox;
 import types.Monde;
+import types.TypeObject;
 import types.Vitesse;
 
-public class Collision implements InterfaceConstantes{
+public abstract class Collision implements InterfaceConstantes{
 
 	public static List<Bloc> getMondeBlocs(Monde monde,Hitbox objectHitbox, Point INIT_RECT, int TAILLE_BLOC)
 	{
@@ -64,7 +66,7 @@ public class Collision implements InterfaceConstantes{
 	 * 
 	 * @return True if the object is colliding with the world
 	 */
-	public boolean isWorldCollision(AbstractModelPartie partie,Deplace deplace, Collidable object,boolean considerTouch)
+	public static boolean isWorldCollision(AbstractModelPartie partie, Collidable object,boolean considerTouch)
 	{
 		List<Bloc> mondeBlocs = null;
 		Hitbox objectHitbox = null;
@@ -79,7 +81,7 @@ public class Collision implements InterfaceConstantes{
 		Point p = new Point(CompScreenMove1.x,CompScreenMove1.y);
 		objectHitbox= Hitbox.minusPoint(object.getHitbox(partie.INIT_RECT),p,false);
 
-		Vitesse speed= object.getGlobalVit();
+		Vitesse speed= object.getGlobalVit(partie);
 		Vitesse minSpeed= new Vitesse(-1*speed.x,-1*speed.y);
 
 		mondeBlocs = getMondeBlocs(partie.monde,objectHitbox, partie.INIT_RECT,
@@ -109,7 +111,7 @@ public class Collision implements InterfaceConstantes{
 		return false;
 	}
 	/** @return false if object is stuck into environment */
-	public boolean ejectWorldCollision(AbstractModelPartie partie,Deplace deplace, Collidable object)
+	public static boolean ejectWorldCollision(AbstractModelPartie partie, Collidable object)
 	{
 		//on calcul l'endroit où serait le nouvel objet
 		int xDeplacement=0;
@@ -117,11 +119,22 @@ public class Collision implements InterfaceConstantes{
 		List<Bloc> mondeBlocs = null;
 		Hitbox objectHitbox = null;
 
-		Vitesse speed= object.getGlobalVit();
+		//Vitesse speed= object.getGlobalVit(partie,object.type.equals(TypeObject.heros));
+		Vitesse speed= object.getGlobalVit(partie);
+		//project the speed with respect to the last norm 
+		speed = Vitesse.removePenetrationComponent(speed, object.getNormCollision());
+
 		Vitesse minSpeed= new Vitesse(-1*speed.x,-1*speed.y);
 
-		xDeplacement=(int) (speed.x);
-		yDeplacement=(int) (speed.y);
+		double corrected_norm=1;
+		double speed_norm = speed.norm();
+		if(object.max_speed_norm>0 && object.max_speed_norm < speed_norm)
+		{
+			corrected_norm= object.max_speed_norm/speed_norm;
+		}
+
+		xDeplacement=(int) (speed.x*corrected_norm  );
+		yDeplacement=(int) (speed.y*corrected_norm  );
 
 		boolean noIntersection = false;
 		//distance which must move the object to avoid any collisions
@@ -227,24 +240,42 @@ public class Collision implements InterfaceConstantes{
 		}
 		boolean xlimExceeded = (Math.abs(totalInterDist.x)> Math.abs(xDeplacement));
 		boolean ylimExceeded = (Math.abs(totalInterDist.y)> Math.abs(yDeplacement));
-		object.xpos+= xlimExceeded ? 0 : (xDeplacement+totalInterDist.x);
-		object.ypos+= ylimExceeded ? 0 : (yDeplacement+totalInterDist.y);	
+		int final_x_dep = xlimExceeded ? 0 : (xDeplacement+totalInterDist.x);
+		int final_y_dep = ylimExceeded ? 0 : (yDeplacement+totalInterDist.y);	
+
+		object.pxpos(final_x_dep);
+		object.pypos(final_y_dep);
 
 		//last collision test to check if the object is now out 
 		if(xlimExceeded || ylimExceeded)
 		{
-			if(isWorldCollision(partie,deplace, object,false))
+			if(isWorldCollision(partie, object,false))
 				return false; // object is stuck
 		}
 
 		//on calcul la direction de collision 
 		if(intersectedHitbox!=null)
 		{
+			object.setNormCollision(EPA_normal);
 			//on appelle la fonction qui gère les collisions en fonction de la normale
-			object.handleWorldCollision(EPA_normal,partie,deplace);
+			object.handleWorldCollision(EPA_normal,partie);
 		}
+		else
+			object.setNormCollision(null);
+
 		return true; //not stuck
 	}
+
+	public static boolean testcollisionObjects(AbstractModelPartie partie, Collidable object1,Collidable object2)
+	{
+		return collisionObjects(partie, object1,object2,false);
+	}
+	public static boolean collisionObjects(AbstractModelPartie partie, Collidable object1,Collidable object2)
+	{
+		return collisionObjects(partie, object1,object2,true);
+	}
+
+
 	/**
 	 * Test collision between two object without moving them
 	 * @param partie
@@ -253,7 +284,7 @@ public class Collision implements InterfaceConstantes{
 	 * @param object2
 	 * @return True if the two objects are colliding
 	 */
-	public boolean collisionObjects(AbstractModelPartie partie,Deplace deplace, Collidable object1,Collidable object2)
+	private static boolean collisionObjects(AbstractModelPartie partie, Collidable object1,Collidable object2,boolean warnCollision)
 	{
 
 		Hitbox objectHitbox1 = null;
@@ -279,7 +310,7 @@ public class Collision implements InterfaceConstantes{
 		Point p2 = new Point(CompScreenMove2.x,CompScreenMove2.y);
 		objectHitbox2= Hitbox.minusPoint(object2.getHitbox(partie.INIT_RECT),p2,false);
 
-		Vector2d deltaSpeed = new Vector2d(object1.getGlobalVit().x-object2.getGlobalVit().x,object1.getGlobalVit().y-object2.getGlobalVit().y);
+		Vector2d deltaSpeed = new Vector2d(object1.getGlobalVit(partie).x-object2.getGlobalVit(partie).x,object1.getGlobalVit(partie).y-object2.getGlobalVit(partie).y);
 		Vector2d m_deltaSpeed= new Vector2d(-deltaSpeed.x,-deltaSpeed.y);
 
 		Vector2d supp1 = GJK_EPA.support(objectHitbox1.polygon,deltaSpeed );//fixed one
@@ -288,8 +319,10 @@ public class Collision implements InterfaceConstantes{
 
 		List<Vector2d> simplex = GJK_EPA.intersects(objectHitbox1.polygon,objectHitbox2.polygon ,firstDir);
 		if(simplex!=null){
-			object1.handleObjectCollision(partie, deplace);
-			object2.handleObjectCollision(partie, deplace);
+			if(warnCollision){
+				object1.handleObjectCollision(partie,object2);
+				object2.handleObjectCollision(partie,object1);
+			}
 			return true;
 		}
 		else

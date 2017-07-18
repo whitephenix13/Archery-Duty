@@ -116,10 +116,10 @@ public class Saut extends Mouvement_perso{
 			//bit more complicated due to gravity, make sure that jump speed and gravity compensate the same way 
 			//jump speed ~ 4.5 m/s = 7.5 wu / frame 
 			final double vitSaut = (Config.i_ratio_fps()*(-11) + Config.i_ratio_fps()*(Config.i_ratio_fps()+1)/2 * Gravite.gravity_norm ); //-16 normalement 
-
+			
 			if(heros.sautGlisse)
 			{
-				object.localVit.x=varVit * ((heros.droite_gauche(anim)=="Gauche") ? -1 : 1);
+				object.localVit.x=varVit * (heros.droite_gauche(anim).equals(Mouvement.GAUCHE) ? -1 : 1);
 				heros.sautGlisse=false;
 				object.localVit.y=vitSaut;
 			}
@@ -196,14 +196,14 @@ public class Saut extends Mouvement_perso{
 	public String droite_gauche(String type,int anim) {
 		if(type.equals(TypeObject.heros))
 			if(anim<3)
-				return ("Gauche");
+				return (Mouvement.GAUCHE);
 			else 
-				return("Droite");
+				return(Mouvement.DROITE);
 		else if(type.equals(TypeObject.m_spirel))
 			if(anim<1)
-				return ("Gauche");
+				return (Mouvement.GAUCHE);
 			else 
-				return("Droite");
+				return(Mouvement.DROITE);
 		else{
 			try {throw new Exception("String droite gauche: type unknown");} catch (Exception e) {e.printStackTrace();}
 			return ("");

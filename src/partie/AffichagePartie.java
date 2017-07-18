@@ -7,8 +7,6 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -26,6 +24,7 @@ import option.AbstractModelOption;
 import option.AffichageOption;
 import option.ControlerOption;
 import option.ModelOption;
+import serialize.Serialize;
 import types.Touches;
 
 @SuppressWarnings("serial")
@@ -64,11 +63,18 @@ public class AffichagePartie extends JFrame implements Observer{
 	public class PanelPartie extends JPanel 
 	{
 
-		public void paint(Graphics g)
+		public void paintComponent(Graphics g)
 		{
+			if(!Serialize.niveauLoaded || !controlerPartie.partie.all_media_loaded)
+			{
+				this.getRootPane().setBackground(Color.BLACK);
+				controlerPartie.partie.showLoading(g);
+				return;
+			}
 			if(!controlerPartie.partie.computationDone){
 				return;
 			}
+			controlerPartie.partie.computationDone=false;
 
 			super.paintComponent(g);
 
@@ -78,13 +84,14 @@ public class AffichagePartie extends JFrame implements Observer{
 			//on affiche les boutons si necessaire 
 			if(controlerPartie.partie.finPartie ||controlerPartie.partie.inPause)
 			{
-				super.paint(g);
+				//change paint to paintcomponent 27/05/17
+				super.paintComponent(g);
 				setOpaque(true); 
 			}
 			//if partie is not done, wait for next computation to finish in order to display next frame 
-			if(!controlerPartie.partie.finPartie)
+			/*TODO if(!controlerPartie.partie.finPartie)
 				controlerPartie.partie.computationDone=false;
-
+			*/
 		}
 	}
 
@@ -386,7 +393,7 @@ public class AffichagePartie extends JFrame implements Observer{
 
 		}
 		controlerPartie.partie.resetVariablesAffichage();
-
+		this.repaint();
 
 	}
 
