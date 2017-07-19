@@ -31,7 +31,8 @@ public class ImagesEffect extends LoadMediaThread{
 			im_grappin_effect.add(getIm("resources/fleches/effects/grappin/"+i+".png",true));
 		}
 		setPercentage((int)(500.0/6));
-		im_slowdown=getIm("resources/slowDownFx.png",true);
+		if(im_slowdown==null)
+			im_slowdown=getIm("resources/slowDownFX.png",true);
 
 		setPercentage(100);
 		mediaLoaded=true;

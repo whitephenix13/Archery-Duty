@@ -5,8 +5,7 @@ public class Todo {
 	//Version 0.1.0
 	//seyeri 
 	//TODO: fleches speciales
-		
-	//MATERIEL
+		//MATERIEL
 	//TODO: Electrique: Object: create area that paralyse ennemy: can't shoot for a while. Ennemi: damage + create a electic ball moving back to the player
 	//TODO: Glace : Object: create a stalactite submitted to gravity                       Ennemi: damage + slow down
 	//TODO: Roche: Object : create a pillar                                                Ennemi: damage + vulnerable
@@ -32,6 +31,8 @@ public class Todo {
 	
 	
 	//TODO: add more sounds for arrows 
+	//TODO: JAR: solve the 2 icons opening ? 
+	//TODO: JAR: delete previous jar in installation
 	//TODO: ajout d'objets comme invicible quand le heros slide 
 	//TODO: Problème si le jeu est ralenti (t=8), spam touche marche => mouvement rapide
 	//TODO mettre à jour deplaceEcran editeur par rapport a celui de AbstractModelPartie
