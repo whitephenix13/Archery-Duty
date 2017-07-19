@@ -92,7 +92,6 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 		anim=0;
 		doitDeplace=false;
 		tempsDetruit = 0;
-		slowDownFactor=3;
 		fixedWhenScreenMoves=false;
 		localVit=new Vitesse(0,0);
 

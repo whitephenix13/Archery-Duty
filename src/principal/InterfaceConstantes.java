@@ -20,9 +20,10 @@ public interface InterfaceConstantes {
 	long FLECHE_TIR_COOLDOWN = (long) ( 1* Math.pow(10, 8));//nanos, 0.1 sec 
 	static long ARMED_MIN_TIME = (long) (1* Math.pow(10, 8));//nanos, 0.1 sec 
 	static long WALL_JUMP_DISABLE_TIME = (long) (2* Math.pow(10, 8));//nanos, 0.2 sec 
-
-	static int NB_MONSTRES_MAX=100;
+	static long ACCROCHE_COOLDOWN = (long) (2* Math.pow(10, 8));
 	
+	static int NB_MONSTRES_MAX=100;
+	static int SLOW_DOWN_FACTOR = 4;
 	//type de spawn
 	int SPAWN_ALEATOIRE = 0; 
 	int SPAWN_PROGRAMME = 1;
@@ -47,20 +48,20 @@ public interface InterfaceConstantes {
 	//permet de determiner les vitesses de chute, de deplacement et de saut 
 	long TDash= 150;
 	//durée d'invincibilité lorsque le héros est touché 
-	static long INV_TOUCHE = 3000;
+	static long INV_TOUCHE = 1000;
 	//fréquence à laquelle il clignote
 	static long CLIGNOTE= 50;
 	
 	static int MAXLIFE= 100;
 	static int MINLIFE= 0;
-	static int MAXSEYERI= 100;
-	static int MINSEYERI= 0;
+	static float MAXSEYERI= 100;
+	static float MINSEYERI= 0;
 	
 	static double FRICTION = 0.1;
 	static double AIRFRICTION = 0.05;
 
-	//vitesse a laquelle la spe diminue de 1 lors du slow down//augmente de 1 en dehors du slow down
-	static long TEMPS_VAR_SPE=100; 
+	//vitesse a laquelle le seyeri varie: toute les 100ms
+	static long TEMPS_VAR_SEYERI=100; 
 	
 	int NOMBRE_BRUITAGE_MAX= 100;
 	

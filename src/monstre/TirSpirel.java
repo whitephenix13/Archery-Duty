@@ -37,7 +37,6 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 
 		needDestroy=false;
 		localVit = new Vitesse();
-		slowDownFactor=3; 
 		fixedWhenScreenMoves=false ; //true : not influenced by screen displacement (ie: use for the hero)
 
 		useGravity=false;

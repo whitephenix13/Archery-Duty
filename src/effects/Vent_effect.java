@@ -19,13 +19,11 @@ public class Vent_effect extends Effect{
 	private double EJECT_SPEED=1400;//square of desired speed at distance < sqrt(EJECT_DISTANCE)
 	private int EJECT_DISTANCE = 40000; // square of distance = 200^2 
 	private Vitesse modified_vitesse = null;
-	
-	public Collidable herosShooter = null; //set this to a heros to make the arrow stick to him 
-	private Integer herosXVit = null;
-	private Integer herosYVit = null;
 
-	
-	
+	public Collidable stickedCollidable = null; //collidable to which the arrow is sticked if any 
+	private Integer stickXVit = null;
+	private Integer stickYVit = null;
+
 	public Vent_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame)
 	{
 		anim=_anim;
@@ -75,9 +73,10 @@ public class Vent_effect extends Effect{
 	@Override
 	public Vitesse getModifiedVitesse(AbstractModelPartie partie, Collidable obj) {
 		
-		if(herosShooter!=null)
-			if(herosXVit!=null && herosYVit != null)
-				return new Vitesse(herosXVit,herosYVit);
+		boolean isStickedCollidable = stickedCollidable!=null && obj == stickedCollidable;
+		if(isStickedCollidable)
+			if(stickXVit!=null && stickYVit != null)
+				return new Vitesse(stickXVit,stickYVit);
 		if(modified_vitesse!=null)
 		{
 			modified_vitesse=Vitesse.applyFriction(modified_vitesse, obj.useGravity, 0);
@@ -129,10 +128,10 @@ public class Vent_effect extends Effect{
 				x_vit = deltaX2 * normSpeed/sqrt_distance2;
 				y_vit = deltaY2 * normSpeed/sqrt_distance2;
 			}
-			if(herosShooter!=null)
+			if(isStickedCollidable)
 			{
-				herosXVit=(int) x_vit;
-				herosYVit=(int) y_vit;				
+				stickXVit=(int) x_vit;
+				stickYVit=(int) y_vit;				
 			}
 			return new Vitesse(x_vit,y_vit);
 		}

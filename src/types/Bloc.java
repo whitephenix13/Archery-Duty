@@ -41,7 +41,6 @@ public class Bloc extends Collidable{
 		this.xpos(x);
 		this.ypos(y);
 		localVit=new Vitesse(0,0);
-		slowDownFactor=1;
 		fixedWhenScreenMoves=false;
 		this.bloquer=bl;
 		this.background=back;

@@ -167,6 +167,7 @@ public class Music extends LoadMediaThread implements InterfaceConstantes{
 		c.stop();
 
 		getClip(true).setFramePosition(framePos*2);
+		volumeControl(gain);
 		getClip(true).start();
 		isSlowed=true;
 	}
@@ -182,6 +183,7 @@ public class Music extends LoadMediaThread implements InterfaceConstantes{
 		c.stop();
 
 		getClip(false).setFramePosition(framePos/2);
+		volumeControl(gain);
 		getClip(false).start();
 		isSlowed=false;
 	}

@@ -25,6 +25,7 @@ import debug.Debug_time;
 import editeur.AffichageEditeur;
 import editeur.ControlerEditeur;
 import editeur.ModelEditeur;
+import images.ImagesPrincipal;
 import loading.LoadAllMedias;
 import loading.LoadAllMedias.CustomLoad;
 import music.Music;
@@ -103,7 +104,7 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 
 		//Wait for background to be visible + music principal to be loaded
 		LoadAllMedias loader = new LoadAllMedias();
-		loader.load(LoadAllMedias.MT_IMAGE, LoadAllMedias.C_PRINCIPAL, "background", this, partie);
+		loader.load(LoadAllMedias.MT_IMAGE, LoadAllMedias.C_PRINCIPAL, ImagesPrincipal.BACKGROUND, this, partie);
 		loader.load(LoadAllMedias.MT_SOUND, LoadAllMedias.C_MUSIC, InterfaceConstantes.musiquePrincipal, this, partie);
 		loader.start();
 		loader.wait(principal, principal,true);

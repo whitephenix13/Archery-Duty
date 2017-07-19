@@ -16,6 +16,7 @@ import deplacement.Mouvement_perso;
 import deplacement.Saut;
 import music.MusicBruitage;
 import partie.AbstractModelPartie;
+import partie.PartieTimer;
 import personnage.Heros;
 import principal.InterfaceConstantes;
 import types.Bloc;
@@ -30,11 +31,11 @@ public class Spirel extends Monstre{
 	//variable for ChangMouv to indicates if the animation was changed or not 
 	private boolean animationChanged = true;
 	
-	private long tempsAncienMouv=0;
-	private static long delaiMouv= 400;
-	private long tempsAncienTir=0;
-	private static long delaiTir= 2000;
-	private int distanceAttaque= 160000; // 400^2
+	private double tempsAncienMouv=0;
+	private static double delaiMouv= 400;
+	private double tempsAncienTir=0;
+	private static double delaiTir= 2000;
+	private double distanceAttaque= 160000; // 400^2
 	private boolean cooldown=true;
 
 	public boolean peutSauter = true;
@@ -60,7 +61,7 @@ public class Spirel extends Monstre{
 		localVit=new Vitesse(0,0);
 		deplacement=new Attente(type,Attente.attente_gauche,current_frame) ;
 		anim=1;
-		tempsAncienMouv= System.nanoTime();
+		tempsAncienMouv= PartieTimer.me.getElapsedNano();
 		actionReussite=false;
 
 		finSaut=false;
@@ -68,7 +69,6 @@ public class Spirel extends Monstre{
 		glisse=false;
 
 		//Param from Collidable
-		slowDownFactor=3;
 		fixedWhenScreenMoves=false;
 
 		xDecallagePlacementTir= Arrays.asList(30,-60,20);
@@ -150,13 +150,13 @@ public class Spirel extends Monstre{
 	{
 
 		boolean herosAGauche;
-		boolean canShoot = (System.nanoTime()-tempsAncienTir)*Math.pow(10, -6)>delaiTir * (partie.slowDown ? 2:1);
-		boolean canAction= (System.nanoTime()-tempsAncienMouv)*Math.pow(10, -6)>delaiMouv * (partie.slowDown ? 2:1);
+		boolean canShoot = (PartieTimer.me.getElapsedNano()-tempsAncienTir)*Math.pow(10, -6)>delaiTir ;
+		boolean canAction= (PartieTimer.me.getElapsedNano()-tempsAncienMouv)*Math.pow(10, -6)>delaiMouv;
 		//On test le cooldown de tir
 		if(canShoot)
 		{
 			cooldown=false;
-			tempsAncienTir=System.nanoTime();
+			tempsAncienTir=PartieTimer.me.getElapsedNano();
 		}
 		//on test le cooldown de mouvement
 		if(canAction)
@@ -319,7 +319,7 @@ public class Spirel extends Monstre{
 				nouvMouv= new Attente(this.type,herosAGauche?Attente.attente_gauche:Attente.attente_droite,partie.getFrame());
 			}	
 
-			tempsAncienMouv=System.nanoTime();
+			tempsAncienMouv=PartieTimer.me.getElapsedNano();
 		}
 		else
 		{

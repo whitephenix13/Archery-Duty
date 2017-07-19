@@ -42,7 +42,7 @@ public class Fleche_vent extends Fleche{
 		if(Collision.testcollisionObjects(partie, this, partie.heros)){
 			partie.heros.addSynchroSpeed(this);
 			Vent_effect eff = (Vent_effect) flecheEffect;
-			eff.herosShooter=this.shooter;
+			eff.stickedCollidable=this.shooter;
 		}
 		this.doitDeplace=false;
 		this.checkCollision=false;
@@ -66,6 +66,8 @@ public class Fleche_vent extends Fleche{
 			obj.registerEffect(flecheEffect);
 			obj.localVit=new Vitesse();
 		}
+		Vent_effect eff = (Vent_effect) flecheEffect;
+		eff.stickedCollidable=collider;
 		collider.addSynchroSpeed(this);
 		this.doitDeplace=false;
 		this.checkCollision=false;

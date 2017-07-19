@@ -158,6 +158,8 @@ public abstract class AbstractModelPartie extends DisplayLoader implements Obser
 	public void reset() 
 	{
 		super.reset();
+		PartieTimer.init();
+
 		deplace = new Deplace();
 		monde = new Monde();
 		frame= 0;
@@ -196,6 +198,7 @@ public abstract class AbstractModelPartie extends DisplayLoader implements Obser
 		INIT_RECT= new Point(50000,50000); //(abs,ord)
 		xScreendisp = 0;
 		yScreendisp = 0;
+				
 	}
 	public void resetVariablesAffichage()
 	{

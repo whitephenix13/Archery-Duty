@@ -13,6 +13,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import images.ImagesPrincipal;
 import loading.OnLoadingCallback;
 import observer.Observer;
 import principal.TypeApplication;
@@ -58,7 +59,7 @@ public class AffichagePrincipal extends JFrame implements Observer, OnLoadingCal
 			
 			if(controlerPrincipal.principal.all_media_loaded)
 			{
-				g.drawImage(controlerPrincipal.principal.imPrincipal.getImage("background"),0,0,this);		
+				g.drawImage(controlerPrincipal.principal.imPrincipal.getImage(ImagesPrincipal.BACKGROUND),0,0,this);		
 	
 				//methode pour faire apparaitre les boutons au dessus de l'image 
 				setOpaque(false);

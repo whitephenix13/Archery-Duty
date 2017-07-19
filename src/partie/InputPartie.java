@@ -133,6 +133,7 @@ public class InputPartie {
 
 		inputMapPut(buildReleaseKeyStroke(partie.touches.t_pause),R_PAUSE);
 		actionMapPut(R_PAUSE);
+		this.resetTouchesFocus();
 	}
 	public void reset()
 	{
@@ -146,6 +147,7 @@ public class InputPartie {
 		{
 			comp.getActionMap().remove(am);
 		}
+		this.resetTouchesFocus();
 	}
 	
 	public void inputMapPut(String ks, String a)

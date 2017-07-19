@@ -7,19 +7,21 @@ import fleches.Fleche;
 import loading.LoadMediaThread;
 
 public class ImagesPrincipal extends LoadMediaThread{
+	public static String BACKGROUND = "background";
+	
 	private Image background = null;
 	@Override
 	public void loadMedia() {
 		if(mediaLoaded)
 			return;
-		loadMedia("", "background");
+		loadMedia("", BACKGROUND);
 		setPercentage(100);
 		mediaLoaded=true;
 		
 	}
 	@Override
 	public void loadMedia(String media_categorie, String filename) {
-		if(filename.equals("background"))
+		if(filename.equals(BACKGROUND))
 		{
 			if(background==null)
 				background=getIm("resources/Principal.png",true);
@@ -28,7 +30,7 @@ public class ImagesPrincipal extends LoadMediaThread{
 	
 	public Image getImage(String name)
 	{
-		if(name.equals("background"))
+		if(name.equals(BACKGROUND))
 		{
 			return background;
 		}

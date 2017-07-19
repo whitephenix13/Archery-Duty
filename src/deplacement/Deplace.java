@@ -28,7 +28,7 @@ public class Deplace implements InterfaceConstantes{
 		debugTime.elapsed("test memorize values", 3);
 		
 		if(isHeros && partie.slowDown){
-			partie.slowCount= (partie.slowCount+1) % (object.slowDownFactor);
+			partie.slowCount= (partie.slowCount+1) % (InterfaceConstantes.SLOW_DOWN_FACTOR);
 		}
 
 		object.memorizeCurrentValue();

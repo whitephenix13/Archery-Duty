@@ -10,6 +10,7 @@ import deplacement.Mouvement;
 import deplacement.Mouvement_perso;
 import effects.Effect;
 import effects.Grappin_effect;
+import effects.Vent_effect;
 import fleches.Fleche;
 import monstre.Monstre;
 import partie.AbstractModelPartie;
@@ -59,6 +60,23 @@ public abstract class Collidable extends Destroyable{
 			}
 		}
 		return false;
+	}
+	/**
+	 * 
+	 * @return true if collidable has a wind arrow stick to it 
+	 */
+	public boolean isWindProjected(){
+		for(Effect eff:currentEffects)
+		{
+			if(eff.name.equals(Fleche.SPIRITUELLE.VENT))
+			{
+				Vent_effect vent = (Vent_effect)eff;
+				if(vent.stickedCollidable==this)
+					return true;
+			}
+		}
+		return false;
+
 	}
 	//Every registered object here will see their speed synchronise with respect to this collidable 
 	private ArrayList<Collidable> synchroSpeed = new ArrayList<Collidable>();
@@ -153,7 +171,6 @@ public abstract class Collidable extends Destroyable{
 	public abstract Vector2d getNormCollision();
 
 
-	public int slowDownFactor; 
 	public boolean fixedWhenScreenMoves ; //true : not influenced by screen displacement (ie: use for the hero)
 
 	protected CurrentValue currentValue;

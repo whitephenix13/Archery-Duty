@@ -51,7 +51,7 @@ public class Grappin_effect extends Effect{
 	public boolean reached_max_length=false;
 
 	public double MIN_SHOOTER_ANCHOR_D = 50;
-	int MAX_LENGTH = 1657; 
+	int MAX_LENGTH = 1000; 
 	private double DRAG_SPEED=15;//15
 	public Grappin_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame, Collidable _shooter )
 	{

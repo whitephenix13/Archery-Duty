@@ -32,6 +32,7 @@ import deplacement.Saut;
 import deplacement.Tir;
 import effects.Effect;
 import fleches.Fleche;
+import images.ImagesEffect;
 import loading.LoadAllMedias;
 import loading.LoadAllMedias.CustomLoad;
 import menuPrincipal.AbstractModelPrincipal;
@@ -93,6 +94,7 @@ public class ModelPartie extends AbstractModelPartie{
 			}
 
 		}
+		
 		firstNonFocused=true;
 		
 		//int x= heros.xPos + heros.deplacement.xdecallsprite[heros.anim]; //la vrai position du heros necessite encore un - variablesPartieRapide.xdeplaceEcran
@@ -143,9 +145,9 @@ public class ModelPartie extends AbstractModelPartie{
 			{
 				Monstre m = tabMonstre.get(i);
 				//on ne deplace le monstre qui si il est visible
-				boolean monsterOnScreen= InterfaceConstantes.SCREEN.polygon.contains(new Point 
-						(m.xpos()+xScreendisp,m.ypos()+yScreendisp));
-				if (monsterOnScreen)
+				//boolean monsterOnScreen= InterfaceConstantes.SCREEN.polygon.contains(new Point 
+						//(m.xpos()+xScreendisp,m.ypos()+yScreendisp));
+				//if (monsterOnScreen)
 					deplace.DeplaceObject(m,m.deplacement, this);
 
 			}
@@ -180,7 +182,7 @@ public class ModelPartie extends AbstractModelPartie{
 			{
 				Fleche fleche = tabFleche.get(i);
 
-				long tempsFleche=  System.nanoTime()-fleche.tempsDetruit;
+				double tempsFleche=  PartieTimer.me.getElapsedNano()-fleche.tempsDetruit;
 				if((tempsFleche > fleche.TEMPS_DESTRUCTION) && fleche.tempsDetruit>0  )
 				{
 					fleche.setNeedDestroy(true);
@@ -226,7 +228,7 @@ public class ModelPartie extends AbstractModelPartie{
 
 			//on met a jour le heros si il est touché avant de l'afficher
 			heros.miseAjourTouche();
-			heros.miseAJourSpe(this);
+			heros.miseAJourSeyeri(this);
 
 
 			debugTime.elapsed("end of game test", 2);
@@ -309,7 +311,7 @@ public class ModelPartie extends AbstractModelPartie{
 		{
 			Effect eff = arrowsEffects.get(i);
 			//if anim ended: delete
-			long tempsEffect=  System.nanoTime()-eff.tempsDetruit;
+			double tempsEffect=  PartieTimer.me.getElapsedNano()-eff.tempsDetruit;
 			if(eff.isEnded())
 			{
 				eff.ref_fleche.OnFlecheEffectDestroy(this, true);
@@ -407,9 +409,10 @@ public class ModelPartie extends AbstractModelPartie{
 		{
 			if(inputPartie.pauseDown )
 			{
-				AbstractModelPrincipal.changeFrame=true;
 				inPause=!inPause;
 				inputPartie.pauseDown=false;
+				if(inPause)
+					inputPartie.resetTouchesFocus();
 			}
 			if(!inPause )
 			{
@@ -419,7 +422,7 @@ public class ModelPartie extends AbstractModelPartie{
 						&& ((System.nanoTime()-heros.last_shoot_time)>InterfaceConstantes.FLECHE_TIR_COOLDOWN))
 				{
 					//if not just wall jump 
-					if(!(heros.deplacement.IsDeplacement(Mouvement_perso.saut) && ((System.nanoTime()-heros.last_wall_jump_time)<=InterfaceConstantes.WALL_JUMP_DISABLE_TIME)))
+					if(!(heros.deplacement.IsDeplacement(Mouvement_perso.saut) && ((PartieTimer.me.getElapsedNano()-heros.last_wall_jump_time)<=InterfaceConstantes.WALL_JUMP_DISABLE_TIME)))
 					{
 						//Normal tir 
 						if(inputPartie.toucheTirDown)
@@ -454,7 +457,7 @@ public class ModelPartie extends AbstractModelPartie{
 					if(! (heros.deplacement.IsDeplacement(Mouvement_perso.course) && heros.anim>=4))
 					{
 						//do not run if we just wall jump
-						if(! (heros.deplacement.IsDeplacement(Mouvement_perso.saut) && (System.nanoTime()-heros.last_wall_jump_time)<= InterfaceConstantes.WALL_JUMP_DISABLE_TIME ))
+						if(! (heros.deplacement.IsDeplacement(Mouvement_perso.saut) && (PartieTimer.me.getElapsedNano()-heros.last_wall_jump_time)<= InterfaceConstantes.WALL_JUMP_DISABLE_TIME ))
 						{
 							changeMouv=true;
 							heros.nouvAnim= 4; 
@@ -516,7 +519,7 @@ public class ModelPartie extends AbstractModelPartie{
 						//do not move if we just wall jump
 						if(heros.deplacement.IsDeplacement(Mouvement_perso.saut)&& 
 								(heros.deplacement.type_mouv != Saut.land_gauche ) && (heros.deplacement.type_mouv != Saut.land_droite ) && 
-								((System.nanoTime()-heros.last_wall_jump_time)> InterfaceConstantes.WALL_JUMP_DISABLE_TIME))
+								((PartieTimer.me.getElapsedNano()-heros.last_wall_jump_time)> InterfaceConstantes.WALL_JUMP_DISABLE_TIME))
 						{
 							changeMouv=true;
 							heros.deplaceSautDroit=true; // on fait bouger le heros
@@ -542,7 +545,7 @@ public class ModelPartie extends AbstractModelPartie{
 					{
 						//do not run if we just wall jump
 						if(! (heros.deplacement.IsDeplacement(Mouvement_perso.saut) && 
-								((System.nanoTime()-heros.last_wall_jump_time)<= InterfaceConstantes.WALL_JUMP_DISABLE_TIME)))
+								((PartieTimer.me.getElapsedNano()-heros.last_wall_jump_time)<= InterfaceConstantes.WALL_JUMP_DISABLE_TIME)))
 						{
 							changeMouv=true;
 							heros.nouvAnim=0;
@@ -606,7 +609,7 @@ public class ModelPartie extends AbstractModelPartie{
 						//do not move if we just wall jump
 						if(heros.deplacement.IsDeplacement(Mouvement_perso.saut)&& 
 								(heros.deplacement.type_mouv != Saut.land_gauche ) && (heros.deplacement.type_mouv != Saut.land_droite ) && 
-								((System.nanoTime()-heros.last_wall_jump_time)> InterfaceConstantes.WALL_JUMP_DISABLE_TIME))
+								((PartieTimer.me.getElapsedNano()-heros.last_wall_jump_time)> InterfaceConstantes.WALL_JUMP_DISABLE_TIME))
 						{
 							changeMouv=true;
 
@@ -633,6 +636,7 @@ public class ModelPartie extends AbstractModelPartie{
 				{
 					slowCount=0;
 					slowDown= ! slowDown;
+					PartieTimer.me.changedSlowMotion(slowDown);
 					inputPartie.toucheSlowDown=false;
 
 					if(slowDown)
@@ -653,7 +657,7 @@ public class ModelPartie extends AbstractModelPartie{
 
 						heros.nouvAnim= (heros.droite_gauche(heros.anim).equals(Mouvement.GAUCHE)? 0 : 3);
 						heros.nouvMouv=new Saut(TypeObject.heros,heros.nouvAnim==0?Saut.jump_gauche:Saut.jump_droite,frame );
-						heros.last_wall_jump_time=System.nanoTime();
+						heros.last_wall_jump_time=PartieTimer.me.getElapsedNano();
 					}
 					else if(heros_accroche && ( (heros.anim==0) || (heros.anim==2)))
 					{
@@ -726,7 +730,7 @@ public class ModelPartie extends AbstractModelPartie{
 
 		}
 
-		boolean just_wall_jump= heros.deplacement.IsDeplacement(Mouvement_perso.saut) && (((System.nanoTime()-heros.last_wall_jump_time)<=InterfaceConstantes.WALL_JUMP_DISABLE_TIME));
+		boolean just_wall_jump= heros.deplacement.IsDeplacement(Mouvement_perso.saut) && (((PartieTimer.me.getElapsedNano()-heros.last_wall_jump_time)<=InterfaceConstantes.WALL_JUMP_DISABLE_TIME));
 		//MARCHE
 		if ((inputPartie.marcheDroiteReleased||inputPartie.marcheGaucheReleased
 				||inputPartie.courseDroiteReleased||inputPartie.courseGaucheReleased) && !just_wall_jump)
@@ -822,106 +826,6 @@ public class ModelPartie extends AbstractModelPartie{
 		keyReleasedAction();
 	}
 
-	/*	public void HandlePressedInput(int input) {
-
-		if( input==touches.t_pause)
-		{
-			pauseDown=true;
-		}
-		if(input==touches.t_tir)
-		{
-			toucheTirDown=true;
-		}
-		if(input==touches.t_slow)
-		{
-			toucheSlowDown=true;
-		}
-		if(input==touches.t_saut)
-		{
-			sautDown=true;
-		}
-		if(input==touches.t_droite || input==touches.t_gauche )
-		{
-			clickTime2 = System.nanoTime();
-			float delta = (float) ((clickTime2-clickTime1)*Math.pow(10, -6));
-			boolean dash = delta<InterfaceConstantes.TDash ; // no tmin dash 
-
-			if(dash && clickRight==true && input==touches.t_droite)
-			{
-				courseDroiteDown=true;
-				marcheDroiteDown=true;
-				clickRight=true;
-				clickLeft=false;
-			}
-			else if(dash && clickLeft==true && input==touches.t_gauche)
-			{
-				courseGaucheDown=true;
-				marcheGaucheDown=true;
-				clickLeft=true;
-				clickRight=false;
-			}
-			else
-			{
-				if(input==touches.t_droite)
-				{
-					//deplacement normal
-					marcheDroiteDown=true;
-					clickRight=true;
-					clickLeft=false;
-				}
-				if(input==touches.t_gauche)
-				{
-					//deplacement normal
-					marcheGaucheDown=true;
-					clickLeft=true;
-					clickRight=false;
-				}
-			}
-		}
-	}
-
-	public void HandleReleasedInput(int input) {
-		if(input==touches.t_pause)
-		{
-			pauseDown=false;
-			pauseReleased=true;
-		}
-		if(input==touches.t_tir)
-		{
-			toucheTirDown=false;
-			toucheTirReleased=true;
-		}
-		if(input==touches.t_slow)
-		{
-			toucheSlowDown=false;
-			toucheSlowReleased=true;
-		}
-		if (input==touches.t_droite)
-		{
-			heros.deplaceSautDroit=false;
-
-			marcheDroiteDown=false;
-			marcheDroiteReleased=true;
-
-			courseDroiteDown=false;
-			courseDroiteReleased=true;
-			//on retient le temps de relachement de la touche
-			clickTime1 = System.nanoTime();
-		}
-		if(input==touches.t_gauche)
-		{
-			heros.deplaceSautGauche=false;
-
-			marcheGaucheDown=false;
-			marcheGaucheReleased=true;
-
-			courseGaucheDown=false;
-			courseGaucheReleased=true;
-			//on retient le temps de relachement de la touche
-			clickTime1 = System.nanoTime();
-		}
-	}
-	 */
 	public void HandleBoutonsPressed(JButton button) {
 		if(button.getText().equals("Option"))
 		{
@@ -1240,7 +1144,7 @@ public class ModelPartie extends AbstractModelPartie{
 		if(slowDown )
 		{
 			//la taille de l'image fait 1500
-			Image im = pan.getToolkit().getImage(getClass().getClassLoader().getResource("resources/slowDownFX.png"));
+			Image im = imEffect.getImage(ImagesEffect.SLOWDOWN);
 			g.drawImage(im, (InterfaceConstantes.LARGEUR_FENETRE-im.getWidth(null))/2 ,(InterfaceConstantes.HAUTEUR_FENETRE-im.getHeight(null))/2,null);
 		}
 
@@ -1260,7 +1164,7 @@ public class ModelPartie extends AbstractModelPartie{
 		//seyeri
 		int[] x_s= {10,10,10};
 		int[] y_s= {40,40,40};
-		int[] width_s={InterfaceConstantes.MAXSEYERI,heros.getNotEnoughSeyeri(),heros.getSeyeri()};
+		int[] width_s={(int) InterfaceConstantes.MAXSEYERI,heros.getNotEnoughSeyeri(),(int) heros.getSeyeri()};
 		int[] height_s={20,20,20};
 		Color[] colors_s = {Color.BLACK,Color.RED,Color.BLUE};
 		drawBar(g,3,x_s,y_s,width_s,height_s,colors_s);
