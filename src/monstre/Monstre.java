@@ -17,12 +17,13 @@ import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import personnage.Heros;
 import principal.InterfaceConstantes;
+import types.Entitie;
 import types.Hitbox;
 import types.Vitesse;
 
 
 @SuppressWarnings("serial")
-public abstract class Monstre extends Collidable implements InterfaceConstantes, Serializable{
+public abstract class Monstre extends Entitie implements InterfaceConstantes, Serializable{
 	//on définit la position du coin en haut à  gauche de la hitbox
 
 	public boolean finSaut;
@@ -48,7 +49,6 @@ public abstract class Monstre extends Collidable implements InterfaceConstantes,
 	Image SPmarche2;
 	Image SPmarche3; 
 
-	private int life=MAXLIFE;
 	/**
 	 * Permet de savoir de quel cote est tourné le monstre
 	 * 
@@ -91,10 +91,6 @@ public abstract class Monstre extends Collidable implements InterfaceConstantes,
 	}
 
 	
-	/**
-	 * getter
-	 */	
-	public int getLife(){return(life);};
 	/**
 	 * accesseur permettant de gérer la vie max et la vie mimimale
 	 */	

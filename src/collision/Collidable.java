@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 import javax.vecmath.Vector2d;
 
+import conditions.ConditionHandler;
 import deplacement.Deplace;
 import deplacement.Mouvement;
 import deplacement.Mouvement_perso;
@@ -25,6 +26,8 @@ public abstract class Collidable extends Destroyable{
 	public String type;
 	private int xpos; 
 	private int ypos; 
+	
+	
 	public int xpos(){return xpos;}
 	public int ypos(){return ypos;}
 	/**
@@ -46,7 +49,7 @@ public abstract class Collidable extends Destroyable{
 	public int anim; 
 	public Mouvement deplacement;
 	public Vitesse localVit;
-	public ArrayList<Effect> currentEffects = new ArrayList<Effect>();
+	public ArrayList<Effect> currentEffects;
 	public boolean isDragged(){
 		for(Effect eff:currentEffects)
 		{
@@ -78,8 +81,9 @@ public abstract class Collidable extends Destroyable{
 		return false;
 
 	}
+	public ConditionHandler conditions;
 	//Every registered object here will see their speed synchronise with respect to this collidable 
-	private ArrayList<Collidable> synchroSpeed = new ArrayList<Collidable>();
+	private ArrayList<Collidable> synchroSpeed ;
 	public void addSynchroSpeed(Collidable objToSynchronize)
 	{
 		//this==synchronizer
@@ -137,9 +141,10 @@ public abstract class Collidable extends Destroyable{
 		}
 		return 0;
 	}
+	
 	public boolean draggable =true;
 	public boolean checkCollision=true;
-
+	
 	public void registerEffect(Effect eff)
 	{
 		currentEffects.add(eff);
@@ -150,7 +155,7 @@ public abstract class Collidable extends Destroyable{
 	}
 
 	public Vitesse getGlobalVit(AbstractModelPartie partie){
-		Vitesse vit = new Vitesse(localVit.x,localVit.y);
+		Vitesse vit = localVit.Copy().times(conditions.getSpeedFactor());
 		boolean isDragged = this.isDragged();
 		for(Effect eff: currentEffects)
 		{
@@ -180,6 +185,19 @@ public abstract class Collidable extends Destroyable{
 	public boolean last_colli_right=false;
 	//value to limit the maximum displacement. <0 means no limit 
 	public double max_speed_norm = -1; 
+	
+	public void init()
+	{
+		currentEffects  = new ArrayList<Effect>();
+		conditions= new ConditionHandler();
+		synchroSpeed= new ArrayList<Collidable>();
+		checkCollision=true;
+		normCollision=null;
+		last_colli_left=false;
+		last_colli_right=false;
+		max_speed_norm=-1;
+	}
+	
 	public abstract Hitbox getHitbox(Point INIT_RECT);
 	public abstract Hitbox getHitbox(Point INIT_RECT,Mouvement mouv, int _anim);
 

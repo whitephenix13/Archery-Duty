@@ -43,7 +43,7 @@ public class Animation {
 	 * Return the corresponding anim value
 	 * */
 	
-	public int update(int anim,int current_frame)
+	public int update(int anim,int current_frame,double speedFactor)
 	{
 		if(start_frame==-1)
 		{
@@ -51,7 +51,7 @@ public class Animation {
 			return -1;
 		}
 		//elapsed frame > change frame number
-		boolean switch_anim = (current_frame-start_frame)>animationFrame.get(anim)*Config.ratio_fps();
+		boolean switch_anim = (current_frame-start_frame)*speedFactor>(animationFrame.get(anim)*Config.ratio_fps());
 		if(anim==(end_index-1))
 		{
 			if(switch_anim){

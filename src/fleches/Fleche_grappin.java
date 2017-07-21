@@ -16,14 +16,14 @@ public class Fleche_grappin extends Fleche {
 	public Collidable collider = null;
 	private boolean dragSomething = false; // boolean to make sure that at most one object is dragged
 	
-	public Fleche_grappin(List<Fleche> tabFleche, int current_frame,Heros _shooter,boolean add_to_list)
+	public Fleche_grappin(List<Fleche> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor)
 	{
-		super(tabFleche, current_frame,_shooter,add_to_list);
+		super(tabFleche, current_frame,_shooter,add_to_list,damageMult,speedFactor);
 		no_more_than_one=true;
 		destroy_on_click=true;
 		type_fleche=SPIRITUELLE.GRAPPIN;
 		TEMPS_DESTRUCTION= (long) (2* Math.pow(10,8));//in nano sec = 0.5 sec 
-		degat=0;
+		damage=0*damageMult;
 	}
 
 	//only move arrow if the grappin length is long enough
@@ -73,7 +73,7 @@ public class Fleche_grappin extends Fleche {
 			this.checkCollision=false;
 			this.doitDeplace=false;
 			shooter.registerEffect(flecheEffect);
-			shooter.localVit = new Vitesse(0,0);
+			shooter.localVit= new Vitesse(0,0);
 			Grappin_effect grap = ((Grappin_effect)flecheEffect);
 			grap.isDragging=true;
 			grap.shooterDragged=true;
@@ -93,7 +93,7 @@ public class Fleche_grappin extends Fleche {
 			collider.addSynchroSpeed(this);
 			//both arrow and object are pulled toward the hero
 			collider.registerEffect(flecheEffect);
-			collider.localVit = new Vitesse(0,0);
+			collider.localVit= new Vitesse(0,0);
 			Grappin_effect grap = ((Grappin_effect)flecheEffect);
 			grap.shooterDragged=false;
 			grap.isDragging=true;

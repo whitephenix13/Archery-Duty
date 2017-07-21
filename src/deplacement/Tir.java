@@ -81,7 +81,7 @@ public class Tir extends Mouvement_perso
 		}
 	}
 	@Override
-	public int updateAnimation(String type,int anim,int current_frame) {
-		return animation.update(0,current_frame);
+	public int updateAnimation(String type,int anim,int current_frame,double speedFactor) {
+		return animation.update(0,current_frame,speedFactor);
 	}
 }

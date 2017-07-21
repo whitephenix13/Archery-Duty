@@ -20,7 +20,7 @@ public class ImagesFleche extends LoadMediaThread{
 	ArrayList<Image> im_vent_aura= new ArrayList<Image>();
 	ArrayList<Image> im_grappin_aura= new ArrayList<Image>();
 
-	ArrayList<Image> im_chargee_aura= new ArrayList<Image>();
+	ArrayList<Image> im_lumiere_aura= new ArrayList<Image>();
 	ArrayList<Image> im_explosive_aura= new ArrayList<Image>();
 	ArrayList<Image> im_trou_noir_aura= new ArrayList<Image>();
 	ArrayList<Image> im_bogue_aura= new ArrayList<Image>();
@@ -58,7 +58,7 @@ public class ImagesFleche extends LoadMediaThread{
 			
 			setPercentage((int)((9.0 + i*17)/0.68));
 
-			im_chargee_aura.add(getIm("resources/fleches/auras/chargee/"+i+".png",true));
+			im_lumiere_aura.add(getIm("resources/fleches/auras/lumiere/"+i+".png",true));
 			im_explosive_aura.add(getIm("resources/fleches/auras/explosive/"+i+".png",true));
 			im_trou_noir_aura.add(getIm("resources/fleches/auras/trou_noir/"+i+".png",true));
 			im_grappin_aura.add(getIm("resources/fleches/auras/grappin/"+i+".png",true));	
@@ -82,26 +82,27 @@ public class ImagesFleche extends LoadMediaThread{
 		{
 			if(fleche.type_fleche.equals(Fleche.MATERIELLE.ELECTRIQUE))
 				im.add(this.im_electrique_aura.get(fleche.anim));
-			else if (fleche.type_fleche.equals(Fleche.MATERIELLE.FOUDRE))
-				im.add(this.im_foudre_aura.get(fleche.anim));
+			else if (fleche.type_fleche.equals(Fleche.MATERIELLE.FEU))
+				im.add(this.im_feu_aura.get(fleche.anim));
 			else if (fleche.type_fleche.equals(Fleche.MATERIELLE.GLACE))
 				im.add(this.im_glace_aura.get(fleche.anim));
 			else if (fleche.type_fleche.equals(Fleche.MATERIELLE.ROCHE))
 				im.add(this.im_roche_aura.get(fleche.anim));
 			
-			else if (fleche.type_fleche.equals(Fleche.SPIRITUELLE.FEU))
-				im.add(this.im_feu_aura.get(fleche.anim));
+			
 			else if (fleche.type_fleche.equals(Fleche.SPIRITUELLE.GRAPPIN))
 				im.add(this.im_grappin_aura.get(fleche.anim));
 			else if (fleche.type_fleche.equals(Fleche.SPIRITUELLE.OMBRE))
 				im.add(this.im_ombre_aura.get(fleche.anim));
+			else if (fleche.type_fleche.equals(Fleche.SPIRITUELLE.LUMIERE))
+				im.add(this.im_lumiere_aura.get(fleche.anim));
 			else if (fleche.type_fleche.equals(Fleche.SPIRITUELLE.VENT))
 				im.add(this.im_vent_aura.get(fleche.anim));
 			
 			else if (fleche.type_fleche.equals(Fleche.DESTRUCTRICE.BOGUE))
 				im.add(this.im_bogue_aura.get(fleche.anim));
-			else if (fleche.type_fleche.equals(Fleche.DESTRUCTRICE.CHARGEE))
-				im.add(this.im_chargee_aura.get(fleche.anim));
+			else if (fleche.type_fleche.equals(Fleche.DESTRUCTRICE.FOUDRE))
+				im.add(this.im_foudre_aura.get(fleche.anim));
 			else if (fleche.type_fleche.equals(Fleche.DESTRUCTRICE.EXPLOSIVE))
 				im.add(this.im_explosive_aura.get(fleche.anim));
 			else if (fleche.type_fleche.equals(Fleche.DESTRUCTRICE.TROU_NOIR))

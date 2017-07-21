@@ -22,16 +22,17 @@ import partie.AbstractModelPartie;
 import personnage.Heros;
 import principal.InterfaceConstantes;
 import types.Hitbox;
+import types.Projectile;
 import types.TypeObject;
 import types.Vitesse;
 
-public class Fleche extends Collidable implements InterfaceConstantes{
+public class Fleche extends Projectile implements InterfaceConstantes{
 	
 	public static String NORMAL="normal";
 	
 	public static class MATERIELLE
 	{
-		public static String FOUDRE="foudre";
+		public static String FEU="feu";
 		public static String ELECTRIQUE="electrique";
 		public static String GLACE="glace";
 		public static String ROCHE="roche";
@@ -39,7 +40,7 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 	}
 	public static class SPIRITUELLE
 	{
-		public static String FEU="feu";
+		public static String LUMIERE="lumiere";
 		public static String OMBRE="ombre";
 		public static String VENT="vent";
 		public static String GRAPPIN="grappin";
@@ -47,7 +48,7 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 	}
 	public static class DESTRUCTRICE
 	{
-		public static String CHARGEE="chargee";
+		public static String FOUDRE="foudre";
 		public static String EXPLOSIVE="explosive";
 		public static String TROU_NOIR="trou_noir";
 		public static String BOGUE="bogue";
@@ -78,14 +79,15 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 	public List<Integer> xanchor=Arrays.asList(28,20,45,45,40,30,55,52,70,35);
 	public List<Integer> yanchor=Arrays.asList(30,20,22,25,45,50,65,42,30,40);
 		
-	public int degat= -50;
-	public int seyeri_cost = -5;
+	public float damage;
+	public float seyeri_cost;
 	private boolean animationChanged=false;
 	
 	public Effect flecheEffect;
 
-	public Fleche(List<Fleche> tabFleche,int current_frame,Heros _shooter,boolean add_to_list)
+	public Fleche(List<Fleche> tabFleche,int current_frame,Heros _shooter,boolean add_to_list,float damageMultiplier,float _speedFactor)
 	{
+		super.init();
 		type = TypeObject.fleche;
 		type_fleche=NORMAL;
 		shooter=_shooter;
@@ -93,8 +95,10 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 		doitDeplace=false;
 		tempsDetruit = 0;
 		fixedWhenScreenMoves=false;
-		localVit=new Vitesse(0,0);
+		localVit= new Vitesse(0,0);
 
+		speedFactor=_speedFactor;
+		
 		deplacement = new T_normal(TypeObject.fleche,T_normal.tir,current_frame);
 		
 		nulle=false;
@@ -105,12 +109,15 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 		
 		TEMPS_DESTRUCTION = (long) Math.pow(10, 9);//nanos, 1sec 
 		
+		damage = -50 * damageMultiplier;
+		seyeri_cost=-5;
+		
 		//effect properties
 		this.draggable=false;
 	}
-	public Fleche(List<Fleche> tabFleche,int current_frame,Heros _shooter)
+	public Fleche(List<Fleche> tabFleche,int current_frame,Heros _shooter,float damageMultiplier,float speedFactor)
 	{
-		this(tabFleche,current_frame,_shooter,true);
+		this(tabFleche,current_frame,_shooter,true,damageMultiplier,speedFactor);
 	}
 
 	public void setPosition(int x, int y)
@@ -235,7 +242,7 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 		//boolean collision_haut = normal.y>0;
 		//boolean collision_bas = normal.y<0;	last_colli_left=collision_gauche;
 		last_colli_right=collision_droite;
-		localVit = new Vitesse(0,0);
+		localVit= new Vitesse(0,0);
 		this.doitDeplace=false;
 		this.isPlanted=true;
 		ArrayList<Collidable> objects = Collidable.getAllEntitiesCollidable(partie);
@@ -275,7 +282,7 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 		{
 			//set the anim 
 			double[] anim_rot = deplace.getAnimRotationTir(partie,true);
-			int animFleche = deplacement.updateAnimation(TypeObject.fleche, anim, partie.getFrame());
+			int animFleche = deplacement.updateAnimation(TypeObject.fleche, anim, partie.getFrame(),conditions.getSpeedFactor());
 			rotation = anim_rot[1];
 			if(animFleche==anim)
 				animationChanged=false;
@@ -293,7 +300,7 @@ public class Fleche extends Collidable implements InterfaceConstantes{
 				return(animSuivante);
 			}
 			else {
-				int animFleche = deplacement.updateAnimation(TypeObject.fleche, anim, partie.getFrame());
+				int animFleche = deplacement.updateAnimation(TypeObject.fleche, anim, partie.getFrame(),conditions.getSpeedFactor());
 				if(animFleche==anim)
 					animationChanged=false;
 				return animFleche;

@@ -20,6 +20,10 @@ public class Vitesse implements Serializable{
 	{
 		return new Vitesse(x+vit2.x,y+vit2.y);
 	}
+	public Vitesse times(double val)
+	{
+		return new Vitesse(x*val,y*val);
+	}
 	public Vitesse negate()
 	{
 		return new Vitesse(-x,-y);

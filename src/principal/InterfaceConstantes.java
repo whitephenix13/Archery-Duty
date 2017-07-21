@@ -52,8 +52,6 @@ public interface InterfaceConstantes {
 	//fréquence à laquelle il clignote
 	static long CLIGNOTE= 50;
 	
-	static int MAXLIFE= 100;
-	static int MINLIFE= 0;
 	static float MAXSEYERI= 100;
 	static float MINSEYERI= 0;
 	

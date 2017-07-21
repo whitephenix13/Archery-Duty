@@ -8,6 +8,7 @@ import principal.InterfaceConstantes;
 
 @SuppressWarnings("serial")
 public class Monde implements InterfaceConstantes, Serializable{
+public String name ="";
 public Bloc[][] niveau;
 
 private Bloc blocVide =new Bloc(Bloc.VIDE,0,0,false,false);

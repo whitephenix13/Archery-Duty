@@ -1,6 +1,7 @@
 package menuPrincipal;
 
 import java.awt.Dimension;
+import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
@@ -13,6 +14,7 @@ import javax.management.openmbean.CompositeData;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.JFrame;
+import javax.swing.KeyStroke;
 
 import com.sun.management.GarbageCollectionNotificationInfo ;
 
@@ -386,7 +388,6 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 	}
 	public static void main(String[] args) throws InterruptedException, UnsupportedAudioFileException, IOException, LineUnavailableException, URISyntaxException 
 	{
-
 		TypeApplication.isJar= new TypeApplication().isJar();
 		ModelPrincipal principal = new ModelPrincipal();
 		principal.Init();

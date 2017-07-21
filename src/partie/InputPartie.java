@@ -25,6 +25,7 @@ public class InputPartie {
 	protected boolean courseGaucheDown;
 	protected boolean toucheSlowDown;
 	protected boolean pauseDown;
+	protected int arrowDown; //-1 for none 0->3 otherwise 
 	//release
 	protected boolean marcheDroiteReleased ;
 	protected boolean marcheGaucheReleased ;
@@ -35,13 +36,15 @@ public class InputPartie {
 	protected boolean courseGaucheReleased;
 	protected boolean toucheSlowReleased;
 	protected boolean pauseReleased;
-	
+	protected int arrowReleased;//-1 for none 0->3 otherwise 
+
+
 	protected float clickTime1;
 	protected float clickTime2;
 
 	protected boolean clickRight = false;
 	protected boolean clickLeft=false;
-	
+
 	public void resetTouchesFocus()
 	{
 
@@ -54,6 +57,8 @@ public class InputPartie {
 		if (courseGaucheDown) { courseGaucheReleased=true;};
 		if (toucheSlowDown) { toucheSlowReleased=true;};
 		if (pauseDown) { pauseReleased=true;};
+		if(arrowDown>-1) {arrowReleased=arrowDown;}
+
 
 		marcheDroiteDown= false;
 		marcheGaucheDown = false;
@@ -64,6 +69,8 @@ public class InputPartie {
 		courseGaucheDown= false;
 		toucheSlowDown= false;
 		pauseDown= false;
+		arrowDown=-1;
+
 	}
 	//actionmap
 	//pressed
@@ -74,6 +81,11 @@ public class InputPartie {
 	private static final String SPE_SHOOT = "special shoot";
 	private static final String JUMP = "jump";
 	private static final String PAUSE = "pause";
+	private static final String ARROW0 = "arrow0";
+	private static final String ARROW1 = "arrow1";
+	private static final String ARROW2 = "arrow2";
+	private static final String ARROW3 = "arrow3";
+
 	//released
 	private static final String R_MOVE_RIGHT = "released move right";
 	private static final String R_MOVE_LEFT = "released move left";
@@ -82,9 +94,14 @@ public class InputPartie {
 	private static final String R_SPE_SHOOT = "released special shoot";
 	private static final String R_JUMP = "released jump";
 	private static final String R_PAUSE = "released pause";
+	private static final String R_ARROW0 = "released arrow0";
+	private static final String R_ARROW1 = "released arrow1";
+	private static final String R_ARROW2 = "released arrow2";
+	private static final String R_ARROW3 = "released arrow3";
+
 	AbstractModelPartie partie;
 	JComponent comp;
-	
+
 	public InputPartie(AbstractModelPartie _part)
 	{partie=_part;}
 	public void init(JComponent _comp)
@@ -102,15 +119,27 @@ public class InputPartie {
 
 		inputMapPut(partie.touches.t_tir,SHOOT);
 		actionMapPut(SHOOT);
-		
+
 		inputMapPut(partie.touches.t_2tir,SPE_SHOOT);
 		actionMapPut(SPE_SHOOT);
-		
+
 		inputMapPut(partie.touches.t_saut,JUMP);
 		actionMapPut(JUMP);
 
 		inputMapPut(partie.touches.t_pause,PAUSE);
 		actionMapPut(PAUSE);
+		
+		inputMapPut(partie.touches.t_arrow0,ARROW0);
+		actionMapPut(ARROW0);
+		
+		inputMapPut(partie.touches.t_arrow1,ARROW1);
+		actionMapPut(ARROW1);
+		
+		inputMapPut(partie.touches.t_arrow2,ARROW2);
+		actionMapPut(ARROW2);
+
+		inputMapPut(partie.touches.t_arrow3,ARROW3);
+		actionMapPut(ARROW3);
 
 		//RELEASED
 		inputMapPut(buildReleaseKeyStroke(partie.touches.t_droite),R_MOVE_RIGHT);
@@ -127,12 +156,27 @@ public class InputPartie {
 
 		inputMapPut(buildReleaseKeyStroke(partie.touches.t_2tir),R_SPE_SHOOT);
 		actionMapPut(R_SPE_SHOOT);
-		
+
 		inputMapPut(buildReleaseKeyStroke(partie.touches.t_saut),R_JUMP);
 		actionMapPut(R_JUMP);
 
 		inputMapPut(buildReleaseKeyStroke(partie.touches.t_pause),R_PAUSE);
 		actionMapPut(R_PAUSE);
+
+		inputMapPut(buildReleaseKeyStroke(partie.touches.t_arrow0),R_ARROW0);
+		actionMapPut(R_ARROW0);
+		
+		inputMapPut(buildReleaseKeyStroke(partie.touches.t_arrow1),R_ARROW1);
+		actionMapPut(R_ARROW1);
+
+		inputMapPut(buildReleaseKeyStroke(partie.touches.t_arrow2),R_ARROW2);
+		actionMapPut(R_ARROW2);
+
+		inputMapPut(buildReleaseKeyStroke(partie.touches.t_arrow3),R_ARROW3);
+		actionMapPut(R_ARROW3);
+
+
+
 		this.resetTouchesFocus();
 	}
 	public void reset()
@@ -149,7 +193,7 @@ public class InputPartie {
 		}
 		this.resetTouchesFocus();
 	}
-	
+
 	public void inputMapPut(String ks, String a)
 	{
 		boolean isMouseInput = ks.equals(partie.touches.LEFT_MOUSE) || ks.equals(partie.touches.MIDDLE_MOUSE) || ks.equals(partie.touches.RIGHT_MOUSE) ;
@@ -169,6 +213,12 @@ public class InputPartie {
 		else if(a == SPE_SHOOT){comp.getActionMap().put(a, new ShootAction(2));}
 		else if(a == JUMP){comp.getActionMap().put(a, new JumpAction());}
 		else if(a == PAUSE){comp.getActionMap().put(a, new PauseAction());}
+		else if(a == ARROW0){comp.getActionMap().put(a, new ArrowAction(0));}
+		else if(a == ARROW1){comp.getActionMap().put(a, new ArrowAction(1));}
+		else if(a == ARROW2){comp.getActionMap().put(a, new ArrowAction(2));}
+		else if(a == ARROW3){comp.getActionMap().put(a, new ArrowAction(3));}
+
+
 		else if(a == R_MOVE_RIGHT ) {comp.getActionMap().put(a, new R_MoveAction(1));}
 		else if(a == R_MOVE_LEFT){comp.getActionMap().put(a, new R_MoveAction(-1));}
 		else if(a == R_SLOW){comp.getActionMap().put(a, new R_SlowAction());}
@@ -176,6 +226,11 @@ public class InputPartie {
 		else if(a == R_SPE_SHOOT){comp.getActionMap().put(a, new R_ShootAction(2));}
 		else if(a == R_JUMP){comp.getActionMap().put(a, new R_JumpAction());}
 		else if(a == R_PAUSE){comp.getActionMap().put(a, new R_PauseAction());}
+		else if(a == R_ARROW0){comp.getActionMap().put(a, new R_ArrowAction(0));}
+		else if(a == R_ARROW1){comp.getActionMap().put(a, new R_ArrowAction(1));}
+		else if(a == R_ARROW2){comp.getActionMap().put(a, new R_ArrowAction(2));}
+		else if(a == R_ARROW3){comp.getActionMap().put(a, new R_ArrowAction(3));}
+
 		else
 		{
 			try {throw new Exception("actionMap "+a+" not handled in actionMapPut");} catch (Exception e) {e.printStackTrace();}
@@ -205,23 +260,23 @@ public class InputPartie {
 		if(isMouseInput|| isReleasedMouseInput){
 			a=mapMouse.get(oldKey);
 			r_a=mapMouse.get(r_oldKey);
-			}
+		}
 		else{
 			a=comp.getInputMap(IFW).get(KeyStroke.getKeyStroke(oldKey));
 			r_a=comp.getInputMap(IFW).get(KeyStroke.getKeyStroke(r_oldKey));
-			}
+		}
 
 		if(isMouseInput||isReleasedMouseInput){
 			mapMouse.remove(oldKey);mapMouse.remove(r_oldKey);}
 		else{
 			comp.getInputMap(IFW).remove(KeyStroke.getKeyStroke(oldKey));comp.getInputMap(IFW).remove(KeyStroke.getKeyStroke(r_oldKey));}
-		
+
 		if(isMouseInput||isReleasedMouseInput){
 			mapMouse.put(newKey, (String) a);mapMouse.put(r_newKey,(String) r_a);}
 		else{
 			comp.getInputMap(IFW).put(KeyStroke.getKeyStroke(newKey),a);comp.getInputMap(IFW).put(KeyStroke.getKeyStroke(r_newKey),r_a);}
-		
-    }
+
+	}
 	private class MoveAction extends AbstractAction {
 
 		/**
@@ -325,6 +380,18 @@ public class InputPartie {
 		public void actionPerformed(ActionEvent arg0) {
 			pauseDown=true;
 		}}
+	private class ArrowAction extends AbstractAction{
+		/**
+		 * 
+		 */
+		int slotnum=0;
+		private static final long serialVersionUID = 1L;
+		ArrowAction(int _slotnum){slotnum=_slotnum;};
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			arrowDown = slotnum;
+		}}
+
 	private class R_MoveAction extends AbstractAction {
 
 		/**
@@ -424,7 +491,18 @@ public class InputPartie {
 			pauseDown=false;
 			pauseReleased=true;
 		}}
-
+	private class R_ArrowAction extends AbstractAction{
+		/**
+		 * 
+		 */
+		int slotnum=0;
+		private static final long serialVersionUID = 1L;
+		R_ArrowAction(int _slotnum){slotnum=_slotnum;};
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			arrowReleased = slotnum;
+			arrowDown = -1;
+		}}
 	public String buildReleaseKeyStroke(String ks)
 	{
 		String[] ks_split = ks.split(" ");

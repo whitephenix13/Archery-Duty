@@ -53,12 +53,13 @@ public class Spirel extends Monstre{
 	 * @param _staticSpirel, permet de rendre la spirel immobile (si =true)
 	 */	
 	public Spirel( int xPo,int yPo,boolean _staticSpirel,int current_frame){
+		super.init();
 		type = TypeObject.m_spirel;
 		staticSpirel=_staticSpirel;
 
 		xpos(xPo);
 		ypos(yPo); 
-		localVit=new Vitesse(0,0);
+		localVit= new Vitesse(0,0);
 		deplacement=new Attente(type,Attente.attente_gauche,current_frame) ;
 		anim=1;
 		tempsAncienMouv= PartieTimer.me.getElapsedNano();
@@ -73,7 +74,13 @@ public class Spirel extends Monstre{
 
 		xDecallagePlacementTir= Arrays.asList(30,-60,20);
 		yDecallagePlacementTir= Arrays.asList(0 ,0,-100);
+		
+		MAXLIFE = 100;
+		MINLIFE = 0;
+		life= MAXLIFE;
 	}
+	
+	public void onAddLife(){if(life==MINLIFE){needDestroy=true;}};
 	/**
 	 * Permet de savoir de quel cote est tourné le monstre
 	 * 
@@ -150,8 +157,9 @@ public class Spirel extends Monstre{
 	{
 
 		boolean herosAGauche;
+		boolean monsterOnScreen= InterfaceConstantes.SCREEN.polygon.contains(new Point (xpos()+partie.xScreendisp,ypos()+partie.yScreendisp));
+		boolean canAction= (PartieTimer.me.getElapsedNano()-tempsAncienMouv)*Math.pow(10, -6)>delaiMouv && monsterOnScreen;
 		boolean canShoot = (PartieTimer.me.getElapsedNano()-tempsAncienTir)*Math.pow(10, -6)>delaiTir ;
-		boolean canAction= (PartieTimer.me.getElapsedNano()-tempsAncienMouv)*Math.pow(10, -6)>delaiMouv;
 		//On test le cooldown de tir
 		if(canShoot)
 		{
@@ -178,13 +186,12 @@ public class Spirel extends Monstre{
 			
 			herosAGauche= monstreXmiddle-herosXmiddle>=0;
 
-			boolean herosInRange= deltaX*deltaX+deltaY*deltaY<distanceAttaque && ! cooldown;
-			
+			boolean shootAllowed= deltaX*deltaX+deltaY*deltaY<distanceAttaque && ! cooldown && (conditions.getShotSpeedFactor()>0);
 			//If drag and can't shoot, exit 
-			if(this.isDragged() && !herosInRange)
+			if(this.isDragged() && !shootAllowed)
 				return;
-			//on test si le heros est dans le cercle d'attaque
-			if(herosInRange)
+			//Shoot towards heros
+			if(shootAllowed)
 			{
 				//animation d'attente
 				doitChangMouv= !((deplacement.IsDeplacement(Mouvement_perso.attente)) 
@@ -196,9 +203,11 @@ public class Spirel extends Monstre{
 				//envoie du projectile
 				int xtir_dir = droite_gauche(anim).equals(Mouvement.GAUCHE)? 1 : 0;
 				int ytir_dir = 2;
-
-				tabTirMonstre.add(new TirSpirel((xpos()+xDecallagePlacementTir.get(xtir_dir)),(ypos()+yDecallagePlacementTir.get(xtir_dir)),xtir_dir,partie.getFrame()));	
-				tabTirMonstre.add(new TirSpirel((xpos()+xDecallagePlacementTir.get(ytir_dir)),(ypos()+yDecallagePlacementTir.get(ytir_dir)),ytir_dir,partie.getFrame()));	
+				
+				tabTirMonstre.add(new TirSpirel(xpos()+xDecallagePlacementTir.get(xtir_dir),ypos()+yDecallagePlacementTir.get(xtir_dir),
+						xtir_dir,partie.getFrame(),conditions.getDamageFactor(),conditions.getShotSpeedFactor()));	
+				tabTirMonstre.add(new TirSpirel(xpos()+xDecallagePlacementTir.get(ytir_dir),ypos()+yDecallagePlacementTir.get(ytir_dir),
+						ytir_dir,partie.getFrame(),conditions.getDamageFactor(),conditions.getShotSpeedFactor()));	
 
 				cooldown=true;
 
@@ -394,7 +403,7 @@ public class Spirel extends Monstre{
 			else 
 			{
 				animationChanged=false;
-				int nextAnim = deplacement.updateAnimation(TypeObject.m_spirel, anim, partie.getFrame());
+				int nextAnim = deplacement.updateAnimation(TypeObject.m_spirel, anim, partie.getFrame(),conditions.getSpeedFactor());
 				alignHitbox(anim,deplacement,nextAnim,partie,deplace);
 				anim=nextAnim;
 				deplacement.setSpeed(TypeObject.m_spirel, this, anim);

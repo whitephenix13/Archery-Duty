@@ -14,12 +14,12 @@ import types.Vitesse;
 public class Fleche_vent extends Fleche{
 
 	private boolean arrowExploded = false; // do not collide with more than one object 
-	public Fleche_vent(List<Fleche> tabFleche, int current_frame,Heros _shooter,boolean add_to_list)
+	public Fleche_vent(List<Fleche> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor)
 	{
-		super(tabFleche,current_frame,_shooter,add_to_list);
+		super(tabFleche,current_frame,_shooter,add_to_list,damageMult,speedFactor);
 		type_fleche=SPIRITUELLE.VENT;
 		TEMPS_DESTRUCTION= (long) (2* Math.pow(10,8));//in nano sec = 0.2 sec 
-		degat=0;
+		damage=0*damageMult;
 	}
 	@Override
 	protected void onPlanted(List<Collidable> objects, AbstractModelPartie partie)
@@ -36,7 +36,7 @@ public class Fleche_vent extends Fleche{
 		for(Collidable obj : objects)
 		{
 			obj.registerEffect(flecheEffect);
-			obj.localVit=new Vitesse();
+			obj.localVit= new Vitesse(0,0);
 		}
 		//If the arrow is planted on the ground and collide with the heros hitbox, attach it to the heros
 		if(Collision.testcollisionObjects(partie, this, partie.heros)){
@@ -64,7 +64,7 @@ public class Fleche_vent extends Fleche{
 		for(Collidable obj : objects)
 		{
 			obj.registerEffect(flecheEffect);
-			obj.localVit=new Vitesse();
+			obj.localVit= new Vitesse(0,0);
 		}
 		Vent_effect eff = (Vent_effect) flecheEffect;
 		eff.stickedCollidable=collider;

@@ -66,7 +66,7 @@ public class Course extends Mouvement_perso{
 			{if(object.last_colli_left){speed_norm = 0;}}
 			else
 			{if(object.last_colli_right){speed_norm = 0;}}
-			object.localVit.x= speed_norm * ((anim<4)? -1 : 1 );//40 for old deplace
+			object.localVit.x = (speed_norm * ((anim<4)? -1 : 1 ));//40 for old deplace
 		}
 		else if(type.equals(TypeObject.m_spirel))
 		{

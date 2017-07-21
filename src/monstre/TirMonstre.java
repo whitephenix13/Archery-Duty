@@ -1,12 +1,12 @@
 package monstre;
 
-import collision.Collidable;
 import partie.AbstractModelPartie;
 import types.Hitbox;
+import types.Projectile;
 
-public abstract class TirMonstre extends Collidable{
+public abstract class TirMonstre extends Projectile{
 	
-	public int dommage;
+	public float dommage;
 		
 	public abstract Hitbox getWorldHitbox(AbstractModelPartie partie);
 

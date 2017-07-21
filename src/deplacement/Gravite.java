@@ -15,24 +15,23 @@ public class Gravite implements InterfaceConstantes
 	//vitesse max a 195km/h= 54,17 m/s = 90 wu/frame
 	public float varVitesse = (float) (gravity_norm *Config.i_ratio_fps()*Config.i_ratio_fps());
 	public float limVitesse = (float) (10.0 *Config.i_ratio_fps()*Config.i_ratio_fps()) ; // 7
-	public void gravite(Collidable object, boolean slowDown) {
+	public void gravite(Collidable object) {
 		float varVitesseGlissade = varVitesse;
 		float limVitesseGlissade = limVitesse/2;
 		if (object.deplacement.IsDeplacement(Mouvement_perso.glissade))
 		{
 			if(object.localVit.y<(limVitesseGlissade - varVitesseGlissade))
-				object.localVit.y+= varVitesseGlissade;
+				object.localVit.y += varVitesseGlissade;
 
 			else 
-				object.localVit.y= limVitesseGlissade;
+				object.localVit.y=limVitesseGlissade;
 		}
 		else 
 		{
 			if(object.localVit.y<(limVitesse - varVitesse))
-				object.localVit.y+= varVitesse;
-
+				object.localVit.y += varVitesse;
 			else 
-				object.localVit.y= limVitesse;
+				object.localVit.y=limVitesse;
 
 		}
 	}

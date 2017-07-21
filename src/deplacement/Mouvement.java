@@ -66,7 +66,7 @@ public abstract class Mouvement{
 	public abstract boolean IsDeplacement(String s);
 	public abstract void setSpeed(String type,Collidable object, int anim);
 	public abstract String droite_gauche(String type,int anim);
-	public int updateAnimation(String type,int anim,int current_frame) {
-		return animation.update(anim,current_frame);
+	public int updateAnimation(String type,int anim,int current_frame,double speedFactor) {
+		return animation.update(anim,current_frame,speedFactor);
 	}
 	}

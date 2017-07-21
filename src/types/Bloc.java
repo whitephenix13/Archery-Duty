@@ -36,11 +36,12 @@ public class Bloc extends Collidable{
 		this(VIDE,-1,-1,false,false);
 	}
 	public Bloc(String str, int x, int y , boolean bl, boolean back) {
+		super.init();
 		type=TypeObject.bloc;
 		this.img=str;
 		this.xpos(x);
 		this.ypos(y);
-		localVit=new Vitesse(0,0);
+		localVit= new Vitesse(0,0);
 		fixedWhenScreenMoves=false;
 		this.bloquer=bl;
 		this.background=back;

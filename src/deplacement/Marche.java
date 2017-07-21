@@ -84,16 +84,16 @@ public class Marche extends Mouvement_perso{
 			int speed_norm = (int)(3.0 / Config.ratio_fps());
 
 			assert (anim>=0 && anim <8);
-			object.localVit.x= speed_norm * ((anim<4)? -1 : 1 );//20 for old deplace
+			object.localVit.x=(speed_norm * ((anim<4)? -1 : 1 ));//20 for old deplace
 		}
 		else if(type.equals(TypeObject.m_spirel))
 		{
 			int speed_norm = (int)(3.0 / Config.ratio_fps());
 			if(anim<2)
-				object.localVit.x=-1*speed_norm;
+				object.localVit.x=(-1*speed_norm);
 			
 			else
-				object.localVit.x= speed_norm;
+				object.localVit.x=( speed_norm);
 		}
 	}
 	@Override

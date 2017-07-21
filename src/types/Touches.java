@@ -1,9 +1,6 @@
 package types;
 
-import java.awt.event.KeyEvent;
 import java.util.LinkedHashMap;
-
-import javax.swing.AbstractAction;
 
 public class Touches {
 
@@ -19,6 +16,10 @@ public class Touches {
 	public String t_2tir =RIGHT_MOUSE;
 	public String t_slow="Z";
 	public String t_pause= "ESCAPE";
+	public String t_arrow0= "1";
+	public String t_arrow1= "2";
+	public String t_arrow2= "3";
+	public String t_arrow3= "4";
 
 	public LinkedHashMap<String,String> mapMouse = new LinkedHashMap<String,String>();
 

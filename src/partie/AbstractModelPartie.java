@@ -17,8 +17,10 @@ import deplacement.Attente;
 import deplacement.Deplace;
 import effects.Effect;
 import fleches.Fleche;
+import images.ImagesCondition;
 import images.ImagesEffect;
 import images.ImagesFleche;
+import images.ImagesFlecheIcon;
 import images.ImagesHeros;
 import images.ImagesMonde;
 import images.ImagesMonstre;
@@ -45,14 +47,11 @@ public abstract class AbstractModelPartie extends DisplayLoader implements Obser
 	public boolean computationDone=false;
 	
 	protected Deplace deplace = new Deplace();
-	public Monde monde = new Monde();
-
+	public Monde monde = null;
 	public Heros heros;
 
 	//Action speciale pour ralentir le temps 
 	public boolean slowDown=false;
-	//public int slowDownFactor= 3;//6
-	public int slowDownTir= 10;//6
 	public int slowCount=0;
 
 	public List<Fleche> tabFleche= new ArrayList<Fleche>();
@@ -100,7 +99,9 @@ public abstract class AbstractModelPartie extends DisplayLoader implements Obser
 	public ImagesTirMonstre imTirMonstre= new ImagesTirMonstre();
 	public ImagesFleche imFleches = new ImagesFleche();
 	public ImagesEffect imEffect= new ImagesEffect();
-
+	public ImagesCondition imConditions= new ImagesCondition();
+	public ImagesFlecheIcon imFlecheIcon = new ImagesFlecheIcon();
+	
 	public Point INIT_RECT= new Point(50000,50000); //(abs,ord)
 	//public int absRect =INIT_RECT.x;
 	//public int ordRect = INIT_RECT.y;
@@ -161,7 +162,8 @@ public abstract class AbstractModelPartie extends DisplayLoader implements Obser
 		PartieTimer.init();
 
 		deplace = new Deplace();
-		monde = new Monde();
+		if(monde==null)
+			monde = new Monde();
 		frame= 0;
 		heros= new Heros(InterfaceConstantes.LARGEUR_FENETRE/2,InterfaceConstantes.HAUTEUR_FENETRE/2,1,new Attente(TypeObject.heros,Attente.attente_gauche,frame),frame);
 

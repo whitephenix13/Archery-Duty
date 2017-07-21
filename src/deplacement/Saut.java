@@ -119,25 +119,25 @@ public class Saut extends Mouvement_perso{
 			
 			if(heros.sautGlisse)
 			{
-				object.localVit.x=varVit * (heros.droite_gauche(anim).equals(Mouvement.GAUCHE) ? -1 : 1);
+				object.localVit.x=(varVit * (heros.droite_gauche(anim).equals(Mouvement.GAUCHE) ? -1 : 1));
 				heros.sautGlisse=false;
-				object.localVit.y=vitSaut;
+				object.localVit.y=(vitSaut);
 			}
 			else if(heros.sautAccroche)
 			{
 				heros.sautAccroche=false;
-				object.localVit.y=vitSaut;
+				object.localVit.y=(vitSaut);
 			}
 			else
 			{
 				if(heros.debutSaut) 
 				{
-					object.localVit.y=vitSaut;
+					object.localVit.y=(vitSaut);
 					heros.debutSaut =false;
 				}
 				else if(heros.finSaut)
 				{
-					object.localVit.y=0;
+					object.localVit.y=(0);
 				}
 				if (heros.deplaceSautDroit  && !heros.last_colli_right && !heros.sautGlisse)
 				{
@@ -145,9 +145,9 @@ public class Saut extends Mouvement_perso{
 						heros.runBeforeJump=false;
 
 					if(object.localVit.x<(vitMax- varVit))
-						object.localVit.x+= varVit;
+						object.localVit.x+=(varVit);
 					else 
-						object.localVit.x= vitMax;
+						object.localVit.x=(vitMax);
 
 					//on attend que le joueur réappui sur la touche de direction pour redeplacer
 					heros.deplaceSautDroit= false;
@@ -159,9 +159,9 @@ public class Saut extends Mouvement_perso{
 						heros.runBeforeJump=false;
 
 					if(object.localVit.x>(-1*vitMax+ varVit))
-						object.localVit.x-= varVit;
+						object.localVit.x-=(varVit);
 					else 
-						object.localVit.x= -1*vitMax;
+						object.localVit.x=(-1*vitMax);
 
 					//on attend que le joueur réappui sur la touche de direction pour redeplacer
 					heros.deplaceSautGauche= false;
@@ -180,15 +180,15 @@ public class Saut extends Mouvement_perso{
 
 			if(spirel.peutSauter)
 			{
-				object.localVit.y=-1*yspeed;
+				object.localVit.y=(-1*yspeed);
 			}
 			if(spirel.sautGauche && ! spirel.sautDroit)
 			{
-				object.localVit.x= -1*xspeed;
+				object.localVit.x=(-1*xspeed);
 			}
 			if(spirel.sautDroit && ! spirel.sautGauche)
 			{
-				object.localVit.x= xspeed;
+				object.localVit.x=(xspeed);
 			}
 		}
 	}

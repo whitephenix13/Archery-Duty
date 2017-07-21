@@ -9,6 +9,7 @@ import music.MusicBruitage;
 import observer.Observable;
 import partie.AbstractModelPartie;
 import serialize.Serialize;
+import types.Bloc;
 
 public class LoadAllMedias {
 
@@ -86,9 +87,13 @@ public class LoadAllMedias {
 				partie.imFleches.loadMedia();
 				partie.imEffect.loadMedia();
 				partie.imMonde.loadMedia();
+				partie.imConditions.loadMedia();
+				partie.imFlecheIcon.loadMedia();
 				
 				Music.me.loadMedia();
+
 				MusicBruitage.me.loadMedia();
+
 				loadedDone=true;
 			}
 			@Override
@@ -102,9 +107,11 @@ public class LoadAllMedias {
 						partie.imFleches.getPercentage() + 
 						partie.imEffect.getPercentage() +
 						partie.imMonde.getPercentage() + 
+						partie.imConditions.getPercentage() +
+						partie.imFlecheIcon.getPercentage() +
 						Music.me.getPercentage() +
 						MusicBruitage.me.getPercentage()
-						)/9.0) ;
+						)/11.0) ;
 				return res;
 			}
 		};
@@ -114,12 +121,13 @@ public class LoadAllMedias {
 	public void loadNiveau(final String nomFichier, final AbstractModelPartie partie)
 	{
 		Serialize.loadPercentage=0;
-
+		
 		CustomLoad custom = new CustomLoad(){
 			@Override
 			public void run()
 			{
-				partie.monde=Serialize.charger(nomFichier);
+				Bloc[][] oldniveau = partie.monde.name.equals(nomFichier)? partie.monde.niveau :null;
+				partie.monde = Serialize.charger(nomFichier,oldniveau);
 				loadedDone=true;
 			}
 			@Override
@@ -185,8 +193,12 @@ public class LoadAllMedias {
 	}
 	public void wait(DisplayLoader modelToUpdate, Observable modelObsToUpdate,boolean setAllMediaLoaded)
 	{
-		while(!mainLoader.loadedDone)
+		boolean lastRound = true; //to see the 100%
+		while(!mainLoader.loadedDone || lastRound)
 		{
+			if(mainLoader.loadedDone)
+				lastRound=false;
+			
 			if(modelToUpdate!=null)
 				modelToUpdate.loadPercentage=mainLoader.getPercentage();
 			//slow down loop with sleep 

@@ -9,6 +9,7 @@ import javax.vecmath.Vector2d;
 import collision.Collidable;
 import collision.Collision;
 import collision.GJK_EPA;
+import conditions.Condition;
 import debug.Debug_time;
 import deplacement.Accroche;
 import deplacement.Attente;
@@ -23,13 +24,13 @@ import fleches.Fleche;
 import fleches.Fleche_auto_teleguidee;
 import fleches.Fleche_bogue;
 import fleches.Fleche_cac;
-import fleches.Fleche_chargee;
 import fleches.Fleche_electrique;
 import fleches.Fleche_explosive;
 import fleches.Fleche_feu;
 import fleches.Fleche_foudre;
 import fleches.Fleche_glace;
 import fleches.Fleche_grappin;
+import fleches.Fleche_lumiere;
 import fleches.Fleche_ombre;
 import fleches.Fleche_retard;
 import fleches.Fleche_roche;
@@ -41,22 +42,23 @@ import partie.AbstractModelPartie;
 import partie.PartieTimer;
 import principal.InterfaceConstantes;
 import types.Bloc;
+import types.Entitie;
 import types.Hitbox;
 import types.TypeObject;
 import types.Vitesse;
 
-public class Heros extends Collidable{
+public class Heros extends Entitie{
 
 	public int nouvAnim= 0;
 	public Mouvement nouvMouv = new Attente(TypeObject.heros,Attente.attente_gauche,0);
 	//on definit son type de deplacement 
 
-	private int life=InterfaceConstantes.MAXLIFE;
+	
 	private float seyeri=InterfaceConstantes.MAXSEYERI;
-	private int not_enough_seyeri=0; // variable to keep track of the amount of seyeri that a rejected action required (used for visual effect)
-	public void setNotEnoughSeyeri(int val){not_enough_seyeri=val;not_enough_seyeri_counter=10;}
-	public int getNotEnoughSeyeri(){return not_enough_seyeri;}
-	private int not_enough_seyeri_counter; // use this to let the red indicaters appear longuer
+	private float not_enough_seyeri=0; // variable to keep track of the amount of seyeri that a rejected action required (used for visual effect)
+	public void setNotEnoughSeyeri(float val){not_enough_seyeri=val;not_enough_seyeri_counter=10;}
+	public float getNotEnoughSeyeri(){return not_enough_seyeri;}
+	private int not_enough_seyeri_counter; // use this to let the red indicaters appear longer
 	private double accrocheCooldownTimer=0;
 	public void decreaseNotEnoughSeyeriCounter()
 	{
@@ -103,8 +105,12 @@ public class Heros extends Collidable{
 	//In order to determine affinity: 1=Materiel, 2=Spirituel, 3=Destructeur 4=Ruse
 	public int current_slot = 0;
 	//Which arrows are equiped per affinity
-	private String[] slots = {Fleche.SPIRITUELLE.VENT,Fleche.SPIRITUELLE.GRAPPIN,Fleche.SPIRITUELLE.GRAPPIN,Fleche.SPIRITUELLE.VENT};
+	//private String[] slots = {Fleche.DESTRUCTRICE.BOGUE,Fleche.DESTRUCTRICE.EXPLOSIVE,Fleche.DESTRUCTRICE.FOUDRE,Fleche.DESTRUCTRICE.TROU_NOIR};
+	//private String[] slots = {Fleche.MATERIELLE.ELECTRIQUE,Fleche.MATERIELLE.FEU,Fleche.MATERIELLE.GLACE,Fleche.MATERIELLE.ROCHE};
+	private String[] slots = {Fleche.SPIRITUELLE.VENT,Fleche.SPIRITUELLE.LUMIERE,Fleche.SPIRITUELLE.OMBRE,Fleche.SPIRITUELLE.GRAPPIN};
+	//private String[] slots = {Fleche.RUSEE.AUTO_TELEGUIDEE,Fleche.RUSEE.CAC,Fleche.RUSEE.RETARD,Fleche.RUSEE.V_FLECHE};
 
+	public String[] getSlots(){return slots;}
 	/**
 	 * 
 	 * @param special is the arrow special or regular
@@ -155,22 +161,42 @@ public class Heros extends Collidable{
 	public boolean getLast_align_d(){return last_align_down;}
 
 	public Heros( int xPo,int yPo, int _anim, Mouvement_perso dep,int current_frame){
+		super.init();
+		MAXLIFE = 100;
+		MINLIFE = 0;
+		life= MAXLIFE;
 		type=TypeObject.heros;
 		xpos(xPo);
 		ypos(yPo); 
-		localVit = new Vitesse(0,0);
+		localVit= new Vitesse(0,0);
 		fixedWhenScreenMoves=true;
 		deplacement=dep ;
 		anim=_anim;
 		nouvAnim= 0;
 		nouvMouv = new Attente(TypeObject.heros,Attente.attente_gauche,current_frame);
 		tempsTouche=PartieTimer.me.getElapsedNano();
+		
+		//TODO: test
+		//conditions.addNewCondition(Condition.BRULURE);
+		conditions.addNewCondition(Condition.REGENERATION);
+		conditions.addNewCondition(Condition.DEFAILLANCE);
+		conditions.addNewCondition(Condition.FAIBLESSE);
+		conditions.addNewCondition(Condition.FORCE);
+		conditions.addNewCondition(Condition.LENTEUR);
+		//conditions.addNewCondition(Condition.PARALYSIE);
+		//conditions.addNewCondition(Condition.PRECISION);
+		conditions.addNewCondition(Condition.RESISTANCE);
+		conditions.addNewCondition(Condition.VITESSE);
+
 	}
+	
+	public void onAddLife(){};
+	
 	public String droite_gauche (int anim){
 		return deplacement.droite_gauche(TypeObject.heros, anim);
 	}
 
-	public void touche (int degat) 
+	public void touche (float degat) 
 	{
 		tempsTouche=PartieTimer.me.getElapsedNano();
 		afficheTouche=false;
@@ -222,17 +248,7 @@ public class Heros extends Collidable{
 			}
 		}
 	}
-	public int getLife()
-	{
-		return(life);
-	}
-	public void addLife(int add)
-	{
-		life += add;
-		if(life>InterfaceConstantes.MAXLIFE){life=InterfaceConstantes.MAXLIFE;}
-		if(life<InterfaceConstantes.MINLIFE){life=InterfaceConstantes.MINLIFE;}
-
-	}
+	
 	public float getSeyeri()
 	{
 		return(seyeri);
@@ -244,7 +260,7 @@ public class Heros extends Collidable{
 	 * @param add
 	 * @return false if reached minSeyeri
 	 */
-	public boolean seyeriActionPossible(int cost)
+	public boolean seyeriActionPossible(float cost)
 	{
 		if((seyeri+cost)<InterfaceConstantes.MINSEYERI)
 			return false;
@@ -445,7 +461,7 @@ public class Heros extends Collidable{
 		currentValue=new CurrentValue(){		
 			@Override
 			public void res()
-			{xpos(memPos.x);ypos(memPos.y);deplacement=memDep;anim=memAnim;localVit=memVitloca;}};
+			{xpos(memPos.x);ypos(memPos.y);deplacement=memDep;anim=memAnim;localVit=(memVitloca);}};
 	}
 	@Override
 	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
@@ -576,7 +592,7 @@ public class Heros extends Collidable{
 			//on ajuste la position du personnage pour qu'il soit centrÃ© 
 			anim= nextAnim;
 			deplacement=nextMouv;
-			localVit.y=0;
+			localVit.y=(0);
 			return(anim);
 
 		}
@@ -625,6 +641,7 @@ public class Heros extends Collidable{
 			deplacement.setSpeed(TypeObject.heros, this, anim);
 			deplaceSautGauche=false;
 			deplaceSautDroit=false;
+			localVit.x=(0);
 			return(anim);
 		}
 		debugTime.elapsed("accroche", 4);
@@ -750,7 +767,7 @@ public class Heros extends Collidable{
 			//on ajuste la position du personnage pour qu'il soit centr� 
 			alignHitbox(animHeros,nextDep,nextAnim,partie,deplace,blocGaucheGlisse);
 			//on choisit la direction d'attente			
-			localVit.x=0;	
+			localVit.x=(0);
 			finSaut=false;
 			peutSauter=true;
 			anim=nextAnim;
@@ -769,7 +786,7 @@ public class Heros extends Collidable{
 			//on ajuste la position du personnage pour qu'il soit centr� 
 			anim= nextAnim;
 			deplacement=nextMouv;
-			localVit.y=0;
+			localVit.y=(0);
 			return(anim);
 
 		}
@@ -783,7 +800,7 @@ public class Heros extends Collidable{
 			anim = nextAnim;
 			deplacement= nextMouv;
 			deplacement.setSpeed(TypeObject.heros, this, anim);
-			localVit.x=0;
+			localVit.x=(0);
 			nouvAnim=anim;	
 			return(anim);
 
@@ -841,7 +858,7 @@ public class Heros extends Collidable{
 			//if(!partie.changeMouv ) // MEME MOUVEMENT QUE PRECEDEMMENT , otherwise problem with landing 
 		{
 			animationChanged=false;
-			int nextAnim = deplacement.updateAnimation(TypeObject.heros, animHeros, partie.getFrame());
+			int nextAnim = deplacement.updateAnimation(TypeObject.heros, animHeros, partie.getFrame(),conditions.getSpeedFactor());
 			alignHitbox(animHeros,deplacement,nextAnim,partie,deplace,blocGaucheGlisse);
 			anim= nextAnim;
 			deplacement.setSpeed(TypeObject.heros, this, anim);
@@ -866,6 +883,7 @@ public class Heros extends Collidable{
 				&& (blocGauche&&(last_colli_left||getGlobalVit(partie).x<0)) && falling && !no_accroche && accrocheCooldownDone; 
 		boolean res_g = (deplacement.IsDeplacement(Mouvement_perso.saut)||deplacement.IsDeplacement(Mouvement_perso.course)) 
 				&& (blocDroit && (last_colli_right||getGlobalVit(partie).x>0)) && falling && !no_accroche && accrocheCooldownDone; 
+	
 		boolean[] res ={res_d,res_g};
 		//caution for accroche, res_d is actually res_l, and res_l res_d
 		return res;
@@ -947,9 +965,9 @@ public class Heros extends Collidable{
 			double frict = InterfaceConstantes.FRICTION;
 			double newVitX= localVit.x - (localVit.x* frict);
 			if( (!neg && newVitX<minlocalSpeed) || (neg && newVitX>-1*minlocalSpeed) )
-				localVit.x=minlocalSpeed;
+				localVit.x=(minlocalSpeed);
 			else
-				localVit.x=newVitX;
+				localVit.x=(newVitX);
 		}
 
 	}
@@ -995,47 +1013,47 @@ public class Heros extends Collidable{
 		String tir_type_ =get_tir_type(special);
 		//Only give the shooter information in the fleche constructor if it is needed 
 		if(tir_type_.equals(Fleche.NORMAL))
-			fleche =new Fleche(partie.tabFleche,partie.getFrame(),null,add_to_list);
+			fleche =new Fleche(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 
 		//MATERIEL
-		else if(tir_type_.equals(Fleche.MATERIELLE.FOUDRE))
-			fleche =new Fleche_foudre(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+		else if(tir_type_.equals(Fleche.MATERIELLE.FEU))
+			fleche =new Fleche_feu(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 		else if(tir_type_.equals(Fleche.MATERIELLE.ELECTRIQUE))
-			fleche =new Fleche_electrique(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+			fleche =new Fleche_electrique(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 		else if(tir_type_.equals(Fleche.MATERIELLE.GLACE))
-			fleche =new Fleche_glace(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+			fleche =new Fleche_glace(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 		else if(tir_type_.equals(Fleche.MATERIELLE.ROCHE))
-			fleche =new Fleche_roche(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+			fleche =new Fleche_roche(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 
 		//SPIRITUELLE
-		else if(tir_type_.equals(Fleche.SPIRITUELLE.FEU))
-			fleche =new Fleche_feu(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+		else if(tir_type_.equals(Fleche.SPIRITUELLE.LUMIERE))
+			fleche =new Fleche_lumiere(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 		else if(tir_type_.equals(Fleche.SPIRITUELLE.GRAPPIN))
-			fleche =new Fleche_grappin(partie.tabFleche,partie.getFrame(),this,add_to_list);//TODO
+			fleche =new Fleche_grappin(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 		else if(tir_type_.equals(Fleche.SPIRITUELLE.OMBRE))
-			fleche =new Fleche_ombre(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+			fleche =new Fleche_ombre(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 		else if(tir_type_.equals(Fleche.SPIRITUELLE.VENT))
-			fleche =new Fleche_vent(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+			fleche =new Fleche_vent(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 
 		//DESTRUCTEUR
 		else if(tir_type_.equals(Fleche.DESTRUCTRICE.BOGUE))
-			fleche =new Fleche_bogue(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
-		else if(tir_type_.equals(Fleche.DESTRUCTRICE.CHARGEE))
-			fleche =new Fleche_chargee(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+			fleche =new Fleche_bogue(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+		else if(tir_type_.equals(Fleche.DESTRUCTRICE.FOUDRE))
+			fleche =new Fleche_foudre(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 		else if(tir_type_.equals(Fleche.DESTRUCTRICE.EXPLOSIVE))
-			fleche =new Fleche_explosive(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+			fleche =new Fleche_explosive(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 		else if(tir_type_.equals(Fleche.DESTRUCTRICE.TROU_NOIR))
-			fleche =new Fleche_trou_noir(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+			fleche =new Fleche_trou_noir(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 
 		//RUSE
 		else if(tir_type_.equals(Fleche.RUSEE.AUTO_TELEGUIDEE))
-			fleche =new Fleche_auto_teleguidee(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+			fleche =new Fleche_auto_teleguidee(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 		else if(tir_type_.equals(Fleche.RUSEE.CAC))
-			fleche =new Fleche_cac(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+			fleche =new Fleche_cac(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 		else if(tir_type_.equals(Fleche.RUSEE.RETARD))
-			fleche =new Fleche_retard(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+			fleche =new Fleche_retard(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 		else if(tir_type_.equals(Fleche.RUSEE.V_FLECHE))
-			fleche =new Fleche_v_fleche(partie.tabFleche,partie.getFrame(),null,add_to_list);//TODO
+			fleche =new Fleche_v_fleche(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 
 		return fleche;
 	}
@@ -1049,6 +1067,7 @@ public class Heros extends Collidable{
 		Fleche f = getArrowInstance(partie,!tir_type.equals(Fleche.NORMAL),false);
 
 		boolean enough_seyeri=seyeriActionPossible(f.seyeri_cost);
+		boolean notParalyzed = conditions.getShotSpeedFactor()>0;
 		if(!enough_seyeri)
 			setNotEnoughSeyeri(-1*f.seyeri_cost);
 		boolean can_shoot_more_than_one = true;
@@ -1075,7 +1094,7 @@ public class Heros extends Collidable{
 		}
 
 
-		return (enough_seyeri && can_shoot_more_than_one);
+		return (enough_seyeri && notParalyzed && can_shoot_more_than_one);
 	}
 
 	public void shootArrow(AbstractModelPartie partie)

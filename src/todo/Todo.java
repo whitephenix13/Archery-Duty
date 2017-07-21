@@ -5,6 +5,8 @@ public class Todo {
 	//Version 0.1.0
 	//seyeri 
 	//TODO: fleches speciales
+	//TODO: still huge lags: check if it is due to garbage collector 
+	
 		//MATERIEL
 	//TODO: Electrique: Object: create area that paralyse ennemy: can't shoot for a while. Ennemi: damage + create a electic ball moving back to the player
 	//TODO: Glace : Object: create a stalactite submitted to gravity                       Ennemi: damage + slow down
@@ -13,9 +15,9 @@ public class Todo {
 
 	//SPIRITUEL
 	//TODO: Lumiere: boost surrounding beings : speed, jump, damage x2 
-	//TODO: Ombre: teleport
-	//TODO: Vent: projette en l'air
-	//TODO: Grappin
+	//TODO: Ombre: teleport+ malus
+	// Vent: projette en l'air
+	// Grappin
 	
 	//DESTRUCTREUR
 	//TODO: Foudre : lightning going through enemies  
@@ -26,13 +28,14 @@ public class Todo {
 	//RUSE
 	//TODO: auto-teleguidée: goes to nearest ennemi
 	//TODO: retard: stay where shot then move fast + push ennemis 
-	//TODO: v-fleche 
+	//TODO: v-fleche lente 
 	//TODO: cac: tire 3 flèches à portée réduite 
 	
-	
+	//TODO: warning, arrow speed slow down is broken: can gather arrows 
+	//TODO: optimiser la taille du monde chargé dans partie rapide 
 	//TODO: add more sounds for arrows 
 	//TODO: JAR: solve the 2 icons opening ? 
-	//TODO: JAR: delete previous jar in installation
+	//TODO: JAR: delete previous jar in installation, check the manifest version , https://stackoverflow.com/questions/3493416/how-to-run-a-file-before-setup-with-inno-setup
 	//TODO: ajout d'objets comme invicible quand le heros slide 
 	//TODO: Problème si le jeu est ralenti (t=8), spam touche marche => mouvement rapide
 	//TODO mettre à jour deplaceEcran editeur par rapport a celui de AbstractModelPartie
@@ -41,7 +44,6 @@ public class Todo {
 	//TODO: effet slow motion (garder en mémoire les images des mouvements précédants et les afficher avec transparance)
 	//TODO: permttre le resize fenetre
 	//TODO: ajouter des plugins angel chore, ou celesta
-	//TODO: optimiser la taille du monde chargé dans partie rapide 
 	//TODO: creer des "blocs" event
 	//TODO: creer un tutoriel
 	//TODO: permettre de replay le niveau: mémoriser les temps et valeurs des "touches down" et "touches released"

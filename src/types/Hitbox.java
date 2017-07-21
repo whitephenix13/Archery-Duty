@@ -139,7 +139,7 @@ public class Hitbox {
 		return(res);
 	}
 
-	private static Point getHitboxCenter(Hitbox hitbox )
+	public static Point getHitboxCenter(Hitbox hitbox )
 	{
 		assert (hitbox.polygon.npoints==4);
 		///on trace les deux diagonales, l'intersection des deux droites donnent le centre

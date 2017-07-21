@@ -10,6 +10,7 @@ import debug.Debug_time;
 import partie.AbstractModelPartie;
 import personnage.Heros;
 import principal.InterfaceConstantes;
+import types.Entitie;
 import types.Hitbox;
 
 public class Deplace implements InterfaceConstantes{
@@ -48,7 +49,7 @@ public class Deplace implements InterfaceConstantes{
 
 		
 		if(useGravity)
-			gravite.gravite(object, partie.slowDown);
+			gravite.gravite(object);
 
 		debugTime.elapsed("after gravity and before friction", 4);
 
@@ -81,6 +82,12 @@ public class Deplace implements InterfaceConstantes{
 		if(isHeros){
 			Point delta = getdeplaceEcran(partie,(Heros)object);
 			deplaceEcran(delta,partie,object);
+		}
+		
+		//Apply conditions damage 
+		if(object instanceof Entitie){
+			Entitie enti = (Entitie) object;
+			enti.addLife(object.conditions.conditionDamageReceived());
 		}
 
 	}

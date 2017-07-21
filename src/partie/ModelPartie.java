@@ -20,7 +20,10 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import Affichage.Affichage;
+import collision.Collidable;
 import collision.Collision;
+import conditions.Condition;
+import conditions.ConditionHandler;
 import debug.Debug_time;
 import deplacement.Accroche;
 import deplacement.Attente;
@@ -33,8 +36,6 @@ import deplacement.Tir;
 import effects.Effect;
 import fleches.Fleche;
 import images.ImagesEffect;
-import loading.LoadAllMedias;
-import loading.LoadAllMedias.CustomLoad;
 import menuPrincipal.AbstractModelPrincipal;
 import monstre.Monstre;
 import monstre.Spirel;
@@ -43,7 +44,6 @@ import music.Music;
 import music.MusicBruitage;
 import option.Config;
 import principal.InterfaceConstantes;
-import serialize.Serialize;
 import types.Bloc;
 import types.Destroyable;
 import types.Hitbox;
@@ -202,6 +202,10 @@ public class ModelPartie extends AbstractModelPartie{
 			//update effects anim or delete them 
 			gestionEffect();
 
+			//update conditions for all collidable. Only do it at the end to be sure that all entities received the same information on the conditions
+			for(Collidable c : Collidable.getAllCollidable(this))
+				c.conditions.updateConditionState();
+			
 			debugTime.elapsed("object destruction preparation", 2);
 
 			//PREPARE OBJECTS FOR DESTRUCTION 
@@ -237,7 +241,7 @@ public class ModelPartie extends AbstractModelPartie{
 
 			boolean finPartieAvant= finPartie;
 
-			finPartie= (heros.getLife()==InterfaceConstantes.MINLIFE) || (nombreMonstreRestant==0);
+			finPartie= (heros.getLife()==heros.MINLIFE) || (nombreMonstreRestant==0);
 
 			//on detecte la fin de la partie de la première fois : 
 			if(!finPartieAvant &&finPartie )
@@ -284,7 +288,7 @@ public class ModelPartie extends AbstractModelPartie{
 
 					if(monstre.checkCollision && !monstre.getNeedDestroy() && Collision.collisionObjects(this, fleche, monstre))
 					{
-						tabMonstre.get(j).addLife(tabFleche.get(i).degat);
+						tabMonstre.get(j).addLife(tabFleche.get(i).damage);
 					}
 				}
 			}
@@ -325,7 +329,7 @@ public class ModelPartie extends AbstractModelPartie{
 			else if(!eff.getNeedDestroy() && (eff.tempsDetruit==0) )
 			{
 				eff.onUpdate(this,false);
-				eff.anim=eff.animation.update(eff.anim, this.getFrame());
+				eff.anim=eff.animation.update(eff.anim, this.getFrame(),1);
 			}
 		}
 
@@ -416,6 +420,10 @@ public class ModelPartie extends AbstractModelPartie{
 			}
 			if(!inPause )
 			{
+				if(inputPartie.arrowDown>-1)
+				{
+					heros.current_slot=inputPartie.arrowDown;
+				}
 				boolean isDragged = this.heros.isDragged();
 				//TIR 
 				if( (inputPartie.toucheTirDown|| inputPartie.touche2TirDown) && !heros.flecheEncochee && !heros.doitEncocherFleche 
@@ -818,6 +826,10 @@ public class ModelPartie extends AbstractModelPartie{
 			inputPartie.sautDown=false;
 			inputPartie.sautReleased=false;
 		}
+		
+		//SWITCH ARROW 
+		if(inputPartie.arrowReleased>-1)
+			inputPartie.arrowReleased=-1;
 	}
 
 	public void keyAction()
@@ -943,13 +955,25 @@ public class ModelPartie extends AbstractModelPartie{
 
 			int xDraw_d= xDraw +m.deplacement.xtaille.get(m.anim);
 			//draw monster lifebar
-			int[] x= {xDraw/2+xDraw_d/2-InterfaceConstantes.MAXLIFE/2,xDraw/2+xDraw_d/2-InterfaceConstantes.MAXLIFE/2};
+			int[] x= {(int) (xDraw/2+xDraw_d/2-m.MAXLIFE/2),(int) (xDraw/2+xDraw_d/2-m.MAXLIFE/2)};
 			int[] y= {yDraw-10,yDraw-10};
-			int[] width={InterfaceConstantes.MAXLIFE,m.getLife()};
+			int[] width={(int) m.MAXLIFE,(int) m.getLife()};
 			int[] height={5,5};
 			Color[] colors = {Color.BLACK,Color.GREEN};
 			drawBar(g,2,x,y,width,height,colors);
 
+			ArrayList<Condition> allcondis = m.conditions.getAllConditions();
+			int xMiddle = Hitbox.getHitboxCenter(m.getHitbox(INIT_RECT)).x-m.xpos();
+			int xStartDrawCondi = m.conditions.getXStartDraw(xDraw, xMiddle, allcondis.size());
+			int yStartDrawCondi = m.conditions.getYStartDraw(y[0]-25);
+
+			for(int i =0; i<allcondis.size();++i){
+				Condition condi = allcondis.get(i); 
+				if(condi.blinkDisplay)
+					g.drawImage(imConditions.getImage(condi.name), xStartDrawCondi+25*i ,yStartDrawCondi ,null);
+			}
+					
+			
 			//drawBar(g,xDraw/2+xDraw_d/2-InterfaceConstantes.MAXLIFE/2,yDraw-10,InterfaceConstantes.MAXLIFE,5,m.getLife(),Color.BLACK,Color.GREEN);
 			if(drawHitbox)
 			{
@@ -999,7 +1023,15 @@ public class ModelPartie extends AbstractModelPartie{
 				ArrayList<Image> l_image = imHeros.getImages(heros);
 				for(int i=0; i<l_image.size(); ++i)
 					g.drawImage(l_image.get(i), heros.xpos(),heros.ypos(),null);
-
+			}
+			ArrayList<Condition> allcondis = heros.conditions.getAllConditions();
+			int xMiddle = Hitbox.getHitboxCenter(heros.getHitbox(INIT_RECT)).x-heros.xpos();
+			int xStartDrawCondi = heros.conditions.getXStartDraw(heros.xpos(), xMiddle, allcondis.size());
+			int yStartDrawCondi = heros.conditions.getYStartDraw(heros.ypos()-25);
+			for(int i =0; i<allcondis.size();++i){
+				Condition condi = allcondis.get(i); 
+				if(condi.blinkDisplay)
+					g.drawImage(imConditions.getImage(condi.name), xStartDrawCondi+25*i ,yStartDrawCondi ,null);
 			}
 		}
 
@@ -1156,7 +1188,7 @@ public class ModelPartie extends AbstractModelPartie{
 		//life
 		int[] x_l= {10,10};
 		int[] y_l= {10,10};
-		int[] width_l={InterfaceConstantes.MAXLIFE,heros.getLife()};
+		int[] width_l={(int) heros.MAXLIFE,(int) heros.getLife()};
 		int[] height_l={20,20};
 		Color[] colors_l = {Color.BLACK,Color.GREEN};
 		drawBar(g,2,x_l,y_l,width_l,height_l,colors_l);
@@ -1164,7 +1196,7 @@ public class ModelPartie extends AbstractModelPartie{
 		//seyeri
 		int[] x_s= {10,10,10};
 		int[] y_s= {40,40,40};
-		int[] width_s={(int) InterfaceConstantes.MAXSEYERI,heros.getNotEnoughSeyeri(),(int) heros.getSeyeri()};
+		int[] width_s={(int) InterfaceConstantes.MAXSEYERI,(int) heros.getNotEnoughSeyeri(),(int) heros.getSeyeri()};
 		int[] height_s={20,20,20};
 		Color[] colors_s = {Color.BLACK,Color.RED,Color.BLUE};
 		drawBar(g,3,x_s,y_s,width_s,height_s,colors_s);
@@ -1173,10 +1205,17 @@ public class ModelPartie extends AbstractModelPartie{
 
 
 		//nombre de monstre restant
+		for(int i=0; i<heros.getSlots().length;++i)
+		{
+			String s = heros.getSlots()[i];
+			int ydecall = i==heros.current_slot?10:0;
+			g.drawImage(imFlecheIcon.getImage(s), 10 + 25*i, 80+ydecall, null);
+		}
+		
+		//nombre de monstre restant
 		g.setColor(Color.BLACK);
 		g.setFont(new Font(g.getFont().getFontName(),g.getFont().getStyle(), 20 ));
-		g.drawString("Nombre monstres restant: "+ nombreMonstreRestant, 10, 80);
-
+		g.drawString("Monstres restant: "+ nombreMonstreRestant, InterfaceConstantes.LARGEUR_FENETRE - 220, 20);
 		//jeu en pause 
 		if(inPause)
 		{
@@ -1189,7 +1228,7 @@ public class ModelPartie extends AbstractModelPartie{
 
 		if(finPartie)
 		{
-			if(heros.getLife()==InterfaceConstantes.MINLIFE)
+			if(heros.getLife()==heros.MINLIFE)
 			{
 				g.setColor(Color.BLACK);
 				g.setFont(new Font(g.getFont().getFontName(),g.getFont().getStyle(), 40 ));

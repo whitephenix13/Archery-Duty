@@ -84,8 +84,8 @@ public class T_normal extends Mouvement_tir{
 			if(f.type_fleche.equals(Fleche.SPIRITUELLE.GRAPPIN))
 				speed_norm = (int)(60.0 / Config.ratio_fps());//60
 			Vitesse vit = object.convertSpeed(speed_norm,object.rotation);
-			object.localVit.x=vit.x;
-			object.localVit.y=vit.y;
+			object.localVit.x=(vit.x);
+			object.localVit.y=(vit.y);
 		}
 		else if(type.equals(TypeObject.tir_spirel))
 		{
@@ -93,9 +93,9 @@ public class T_normal extends Mouvement_tir{
 
 			switch(anim)
 			{
-			case 0 : object.localVit.x= 1*speed_norm;break;
-			case 1 : object.localVit.x= -1*speed_norm;break;
-			case 2 : object.localVit.y=-1*speed_norm;break;
+				case 0 : object.localVit.x=(1*speed_norm);break;
+				case 1 : object.localVit.x=(-1*speed_norm);break;
+				case 2 : object.localVit.y=(-1*speed_norm);break;
 			}
 		}
 	}
@@ -118,11 +118,11 @@ public class T_normal extends Mouvement_tir{
 		}
 	}
 	@Override
-	public int updateAnimation(String type,int anim,int current_frame) {
+	public int updateAnimation(String type,int anim,int current_frame,double speedFactor) {
 		if(type.equals(TypeObject.fleche))
-			return animation.update(anim,current_frame);
+			return animation.update(anim,current_frame,speedFactor);
 		else  if(type.equals(TypeObject.tir_spirel))
-			return animation.update(0,current_frame);
+			return animation.update(0,current_frame,speedFactor);
 		else 
 			return -1;
 	}

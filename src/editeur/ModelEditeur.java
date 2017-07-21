@@ -397,9 +397,10 @@ public class ModelEditeur extends AbstractModelEditeur{
 		String err = Serialize.sauver(nom, monde);
 		return err;
 	}
+	@SuppressWarnings("unused")
 	public void charger(String nom) 
 	{
-		Monde _monde = Serialize.charger(nom);		
+		Monde _monde = Serialize.charger(nom,null);		
 		if(_monde==null)
 		{
 			return;

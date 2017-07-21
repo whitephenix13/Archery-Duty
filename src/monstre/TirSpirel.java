@@ -27,8 +27,9 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	 * 
 	 * @return le nombre de tour de boucle a attendre avant de redeplacer le monstre
 	 */	
-	public TirSpirel(int _xpos, int _ypos,int _anim,int current_frame)
+	public TirSpirel(int _xpos, int _ypos,int _anim,int current_frame,float damageMultiplier,float speedFactor)
 	{
+		super.init();
 		type=TypeObject.tir_spirel;
 		xpos(_xpos);
 		ypos(_ypos);
@@ -36,13 +37,13 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 		deplacement= new T_normal(type,Attente.attente_gauche,current_frame);
 
 		needDestroy=false;
-		localVit = new Vitesse();
+		localVit=new Vitesse(0,0);
 		fixedWhenScreenMoves=false ; //true : not influenced by screen displacement (ie: use for the hero)
 
 		useGravity=false;
 		deplacement.setSpeed(TypeObject.tir_spirel,this,anim);
 
-		dommage= 0;//-25
+		dommage= -25*damageMultiplier;//-25
 
 		//effect properties
 		this.draggable=false;
