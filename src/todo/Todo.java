@@ -4,17 +4,17 @@ public class Todo {
 	
 	//Version 0.2.2
 
-	//TODO: push :D
+	//TODO: change effect so that their application area is related to the visual? (vent)
 	
 	//TODO: load only relevant part of the world 
 	//TODO: correct Partie timer when system pause 
-	//TODO: CHeck arrows colliding to themselves (the reason why you can't infinite push with wind)
+	//TODO: CHeck arrows colliding to themselves (the reason why you can't infinite push with wind?)
 	//TODO: pre-init grappin to avoid use GC call
 	//TODO: set the java parameter for .jar
 	//TODO: add switch arrow touch option 
 	
 		//MATERIEL
-	//TODO: Electrique: Object: create area that paralyse ennemy: can't shoot for a while. Ennemi: damage + create a electic ball moving back to the player
+	//TODO: Electrique: Object: create area that paralyse ennemy: can't shoot for a while. Ennemi: damage + create a electic ball moving back in the same direction as arrow: destroy all projectiles and disappear when wall it or after time
 	//TODO: Glace : Object: create a stalactite submitted to gravity                       Ennemi: damage + slow down
 	//TODO: Roche: Object : create a pillar                                                Ennemi: damage + vulnerable
 	//TODO: Feu: Object: create a wave of fire pillar                                      Ennemi: damage + burn
