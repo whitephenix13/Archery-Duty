@@ -2,6 +2,8 @@ package fleches;
 
 import java.util.List;
 
+import javax.vecmath.Vector2d;
+
 import collision.Collidable;
 import collision.Collision;
 import effects.Grappin_effect;
@@ -22,8 +24,13 @@ public class Fleche_vent extends Fleche{
 		damage=0*damageMult;
 	}
 	@Override
-	protected void onPlanted(List<Collidable> objects, AbstractModelPartie partie)
+	protected void onPlanted(List<Collidable> objects, AbstractModelPartie partie,boolean stuck)
 	{
+		if(stuck)
+		{
+			this.destroy(partie,false);
+			return;
+		}
 		if(arrowExploded)
 			return;
 
@@ -50,7 +57,7 @@ public class Fleche_vent extends Fleche{
 	}
 	
 	@Override
-	protected boolean OnObjectsCollision(List<Collidable> objects,AbstractModelPartie partie,Collidable collider)
+	protected boolean OnObjectsCollision(List<Collidable> objects,AbstractModelPartie partie,Collidable collider,Vector2d normal)
 	{
 		if(arrowExploded)
 			return false;

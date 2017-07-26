@@ -2,10 +2,13 @@ package fleches;
 
 import java.util.List;
 
+import javax.vecmath.Vector2d;
+
 import collision.Collidable;
 import deplacement.Deplace;
 import effects.Effect;
 import effects.Grappin_effect;
+import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import personnage.Heros;
 import types.Vitesse;
@@ -15,7 +18,7 @@ public class Fleche_grappin extends Fleche {
 	private boolean destroy_next_frame=false;
 	public Collidable collider = null;
 	private boolean dragSomething = false; // boolean to make sure that at most one object is dragged
-	
+
 	public Fleche_grappin(List<Fleche> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor)
 	{
 		super(tabFleche, current_frame,_shooter,add_to_list,damageMult,speedFactor);
@@ -65,25 +68,32 @@ public class Fleche_grappin extends Fleche {
 	}
 
 	@Override
-	protected void onPlanted(List<Collidable> objects,AbstractModelPartie partie)
+	protected void onPlanted(List<Collidable> objects,AbstractModelPartie partie,boolean stuck)
 	{
 		if((!this.needDestroy || this.tempsDetruit>0) && !dragSomething)
 		{
 			//planted is only called if the arrow collide with the world hence the grappin applies on the shooter
 			this.checkCollision=false;
 			this.doitDeplace=false;
-			shooter.registerEffect(flecheEffect);
-			shooter.localVit= new Vitesse(0,0);
-			Grappin_effect grap = ((Grappin_effect)flecheEffect);
-			grap.isDragging=true;
-			grap.shooterDragged=true;
-			dragSomething=true;
+			if(!stuck)
+			{
+				shooter.registerEffect(flecheEffect);
+				shooter.localVit= new Vitesse(0,0);
+				Grappin_effect grap = ((Grappin_effect)flecheEffect);
+				grap.isDragging=true;
+				grap.shooterDragged=true;
+				dragSomething=true;
+			}
+			else
+			{
+				this.destroy(partie, false);
+			}
 		}
 	}
 
 
 	@Override
-	protected boolean OnObjectsCollision(List<Collidable> objects,AbstractModelPartie partie,Collidable collider)
+	protected boolean OnObjectsCollision(List<Collidable> objects,AbstractModelPartie partie,Collidable collider,Vector2d normal)
 	{
 		if(collider.draggable && (!this.needDestroy || this.tempsDetruit>0) && !dragSomething )
 		{
@@ -115,7 +125,7 @@ public class Fleche_grappin extends Fleche {
 			generatedEffect=true;
 			flecheEffect=new Grappin_effect(partie,this,0,partie.getFrame(),shooter);
 			//TODO: sound grappin
-			//MusicBruitage.me.startBruitage("vent_effect");
+			MusicBruitage.startBruitage("arc");
 		}
 
 	}

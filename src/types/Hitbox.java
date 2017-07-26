@@ -47,27 +47,21 @@ public class Hitbox {
 	{
 		Vector2d res= new Vector2d(poly.xpoints[0],poly.ypoints[0]);
 		double res_value = dir.dot(res);
-		boolean isGreater=false;
 		for(int n=1; n<poly.npoints; ++n)
 		{
 			Vector2d vect = new Vector2d(poly.xpoints[n],poly.ypoints[n]);
 			double dot= dir.dot(vect);
-
 			//for a polygon, once you go through all its vertices, the value of the dot product with a direction
 			//increase until you reach the support point and then decrease.
-			if(dot<=res_value)
-				if(isGreater)//we were increasing: the previous point was the support point
-					break;
-				else
-					continue;
-			
-			res_value=dot;
-			res=vect;
-			isGreater=true;
+			if(dot>res_value)
+			{
+				res_value=dot;
+				res=vect;
+			}
 		}
 		return res;
 	}
-	
+
 	public static List<Vector2d> supportsPoint(Vector2d dir, Polygon poly)
 	{
 		List<Vector2d> res= new ArrayList<Vector2d>();
@@ -90,12 +84,12 @@ public class Hitbox {
 			//if dot==last_mem_value we may have several max value, otherwise, the previous memorised values were wrong
 			if(dot>last_mem_value)
 				res= new ArrayList<Vector2d>();
-			
+
 			last_mem_value=dot;
 			res.add(vect);
 			isGreater=true;
 		}
-		
+
 		return res;
 	}
 	public static Hitbox rotateHitbox(Hitbox hit, int angle)
@@ -178,7 +172,7 @@ public class Hitbox {
 		}
 		return copy? copyHit: hit;
 	}
-	
+
 	public static Hitbox plusPoint(Hitbox hit, Point p, boolean copy)
 	{
 		Point p2 = new Point(-p.x,-p.y);

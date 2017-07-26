@@ -171,13 +171,15 @@ public abstract class Collidable extends Destroyable{
 	//Last norm of colliding object (most of the time: world). Null if none. The colliding object must be unpentrable, otherwise its norm is not registered as "last"
 	//WARNING: only works with single object collision. WARNING strange things might happen if the object can move 
 	protected Vector2d normCollision = null;
+	
 	public void setNormCollision(Vector2d _norm){normCollision=_norm;}
 	//return the last norm of colliding object. This object has to be unpenetrable.
 	public abstract Vector2d getNormCollision();
 
 
 	public boolean fixedWhenScreenMoves ; //true : not influenced by screen displacement (ie: use for the hero)
-
+	public boolean controlScreenMotion=false;
+	
 	protected CurrentValue currentValue;
 	public boolean useGravity=false;
 	//Variables pour mémoriser la direction de la dernière collision
@@ -201,8 +203,8 @@ public abstract class Collidable extends Destroyable{
 	public abstract Hitbox getHitbox(Point INIT_RECT);
 	public abstract Hitbox getHitbox(Point INIT_RECT,Mouvement mouv, int _anim);
 
-	public abstract void handleWorldCollision(Vector2d normal,AbstractModelPartie partie);
-	public abstract void handleObjectCollision(AbstractModelPartie partie,Collidable collider);
+	public abstract void handleWorldCollision(Vector2d normal,AbstractModelPartie partie,boolean stuck);
+	public abstract void handleObjectCollision(AbstractModelPartie partie,Collidable collider,Vector2d normal);
 	public abstract void handleStuck(AbstractModelPartie partie);
 
 	/**
@@ -253,11 +255,11 @@ public abstract class Collidable extends Destroyable{
 
 		int xdir = left ? -1 :1;
 		int ydir = down ? 1 :-1;
-		int dx= (int) (Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,depActu, animActu).polygon).x -
-				Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,depSuiv, animSuiv).polygon).x);
+		int dx= (int) Math.round( (Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,depActu, animActu).polygon).x -
+				Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,depSuiv, animSuiv).polygon).x));
 
-		int dy= (int) (Hitbox.supportPoint(new Vector2d(0,ydir), getHitbox(partie.INIT_RECT,depActu, animActu).polygon).y -
-				Hitbox.supportPoint(new Vector2d(0,ydir), getHitbox(partie.INIT_RECT,depSuiv, animSuiv).polygon).y);
+		int dy= (int) Math.round((Hitbox.supportPoint(new Vector2d(0,ydir), getHitbox(partie.INIT_RECT,depActu, animActu).polygon).y -
+				Hitbox.supportPoint(new Vector2d(0,ydir), getHitbox(partie.INIT_RECT,depSuiv, animSuiv).polygon).y));
 
 		int m_dx=0; //-dx, computed if needed
 		int m_dy=0; //-dy, computed if needed
@@ -281,7 +283,7 @@ public abstract class Collidable extends Destroyable{
 		//test the opposite y 
 		if(!valid)
 		{
-			m_dy=(int) (Hitbox.supportPoint(new Vector2d(0,-ydir), getHitbox(partie.INIT_RECT,depActu, animActu).polygon).y -
+			m_dy=(int) Math.round(Hitbox.supportPoint(new Vector2d(0,-ydir), getHitbox(partie.INIT_RECT,depActu, animActu).polygon).y -
 					Hitbox.supportPoint(new Vector2d(0,-ydir), getHitbox(partie.INIT_RECT,depSuiv, animSuiv).polygon).y);
 			
 			pxpos(dx-xadded);
@@ -297,7 +299,7 @@ public abstract class Collidable extends Destroyable{
 		//test the opposite x with the first value of y
 		if(!valid && !n_glisse)
 		{
-			m_dx=(int) (Hitbox.supportPoint(new Vector2d(-xdir,0), getHitbox(partie.INIT_RECT,depActu, animActu).polygon).x -
+			m_dx=(int) Math.round(Hitbox.supportPoint(new Vector2d(-xdir,0), getHitbox(partie.INIT_RECT,depActu, animActu).polygon).x -
 					Hitbox.supportPoint(new Vector2d(-xdir,0), getHitbox(partie.INIT_RECT,depSuiv, animSuiv).polygon).x);
 			
 			pxpos(m_dx-xadded);
@@ -350,7 +352,7 @@ public abstract class Collidable extends Destroyable{
 
 		double x = norm_speed * cos_angle;
 		double y = norm_speed * sin_angle;
-		return new Vitesse((int)x,(int)y);
+		return new Vitesse((int)Math.round(x),(int)Math.round(y));
 	}
 
 	//get all relevant collidable,ie: the one that are affected by the effect of the arrows 

@@ -2,10 +2,16 @@ package todo;
 
 public class Todo {
 	
-	//Version 0.1.0
-	//seyeri 
-	//TODO: fleches speciales
-	//TODO: still huge lags: check if it is due to garbage collector 
+	//Version 0.2.2
+
+	//TODO: push :D
+	
+	//TODO: load only relevant part of the world 
+	//TODO: correct Partie timer when system pause 
+	//TODO: CHeck arrows colliding to themselves (the reason why you can't infinite push with wind)
+	//TODO: pre-init grappin to avoid use GC call
+	//TODO: set the java parameter for .jar
+	//TODO: add switch arrow touch option 
 	
 		//MATERIEL
 	//TODO: Electrique: Object: create area that paralyse ennemy: can't shoot for a while. Ennemi: damage + create a electic ball moving back to the player
@@ -21,7 +27,7 @@ public class Todo {
 	
 	//DESTRUCTREUR
 	//TODO: Foudre : lightning going through enemies  
-	//TODO: Explosif : huge damage (+ projection? )
+	//TODO: Explosif : huge damage (+ projection? ): need time out so that combo with ombre: tp ennemy in explosion?
 	//TODO: Trou noir: suck ennemis + damage 
 	//TODO: Bogue: arrows all around player 
 	
@@ -31,6 +37,7 @@ public class Todo {
 	//TODO: v-fleche lente 
 	//TODO: cac: tire 3 flèches à portée réduite 
 	
+	//TODO: more optimization: use sprite sheet 
 	//TODO: warning, arrow speed slow down is broken: can gather arrows 
 	//TODO: optimiser la taille du monde chargé dans partie rapide 
 	//TODO: add more sounds for arrows 

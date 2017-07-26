@@ -137,36 +137,36 @@ public class ConditionHandler {
 	} 
 	
 	/** Add a new condition to the list or replace existing one */
-	public void addNewCondition(String name)
+	public void addNewCondition(String name,double _duree)
 	{
 		if(name.equals(Condition.BRULURE))
-			conditionsMap.put(name, new C_Brulure());
+			conditionsMap.put(name, new C_Brulure(_duree));
 		if(name.equals(Condition.REGENERATION))
-			conditionsMap.put(name, new C_Regeneration());
+			conditionsMap.put(name, new C_Regeneration(_duree));
 
 		else if(name.equals(Condition.LENTEUR))
-			conditionsMap.put(name, new C_Lenteur());
+			conditionsMap.put(name, new C_Lenteur(_duree));
 
 		else if(name.equals(Condition.VITESSE))
-			conditionsMap.put(name, new C_Vitesse());
+			conditionsMap.put(name, new C_Vitesse(_duree));
 
 		else if(name.equals(Condition.PARALYSIE))
-			conditionsMap.put(name, new C_Paralysie());		
+			conditionsMap.put(name, new C_Paralysie(_duree));		
 		
 		else if(name.equals(Condition.PRECISION))
-			conditionsMap.put(name, new C_Precision());		
+			conditionsMap.put(name, new C_Precision(_duree));		
 
 		else if(name.equals(Condition.DEFAILLANCE))
-			conditionsMap.put(name, new C_Defaillance());	
+			conditionsMap.put(name, new C_Defaillance(_duree));	
 
 		else if(name.equals(Condition.FORCE))
-			conditionsMap.put(name, new C_Force());	
+			conditionsMap.put(name, new C_Force(_duree));	
 
 		else if(name.equals(Condition.RESISTANCE))
-			conditionsMap.put(name, new C_Resistance());	
+			conditionsMap.put(name, new C_Resistance(_duree));	
 
 		else if(name.equals(Condition.FAIBLESSE))
-			conditionsMap.put(name, new C_Faiblesse());
+			conditionsMap.put(name, new C_Faiblesse(_duree));
 		else{
 			try {
 				throw(new Exception("Condition not known: "+ name));

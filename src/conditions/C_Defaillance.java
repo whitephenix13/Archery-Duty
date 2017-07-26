@@ -7,10 +7,10 @@ public class C_Defaillance extends Condition{
 	 * Received more damage from an attack 
 	 * */
 	
-	public C_Defaillance()
+	public C_Defaillance(double _duree)
 	{
 		name=DEFAILLANCE;
-		DUREE= 50*Math.pow(10, 9); //sec 
+		DUREE= _duree*Math.pow(10, 9); //sec 
 		FACTOR= 2; //damage x2  
 		startTime=PartieTimer.me.getElapsedNano();
 	}

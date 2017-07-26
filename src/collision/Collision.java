@@ -16,14 +16,12 @@ import java.util.List;
 
 import javax.vecmath.Vector2d;
 
-import deplacement.Deplace;
-import effects.Effect;
+import fleches.Fleche;
 import partie.AbstractModelPartie;
 import principal.InterfaceConstantes;
 import types.Bloc;
 import types.Hitbox;
 import types.Monde;
-import types.TypeObject;
 import types.Vitesse;
 
 public abstract class Collision implements InterfaceConstantes{
@@ -83,7 +81,6 @@ public abstract class Collision implements InterfaceConstantes{
 
 		Vitesse speed= object.getGlobalVit(partie);
 		Vitesse minSpeed= new Vitesse(-1*speed.x,-1*speed.y);
-
 		mondeBlocs = getMondeBlocs(partie.monde,objectHitbox, partie.INIT_RECT,
 				partie.TAILLE_BLOC);
 		for(Bloc mondeBloc : mondeBlocs)
@@ -102,7 +99,8 @@ public abstract class Collision implements InterfaceConstantes{
 			if(simplex!=null)
 			{
 				dNull=false;
-				dInter= GJK_EPA.EPA(mondeBox.polygon, objectHitbox.polygon, simplex, minSpeed.vect2d(), normals);
+				dInter= GJK_EPA.EPA(objectHitbox.polygon,mondeBox.polygon, simplex, minSpeed.vect2d(), normals);
+
 			}
 			collision_type =  GJK_EPA.isIntersect(dInter,dNull);
 			if( (collision_type == GJK_EPA.INTER && !considerTouch) || (considerTouch && collision_type != GJK_EPA.NOT_INTER) )
@@ -113,6 +111,7 @@ public abstract class Collision implements InterfaceConstantes{
 	/** @return false if object is stuck into environment */
 	public static boolean ejectWorldCollision(AbstractModelPartie partie, Collidable object)
 	{
+
 		//on calcul l'endroit où serait le nouvel objet
 		int xDeplacement=0;
 		int yDeplacement=0;
@@ -133,8 +132,8 @@ public abstract class Collision implements InterfaceConstantes{
 			corrected_norm= object.max_speed_norm/speed_norm;
 		}
 
-		xDeplacement=(int) (speed.x*corrected_norm  );
-		yDeplacement=(int) (speed.y*corrected_norm  );
+		xDeplacement=(int) Math.round(speed.x*corrected_norm  );
+		yDeplacement=(int) Math.round(speed.y*corrected_norm  );
 
 		boolean noIntersection = false;
 		//distance which must move the object to avoid any collisions
@@ -220,6 +219,7 @@ public abstract class Collision implements InterfaceConstantes{
 					double yequ = (speed.y>0 && y_out==(int)y_out)? -1 : 0;
 					vectOut= new Vector2d(Math.floor(x_out)+x+xequ,Math.floor(y_out)+y+yequ);
 					intersectedHitbox=mondeBox;
+
 					if((Math.abs(maxInterDist.x)-Math.abs((int)vectOut.x))<0 || 
 							((Math.abs(maxInterDist.y)-Math.abs((int)vectOut.y))<0 ))
 					{
@@ -258,7 +258,7 @@ public abstract class Collision implements InterfaceConstantes{
 		{
 			object.setNormCollision(EPA_normal);
 			//on appelle la fonction qui gère les collisions en fonction de la normale
-			object.handleWorldCollision(EPA_normal,partie);
+			object.handleWorldCollision(EPA_normal,partie,false);
 		}
 		else
 			object.setNormCollision(null);
@@ -318,10 +318,20 @@ public abstract class Collision implements InterfaceConstantes{
 		Vector2d firstDir = new Vector2d(supp1.x-supp2.x, supp1.y-supp2.y);
 
 		List<Vector2d> simplex = GJK_EPA.intersects(objectHitbox1.polygon,objectHitbox2.polygon ,firstDir);
+
+
+		List<Vector2d> normals = new ArrayList<Vector2d>();
+
+		Vector2d EPA_normal = null;
+	
 		if(simplex!=null){
+			GJK_EPA.EPA(objectHitbox1.polygon, objectHitbox2.polygon, simplex, firstDir, normals);
+			if(normals.size()>0)
+				EPA_normal=normals.get(0);
 			if(warnCollision){
-				object1.handleObjectCollision(partie,object2);
-				object2.handleObjectCollision(partie,object1);
+				object1.handleObjectCollision(partie,object2,EPA_normal);
+				EPA_normal.negate();
+				object2.handleObjectCollision(partie,object1,EPA_normal);
 			}
 			return true;
 		}

@@ -75,7 +75,7 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	}
 	@Override
 	public void handleStuck(AbstractModelPartie partie) {
-		handleWorldCollision(new Vector2d(0,0), partie);
+		handleWorldCollision(new Vector2d(0,0), partie,true);
 	}
 	@Override
 	public void handleDeplacementSuccess(AbstractModelPartie partie) {
@@ -118,7 +118,7 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 		return Hitbox.plusPoint(hit1, new Point(partie.xScreendisp,partie.yScreendisp),true);
 	}
 	@Override
-	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie) {
+	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,boolean stuck) {
 		//project speed to ground 
 		boolean collision_gauche = normal.x>0;
 		boolean collision_droite = normal.x<0;
@@ -132,7 +132,7 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 		
 	}
 	@Override
-	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider) {needDestroy=true;}
+	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider,Vector2d normal) {needDestroy=true;}
 
 
 }

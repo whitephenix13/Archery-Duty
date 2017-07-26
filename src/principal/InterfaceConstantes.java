@@ -6,7 +6,7 @@ import types.Hitbox;
 
 
 public interface InterfaceConstantes {
-	static String VERSION ="0.0.0";
+	static String VERSION ="0.2.2";
 	
 	static int DEBUG_TIME_VERBOSE=0;// 0 for none, 1 for more , ...until 4
 	

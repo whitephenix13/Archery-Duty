@@ -126,7 +126,7 @@ public abstract class Monstre extends Entitie implements InterfaceConstantes, Se
 		Hitbox hit1  =Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos(),ypos()),true);
 		return Hitbox.plusPoint(hit1, new Point(partie.xScreendisp,partie.yScreendisp),true);	}
 	@Override
-	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie) {
+	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,boolean stuck) {
 		boolean collision_gauche = normal.x>0;
 		boolean collision_droite = normal.x<0;
 		//boolean collision_haut = normal.y>0;
@@ -160,7 +160,7 @@ public abstract class Monstre extends Entitie implements InterfaceConstantes, Se
 		}
 	}
 	@Override
-	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider) {}
+	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider,Vector2d normal) {}
 	public class ResetHandleCollision
 	{
 		public void reset()

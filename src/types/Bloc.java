@@ -133,14 +133,14 @@ public class Bloc extends Collidable{
 		return getHitbox(INIT_RECT);
 	}
 	@Override
-	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie) {
+	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,boolean stuck) {
 		//no collision handle: this bloc si currently static which means that the only objects that can collides with it are
 		//mobile objects. We'll rather call the handleCollision of the mobile objects 
 		//REMOVEfor(int i= currentEffects.size()-1;i>=0;i--)
 			//currentEffects.get(i).onAffectedObjectCollide(partie,this,normal);
 	}
 	@Override
-	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider) {
+	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider,Vector2d normal) {
 		try {
 			throw new Exception("Calling handleObjectCollision for a bloc is forbidden");
 		} catch (Exception e) {

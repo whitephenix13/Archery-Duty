@@ -1,11 +1,13 @@
 package menuPrincipal;
 
 import java.awt.Dimension;
-import java.awt.event.KeyEvent;
+import java.awt.Polygon;
 import java.io.IOException;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.management.Notification;
 import javax.management.NotificationEmitter;
@@ -14,7 +16,7 @@ import javax.management.openmbean.CompositeData;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.JFrame;
-import javax.swing.KeyStroke;
+import javax.vecmath.Vector2d;
 
 import com.sun.management.GarbageCollectionNotificationInfo ;
 
@@ -22,6 +24,8 @@ import Affichage.Affichage;
 import choixNiveau.AffichageChoixNiveau;
 import choixNiveau.ControlerChoixNiveau;
 import choixNiveau.ModelChoixNiveau;
+import collision.GJK_EPA;
+import collision.GJK_EPA.IntersectPoint;
 import credit.AffichageCredit;
 import debug.Debug_time;
 import editeur.AffichageEditeur;
@@ -29,9 +33,7 @@ import editeur.ControlerEditeur;
 import editeur.ModelEditeur;
 import images.ImagesPrincipal;
 import loading.LoadAllMedias;
-import loading.LoadAllMedias.CustomLoad;
 import music.Music;
-import observer.Observer;
 import option.AffichageOption;
 import option.Config;
 import option.ControlerOption;
@@ -41,11 +43,12 @@ import partie.ControlerPartie;
 import partie.ModelPartie;
 import principal.InterfaceConstantes;
 import principal.TypeApplication;
+import types.Hitbox;
 import types.Touches;
 
 
 public class ModelPrincipal extends AbstractModelPrincipal{
-	
+
 	protected void Init() {
 		debutBoucle=false;
 
@@ -56,7 +59,7 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		controlerPrincipal = new ControlerPrincipal(principal);
 		affichagePrincipal = new AffichagePrincipal(controlerPrincipal);
 		principal.addObserver(affichagePrincipal);
-		
+
 		edit = new ModelEditeur();
 		controlerEditeur = new ControlerEditeur(edit);
 		affichageEditeur = new AffichageEditeur(controlerEditeur);
@@ -94,7 +97,7 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		affich.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
 		affich.setVisible(true);		
-		
+
 		//add main observer used to ask for global screen update ie: when loading 
 		principal.addMainObserver(affich);
 		edit.addMainObserver(affich);
@@ -288,12 +291,12 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 			partieLoader.loadNiveau(choix.getNiveauSelectionne(), partie);
 			partieLoader.start();
 			partieLoader.wait(partie, partie,false);
-			
+
 			//make sure that all other media are loaded correctly
 			allMediaLoader.wait(partie, partie,true);
-			
+
 			//Get rid of all the images and music loaded in cache 
-			System.gc();
+			//System.gc();
 			partie.startPartie(InterfaceConstantes.SPAWN_PROGRAMME);//SPAWN_ALEATOIRE, SPAWN_PROGRAMME
 
 			//listener
@@ -388,10 +391,51 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 	}
 	public static void main(String[] args) throws InterruptedException, UnsupportedAudioFileException, IOException, LineUnavailableException, URISyntaxException 
 	{
+		/*TEST PROJECTION */
+		/*List<Vector2d> simplex = new ArrayList<Vector2d>();
+		simplex.add(new Vector2d(0,1));
+		simplex.add(new Vector2d(1,-104));
+		simplex.add(new Vector2d(1,-5));
+		
+		Vector2d dir = new Vector2d(30,5);
+		
+		IntersectPoint p1 = GJK_EPA.getEdgeInDirection(simplex, dir, null, null);
+		
+		List<Vector2d> simplex2 = new ArrayList<Vector2d>();
+		simplex2.add(new Vector2d(0,1));
+		simplex2.add(new Vector2d(1,-104));
+		simplex2.add(new Vector2d(1,-5));
+		
+		simplex2.remove(p1.index);
+		IntersectPoint p2 = GJK_EPA.getEdgeInDirection(simplex2, dir, null, null);
+
+		System.out.println(simplex.get(p1.index));
+		System.out.println(simplex2.get(p2.index));
+		
+		Polygon pol = new Polygon();
+		pol.addPoint(0, 1);
+		pol.addPoint(1, -104);
+		pol.addPoint(1, -5);
+		Vector2d v1 = Hitbox.supportPoint(dir, pol);
+		
+		Polygon pol2 = new Polygon();
+		pol2.addPoint(0, 1);
+		pol2.addPoint(1, -104);
+		pol2.addPoint(1, -5);
+	
+		Vector2d v2 = Hitbox.supportPoint(dir, pol2);
+		System.out.println(v1);
+		
+		IntersectPoint pp1 =GJK_EPA.projection(new Vector2d(0,1), new Vector2d(1,-5), dir);
+		IntersectPoint pp2 =GJK_EPA.projection(new Vector2d(1,-104), new Vector2d(1,-5), dir);
+		System.out.println((pp1==null) + " "+( pp2==null));*/
+		//END TEST
 		TypeApplication.isJar= new TypeApplication().isJar();
 		ModelPrincipal principal = new ModelPrincipal();
 		principal.Init();
 		principal.StartBoucleJeu();
+
+
 		//Convertisseur conv = new Convertisseur();
 		//conv.convertir();
 

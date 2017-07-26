@@ -6,6 +6,8 @@ import java.util.List;
 
 import javax.vecmath.Vector2d;
 
+import types.Hitbox;
+
 public abstract class GJK_EPA {
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	private static float FLOAT_MAX = 3.402823466e+38F;
@@ -28,7 +30,7 @@ public abstract class GJK_EPA {
 			dNull=false;
 			GJK_EPA.EPA(b, a, simplex, firstDir , normals);
 		}
-			return isIntersect(dInter,dNull);
+		return isIntersect(dInter,dNull);
 	}
 	public static int isIntersect(double dInter,boolean dNull)
 	{
@@ -54,7 +56,7 @@ public abstract class GJK_EPA {
 				touchingNow= (Math.abs(A.x)<0.71f); // ~sqrt(2)/2
 			else
 			{
-	
+
 				//Find C such that AB . CO = (0,0) (O being vector(0,0))
 				// (B.x-A.x) C.x + (B.y-A.y) C.y =0 <=>  C.x + a* C.y = 0
 				//C belong to AB : C.y = a * C.x + b
@@ -66,7 +68,7 @@ public abstract class GJK_EPA {
 				Vector2d v = new Vector2d(X,Y);
 				touchingNow=(v.length() < 0.71);
 			}
-			
+
 			touching = touching || touchingNow;
 			if(touching)
 				break;
@@ -316,8 +318,11 @@ public abstract class GJK_EPA {
 
 	}
 
+	/**Expansion algorithm which iteratively adds a point in order to expand the simplex. Stop when the distance to the closest edge is close to the one of the point added */
 	public static double EPA(Polygon shapeA, Polygon shapeB, List<Vector2d> simplex, Vector2d dir, List<Vector2d> outNormal)
 	{
+		
+
 		while(true)
 		{
 			double distance = FLOAT_MAX;
@@ -331,22 +336,53 @@ public abstract class GJK_EPA {
 			//get support point in direction of edge's normal
 			final Vector2d sup = support( shapeA,edgeNormal  );
 			sup.sub( support( shapeB, new Vector2d( -edgeNormal.x, -edgeNormal.y ) ) ); 
-
-			distance = edgeInDirection.distanceNormal;
-
+			//get support point in direction of edge's normal
 			double d = sup.dot(edgeNormal);
 
 			if( (d - distance) <= TOLERANCE)
 			{
+	
+
+				edgeInDirection.normal= correctNormal(edgeInDirection.normal);
+				
 				outNormal.add(edgeInDirection.normal);
 				return edgeInDirection.distance;
 			}
-			else
+			else{
+				
 				simplex.add(edgeInDirection.index,sup);
+			}
 
 		}
 	}
+	/*Project a vector to the closest vector that makes a 90° with the axis.
+	 * Positif perturbation makes the vector turn toward the positif angle*/
+	public static Vector2d projectVectorTo90(Vector2d v,boolean negate,double perturbation)
+	{
+		boolean biggestX = Math.abs(v.x)>=Math.abs(v.y);
+		int neg =negate?-1:1;
+		if(biggestX)
+		{
+			int sign = v.x>0?1:-1;
+			return new Vector2d(1*sign*neg,perturbation*sign*neg);
+		}
+		else
+		{
+			int sign = v.y>0?1:-1;
+			return new Vector2d(perturbation*sign*neg,1*sign*neg);
+		}
 
+	}
+	public static Vector2d correctNormal(Vector2d v)
+	{
+		//correct -0 to 0 
+		if(Math.abs(v.x)==0)
+			v.x=0;
+		if(Math.abs(v.y)==0)
+			v.y=0;
+		
+		return v;
+	}
 	public static boolean containValue(double p1, double p2,double point)
 	{
 		if( ( (Math.min(p1, p2)-TOLERANCE)<= point) && ( (Math.max(p1, p2)+TOLERANCE)>= point) )
@@ -355,10 +391,29 @@ public abstract class GJK_EPA {
 			return false;
 	}
 
-	private static IntersectPoint getEdgeInDirection(List<Vector2d> simplex, Vector2d dir,Polygon shA, Polygon shB)
+	public static Vector2d supportPoint(Vector2d dir, List<Vector2d> l)
+	{
+		Vector2d res= l.get(0);
+		double res_value = dir.dot(res);
+		for(int n=1; n<l.size(); ++n)
+		{
+			Vector2d vect = l.get(n);
+			double dot= dir.dot(vect);
+
+			if(dot>res_value)
+			{
+				res_value=dot;
+				res=vect;
+			}
+		}
+		return res;
+	}
+
+	public static IntersectPoint getEdgeInDirection(List<Vector2d> simplex, Vector2d dir,Polygon shA, Polygon shB)
 	{
 		IntersectPoint intersectTest=null;
 		IntersectPoint memIntersectTest=null;
+
 		for(int i = 0; i < simplex.size(); i++)
 		{
 			int j;
@@ -367,8 +422,10 @@ public abstract class GJK_EPA {
 			else
 				j = i+1;
 			intersectTest = projection(simplex.get(i),simplex.get(j),dir);
+			//System.out.println("Projection: " +simplex.get(i) +" "+simplex.get(j)+ " "+dir);
 			if(intersectTest!=null)
 			{
+				//System.out.println(intersectTest.normal);
 				intersectTest.index=j;
 				if(intersectTest.normal==null)
 				{
@@ -382,13 +439,16 @@ public abstract class GJK_EPA {
 
 					outerloop: 
 						for(int indA =0; indA<shA.npoints; indA++)
-							for(int indB =0; indA<shB.npoints; indB++)
+							for(int indB =0; indB<shB.npoints; indB++)
 							{
 								Vector2d v = new Vector2d(shA.xpoints[indA]-shB.xpoints[indB],shA.ypoints[indA]-shB.ypoints[indB]);
-								if(v.dot(n)<TOLERANCE)
+								double dot = v.dot(n);
+								if(dot<TOLERANCE)
+								{
 									break outerloop;
+								}
 
-								else if (v.dot(n)>TOLERANCE)
+								else if (dot>TOLERANCE)
 									n = new Vector2d(-n.x,-n.y);
 
 								//else: continue
@@ -396,16 +456,22 @@ public abstract class GJK_EPA {
 					intersectTest.normal=n;
 
 				}
-				if(intersectTest.distanceNormal>TOLERANCE)
-					return intersectTest;
-				else
-					memIntersectTest=intersectTest; //continue to look for a better point if exists 
+				//if(intersectTest.distanceNormal>TOLERANCE )){
+				return intersectTest;
+				
+				//else
+					//memIntersectTest=intersectTest; //continue to look for a better point if exists 
+
 			}
 		}
+		
 		return memIntersectTest;
 	}
+
+
 	//calculate the projection of the origin in the direction dir on the segment [p1,p2]
-	private static IntersectPoint projection(Vector2d p1, Vector2d p2, Vector2d dir)
+	
+	public static IntersectPoint projection(Vector2d p1, Vector2d p2, Vector2d dir)
 	{
 		//(1)y=ax+b avec pt intercection P={X,Y} et X[min(p1.x,p2.x),max(p1.x,p2.x)], Y[min(p1.y,p2.y),max(p1.y,p2.y)]
 		//(2)D : y= dir.y/dir.x * x
@@ -470,7 +536,6 @@ public abstract class GJK_EPA {
 			}
 			else //(1) y=ax+b, (2) y= dir.y/dir.x* x
 			{
-
 				double X=b/(dirSlope-a);
 				double Y=dirSlope*X;
 				intersectP=new Vector2d(X,Y);

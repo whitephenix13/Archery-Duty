@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import javax.vecmath.Vector2d;
 
+import collision.GJK_EPA;
 import principal.InterfaceConstantes;
 
 @SuppressWarnings("serial")
@@ -88,7 +89,7 @@ public class Vitesse implements Serializable{
 	{
 		if(normal==null)
 			return vit;
-		
+		normal = GJK_EPA.projectVectorTo90(normal, false, 0);
 		double dotNormal = vit.vect2d().dot(normal);
 		if(dotNormal>=0)
 			return vit;

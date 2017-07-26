@@ -7,10 +7,10 @@ public class C_Faiblesse extends Condition{
 	 * Give less damage when attacking 
 	 * */
 	
-	public C_Faiblesse()
+	public C_Faiblesse(double _duree)
 	{
 		name=FAIBLESSE;
-		DUREE= 50*Math.pow(10, 9); //sec 
+		DUREE= _duree*Math.pow(10, 9); //sec 
 		FACTOR= 0.5; //damage x0.5  
 		startTime=PartieTimer.me.getElapsedNano();
 	}

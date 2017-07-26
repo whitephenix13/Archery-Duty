@@ -7,10 +7,10 @@ public class C_Brulure extends Condition{
 	 * Inflicts damage on duration 
 	 * */
 	
-	public C_Brulure()
+	public C_Brulure(double _duree)
 	{
 		name=BRULURE;
-		DUREE= 50*Math.pow(10, 9); //sec 
+		DUREE= _duree*Math.pow(10, 9); //sec 
 		STEP = 1*Math.pow(10, 9); //damage every seconds
 		DAMAGE = -5; //5 damage every STEP
 		

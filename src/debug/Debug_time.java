@@ -23,9 +23,12 @@ public class Debug_time {
 			for(int i=0; i<verbose; i++)
 				tabs+="\t";
 			
-			String s = "Time: "+mess+ ": "+ ((System.nanoTime()-time)*Math.pow(10, -9)) + " / "+ (System.nanoTime()-starttime)*Math.pow(10, -9);
+			double deltaAction = System.nanoTime()-time;
+			double deltaLoop = System.nanoTime()-starttime;
+
+			String s = "Time: "+mess+ ": "+ ((deltaAction)*Math.pow(10, -9)) + " / "+ (deltaLoop)*Math.pow(10, -9);
 					
-			if((System.nanoTime()-starttime)*Math.pow(10, -9)>MAX_TIME)
+			if((deltaLoop)*Math.pow(10, -9)>MAX_TIME)
 				System.err.println(tabs+"W"+s);
 			else
 				System.out.println(tabs+s);

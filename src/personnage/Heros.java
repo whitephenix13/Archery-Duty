@@ -107,7 +107,7 @@ public class Heros extends Entitie{
 	//Which arrows are equiped per affinity
 	//private String[] slots = {Fleche.DESTRUCTRICE.BOGUE,Fleche.DESTRUCTRICE.EXPLOSIVE,Fleche.DESTRUCTRICE.FOUDRE,Fleche.DESTRUCTRICE.TROU_NOIR};
 	//private String[] slots = {Fleche.MATERIELLE.ELECTRIQUE,Fleche.MATERIELLE.FEU,Fleche.MATERIELLE.GLACE,Fleche.MATERIELLE.ROCHE};
-	private String[] slots = {Fleche.SPIRITUELLE.VENT,Fleche.SPIRITUELLE.LUMIERE,Fleche.SPIRITUELLE.OMBRE,Fleche.SPIRITUELLE.GRAPPIN};
+	private String[] slots = {Fleche.SPIRITUELLE.VENT,Fleche.SPIRITUELLE.GRAPPIN,Fleche.SPIRITUELLE.OMBRE,Fleche.SPIRITUELLE.LUMIERE};
 	//private String[] slots = {Fleche.RUSEE.AUTO_TELEGUIDEE,Fleche.RUSEE.CAC,Fleche.RUSEE.RETARD,Fleche.RUSEE.V_FLECHE};
 
 	public String[] getSlots(){return slots;}
@@ -175,18 +175,18 @@ public class Heros extends Entitie{
 		nouvAnim= 0;
 		nouvMouv = new Attente(TypeObject.heros,Attente.attente_gauche,current_frame);
 		tempsTouche=PartieTimer.me.getElapsedNano();
-		
+		controlScreenMotion=true;
 		//TODO: test
 		//conditions.addNewCondition(Condition.BRULURE);
-		conditions.addNewCondition(Condition.REGENERATION);
-		conditions.addNewCondition(Condition.DEFAILLANCE);
-		conditions.addNewCondition(Condition.FAIBLESSE);
-		conditions.addNewCondition(Condition.FORCE);
-		conditions.addNewCondition(Condition.LENTEUR);
+		//conditions.addNewCondition(Condition.REGENERATION);
+		//conditions.addNewCondition(Condition.DEFAILLANCE);
+		//conditions.addNewCondition(Condition.FAIBLESSE);
+		//conditions.addNewCondition(Condition.FORCE);
+		//conditions.addNewCondition(Condition.LENTEUR);
 		//conditions.addNewCondition(Condition.PARALYSIE);
 		//conditions.addNewCondition(Condition.PRECISION);
-		conditions.addNewCondition(Condition.RESISTANCE);
-		conditions.addNewCondition(Condition.VITESSE);
+		//conditions.addNewCondition(Condition.RESISTANCE,30);
+		//conditions.addNewCondition(Condition.VITESSE,30);
 
 	}
 	
@@ -411,7 +411,7 @@ public class Heros extends Entitie{
 		return false;
 	}
 	@Override
-	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie) {
+	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,boolean stuck) {
 		boolean collision_gauche = normal.x>0;
 		boolean collision_droite = normal.x<0;
 		//boolean collision_haut = normal.y>0;
@@ -449,7 +449,7 @@ public class Heros extends Entitie{
 	}
 
 	@Override
-	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider) {}
+	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider,Vector2d normal) {}
 
 	@Override
 	public void memorizeCurrentValue() {
@@ -1027,13 +1027,13 @@ public class Heros extends Entitie{
 
 		//SPIRITUELLE
 		else if(tir_type_.equals(Fleche.SPIRITUELLE.LUMIERE))
-			fleche =new Fleche_lumiere(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_lumiere(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type_.equals(Fleche.SPIRITUELLE.GRAPPIN))
-			fleche =new Fleche_grappin(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_grappin(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type_.equals(Fleche.SPIRITUELLE.OMBRE))
-			fleche =new Fleche_ombre(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_ombre(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type_.equals(Fleche.SPIRITUELLE.VENT))
-			fleche =new Fleche_vent(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_vent(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 
 		//DESTRUCTEUR
 		else if(tir_type_.equals(Fleche.DESTRUCTRICE.BOGUE))

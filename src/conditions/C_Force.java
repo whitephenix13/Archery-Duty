@@ -7,10 +7,10 @@ public class C_Force extends Condition{
 	 * Inflicts more damage when attacking
 	 * */
 	
-	public C_Force()
+	public C_Force(double _duree)
 	{
 		name=FORCE;
-		DUREE= 30*Math.pow(10, 9); //sec 
+		DUREE= _duree*Math.pow(10, 9); //sec 
 		FACTOR= 2; //damage x2  
 		startTime=PartieTimer.me.getElapsedNano();
 	}

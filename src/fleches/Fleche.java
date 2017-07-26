@@ -163,14 +163,15 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 		beforeFlecheDestroyed(partie);
 		super.destroy(partie, destroyNow);
 		//remove itself from created effect 
-		flecheEffect.onRemoveRefFleche(partie,destroyNow);
+		if(flecheEffect !=null)
+			flecheEffect.onRemoveRefFleche(partie,destroyNow);
 	}
 	@Override
 	public void onDestroy(AbstractModelPartie partie){
 		//do nothing when detroyed 
 	}
 	
-	protected void onPlanted(List<Collidable> objects,AbstractModelPartie partie)
+	protected void onPlanted(List<Collidable> objects,AbstractModelPartie partie,boolean stuck)
 	{
 		this.timer();
 	}
@@ -181,7 +182,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 	 * @param collider
 	 * @return true if need immediate destroy
 	 */
-	protected boolean OnObjectsCollision (List<Collidable> objects,AbstractModelPartie partie,Collidable collider)
+	protected boolean OnObjectsCollision (List<Collidable> objects,AbstractModelPartie partie,Collidable collider,Vector2d normal)
 	{
 		return true;
 	}
@@ -202,7 +203,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 			for(int j = 0; j<current_pol.npoints; ++j)
 			{
 				Point2D temp = tr.transform(new Point(current_pol.xpoints[j],current_pol.ypoints[j]), null);
-				new_pol.addPoint((int)temp.getX()-pos.x-screendisp.x,(int)temp.getY()-pos.y-screendisp.y);
+				new_pol.addPoint((int)Math.round(temp.getX()-pos.x-screendisp.x),(int)Math.round(temp.getY()-pos.y-screendisp.y));
 				
 			}
 			new_rotated_hit.add(new Hitbox(new_pol));
@@ -235,7 +236,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 		
 		
 	@Override
-	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie) {
+	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,boolean stuck) {
 		
 		boolean collision_gauche = normal.x>0;
 		boolean collision_droite = normal.x<0;
@@ -247,17 +248,17 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 		this.isPlanted=true;
 		ArrayList<Collidable> objects = Collidable.getAllEntitiesCollidable(partie);
 
-		onPlanted(objects,partie);
+		onPlanted(objects,partie,stuck);
 		
 		
 	}
 	@Override
 	public void handleObjectCollision(AbstractModelPartie partie,
-			Collidable collider) 
+			Collidable collider,Vector2d normal) 
 	{
 		ArrayList<Collidable> objects = Collidable.getAllEntitiesCollidable(partie);
 
-		this.needDestroy = OnObjectsCollision(objects,partie,collider);
+		this.needDestroy = OnObjectsCollision(objects,partie,collider,normal);
 	}
 
 	@Override
@@ -365,7 +366,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 		//si il y a collision lors du changement d'animation, on doit arreter la fleche
 		if (!Collision.ejectWorldCollision(partie , this))
 		{
-			handleWorldCollision(new Vector2d(), partie);
+			handleWorldCollision(new Vector2d(), partie,false);
 		}
 
 	}
@@ -424,7 +425,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 	}
 	@Override
 	public void handleStuck(AbstractModelPartie partie) {
-		handleWorldCollision( new Vector2d(), partie );
+		handleWorldCollision( new Vector2d(), partie,true );
 	}
 	@Override
 	public void handleDeplacementSuccess(AbstractModelPartie partie) {
