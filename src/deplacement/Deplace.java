@@ -7,6 +7,7 @@ import javax.vecmath.Vector2d;
 import collision.Collidable;
 import collision.Collision;
 import debug.Debug_time;
+import effects.Effect;
 import partie.AbstractModelPartie;
 import personnage.Heros;
 import principal.InterfaceConstantes;
@@ -84,10 +85,16 @@ public class Deplace implements InterfaceConstantes{
 			deplaceEcran(delta,partie,object);
 		}
 		
-		//Apply conditions damage 
+		
 		if(object instanceof Entitie){
 			Entitie enti = (Entitie) object;
-			enti.addLife(object.conditions.conditionDamageReceived());
+			
+			//update the conditions (or other) before applying them
+			for(Effect eff : enti.currentEffects)
+				eff.updateOnCollidable(partie, enti);
+			
+			//Apply conditions damage 
+			enti.addLife(enti.conditions.conditionDamageReceived());
 		}
 
 	}

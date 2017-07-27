@@ -13,9 +13,9 @@ import javax.vecmath.Vector2d;
 import collision.Collidable;
 import deplacement.Deplace;
 import fleches.Fleche;
-import fleches.Fleche_grappin;
 import partie.AbstractModelPartie;
 import personnage.Heros;
+import types.Entitie;
 import types.Hitbox;
 import types.TypeObject;
 import types.Vitesse;
@@ -59,6 +59,8 @@ public class Grappin_effect extends Effect{
 		name = Fleche.SPIRITUELLE.GRAPPIN;
 		xtaille =  Arrays.asList(1657);
 		ytaille =  Arrays.asList(30);
+		hitbox= Hitbox.createSquareHitboxes(1657-MAX_LENGTH,0,1657,30,1);
+
 		rotation = 0;
 
 		int start_index =0;
@@ -148,10 +150,40 @@ public class Grappin_effect extends Effect{
 		else
 			rotation = Deplace.XYtoAngle(xPosRelative, yPosRelative);
 		
+		hitbox= Hitbox.createSquareHitboxes((int)(1657-current_length),0,1657,30,1);
+		super.onUpdate(partie, lastCompute);	
 	}
 
+	
+	@Override
+	public void updateOnCollidable(AbstractModelPartie partie,Entitie attacher)
+	{
+		
+	}
+	
+	@Override
+	public Vitesse getModifiedVitesse(AbstractModelPartie partie,Collidable obj) {
+		//if(modified_vitesse==null)
+		//{
+		if(obj.type.equals(TypeObject.heros) && ! this.shooterDragged)
+			return new Vitesse(); 
+
+		if(!obj.type.equals(TypeObject.heros) &&  this.shooterDragged)
+			return new Vitesse(); 
+
+		double[] XY = Deplace.angleToXY(rotation);
+		double normXY = Math.sqrt(Math.pow(XY[0],2)+Math.pow(XY[1],2));
+		modified_vitesse= new Vitesse(XY[0]*DRAG_SPEED/normXY,XY[1]*DRAG_SPEED/normXY);
+		if(!shooterDragged)
+			modified_vitesse=modified_vitesse.negate();
+
+		//}
+
+		return modified_vitesse;	
+	}
+	
 	@Override 
-	public AffineTransform getTransformDraw(AbstractModelPartie partie) {
+	public AffineTransform computeTransformDraw(AbstractModelPartie partie) {
 		Point taille = new Point(xtaille.get(anim),ytaille.get(anim));
 
 		int xshift =(int) ( taille.x /2 * xplace * Math.cos(0) - taille.y /2 * yplace * Math.sin(0));
@@ -202,26 +234,7 @@ public class Grappin_effect extends Effect{
 
 		return previousMaskedIm;
 	}
-	@Override
-	public Vitesse getModifiedVitesse(AbstractModelPartie partie,Collidable obj) {
-		//if(modified_vitesse==null)
-		//{
-		if(obj.type.equals(TypeObject.heros) && ! this.shooterDragged)
-			return new Vitesse(); 
-
-		if(!obj.type.equals(TypeObject.heros) &&  this.shooterDragged)
-			return new Vitesse(); 
-
-		double[] XY = Deplace.angleToXY(rotation);
-		double normXY = Math.sqrt(Math.pow(XY[0],2)+Math.pow(XY[1],2));
-		modified_vitesse= new Vitesse(XY[0]*DRAG_SPEED/normXY,XY[1]*DRAG_SPEED/normXY);
-		if(!shooterDragged)
-			modified_vitesse=modified_vitesse.negate();
-
-		//}
-
-		return modified_vitesse;	
-	}
+	
 
 
 }

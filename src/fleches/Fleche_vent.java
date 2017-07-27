@@ -6,11 +6,11 @@ import javax.vecmath.Vector2d;
 
 import collision.Collidable;
 import collision.Collision;
-import effects.Grappin_effect;
 import effects.Vent_effect;
 import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import personnage.Heros;
+import types.Entitie;
 import types.Vitesse;
 
 public class Fleche_vent extends Fleche{
@@ -24,7 +24,7 @@ public class Fleche_vent extends Fleche{
 		damage=0*damageMult;
 	}
 	@Override
-	protected void onPlanted(List<Collidable> objects, AbstractModelPartie partie,boolean stuck)
+	protected void onPlanted(List<Entitie> objects, AbstractModelPartie partie,boolean stuck)
 	{
 		if(stuck)
 		{
@@ -40,13 +40,13 @@ public class Fleche_vent extends Fleche{
 			flecheEffect=new Vent_effect(partie,this,0,partie.getFrame());
 			MusicBruitage.startBruitage("vent_effect");
 		}
-		for(Collidable obj : objects)
+		for(Entitie obj : objects)
 		{
 			obj.registerEffect(flecheEffect);
 			obj.localVit= new Vitesse(0,0);
 		}
 		//If the arrow is planted on the ground and collide with the heros hitbox, attach it to the heros
-		if(Collision.testcollisionObjects(partie, this, partie.heros)){
+		if(Collision.testcollisionObjects(partie, this, partie.heros,true)){
 			partie.heros.addSynchroSpeed(this);
 			Vent_effect eff = (Vent_effect) flecheEffect;
 			eff.stickedCollidable=this.shooter;
@@ -57,7 +57,7 @@ public class Fleche_vent extends Fleche{
 	}
 	
 	@Override
-	protected boolean OnObjectsCollision(List<Collidable> objects,AbstractModelPartie partie,Collidable collider,Vector2d normal)
+	protected boolean OnObjectsCollision(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d normal)
 	{
 		if(arrowExploded)
 			return false;
@@ -68,7 +68,7 @@ public class Fleche_vent extends Fleche{
 			flecheEffect=new Vent_effect(partie,this,0,partie.getFrame());
 			MusicBruitage.startBruitage("vent_effect");
 		}
-		for(Collidable obj : objects)
+		for(Entitie obj : objects)
 		{
 			obj.registerEffect(flecheEffect);
 			obj.localVit= new Vitesse(0,0);

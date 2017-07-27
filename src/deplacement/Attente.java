@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import collision.Collidable;
+import types.Hitbox;
 import types.TypeObject;
 import types.Vitesse;
 
@@ -32,12 +33,12 @@ public class Attente extends Mouvement_perso{
 			List<Integer> yh = Arrays.asList(13,13,13,13);
 			List<Integer> yb = Arrays.asList(99,99,99,99);
 
-			hitboxCreation.add(asListPoint(xg,yh));
-			hitboxCreation.add(asListPoint(xd,yh));
-			hitboxCreation.add(asListPoint(xd,yb));
-			hitboxCreation.add(asListPoint(xg,yb));
+			hitboxCreation.add(Hitbox.asListPoint(xg,yh));
+			hitboxCreation.add(Hitbox.asListPoint(xd,yh));
+			hitboxCreation.add(Hitbox.asListPoint(xd,yb));
+			hitboxCreation.add(Hitbox.asListPoint(xg,yb));
 
-			hitbox = createHitbox(hitboxCreation);
+			hitbox = Hitbox.createHitbox(hitboxCreation);
 			//animation frame, current_frame, start_index, end_index
 			int start_index =type_mouv==attente_gauche ? 0 : 2;
 			int end_index =type_mouv==attente_gauche ? 2 : 4;
@@ -55,12 +56,12 @@ public class Attente extends Mouvement_perso{
 			List<Integer> yh = Arrays.asList(0,0);
 			List<Integer> yb = Arrays.asList(74,74);
 
-			hitboxCreation.add(asListPoint(xg,yh));
-			hitboxCreation.add(asListPoint(xd,yh));
-			hitboxCreation.add(asListPoint(xd,yb));
-			hitboxCreation.add(asListPoint(xg,yb));
+			hitboxCreation.add(Hitbox.asListPoint(xg,yh));
+			hitboxCreation.add(Hitbox.asListPoint(xd,yh));
+			hitboxCreation.add(Hitbox.asListPoint(xd,yb));
+			hitboxCreation.add(Hitbox.asListPoint(xg,yb));
 
-			hitbox = createHitbox(hitboxCreation);
+			hitbox = Hitbox.createHitbox(hitboxCreation);
 			int start_index =type_mouv==attente_gauche ? 0 : 1;
 			int end_index =type_mouv==attente_gauche ? 1 : 2;
 			//animation frame, current_frame, start_index, end_index

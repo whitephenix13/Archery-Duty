@@ -10,6 +10,7 @@ import deplacement.Animation;
 import deplacement.Mouvement;
 import fleches.Fleche;
 import option.Config;
+import types.Hitbox;
 import types.TypeObject;
 import types.Vitesse;
 
@@ -33,12 +34,12 @@ public class T_normal extends Mouvement_tir{
 			List<Integer> yh = Arrays.asList(5,5,5,5);
 			List<Integer> yb = Arrays.asList(11,11,11,11);
 
-			hitboxCreation.add(asListPoint(xg,yh));
-			hitboxCreation.add(asListPoint(xd,yh));
-			hitboxCreation.add(asListPoint(xd,yb));
-			hitboxCreation.add(asListPoint(xg,yb));
+			hitboxCreation.add(Hitbox.asListPoint(xg,yh));
+			hitboxCreation.add(Hitbox.asListPoint(xd,yh));
+			hitboxCreation.add(Hitbox.asListPoint(xd,yb));
+			hitboxCreation.add(Hitbox.asListPoint(xg,yb));
 
-			hitbox = createHitbox(hitboxCreation);
+			hitbox = Hitbox.createHitbox(hitboxCreation);
 			//animation frame, current_frame, start_index, end_index
 			int delta= 5;
 			animation.start(Arrays.asList(delta,2*delta,3*delta,4*delta), current_frame, 0, 4);
@@ -57,12 +58,12 @@ public class T_normal extends Mouvement_tir{
 			List<Integer> yh = Arrays.asList(0,0,0);
 			List<Integer> yb = Arrays.asList(34,34,114);
 
-			hitboxCreation.add(asListPoint(xg,yh));
-			hitboxCreation.add(asListPoint(xd,yh));
-			hitboxCreation.add(asListPoint(xd,yb));
-			hitboxCreation.add(asListPoint(xg,yb));
+			hitboxCreation.add(Hitbox.asListPoint(xg,yh));
+			hitboxCreation.add(Hitbox.asListPoint(xd,yh));
+			hitboxCreation.add(Hitbox.asListPoint(xd,yb));
+			hitboxCreation.add(Hitbox.asListPoint(xg,yb));
 
-			hitbox = createHitbox(hitboxCreation);
+			hitbox = Hitbox.createHitbox(hitboxCreation);
 			//animation frame, current_frame, start_index, end_index
 			animation.start(Arrays.asList(2), current_frame, 0, 1);
 		}

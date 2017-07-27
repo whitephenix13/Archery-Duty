@@ -5,12 +5,18 @@ import java.awt.Point;
 import java.util.Arrays;
 
 import collision.Collidable;
+import collision.Collision;
+import conditions.Condition;
 import fleches.Fleche;
 import partie.AbstractModelPartie;
+import types.Entitie;
+import types.Hitbox;
 import types.Vitesse;
 
 public class Lumiere_effect extends Effect{
 	
+	double DUREE_VITESSE = 10;
+
 	public Lumiere_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame)
 	{
 		anim=_anim;
@@ -19,22 +25,31 @@ public class Lumiere_effect extends Effect{
 		name = Fleche.SPIRITUELLE.LUMIERE;
 		xtaille =  Arrays.asList(100,100,100,100,100);
 		ytaille =  Arrays.asList(100,100,100,100,100);
+		hitbox= Hitbox.createSquareHitboxes(0,0,100,100,5);
+
 		rotation = _ref_fleche.rotation;
 		int start_index =0;
 		int end_index =5;
 		animation.start(Arrays.asList(4,8,12,16,20), current_frame, start_index, end_index);
 		maxnumberloops = 1;
-
+		
+		localVit= new Vitesse();
 		partie.arrowsEffects.add(this);
 	}
 
+
+	@Override
+	public void updateOnCollidable(AbstractModelPartie partie,Entitie attacher)
+	{
+		if(Collision.testcollisionObjects(partie, this, attacher,true))
+			attacher.conditions.addNewCondition(Condition.VITESSE, DUREE_VITESSE);
+	}
 	
 	@Override
-	public void onUpdate(AbstractModelPartie partie, boolean last) {
-		// TODO Auto-generated method stub
-		
+	public Vitesse getModifiedVitesse(AbstractModelPartie partie,
+			Collidable obj) {
+		return new Vitesse();
 	}
-
 	@Override
 	public Point getTranslationFromTranformDraw(AbstractModelPartie partie) {
 		int fanim = ref_fleche.anim;
@@ -52,15 +67,7 @@ public class Lumiere_effect extends Effect{
 		return transl;
 	}
 
-	@Override
-	public Image applyFilter(AbstractModelPartie partie, Image im) {
-		return im;
-	}
-
-	@Override
-	public Vitesse getModifiedVitesse(AbstractModelPartie partie,
-			Collidable obj) {
-		return new Vitesse();
-	}
+	
+	
 
 }

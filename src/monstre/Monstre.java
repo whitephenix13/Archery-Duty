@@ -13,13 +13,11 @@ import deplacement.Deplace;
 import deplacement.Mouvement;
 import deplacement.Mouvement_perso;
 import effects.Effect;
-import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import personnage.Heros;
 import principal.InterfaceConstantes;
 import types.Entitie;
 import types.Hitbox;
-import types.Vitesse;
 
 
 @SuppressWarnings("serial")

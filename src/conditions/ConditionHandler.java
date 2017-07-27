@@ -141,7 +141,7 @@ public class ConditionHandler {
 	{
 		if(name.equals(Condition.BRULURE))
 			conditionsMap.put(name, new C_Brulure(_duree));
-		if(name.equals(Condition.REGENERATION))
+		else if(name.equals(Condition.REGENERATION))
 			conditionsMap.put(name, new C_Regeneration(_duree));
 
 		else if(name.equals(Condition.LENTEUR))

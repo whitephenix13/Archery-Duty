@@ -9,7 +9,6 @@ import javax.vecmath.Vector2d;
 import collision.Collidable;
 import collision.Collision;
 import collision.GJK_EPA;
-import conditions.Condition;
 import debug.Debug_time;
 import deplacement.Accroche;
 import deplacement.Attente;
@@ -109,7 +108,6 @@ public class Heros extends Entitie{
 	//private String[] slots = {Fleche.MATERIELLE.ELECTRIQUE,Fleche.MATERIELLE.FEU,Fleche.MATERIELLE.GLACE,Fleche.MATERIELLE.ROCHE};
 	private String[] slots = {Fleche.SPIRITUELLE.VENT,Fleche.SPIRITUELLE.GRAPPIN,Fleche.SPIRITUELLE.OMBRE,Fleche.SPIRITUELLE.LUMIERE};
 	//private String[] slots = {Fleche.RUSEE.AUTO_TELEGUIDEE,Fleche.RUSEE.CAC,Fleche.RUSEE.RETARD,Fleche.RUSEE.V_FLECHE};
-
 	public String[] getSlots(){return slots;}
 	/**
 	 * 
@@ -1084,7 +1082,9 @@ public class Heros extends Entitie{
 					arrow_already_shot=true;
 					if(f.destroy_on_click)
 					{
-						tabFleche.get(i).destroy(partie,true);
+						Fleche f_to_destruct = tabFleche.get(i);
+						if(!f_to_destruct.getNeedDestroy() && (f_to_destruct.tempsDetruit==0))
+							f_to_destruct.destroy(partie,true);
 					}
 					break;
 				}

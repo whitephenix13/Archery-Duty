@@ -21,6 +21,7 @@ import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import personnage.Heros;
 import principal.InterfaceConstantes;
+import types.Entitie;
 import types.Hitbox;
 import types.Projectile;
 import types.TypeObject;
@@ -111,9 +112,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 		
 		damage = -50 * damageMultiplier;
 		seyeri_cost=-5;
-		
-		//effect properties
-		this.draggable=false;
+
 	}
 	public Fleche(List<Fleche> tabFleche,int current_frame,Heros _shooter,float damageMultiplier,float speedFactor)
 	{
@@ -136,7 +135,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 		xpos((int) newpos.getX()-partie.xScreendisp);
 		ypos((int) newpos.getY()-partie.yScreendisp);
 		
-		convertHitbox(partie.INIT_RECT,draw_tr,new Point(xpos(),ypos()),new Point(partie.xScreendisp,partie.yScreendisp));
+		deplacement.hitbox_rotated  = Hitbox.convertHitbox(deplacement.hitbox,partie.INIT_RECT,draw_tr,new Point(xpos(),ypos()),new Point(partie.xScreendisp,partie.yScreendisp));
 
 		//reset the 0 of the transformation. usefull since the position changed from 0 to its drawing position (~700,400)
 		draw_tr.translate(-xpos(), -ypos());
@@ -165,13 +164,14 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 		//remove itself from created effect 
 		if(flecheEffect !=null)
 			flecheEffect.onRemoveRefFleche(partie,destroyNow);
+		flecheEffect=null;
 	}
 	@Override
 	public void onDestroy(AbstractModelPartie partie){
 		//do nothing when detroyed 
 	}
 	
-	protected void onPlanted(List<Collidable> objects,AbstractModelPartie partie,boolean stuck)
+	protected void onPlanted(List<Entitie> objects,AbstractModelPartie partie,boolean stuck)
 	{
 		this.timer();
 	}
@@ -182,7 +182,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 	 * @param collider
 	 * @return true if need immediate destroy
 	 */
-	protected boolean OnObjectsCollision (List<Collidable> objects,AbstractModelPartie partie,Collidable collider,Vector2d normal)
+	protected boolean OnObjectsCollision (List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d normal)
 	{
 		return true;
 	}
@@ -192,25 +192,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 		return null;
 	}
 	
-	public void convertHitbox(Point INIT_RECT,AffineTransform tr,Point pos,Point screendisp) {
-		List<Hitbox> current = deplacement.hitbox;
-		List<Hitbox> new_rotated_hit = new ArrayList<Hitbox>();
-
-		for (int i = 0; i<current.size(); ++i)
-		{
-			Polygon current_pol = current.get(i).polygon; 
-			Polygon new_pol = new Polygon();
-			for(int j = 0; j<current_pol.npoints; ++j)
-			{
-				Point2D temp = tr.transform(new Point(current_pol.xpoints[j],current_pol.ypoints[j]), null);
-				new_pol.addPoint((int)Math.round(temp.getX()-pos.x-screendisp.x),(int)Math.round(temp.getY()-pos.y-screendisp.y));
-				
-			}
-			new_rotated_hit.add(new Hitbox(new_pol));
-		}
-
-		deplacement.hitbox_rotated= new_rotated_hit;
-	}
+	
 	@Override
 	public Hitbox getHitbox(Point INIT_RECT) {
 		if(!encochee)
@@ -241,12 +223,13 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 		boolean collision_gauche = normal.x>0;
 		boolean collision_droite = normal.x<0;
 		//boolean collision_haut = normal.y>0;
-		//boolean collision_bas = normal.y<0;	last_colli_left=collision_gauche;
+		//boolean collision_bas = normal.y<0;	
+		last_colli_left=collision_gauche;
 		last_colli_right=collision_droite;
 		localVit= new Vitesse(0,0);
 		this.doitDeplace=false;
 		this.isPlanted=true;
-		ArrayList<Collidable> objects = Collidable.getAllEntitiesCollidable(partie);
+		ArrayList<Entitie> objects = Collidable.getAllEntitiesCollidable(partie);
 
 		onPlanted(objects,partie,stuck);
 		
@@ -256,7 +239,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 	public void handleObjectCollision(AbstractModelPartie partie,
 			Collidable collider,Vector2d normal) 
 	{
-		ArrayList<Collidable> objects = Collidable.getAllEntitiesCollidable(partie);
+		ArrayList<Entitie> objects = Collidable.getAllEntitiesCollidable(partie);
 
 		this.needDestroy = OnObjectsCollision(objects,partie,collider,normal);
 	}
@@ -283,7 +266,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 		{
 			//set the anim 
 			double[] anim_rot = deplace.getAnimRotationTir(partie,true);
-			int animFleche = deplacement.updateAnimation(TypeObject.fleche, anim, partie.getFrame(),conditions.getSpeedFactor());
+			int animFleche = deplacement.updateAnimation(TypeObject.fleche, anim, partie.getFrame(),speedFactor);
 			rotation = anim_rot[1];
 			if(animFleche==anim)
 				animationChanged=false;
@@ -301,7 +284,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 				return(animSuivante);
 			}
 			else {
-				int animFleche = deplacement.updateAnimation(TypeObject.fleche, anim, partie.getFrame(),conditions.getSpeedFactor());
+				int animFleche = deplacement.updateAnimation(TypeObject.fleche, anim, partie.getFrame(),speedFactor);
 				if(animFleche==anim)
 					animationChanged=false;
 				return animFleche;

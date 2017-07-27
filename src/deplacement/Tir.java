@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import collision.Collidable;
+import types.Hitbox;
 import types.TypeObject;
 
 public class Tir extends Mouvement_perso
@@ -38,12 +39,12 @@ public class Tir extends Mouvement_perso
 				y_center_tir.add(yh.get(i)+ (yb.get(i)+yh.get(i))/5);//arm height
 
 			}
-			hitboxCreation.add(asListPoint(xg,yh));
-			hitboxCreation.add(asListPoint(xd,yh));
-			hitboxCreation.add(asListPoint(xd,yb));
-			hitboxCreation.add(asListPoint(xg,yb));
+			hitboxCreation.add(Hitbox.asListPoint(xg,yh));
+			hitboxCreation.add(Hitbox.asListPoint(xd,yh));
+			hitboxCreation.add(Hitbox.asListPoint(xd,yb));
+			hitboxCreation.add(Hitbox.asListPoint(xg,yb));
 
-			hitbox = createHitbox(hitboxCreation);
+			hitbox = Hitbox.createHitbox(hitboxCreation);
 			//animation frame, current_frame, start_index, end_index
 			animation.start(Arrays.asList(2), current_frame, 0, 1);
 

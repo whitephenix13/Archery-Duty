@@ -10,6 +10,7 @@ import collision.Collidable;
 import monstre.Spirel;
 import option.Config;
 import personnage.Heros;
+import types.Hitbox;
 import types.TypeObject;
 
 public class Saut extends Mouvement_perso{
@@ -37,12 +38,12 @@ public class Saut extends Mouvement_perso{
 			List<Integer> yh = Arrays.asList(8,5,5,8,5,5);
 			List<Integer> yb = Arrays.asList(96,98,86,96,98,86);
 
-			hitboxCreation.add(asListPoint(xg,yh));
-			hitboxCreation.add(asListPoint(xd,yh));
-			hitboxCreation.add(asListPoint(xd,yb));
-			hitboxCreation.add(asListPoint(xg,yb));
+			hitboxCreation.add(Hitbox.asListPoint(xg,yh));
+			hitboxCreation.add(Hitbox.asListPoint(xd,yh));
+			hitboxCreation.add(Hitbox.asListPoint(xd,yb));
+			hitboxCreation.add(Hitbox.asListPoint(xg,yb));
 
-			hitbox = createHitbox(hitboxCreation);
+			hitbox = Hitbox.createHitbox(hitboxCreation);
 			//animation frame, current_frame, start_index, end_index
 			int start_index=0;int end_index=0;
 			if(type_mouv==jump_gauche){
@@ -72,12 +73,12 @@ public class Saut extends Mouvement_perso{
 			List<Integer> yh = Arrays.asList(0,0);
 			List<Integer> yb = Arrays.asList(74,74);
 
-			hitboxCreation.add(asListPoint(xg,yh));
-			hitboxCreation.add(asListPoint(xd,yh));
-			hitboxCreation.add(asListPoint(xd,yb));
-			hitboxCreation.add(asListPoint(xg,yb));
+			hitboxCreation.add(Hitbox.asListPoint(xg,yh));
+			hitboxCreation.add(Hitbox.asListPoint(xd,yh));
+			hitboxCreation.add(Hitbox.asListPoint(xd,yb));
+			hitboxCreation.add(Hitbox.asListPoint(xg,yb));
 
-			hitbox = createHitbox(hitboxCreation);
+			hitbox = Hitbox.createHitbox(hitboxCreation);
 			//animation frame, current_frame, start_index, end_index
 			int start_index=0;int end_index=0;
 			if(type_mouv==jump_gauche){

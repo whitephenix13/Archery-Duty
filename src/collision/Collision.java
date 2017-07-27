@@ -266,13 +266,13 @@ public abstract class Collision implements InterfaceConstantes{
 		return true; //not stuck
 	}
 
-	public static boolean testcollisionObjects(AbstractModelPartie partie, Collidable object1,Collidable object2)
+	public static boolean testcollisionObjects(AbstractModelPartie partie, Collidable object1,Collidable object2,boolean computeDirWithSpeed)
 	{
-		return collisionObjects(partie, object1,object2,false);
+		return collisionObjects(partie, object1,object2,false,computeDirWithSpeed);
 	}
-	public static boolean collisionObjects(AbstractModelPartie partie, Collidable object1,Collidable object2)
+	public static boolean collisionObjects(AbstractModelPartie partie, Collidable object1,Collidable object2,boolean computeDirWithSpeed)
 	{
-		return collisionObjects(partie, object1,object2,true);
+		return collisionObjects(partie, object1,object2,true,computeDirWithSpeed);
 	}
 
 
@@ -284,7 +284,7 @@ public abstract class Collision implements InterfaceConstantes{
 	 * @param object2
 	 * @return True if the two objects are colliding
 	 */
-	private static boolean collisionObjects(AbstractModelPartie partie, Collidable object1,Collidable object2,boolean warnCollision)
+	private static boolean collisionObjects(AbstractModelPartie partie, Collidable object1,Collidable object2,boolean warnCollision,boolean computeDirWithSpeed)
 	{
 
 		Hitbox objectHitbox1 = null;
@@ -310,12 +310,15 @@ public abstract class Collision implements InterfaceConstantes{
 		Point p2 = new Point(CompScreenMove2.x,CompScreenMove2.y);
 		objectHitbox2= Hitbox.minusPoint(object2.getHitbox(partie.INIT_RECT),p2,false);
 
-		Vector2d deltaSpeed = new Vector2d(object1.getGlobalVit(partie).x-object2.getGlobalVit(partie).x,object1.getGlobalVit(partie).y-object2.getGlobalVit(partie).y);
-		Vector2d m_deltaSpeed= new Vector2d(-deltaSpeed.x,-deltaSpeed.y);
+		Vector2d firstDir=new Vector2d(1,0);
+		if(computeDirWithSpeed){
+			Vector2d deltaSpeed = new Vector2d(object1.getGlobalVit(partie).x-object2.getGlobalVit(partie).x,object1.getGlobalVit(partie).y-object2.getGlobalVit(partie).y);
+			Vector2d m_deltaSpeed= new Vector2d(-deltaSpeed.x,-deltaSpeed.y);
 
-		Vector2d supp1 = GJK_EPA.support(objectHitbox1.polygon,deltaSpeed );//fixed one
-		Vector2d supp2 = GJK_EPA.support(objectHitbox2.polygon, m_deltaSpeed);//mobile one
-		Vector2d firstDir = new Vector2d(supp1.x-supp2.x, supp1.y-supp2.y);
+			Vector2d supp1 = GJK_EPA.support(objectHitbox1.polygon,deltaSpeed );//fixed one
+			Vector2d supp2 = GJK_EPA.support(objectHitbox2.polygon, m_deltaSpeed);//mobile one
+			firstDir = new Vector2d(supp1.x-supp2.x, supp1.y-supp2.y);
+		}
 
 		List<Vector2d> simplex = GJK_EPA.intersects(objectHitbox1.polygon,objectHitbox2.polygon ,firstDir);
 
@@ -323,7 +326,7 @@ public abstract class Collision implements InterfaceConstantes{
 		List<Vector2d> normals = new ArrayList<Vector2d>();
 
 		Vector2d EPA_normal = null;
-	
+
 		if(simplex!=null){
 			GJK_EPA.EPA(objectHitbox1.polygon, objectHitbox2.polygon, simplex, firstDir, normals);
 			if(normals.size()>0)

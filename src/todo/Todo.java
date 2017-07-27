@@ -3,8 +3,6 @@ package todo;
 public class Todo {
 	
 	//Version 0.2.2
-
-	//TODO: change effect so that their application area is related to the visual? (vent)
 	
 	//TODO: load only relevant part of the world 
 	//TODO: correct Partie timer when system pause 
@@ -20,8 +18,8 @@ public class Todo {
 	//TODO: Feu: Object: create a wave of fire pillar                                      Ennemi: damage + burn
 
 	//SPIRITUEL
-	//TODO: Lumiere: boost surrounding beings : speed, jump, damage x2 
-	//TODO: Ombre: teleport+ malus
+	// Lumiere: boost surrounding beings : speed, jump, damage x2 
+	// Ombre: teleport+ malus
 	// Vent: projette en l'air
 	// Grappin
 	
@@ -34,7 +32,7 @@ public class Todo {
 	//RUSE
 	//TODO: auto-teleguidée: goes to nearest ennemi
 	//TODO: retard: stay where shot then move fast + push ennemis 
-	//TODO: v-fleche lente 
+	//TODO: v-fleche lente //bounce shots // make no gravity area 
 	//TODO: cac: tire 3 flèches à portée réduite 
 	
 	//TODO: more optimization: use sprite sheet 

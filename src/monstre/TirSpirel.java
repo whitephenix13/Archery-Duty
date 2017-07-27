@@ -45,8 +45,6 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 
 		dommage= -25*damageMultiplier;//-25
 
-		//effect properties
-		this.draggable=false;
 		
 		//on active la musique car le tir part directement 
 		MusicBruitage.startBruitage("laser");

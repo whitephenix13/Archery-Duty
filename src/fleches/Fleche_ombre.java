@@ -19,8 +19,6 @@ import types.Hitbox;
 
 public class Fleche_ombre extends Fleche {
 
-	double LENTEUR_DUREE = 3;
-
 	public Fleche_ombre(List<Fleche> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor) {
 		super(tabFleche, current_frame,_shooter,add_to_list,damageMult,speedFactor);
 		type_fleche=SPIRITUELLE.OMBRE;
@@ -178,7 +176,7 @@ public class Fleche_ombre extends Fleche {
 			}
 		}
 	}
-	void applyArrowEffect(List<Collidable> objects,AbstractModelPartie partie,Collidable collider,Vector2d collisionNormal)
+	void applyArrowEffect(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d collisionNormal)
 	{
 		if(generatedEffect)
 			return;
@@ -192,19 +190,16 @@ public class Fleche_ombre extends Fleche {
 			teleportToArrow(shooter,partie,collisionNormal);
 		else
 			teleportSwitch(shooter,collider,partie,collisionNormal);
-		for(Collidable obj : objects)
+		for(Entitie obj : objects)
 		{
-			if(obj instanceof Entitie)
-				if(Collision.testcollisionObjects(partie, this, obj)){
-					obj.conditions.addNewCondition(Condition.LENTEUR, LENTEUR_DUREE);
-				}
+			obj.currentEffects.add(flecheEffect);
 		}
 
 		this.doitDeplace=false;
 		this.checkCollision=false;
 	}
 	@Override
-	protected void onPlanted(List<Collidable> objects, AbstractModelPartie partie,boolean stuck)
+	protected void onPlanted(List<Entitie> objects, AbstractModelPartie partie,boolean stuck)
 	{
 		if(stuck)
 			destroy(partie,false);
@@ -212,7 +207,7 @@ public class Fleche_ombre extends Fleche {
 			applyArrowEffect(objects,partie,null,this.normCollision);
 	}
 	@Override
-	protected boolean OnObjectsCollision(List<Collidable> objects,AbstractModelPartie partie,Collidable collider,Vector2d normal)
+	protected boolean OnObjectsCollision(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d normal)
 	{
 		if(collider instanceof Entitie)
 			applyArrowEffect(objects,partie,collider,normal);

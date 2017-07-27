@@ -45,9 +45,6 @@ public class Bloc extends Collidable{
 		fixedWhenScreenMoves=false;
 		this.bloquer=bl;
 		this.background=back;
-
-		//effect properties
-		this.draggable=false;
 	}
 	/*public static Bloc[][] InitBlocMatrix(int xsize, int ysize)
 	{
@@ -182,6 +179,10 @@ public class Bloc extends Collidable{
 	@Override
 	public void onDestroy(AbstractModelPartie partie) {
 		//do nothing
+	}
+	@Override
+	public Vitesse getGlobalVit(AbstractModelPartie partie) {
+		return null;
 	}
 
 }

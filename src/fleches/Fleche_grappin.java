@@ -6,17 +6,17 @@ import javax.vecmath.Vector2d;
 
 import collision.Collidable;
 import deplacement.Deplace;
-import effects.Effect;
 import effects.Grappin_effect;
 import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import personnage.Heros;
+import types.Entitie;
 import types.Vitesse;
 
 public class Fleche_grappin extends Fleche {
 
 	private boolean destroy_next_frame=false;
-	public Collidable collider = null;
+	public Entitie collider = null;
 	private boolean dragSomething = false; // boolean to make sure that at most one object is dragged
 
 	public Fleche_grappin(List<Fleche> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor)
@@ -41,7 +41,7 @@ public class Fleche_grappin extends Fleche {
 		max_speed_norm = -1;
 		boolean[] res = super.deplace(partie, deplace);
 		double speedNorm = this.getGlobalVit(partie).norm();
-		if(generatedEffect)
+		if(generatedEffect && (this.tempsDetruit==0) && (!this.getNeedDestroy()) )
 		{
 			Grappin_effect eff = (Grappin_effect) this.flecheEffect;
 
@@ -53,7 +53,7 @@ public class Fleche_grappin extends Fleche {
 				if(this.tempsDetruit<=0)
 				{
 					eff.reached_max_length=true;
-					eff.destroy(partie, false);
+					//eff.destroy(partie, false);
 					destroy(partie,false);
 					doitDeplace=false;
 				}
@@ -68,8 +68,13 @@ public class Fleche_grappin extends Fleche {
 	}
 
 	@Override
-	protected void onPlanted(List<Collidable> objects,AbstractModelPartie partie,boolean stuck)
+	protected void onPlanted(List<Entitie> objects,AbstractModelPartie partie,boolean stuck)
 	{
+		if(stuck){
+			destroy(partie,false);
+			return;
+		}
+		
 		if((!this.needDestroy || this.tempsDetruit>0) && !dragSomething)
 		{
 			//planted is only called if the arrow collide with the world hence the grappin applies on the shooter
@@ -93,16 +98,19 @@ public class Fleche_grappin extends Fleche {
 
 
 	@Override
-	protected boolean OnObjectsCollision(List<Collidable> objects,AbstractModelPartie partie,Collidable collider,Vector2d normal)
+	protected boolean OnObjectsCollision(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d normal)
 	{
-		if(collider.draggable && (!this.needDestroy || this.tempsDetruit>0) && !dragSomething )
+		boolean isColliderEntitie = collider instanceof Entitie;
+		Entitie colliderEntitie = isColliderEntitie?  (Entitie) collider : null;
+
+		if(colliderEntitie != null && colliderEntitie.draggable && (!this.needDestroy || this.tempsDetruit>0) && !dragSomething )
 		{
-			this.collider= collider;
+			this.collider= colliderEntitie;
 			this.checkCollision=false;
 			this.doitDeplace=false;
 			collider.addSynchroSpeed(this);
 			//both arrow and object are pulled toward the hero
-			collider.registerEffect(flecheEffect);
+			colliderEntitie.registerEffect(flecheEffect);
 			collider.localVit= new Vitesse(0,0);
 			Grappin_effect grap = ((Grappin_effect)flecheEffect);
 			grap.shooterDragged=false;
@@ -110,7 +118,7 @@ public class Fleche_grappin extends Fleche {
 			dragSomething=true;
 			return false;
 		}
-		else if(!dragSomething)
+		if(!dragSomething)
 			return true;
 		else
 			return false;

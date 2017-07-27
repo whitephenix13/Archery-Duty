@@ -364,12 +364,14 @@ public abstract class GJK_EPA {
 		if(biggestX)
 		{
 			int sign = v.x>0?1:-1;
-			return new Vector2d(1*sign*neg,perturbation*sign*neg);
+			double other = perturbation==0 ? 0 : (perturbation*sign*neg);
+			return new Vector2d(1*sign*neg,other);
 		}
 		else
 		{
 			int sign = v.y>0?1:-1;
-			return new Vector2d(perturbation*sign*neg,1*sign*neg);
+			double other = perturbation==0 ? 0 : (perturbation*sign*neg);
+			return new Vector2d(other,1*sign*neg);
 		}
 
 	}

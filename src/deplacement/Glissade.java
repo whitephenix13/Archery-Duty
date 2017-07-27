@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import collision.Collidable;
+import types.Hitbox;
 import types.TypeObject;
 
 public class Glissade extends Mouvement_perso
@@ -31,12 +32,12 @@ public class Glissade extends Mouvement_perso
 			List<Integer> yh = Arrays.asList(5,5);
 			List<Integer> yb = Arrays.asList(88,88);
 
-			hitboxCreation.add(asListPoint(xg,yh));
-			hitboxCreation.add(asListPoint(xd,yh));
-			hitboxCreation.add(asListPoint(xd,yb));
-			hitboxCreation.add(asListPoint(xg,yb));
+			hitboxCreation.add(Hitbox.asListPoint(xg,yh));
+			hitboxCreation.add(Hitbox.asListPoint(xd,yh));
+			hitboxCreation.add(Hitbox.asListPoint(xd,yb));
+			hitboxCreation.add(Hitbox.asListPoint(xg,yb));
 
-			hitbox = createHitbox(hitboxCreation);
+			hitbox = Hitbox.createHitbox(hitboxCreation);
 			
 
 			//animation frame, current_frame, start_index, end_index

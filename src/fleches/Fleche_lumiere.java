@@ -8,16 +8,12 @@ import collision.Collidable;
 import collision.Collision;
 import conditions.Condition;
 import effects.Lumiere_effect;
-import effects.Vent_effect;
 import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import personnage.Heros;
 import types.Entitie;
-import types.Vitesse;
 
 public class Fleche_lumiere extends Fleche {
-
-	double VITESSE_DUREE = 10;
 
 	public Fleche_lumiere(List<Fleche> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor) {
 		super(tabFleche, current_frame,_shooter,add_to_list,damageMult,speedFactor);
@@ -26,7 +22,7 @@ public class Fleche_lumiere extends Fleche {
 		damage=0*damageMult;
 	}
 
-	void applyArrowEffect(List<Collidable> objects,AbstractModelPartie partie,Collidable collider)
+	void applyArrowEffect(List<Entitie> objects,AbstractModelPartie partie,Collidable collider)
 	{
 		if(generatedEffect)
 			return;
@@ -36,12 +32,9 @@ public class Fleche_lumiere extends Fleche {
 		flecheEffect=new Lumiere_effect(partie,this,0,partie.getFrame());
 		MusicBruitage.startBruitage("arc");
 
-		for(Collidable obj : objects)
+		for(Entitie obj : objects)
 		{
-			if(obj instanceof Entitie)
-				if(Collision.testcollisionObjects(partie, this, obj)){
-					obj.conditions.addNewCondition(Condition.VITESSE, VITESSE_DUREE);
-				}
+			obj.currentEffects.add(this.flecheEffect);
 		}
 		this.doitDeplace=false;
 		this.checkCollision=false;
@@ -49,7 +42,7 @@ public class Fleche_lumiere extends Fleche {
 
 	}
 	@Override
-	protected void onPlanted(List<Collidable> objects, AbstractModelPartie partie,boolean stuck)
+	protected void onPlanted(List<Entitie> objects, AbstractModelPartie partie,boolean stuck)
 	{
 		if(stuck)
 			destroy(partie,false);
@@ -57,7 +50,7 @@ public class Fleche_lumiere extends Fleche {
 			applyArrowEffect(objects,partie,null);
 	}
 	@Override
-	protected boolean OnObjectsCollision(List<Collidable> objects,AbstractModelPartie partie,Collidable collider,Vector2d normal)
+	protected boolean OnObjectsCollision(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d normal)
 	{
 		applyArrowEffect(objects,partie,collider);
 		return false;

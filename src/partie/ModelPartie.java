@@ -23,7 +23,6 @@ import Affichage.Affichage;
 import collision.Collidable;
 import collision.Collision;
 import conditions.Condition;
-import conditions.ConditionHandler;
 import debug.Debug_time;
 import deplacement.Accroche;
 import deplacement.Attente;
@@ -34,6 +33,7 @@ import deplacement.Mouvement_perso;
 import deplacement.Saut;
 import deplacement.Tir;
 import effects.Effect;
+import effects.Electrique_effect;
 import fleches.Fleche;
 import images.ImagesEffect;
 import menuPrincipal.AbstractModelPrincipal;
@@ -46,6 +46,7 @@ import option.Config;
 import principal.InterfaceConstantes;
 import types.Bloc;
 import types.Destroyable;
+import types.Entitie;
 import types.Hitbox;
 import types.Touches;
 import types.TypeObject;
@@ -202,8 +203,8 @@ public class ModelPartie extends AbstractModelPartie{
 			//update effects anim or delete them 
 			gestionEffect();
 
-			//update conditions for all collidable. Only do it at the end to be sure that all entities received the same information on the conditions
-			for(Collidable c : Collidable.getAllCollidable(this))
+			//update conditions for all entities. Only do it at the end to be sure that all entities received the same information on the conditions
+			for(Entitie c : Collidable.getAllEntitiesCollidable(this))
 				c.conditions.updateConditionState();
 			
 			debugTime.elapsed("object destruction preparation", 2);
@@ -270,7 +271,7 @@ public class ModelPartie extends AbstractModelPartie{
 				{
 					TirMonstre tirM= tabTirMonstre.get(j);
 
-					if(tirM.checkCollision && !tirM.getNeedDestroy() && Collision.collisionObjects(this, fleche, tirM))
+					if(tirM.checkCollision && !tirM.getNeedDestroy() && Collision.collisionObjects(this, fleche, tirM,true))
 					{
 						//bruit de collision tir/tir 
 						MusicBruitage.startBruitage("annulation tir");
@@ -286,7 +287,7 @@ public class ModelPartie extends AbstractModelPartie{
 				{
 					Monstre monstre = tabMonstre.get(j);
 
-					if(monstre.checkCollision && !monstre.getNeedDestroy() && Collision.collisionObjects(this, fleche, monstre))
+					if(monstre.checkCollision && !monstre.getNeedDestroy() && Collision.collisionObjects(this, fleche, monstre,true))
 					{
 						tabMonstre.get(j).addLife(tabFleche.get(i).damage);
 					}
@@ -301,7 +302,7 @@ public class ModelPartie extends AbstractModelPartie{
 		{
 			TirMonstre tirM= tabTirMonstre.get(j);
 
-			if(tirM.checkCollision && !tirM.getNeedDestroy() && !heros.getNeedDestroy() && Collision.collisionObjects(this, heros, tirM))
+			if(tirM.checkCollision && !tirM.getNeedDestroy() && !heros.getNeedDestroy() && Collision.collisionObjects(this, heros, tirM,true))
 			{
 				if(!heros.invincible)
 					heros.touche(tabTirMonstre.get(j).dommage);
@@ -316,20 +317,21 @@ public class ModelPartie extends AbstractModelPartie{
 			Effect eff = arrowsEffects.get(i);
 			//if anim ended: delete
 			double tempsEffect=  PartieTimer.me.getElapsedNano()-eff.tempsDetruit;
-			if(eff.isEnded())
-			{
-				eff.ref_fleche.OnFlecheEffectDestroy(this, true);
-				eff.destroy(this, true);
-			}
-			else if(tempsEffect>eff.TEMPS_DESTRUCTION && eff.tempsDetruit>0)
+			
+			if(!eff.isEnded() && tempsEffect>eff.TEMPS_DESTRUCTION && eff.tempsDetruit>0)
 			{
 				eff.setNeedDestroy(true);
 			}	
 			//increment anim
-			else if(!eff.getNeedDestroy() && (eff.tempsDetruit==0) )
+			else if(!eff.isEnded() && !eff.getNeedDestroy() && (eff.tempsDetruit==0) )
 			{
 				eff.onUpdate(this,false);
 				eff.anim=eff.animation.update(eff.anim, this.getFrame(),1);
+			}
+			if(eff.isEnded())
+			{
+				//eff.ref_fleche.OnFlecheEffectDestroy(this, true);
+				eff.destroy(this, true);
 			}
 		}
 
@@ -904,7 +906,7 @@ public class ModelPartie extends AbstractModelPartie{
 		drawPerso(g,false);
 		drawFleches(g,false);
 		drawTirMonstres(g,false);
-		drawEffects(g,pan,false);
+		drawEffects(g,pan,true);
 		drawInterface(g);
 
 	}
@@ -1145,8 +1147,11 @@ public class ModelPartie extends AbstractModelPartie{
 		for(int i =0; i< arrowsEffects.size(); ++i)
 		{
 			Effect eff = arrowsEffects.get(i);
+			
+			if(eff.getNeedDestroy())
+				continue;
 			int anim = eff.anim;
-			AffineTransform tr = eff.getTransformDraw(this);
+			AffineTransform tr = eff.draw_tr;
 
 			ArrayList<Image> images = imEffect.getImage(eff);
 			for(Image im : images){
@@ -1155,20 +1160,10 @@ public class ModelPartie extends AbstractModelPartie{
 				g2d.drawImage(im2draw,tr,null);
 
 			}
-
 			if(drawHitbox)
 			{
-				Point transl = eff.getTranslationFromTranformDraw(this);
-				int xgh=transl.x;
-				int ygh=transl.y;
-				int xdh=(int) (xgh+eff.xtaille.get(anim)*Math.cos(eff.ref_fleche.rotation));
-				int ydh=(int) (ygh+eff.xtaille.get(anim)*Math.sin(eff.ref_fleche.rotation));
-				int xdb= (int) (xdh-eff.ytaille.get(anim)*Math.sin(eff.ref_fleche.rotation));
-				int ydb= (int) (ydh+eff.ytaille.get(anim)*Math.cos(eff.ref_fleche.rotation));
-				int xgb= (int) (xgh-eff.ytaille.get(anim)*Math.sin(eff.ref_fleche.rotation));
-				int ygb=(int) (ygh+eff.ytaille.get(anim)*Math.cos(eff.ref_fleche.rotation));
-
-				Hitbox hitbox= new Hitbox(new Point(xgh,ygh),new Point(xdh,ydh),new Point(xdb,ydb),new Point(xgb,ygb));
+				Hitbox hitbox= eff.getHitbox(INIT_RECT);
+				hitbox=Hitbox.plusPoint(hitbox, new Point(xScreendisp,yScreendisp),true);
 				drawPolygon(g,hitbox.polygon);
 			}
 		}
@@ -1286,7 +1281,13 @@ public class ModelPartie extends AbstractModelPartie{
 
 	public void drawPolygon(Graphics g, Polygon p)
 	{
+		drawPolygon(g,p,Color.red);
+	}
+	public void drawPolygon(Graphics g, Polygon p,Color c)
+	{
+		g.setColor(c);
 		g.drawPolygon(p);
+		g.setColor(Color.BLACK);
 	}
 	public void drawBar(Graphics g,int number_rectangles, int[] x, int[] y, int[] width, int[] height,Color[] colors)
 	{

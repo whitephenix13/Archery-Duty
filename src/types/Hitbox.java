@@ -2,6 +2,8 @@ package types;
 
 import java.awt.Point;
 import java.awt.Polygon;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +33,61 @@ public class Hitbox {
 		polygon=_p;
 	}
 
+	/** Create a square hitbox whose bounds are xmin,xmax,ymin,ymax*/
+	public static Hitbox createSquareHitbox(int xmin, int ymin, int xmax, int ymax)
+	{
+		return new Hitbox(new Point(xmin,ymin),new Point(xmax,ymin),new Point(xmax,ymax),new Point(xmin,ymax));
+	}
+	/**Create "nb" square hitboxes all identical*/
+	public static List<Hitbox> createSquareHitboxes(int xmin, int ymin, int xmax, int ymax,int nb)
+	{
+		List<Hitbox> hitboxes = new ArrayList<Hitbox>();
+		for(int i=0;i<nb; ++i)
+			hitboxes.add(createSquareHitbox(xmin, ymin, xmax, ymax));
+		return hitboxes;
+	}
+	/**Create square hitboxes based on the list*/
+	public static List<Hitbox> createSquareHitboxes(List<Integer> xmin, List<Integer> ymin, List<Integer> xmax, List<Integer> ymax)
+	{
+		List<Hitbox> hitboxes = new ArrayList<Hitbox>();
+		for(int i=0;i<xmin.size(); ++i)
+			hitboxes.add(createSquareHitbox(xmin.get(i), ymin.get(i), xmax.get(i), ymax.get(i)));
+		return hitboxes;
+	}
+	public static List<Point> asListPoint(List<Integer> x, List<Integer> y)
+	{
+		List<Point> l = new ArrayList<Point>();
+		for(int i = 0 ; i<x.size(); ++i)
+		{
+			l.add(new Point(x.get(i),y.get(i)));
+		}
+		return l;
+	}
+	/**
+	 * 
+	 * @param list [A B C D] where A : list of an edge pos (x,y) depending on the anim A[anim] list[edge][anim]
+	 * @return list [A B] where list[anim] return a hitbox A
+	 */
+	public static List<Hitbox> createHitbox(List<List<Point>> list)
+	{
+		List<Hitbox> hitboxes = new ArrayList<Hitbox>();
+		//Generate one hitbox per animation
+		for(int anim=0; anim<list.get(0).size(); ++anim)
+		{
+			hitboxes.add(new Hitbox());	
+		}
+		
+		for(int edge=0; edge<list.size(); ++edge)
+		{
+			List<Point> edgelist= list.get(edge);
+			for(int anim=0; anim<edgelist.size(); ++anim)
+			{
+				Point point = edgelist.get(anim);
+				hitboxes.get(anim).polygon.addPoint(point.x,point.y);
+			}
+		}
+		return hitboxes;
+	}
 	public String toString()
 	{
 		String s="";
@@ -92,6 +149,26 @@ public class Hitbox {
 
 		return res;
 	}
+	
+	public static List<Hitbox> convertHitbox(List<Hitbox> current, Point INIT_RECT,AffineTransform tr,Point pos,Point screendisp) {
+		List<Hitbox> new_rotated_hit = new ArrayList<Hitbox>();
+
+		for (int i = 0; i<current.size(); ++i)
+		{
+			Polygon current_pol = current.get(i).polygon; 
+			Polygon new_pol = new Polygon();
+			for(int j = 0; j<current_pol.npoints; ++j)
+			{
+				Point2D temp = tr.transform(new Point(current_pol.xpoints[j],current_pol.ypoints[j]), null);
+				new_pol.addPoint((int)Math.round(temp.getX()-pos.x-screendisp.x),(int)Math.round(temp.getY()-pos.y-screendisp.y));
+				
+			}
+			new_rotated_hit.add(new Hitbox(new_pol));
+		}
+
+		return new_rotated_hit;
+	}
+	
 	public static Hitbox rotateHitbox(Hitbox hit, int angle)
 	{
 		assert (hit.polygon.npoints==4);

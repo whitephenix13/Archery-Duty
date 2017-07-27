@@ -8,6 +8,7 @@ import java.util.List;
 
 import collision.Collidable;
 import option.Config;
+import types.Hitbox;
 import types.TypeObject;
 
 public class Marche extends Mouvement_perso{
@@ -32,12 +33,12 @@ public class Marche extends Mouvement_perso{
 			List<Integer> yh = Arrays.asList(10,9,7,9,10,9,7,9);
 			List<Integer> yb = Arrays.asList(100,99,97,99,100,99,97,99);
 
-			hitboxCreation.add(asListPoint(xg,yh));
-			hitboxCreation.add(asListPoint(xd,yh));
-			hitboxCreation.add(asListPoint(xd,yb));
-			hitboxCreation.add(asListPoint(xg,yb));
+			hitboxCreation.add(Hitbox.asListPoint(xg,yh));
+			hitboxCreation.add(Hitbox.asListPoint(xd,yh));
+			hitboxCreation.add(Hitbox.asListPoint(xd,yb));
+			hitboxCreation.add(Hitbox.asListPoint(xg,yb));
 
-			hitbox = createHitbox(hitboxCreation);
+			hitbox = Hitbox.createHitbox(hitboxCreation);
 			//animation frame, current_frame, start_index, end_index
 			int start_index =type_mouv==marche_gauche ? 0 : 4;
 			int end_index =type_mouv==marche_gauche ? 4 : 8;
@@ -56,12 +57,12 @@ public class Marche extends Mouvement_perso{
 			List<Integer> yh = Arrays.asList(0 ,0 ,0 ,0 ,-1,-1,-1,-1);
 			List<Integer> yb = Arrays.asList(74,74,74,74,-1,-1,-1,-1);
 
-			hitboxCreation.add(asListPoint(xg,yh));
-			hitboxCreation.add(asListPoint(xd,yh));
-			hitboxCreation.add(asListPoint(xd,yb));
-			hitboxCreation.add(asListPoint(xg,yb));
+			hitboxCreation.add(Hitbox.asListPoint(xg,yh));
+			hitboxCreation.add(Hitbox.asListPoint(xd,yh));
+			hitboxCreation.add(Hitbox.asListPoint(xd,yb));
+			hitboxCreation.add(Hitbox.asListPoint(xg,yb));
 
-			hitbox = createHitbox(hitboxCreation);
+			hitbox = Hitbox.createHitbox(hitboxCreation);
 			
 			//animation frame, current_frame, start_index, end_index
 			int start_index =type_mouv==marche_gauche ? 0 : 2;

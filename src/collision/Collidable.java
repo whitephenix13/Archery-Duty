@@ -5,7 +5,6 @@ import java.util.ArrayList;
 
 import javax.vecmath.Vector2d;
 
-import conditions.ConditionHandler;
 import deplacement.Deplace;
 import deplacement.Mouvement;
 import deplacement.Mouvement_perso;
@@ -14,9 +13,12 @@ import effects.Grappin_effect;
 import effects.Vent_effect;
 import fleches.Fleche;
 import monstre.Monstre;
+import monstre.TirMonstre;
 import partie.AbstractModelPartie;
 import types.Destroyable;
+import types.Entitie;
 import types.Hitbox;
+import types.Projectile;
 import types.Vitesse;
 
 //Specify that an object can enter in collision. 
@@ -49,39 +51,9 @@ public abstract class Collidable extends Destroyable{
 	public int anim; 
 	public Mouvement deplacement;
 	public Vitesse localVit;
-	public ArrayList<Effect> currentEffects;
-	public boolean isDragged(){
-		for(Effect eff:currentEffects)
-		{
-			if(eff.name.equals(Fleche.SPIRITUELLE.GRAPPIN))
-			{
-				Grappin_effect grap = (Grappin_effect)eff;
-				if(grap.shooterDragged && this == grap.shooter)
-					return true;
-				if(!grap.shooterDragged && this != grap.shooter)
-					return true;
-			}
-		}
-		return false;
-	}
-	/**
-	 * 
-	 * @return true if collidable has a wind arrow stick to it 
-	 */
-	public boolean isWindProjected(){
-		for(Effect eff:currentEffects)
-		{
-			if(eff.name.equals(Fleche.SPIRITUELLE.VENT))
-			{
-				Vent_effect vent = (Vent_effect)eff;
-				if(vent.stickedCollidable==this)
-					return true;
-			}
-		}
-		return false;
-
-	}
-	public ConditionHandler conditions;
+	
+	
+	//public ConditionHandler conditions;
 	//Every registered object here will see their speed synchronise with respect to this collidable 
 	private ArrayList<Collidable> synchroSpeed ;
 	public void addSynchroSpeed(Collidable objToSynchronize)
@@ -142,32 +114,9 @@ public abstract class Collidable extends Destroyable{
 		return 0;
 	}
 	
-	public boolean draggable =true;
 	public boolean checkCollision=true;
 	
-	public void registerEffect(Effect eff)
-	{
-		currentEffects.add(eff);
-	}
-	public void unregisterEffect(AbstractModelPartie partie, Effect eff)
-	{
-		currentEffects.remove(eff);
-	}
-
-	public Vitesse getGlobalVit(AbstractModelPartie partie){
-		Vitesse vit = localVit.Copy().times(conditions.getSpeedFactor());
-		boolean isDragged = this.isDragged();
-		for(Effect eff: currentEffects)
-		{
-			if(isDragged && eff.name.equals(Fleche.SPIRITUELLE.GRAPPIN)){
-				vit = eff.getModifiedVitesse(partie, this);
-				return vit;
-			}
-			vit =vit.add(eff.getModifiedVitesse(partie, this));
-		}
-
-		return vit;
-	}
+	public abstract Vitesse getGlobalVit(AbstractModelPartie partie);
 	//Last norm of colliding object (most of the time: world). Null if none. The colliding object must be unpentrable, otherwise its norm is not registered as "last"
 	//WARNING: only works with single object collision. WARNING strange things might happen if the object can move 
 	protected Vector2d normCollision = null;
@@ -190,8 +139,6 @@ public abstract class Collidable extends Destroyable{
 	
 	public void init()
 	{
-		currentEffects  = new ArrayList<Effect>();
-		conditions= new ConditionHandler();
 		synchroSpeed= new ArrayList<Collidable>();
 		checkCollision=true;
 		normCollision=null;
@@ -236,16 +183,9 @@ public abstract class Collidable extends Destroyable{
 			this.needDestroy=true;
 		else
 			timer();
-		//Remove all related effects 
-		for(int i=currentEffects.size()-1;i>=0;--i)
-		{
-			unregisterEffect(partie,currentEffects.get(i));
-		}
-
 	}
 
 
-	public void notifyEffectCollision(){for(Effect eff : currentEffects){}};
 	public void alignHitbox(int animActu,Mouvement depSuiv, int animSuiv, AbstractModelPartie partie,Deplace deplace, boolean left, boolean down,
 			String deplacement_type, boolean useTouchCollision)
 	{
@@ -355,20 +295,26 @@ public abstract class Collidable extends Destroyable{
 		return new Vitesse((int)Math.round(x),(int)Math.round(y));
 	}
 
+	//For all the methods below: do not include the effects 
+	
 	//get all relevant collidable,ie: the one that are affected by the effect of the arrows 
-	public static ArrayList<Collidable> getAllEntitiesCollidable(AbstractModelPartie partie)
+	public static ArrayList<Entitie> getAllEntitiesCollidable(AbstractModelPartie partie)
 	{
-		ArrayList<Collidable> objects = new ArrayList<Collidable>();
+		ArrayList<Entitie> objects = new ArrayList<Entitie>();
 		objects.add(partie.heros);
 		for(Monstre m : partie.tabMonstre)
 			objects.add(m);
 		return objects;
 	}
-	public static ArrayList<Collidable> getAllCollidable(AbstractModelPartie partie)
+	//get all relevant collidable,ie: the one that are affected by the effect of the arrows 
+	public static ArrayList<Projectile> getAllProjectileCollidable(AbstractModelPartie partie)
 	{
-		ArrayList<Collidable> objects = getAllEntitiesCollidable(partie);
+		ArrayList<Projectile> objects = new ArrayList<Projectile>();
+		for(TirMonstre tirM : partie.tabTirMonstre)
+			objects.add(tirM);
 		for(Fleche f : partie.tabFleche)
 			objects.add(f);
 		return objects;
 	}
+	
 }
