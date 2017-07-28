@@ -7,6 +7,7 @@ import effects.Effect;
 import fleches.Fleche;
 import loading.LoadMediaThread;
 import loading.OnLoadingCallback;
+import types.TypeObject;
 
 public class ImagesEffect extends LoadMediaThread{
 
@@ -26,6 +27,7 @@ public class ImagesEffect extends LoadMediaThread{
 	ArrayList<Image>[] im_electrique_effect= (ArrayList<Image>[]) new ArrayList[2];
 
 	ArrayList<Image> im_trou_noir_effect= new ArrayList<Image>();
+	ArrayList<Image> im_explosive_effect= new ArrayList<Image>();
 
 	Image im_slowdown =null;
 	public ImagesEffect()
@@ -128,6 +130,11 @@ public class ImagesEffect extends LoadMediaThread{
 			count ++;
 		}
 		setPercentage((int)(100.0*count/nb));
+		for(int i=0; i<12; ++i){
+			im_explosive_effect.add(getIm("resources/fleches/effects/explosive/"+i+".png",true));
+			count ++;
+		}
+		
 		setPercentage(100);
 		mediaLoaded=true;
 	}
@@ -142,29 +149,29 @@ public class ImagesEffect extends LoadMediaThread{
 	public ArrayList<Image> getImage(Effect effect)
 	{
 		ArrayList<Image> im = new ArrayList<Image>();
-		if(!effect.name.equals(""))
-		{
-			if (effect.name.equals(Fleche.SPIRITUELLE.VENT))
-				im.add(im_vent_effect.get(effect.anim));
-			if (effect.name.equals(Fleche.SPIRITUELLE.GRAPPIN))
-				im.add(im_grappin_effect.get(effect.anim));
-			if (effect.name.equals(Fleche.SPIRITUELLE.LUMIERE))
-				im.add(im_lumiere_effect.get(effect.anim));
-			if (effect.name.equals(Fleche.SPIRITUELLE.OMBRE))
-				im.add(im_ombre_effect.get(effect.anim));
-			
-			if (effect.name.equals(Fleche.MATERIELLE.FEU))
-				im.add(im_feu_effect[effect.typeEffect].get(effect.anim));
-			if (effect.name.equals(Fleche.MATERIELLE.ELECTRIQUE))
-				im.add(im_electrique_effect[effect.typeEffect].get(effect.anim));
-			if (effect.name.equals(Fleche.MATERIELLE.GLACE))
-				im.add(im_glace_effect[effect.typeEffect].get(effect.anim));
-			if (effect.name.equals(Fleche.MATERIELLE.ROCHE))
-				im.add(im_roche_effect[effect.typeEffect].get(effect.anim));
-			
-			if (effect.name.equals(Fleche.DESTRUCTRICE.TROU_NOIR))
-				im.add(im_trou_noir_effect.get(effect.anim));
-		}
+		if (TypeObject.isTypeOf(effect, TypeObject.VENT_EFF))
+			im.add(im_vent_effect.get(effect.anim));
+		if (TypeObject.isTypeOf(effect, TypeObject.GRAPPIN_EFF))
+			im.add(im_grappin_effect.get(effect.anim));
+		if (TypeObject.isTypeOf(effect, TypeObject.LUMIERE_EFF))
+			im.add(im_lumiere_effect.get(effect.anim));
+		if (TypeObject.isTypeOf(effect, TypeObject.OMBRE_EFF))
+			im.add(im_ombre_effect.get(effect.anim));
+		
+		if (TypeObject.isTypeOf(effect, TypeObject.FEU_EFF))
+			im.add(im_feu_effect[effect.typeEffect].get(effect.anim));
+		if (TypeObject.isTypeOf(effect, TypeObject.ELECTRIQUE_EFF))
+			im.add(im_electrique_effect[effect.typeEffect].get(effect.anim));
+		if (TypeObject.isTypeOf(effect, TypeObject.GLACE_EFF))
+			im.add(im_glace_effect[effect.typeEffect].get(effect.anim));
+		if (TypeObject.isTypeOf(effect, TypeObject.ROCHE_EFF))
+			im.add(im_roche_effect[effect.typeEffect].get(effect.anim));
+		
+		if (TypeObject.isTypeOf(effect, TypeObject.TROU_NOIR_EFF))
+			im.add(im_trou_noir_effect.get(effect.anim));
+		if (TypeObject.isTypeOf(effect, TypeObject.EXPLOSIVE_EFF))
+			im.add(im_explosive_effect.get(effect.anim));
+		
 		return im;
 		
 	}

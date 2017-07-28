@@ -12,6 +12,7 @@ import fleches.Fleche;
 import partie.AbstractModelPartie;
 import types.Entitie;
 import types.Hitbox;
+import types.TypeObject;
 import types.Vitesse;
 
 public class Vent_effect extends Effect{
@@ -38,7 +39,6 @@ public class Vent_effect extends Effect{
 		anim=_anim;
 
 		ref_fleche = _ref_fleche;
-		name = Fleche.SPIRITUELLE.VENT;
 		xtaille =  Arrays.asList(164,191,259,400);
 		ytaille =  Arrays.asList(159,222,349,400);
 		hitbox = Hitbox.createSquareHitboxes(Arrays.asList(0,0,0,0),Arrays.asList(0,0,0,0),Arrays.asList(164,191,259,400),Arrays.asList(159,222,349,400));

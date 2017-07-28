@@ -3,7 +3,9 @@ package monstre;
 import java.awt.Image;
 import java.awt.Point;
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.vecmath.Vector2d;
@@ -13,11 +15,14 @@ import deplacement.Deplace;
 import deplacement.Mouvement;
 import deplacement.Mouvement_perso;
 import effects.Effect;
+import fleches.Fleche;
 import partie.AbstractModelPartie;
 import personnage.Heros;
 import principal.InterfaceConstantes;
 import types.Entitie;
 import types.Hitbox;
+import types.Projectile;
+import types.TypeObject;
 
 
 @SuppressWarnings("serial")
@@ -47,6 +52,12 @@ public abstract class Monstre extends Entitie implements InterfaceConstantes, Se
 	Image SPmarche2;
 	Image SPmarche3; 
 
+	@Override
+	public void init()
+	{
+		super.init();
+		this.setCollideWithout(Arrays.asList(TypeObject.MONSTRE,TypeObject.TIR_MONSTRE));
+	}
 	/**
 	 * Permet de savoir de quel cote est tourné le monstre
 	 * 
@@ -63,7 +74,7 @@ public abstract class Monstre extends Entitie implements InterfaceConstantes, Se
 	 * @param heros, le personnage jouable
 	 * @param Monde, le niveau en cours  
 	 */	
-	public abstract void IA (List<TirMonstre> tabTirMonstre, Heros heros,AbstractModelPartie partie);
+	public abstract void IA (List<Projectile> tabTirMonstre, Heros heros,AbstractModelPartie partie);
 	/**
 	 * Applique l'action voulue pour le deplacement du monstre 
 	 * 
@@ -116,13 +127,10 @@ public abstract class Monstre extends Entitie implements InterfaceConstantes, Se
 
 	@Override
 	public Hitbox getHitbox(Point INIT_RECT,Mouvement _dep, int _anim) {
-		Mouvement temp = _dep.Copy(type); //create the mouvement
+		Mouvement temp = _dep.Copy(this); //create the mouvement
 		return Hitbox.plusPoint(temp.hitbox.get(_anim), new Point(xpos(),ypos()),true);	
 	}
 	
-	public Hitbox getWorldHitbox(AbstractModelPartie partie) {
-		Hitbox hit1  =Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos(),ypos()),true);
-		return Hitbox.plusPoint(hit1, new Point(partie.xScreendisp,partie.yScreendisp),true);	}
 	@Override
 	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,boolean stuck) {
 		boolean collision_gauche = normal.x>0;
@@ -158,7 +166,13 @@ public abstract class Monstre extends Entitie implements InterfaceConstantes, Se
 		}
 	}
 	@Override
-	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider,Vector2d normal) {}
+	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider,Vector2d normal) 
+	{
+		if(TypeObject.isTypeOf(collider, TypeObject.FLECHE))
+		{
+			addLife( ((Fleche)collider).damage);
+		}
+	}
 	public class ResetHandleCollision
 	{
 		public void reset()

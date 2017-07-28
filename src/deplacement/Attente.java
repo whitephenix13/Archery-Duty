@@ -18,10 +18,10 @@ public class Attente extends Mouvement_perso{
 	public static int attente_droite = 1;
 
 	//constructeur des monstres 
-	public Attente(String type,int _type_mouv, int current_frame){
+	public Attente(Object obj,int _type_mouv, int current_frame){
 		super();
 		type_mouv=_type_mouv;
-		if(type.equals(TypeObject.heros))
+		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
 		{
 			xtaille =  Arrays.asList(85,84,85,84);
 			ytaille =  Arrays.asList(100,100,100,100);
@@ -44,7 +44,7 @@ public class Attente extends Mouvement_perso{
 			int end_index =type_mouv==attente_gauche ? 2 : 4;
 			animation.start(Arrays.asList(80,160,80,160), current_frame, start_index, end_index);
 		}
-		else if(type.equals(TypeObject.m_spirel))
+		else if(TypeObject.isTypeOf(obj, TypeObject.SPIREL))
 		{
 			xtaille =  Arrays.asList(56,56,-1,-1,-1,-1,-1,-1);
 			ytaille =  Arrays.asList(75,75,-1,-1,-1,-1,-1,-1);
@@ -70,32 +70,32 @@ public class Attente extends Mouvement_perso{
 		}
 	}
 
-	public Attente(String type,int _type_mouv, int current_frame,Animation _animation){
-		this(type,_type_mouv,current_frame);
+	public Attente(Object obj,int _type_mouv, int current_frame,Animation _animation){
+		this(obj,_type_mouv,current_frame);
 		animation = _animation;
 	}
 	
-	public Mouvement Copy(String type) {
-		return new Attente(type,type_mouv,animation.getStartFrame(),animation);
+	public Mouvement Copy(Object obj) {
+		return new Attente(obj,type_mouv,animation.getStartFrame(),animation);
 	}
 	
 	@Override
-	public void setSpeed(String type, Collidable object, int anim) {
-		if(type.equals(TypeObject.heros))
+	public void setSpeed(Collidable object, int anim) {
+		if(TypeObject.isTypeOf(object, TypeObject.HEROS))
 			object.localVit= new Vitesse(0,0);
 		
-		else if(type.equals(TypeObject.m_spirel))
+		else if(TypeObject.isTypeOf(object, TypeObject.SPIREL))
 			object.localVit= new Vitesse(0,0);
 	}
 
 	@Override
-	public String droite_gauche(String type,int anim) {
-		if(type.equals(TypeObject.heros))
+	public String droite_gauche(Object obj,int anim) {
+		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
 			if(anim<2)
 				return (Mouvement.GAUCHE);
 			else 
 				return(Mouvement.DROITE);
-		else if(type.equals(TypeObject.m_spirel))
+		else if(TypeObject.isTypeOf(obj, TypeObject.SPIREL))
 			if(anim<1)
 				return (Mouvement.GAUCHE);
 			else 

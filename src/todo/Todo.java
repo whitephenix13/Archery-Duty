@@ -4,6 +4,10 @@ public class Todo {
 	
 	//Version 0.2.2
 	
+
+	//TODO: transfert music from phone to computer 
+	//TODO: fleche bogue 
+	
 	//TODO: load only relevant part of the world 
 	//TODO: correct Partie timer when system pause 
 	//TODO: CHeck arrows colliding to themselves (the reason why you can't infinite push with wind?)

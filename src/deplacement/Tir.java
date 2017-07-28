@@ -13,11 +13,11 @@ public class Tir extends Mouvement_perso
 {
 	public static int tir = 0;
 
-	public Tir(String type, int _type_mouv,int current_frame) 
+	public Tir(Object obj, int _type_mouv,int current_frame) 
     {
 		super();
 		type_mouv=_type_mouv;
-		if(type.equals(TypeObject.heros))
+		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
 		{
 			xtaille =  Arrays.asList(50,63,75,75,63,50,57,75,75,57);
 			ytaille =  Arrays.asList(105,97,86,86,97,105,112,101,101,112);
@@ -51,27 +51,23 @@ public class Tir extends Mouvement_perso
 		}
 	
 	}
-	public Tir(String type,int _type_mouv, int current_frame,Animation _animation){
-		this(type,_type_mouv,current_frame);
+	public Tir(Object obj,int _type_mouv, int current_frame,Animation _animation){
+		this(obj,_type_mouv,current_frame);
 		animation = _animation;
 	}
-	public Mouvement Copy(String type) {
-		return new Tir(type,type_mouv,animation.getStartFrame(),animation);
+	public Mouvement Copy(Object obj) {
+		return new Tir(obj,type_mouv,animation.getStartFrame(),animation);
 	}
 	@Override
-	public void setSpeed(String type, Collidable object, int anim) {
-		if(type.equals(TypeObject.heros))
-		{
-			//nothing
-		}
-		else if(type.equals(TypeObject.m_spirel))
+	public void setSpeed(Collidable object, int anim) {
+		if(TypeObject.isTypeOf(object, TypeObject.HEROS))
 		{
 			//nothing
 		}
 	}
 	@Override
-	public String droite_gauche(String type,int anim) {
-		if(type.equals(TypeObject.heros))
+	public String droite_gauche(Object obj,int anim) {
+		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
 			if(anim>=3 && anim <= 7 )
 				return (Mouvement.GAUCHE);
 			else 
@@ -82,7 +78,7 @@ public class Tir extends Mouvement_perso
 		}
 	}
 	@Override
-	public int updateAnimation(String type,int anim,int current_frame,double speedFactor) {
+	public int updateAnimation(Object obj,int anim,int current_frame,double speedFactor) {
 		return animation.update(0,current_frame,speedFactor);
 	}
 }

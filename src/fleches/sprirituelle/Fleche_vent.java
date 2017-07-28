@@ -1,4 +1,4 @@
-package fleches;
+package fleches.sprirituelle;
 
 import java.util.List;
 
@@ -11,15 +11,15 @@ import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import personnage.Heros;
 import types.Entitie;
+import types.Projectile;
 import types.Vitesse;
 
-public class Fleche_vent extends Fleche{
+public class Fleche_vent extends Spirituelle{
 
 	private boolean arrowExploded = false; // do not collide with more than one object 
-	public Fleche_vent(List<Fleche> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor)
+	public Fleche_vent(List<Projectile> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor)
 	{
 		super(tabFleche,current_frame,_shooter,add_to_list,damageMult,speedFactor);
-		type_fleche=SPIRITUELLE.VENT;
 		TEMPS_DESTRUCTION= (long) (2* Math.pow(10,8));//in nano sec = 0.2 sec 
 		damage=0*damageMult;
 	}
@@ -52,7 +52,7 @@ public class Fleche_vent extends Fleche{
 			eff.stickedCollidable=this.shooter;
 		}
 		this.doitDeplace=false;
-		this.checkCollision=false;
+		this.setCollideWithNone();
 		arrowExploded=true;
 	}
 	
@@ -77,7 +77,7 @@ public class Fleche_vent extends Fleche{
 		eff.stickedCollidable=collider;
 		collider.addSynchroSpeed(this);
 		this.doitDeplace=false;
-		this.checkCollision=false;
+		this.setCollideWithNone();
 		//need destroy after collision : false, it will be destroy after the end of the effect 
 		arrowExploded=true;
 		return false;

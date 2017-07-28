@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 import fleches.Fleche;
 import loading.LoadMediaThread;
+import types.TypeObject;
 
 public class ImagesFlecheIcon extends LoadMediaThread{	
 	Image im_feu= null;
@@ -70,40 +71,40 @@ public class ImagesFlecheIcon extends LoadMediaThread{
 	{
 		Image im = null;		
 
-		if(name.equals(Fleche.MATERIELLE.ELECTRIQUE))
+		if(name.equals(TypeObject.ELECTRIQUE))
 			im=(this.im_electrique);
-		else if (name.equals(Fleche.MATERIELLE.FEU))
+		else if (name.equals(TypeObject.FEU))
 			im=(this.im_feu);
-		else if (name.equals(Fleche.MATERIELLE.GLACE))
+		else if (name.equals(TypeObject.GLACE))
 			im=(this.im_glace);
-		else if (name.equals(Fleche.MATERIELLE.ROCHE))
+		else if (name.equals(TypeObject.ROCHE))
 			im=(this.im_roche);
 
-		else if (name.equals(Fleche.SPIRITUELLE.LUMIERE))
+		else if (name.equals(TypeObject.LUMIERE))
 			im=(this.im_lumiere);
-		else if (name.equals(Fleche.SPIRITUELLE.GRAPPIN))
+		else if (name.equals(TypeObject.GRAPPIN))
 			im=(this.im_grappin);
-		else if (name.equals(Fleche.SPIRITUELLE.OMBRE))
+		else if (name.equals(TypeObject.OMBRE))
 			im=(this.im_ombre);
-		else if (name.equals(Fleche.SPIRITUELLE.VENT))
+		else if (name.equals(TypeObject.VENT))
 			im=(this.im_vent);
 
-		else if (name.equals(Fleche.DESTRUCTRICE.BOGUE))
+		else if (name.equals(TypeObject.BOGUE))
 			im=(this.im_bogue);
-		else if (name.equals(Fleche.DESTRUCTRICE.FOUDRE))
+		else if (name.equals(TypeObject.FOUDRE))
 			im=(this.im_foudre);
-		else if (name.equals(Fleche.DESTRUCTRICE.EXPLOSIVE))
+		else if (name.equals(TypeObject.EXPLOSIVE))
 			im=(this.im_explosive);
-		else if (name.equals(Fleche.DESTRUCTRICE.TROU_NOIR))
+		else if (name.equals(TypeObject.TROU_NOIR))
 			im=(this.im_trou_noir);
 
-		else if (name.equals(Fleche.RUSEE.AUTO_TELEGUIDEE))
+		else if (name.equals(TypeObject.AUTO_TELEGUIDEE))
 			im=(this.im_auto_teleguidee);
-		else if (name.equals(Fleche.RUSEE.CAC))
+		else if (name.equals(TypeObject.CAC))
 			im=(this.im_cac);
-		else if (name.equals(Fleche.RUSEE.RETARD))
+		else if (name.equals(TypeObject.RETARD))
 			im=(this.im_retard);
-		else if (name.equals(Fleche.RUSEE.V_FLECHE))
+		else if (name.equals(TypeObject.V_FLECHE))
 			im=(this.im_v_fleche);
 
 		return im;

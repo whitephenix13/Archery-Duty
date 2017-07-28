@@ -2,6 +2,7 @@ package personnage;
 
 import java.awt.Point;
 import java.awt.Polygon;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.vecmath.Vector2d;
@@ -20,22 +21,23 @@ import deplacement.Mouvement_perso;
 import deplacement.Saut;
 import deplacement.Tir;
 import fleches.Fleche;
-import fleches.Fleche_auto_teleguidee;
-import fleches.Fleche_bogue;
-import fleches.Fleche_cac;
-import fleches.Fleche_electrique;
-import fleches.Fleche_explosive;
-import fleches.Fleche_feu;
-import fleches.Fleche_foudre;
-import fleches.Fleche_glace;
-import fleches.Fleche_grappin;
-import fleches.Fleche_lumiere;
-import fleches.Fleche_ombre;
-import fleches.Fleche_retard;
-import fleches.Fleche_roche;
-import fleches.Fleche_trou_noir;
-import fleches.Fleche_v_fleche;
-import fleches.Fleche_vent;
+import fleches.destructrice.Fleche_bogue;
+import fleches.destructrice.Fleche_explosive;
+import fleches.destructrice.Fleche_foudre;
+import fleches.destructrice.Fleche_trou_noir;
+import fleches.materielle.Fleche_electrique;
+import fleches.materielle.Fleche_feu;
+import fleches.materielle.Fleche_glace;
+import fleches.materielle.Fleche_roche;
+import fleches.rusee.Fleche_auto_teleguidee;
+import fleches.rusee.Fleche_cac;
+import fleches.rusee.Fleche_retard;
+import fleches.rusee.Fleche_v_fleche;
+import fleches.sprirituelle.Fleche_grappin;
+import fleches.sprirituelle.Fleche_lumiere;
+import fleches.sprirituelle.Fleche_ombre;
+import fleches.sprirituelle.Fleche_vent;
+import monstre.TirMonstre;
 import music.Music;
 import partie.AbstractModelPartie;
 import partie.PartieTimer;
@@ -43,13 +45,14 @@ import principal.InterfaceConstantes;
 import types.Bloc;
 import types.Entitie;
 import types.Hitbox;
+import types.Projectile;
 import types.TypeObject;
 import types.Vitesse;
 
 public class Heros extends Entitie{
 
 	public int nouvAnim= 0;
-	public Mouvement nouvMouv = new Attente(TypeObject.heros,Attente.attente_gauche,0);
+	public Mouvement nouvMouv =null;
 	//on definit son type de deplacement 
 
 	
@@ -99,15 +102,15 @@ public class Heros extends Entitie{
 	public boolean doitEncocherFleche=false;
 	public boolean flecheEncochee=false;
 	//Which arrow is currently armed: changed in model partie
-	public String tir_type = Fleche.NORMAL;
+	public String tir_type = TypeObject.FLECHE;
 
 	//In order to determine affinity: 1=Materiel, 2=Spirituel, 3=Destructeur 4=Ruse
 	public int current_slot = 0;
 	//Which arrows are equiped per affinity
-	//private String[] slots = {Fleche.DESTRUCTRICE.BOGUE,Fleche.DESTRUCTRICE.EXPLOSIVE,Fleche.DESTRUCTRICE.FOUDRE,Fleche.DESTRUCTRICE.TROU_NOIR};
-	//private String[] slots = {Fleche.MATERIELLE.ELECTRIQUE,Fleche.MATERIELLE.FEU,Fleche.MATERIELLE.GLACE,Fleche.MATERIELLE.ROCHE};
-	private String[] slots = {Fleche.SPIRITUELLE.VENT,Fleche.SPIRITUELLE.GRAPPIN,Fleche.SPIRITUELLE.OMBRE,Fleche.SPIRITUELLE.LUMIERE};
-	//private String[] slots = {Fleche.RUSEE.AUTO_TELEGUIDEE,Fleche.RUSEE.CAC,Fleche.RUSEE.RETARD,Fleche.RUSEE.V_FLECHE};
+	//private String[] slots = {TypeObject.BOGUE,TypeObject.EXPLOSIVE,TypeObject.FOUDRE,TypeObject.TROU_NOIR};
+	//private String[] slots = {TypeObject.ELECTRIQUE,TypeObject.FEU,TypeObject.GLACE,TypeObject.ROCHE};
+	private String[] slots = {TypeObject.VENT,TypeObject.GRAPPIN,TypeObject.OMBRE,TypeObject.LUMIERE};
+	//private String[] slots = {TypeObject.AUTO_TELEGUIDEE,TypeObject.CAC,TypeObject.RETARD,TypeObject.V_FLECHE};
 	public String[] getSlots(){return slots;}
 	/**
 	 * 
@@ -117,7 +120,7 @@ public class Heros extends Entitie{
 		if(special)
 			tir_type=slots[current_slot];
 		else
-			tir_type=Fleche.NORMAL;
+			tir_type=TypeObject.FLECHE;
 	} 
 	/**
 	 * 
@@ -128,7 +131,7 @@ public class Heros extends Entitie{
 		if(special)
 			return slots[current_slot];
 		else
-			return Fleche.NORMAL;
+			return TypeObject.FLECHE;
 	} 
 	//last time an arrow was shot
 	public long last_shoot_time = -1;
@@ -158,40 +161,28 @@ public class Heros extends Entitie{
 	private boolean last_align_down=true;
 	public boolean getLast_align_d(){return last_align_down;}
 
-	public Heros( int xPo,int yPo, int _anim, Mouvement_perso dep,int current_frame){
+	public Heros( int xPo,int yPo, int _anim, int current_frame){
 		super.init();
 		MAXLIFE = 100;
 		MINLIFE = 0;
 		life= MAXLIFE;
-		type=TypeObject.heros;
 		xpos(xPo);
 		ypos(yPo); 
 		localVit= new Vitesse(0,0);
 		fixedWhenScreenMoves=true;
-		deplacement=dep ;
+		deplacement=new Attente(this,Attente.attente_gauche,current_frame);
 		anim=_anim;
 		nouvAnim= 0;
-		nouvMouv = new Attente(TypeObject.heros,Attente.attente_gauche,current_frame);
+		nouvMouv = new Attente(this,Attente.attente_gauche,current_frame);
 		tempsTouche=PartieTimer.me.getElapsedNano();
 		controlScreenMotion=true;
-		//TODO: test
-		//conditions.addNewCondition(Condition.BRULURE);
-		//conditions.addNewCondition(Condition.REGENERATION);
-		//conditions.addNewCondition(Condition.DEFAILLANCE);
-		//conditions.addNewCondition(Condition.FAIBLESSE);
-		//conditions.addNewCondition(Condition.FORCE);
-		//conditions.addNewCondition(Condition.LENTEUR);
-		//conditions.addNewCondition(Condition.PARALYSIE);
-		//conditions.addNewCondition(Condition.PRECISION);
-		//conditions.addNewCondition(Condition.RESISTANCE,30);
-		//conditions.addNewCondition(Condition.VITESSE,30);
-
+		this.setCollideWithout(Arrays.asList(TypeObject.HEROS,TypeObject.FLECHE));
 	}
 	
 	public void onAddLife(){};
 	
 	public String droite_gauche (int anim){
-		return deplacement.droite_gauche(TypeObject.heros, anim);
+		return deplacement.droite_gauche(this, anim);
 	}
 
 	public void touche (float degat) 
@@ -298,7 +289,7 @@ public class Heros extends Entitie{
 	}
 	public Hitbox getHitbox(Point INIT_RECT, Mouvement _dep, int _anim) {
 		try{
-			Mouvement_perso temp = (Mouvement_perso) _dep.Copy(TypeObject.heros); //create the mouvement
+			Mouvement_perso temp = (Mouvement_perso) _dep.Copy(this); //create the mouvement
 			return Hitbox.plusPoint(temp.hitbox.get(_anim), new Point(xpos(),ypos()),true);
 		}
 		catch(IndexOutOfBoundsException e)
@@ -447,13 +438,20 @@ public class Heros extends Entitie{
 	}
 
 	@Override
-	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider,Vector2d normal) {}
+	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider,Vector2d normal) 
+	{
+		if(TypeObject.isTypeOf(collider, TypeObject.TIR_MONSTRE))
+		{
+			if(!invincible)
+				touche(((TirMonstre)collider).damage);
+		}
+	}
 
 	@Override
 	public void memorizeCurrentValue() {
 
 		final Point memPos= new Point(xpos(),ypos()); 
-		final Mouvement_perso memDep = (Mouvement_perso) deplacement.Copy(TypeObject.heros);
+		final Mouvement_perso memDep = (Mouvement_perso) deplacement.Copy(this);
 		final int memAnim = anim;
 		final Vitesse memVitloca = localVit.Copy();
 		currentValue=new CurrentValue(){		
@@ -584,7 +582,7 @@ public class Heros extends Entitie{
 				&& (droite_gauche(animHeros).equals(Mouvement.GAUCHE));
 		if(stopAccrocheD || stopAccrocheG)
 		{
-			Mouvement nextMouv = new Attente(TypeObject.heros,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?Attente.attente_gauche: Attente.attente_droite,partie.getFrame());
+			Mouvement nextMouv = new Attente(this,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?Attente.attente_gauche: Attente.attente_droite,partie.getFrame());
 			int nextAnim = (droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? 0 : 2 );
 			alignHitbox(animHeros,nextMouv,nextAnim,partie ,deplace,blocGaucheGlisse);
 			//on ajuste la position du personnage pour qu'il soit centrÃ© 
@@ -612,10 +610,10 @@ public class Heros extends Entitie{
 			int animSuivante = (int)anim_rotation[0];
 			rotation_tir=anim_rotation[1];
 			//on decalle
-			Mouvement mouvSuivant = new Tir(TypeObject.heros,Tir.tir,partie.getFrame());
+			Mouvement mouvSuivant = new Tir(this,Tir.tir,partie.getFrame());
 			alignHitbox(animHeros,mouvSuivant,animSuivante ,partie,deplace,blocGaucheGlisse);
 			deplacement= mouvSuivant;
-			deplacement.setSpeed(TypeObject.heros, this, anim);
+			deplacement.setSpeed(this, anim);
 			if(!falling)
 			{
 				finSaut=false;
@@ -630,13 +628,13 @@ public class Heros extends Entitie{
 		//SPECIAL CASE that comes from computation on the current Mouvement 
 		if( (beginSliding_r||beginSliding_l) && !deplacement.IsDeplacement(Mouvement_perso.glissade))
 		{
-			Mouvement nextMouv = new Glissade(TypeObject.heros,beginSliding_l?Glissade.glissade_gauche:Glissade.glissade_droite,partie.getFrame());
+			Mouvement nextMouv = new Glissade(this,beginSliding_l?Glissade.glissade_gauche:Glissade.glissade_droite,partie.getFrame());
 			int nextAnim = (beginSliding_l ? 0 :1);
 
 			alignHitbox(animHeros,nextMouv,nextAnim,partie ,deplace,blocGaucheGlisse);
 			anim = nextAnim;
 			deplacement= nextMouv;
-			deplacement.setSpeed(TypeObject.heros, this, anim);
+			deplacement.setSpeed(this, anim);
 			deplaceSautGauche=false;
 			deplaceSautDroit=false;
 			localVit.x=(0);
@@ -648,7 +646,7 @@ public class Heros extends Entitie{
 		{
 			//WARNING: problem if the action is not succeeded 
 			accrocheCooldownTimer=PartieTimer.me.getElapsedNano();
-			Mouvement nextMouv= new Accroche(TypeObject.heros, beginAccroche_l? Accroche.accroche_gauche:Accroche.accroche_droite,partie.getFrame());
+			Mouvement nextMouv= new Accroche(this, beginAccroche_l? Accroche.accroche_gauche:Accroche.accroche_droite,partie.getFrame());
 			int nextAnim = (beginAccroche_l?0:2);
 
 			//Manually align hitbox 
@@ -677,7 +675,7 @@ public class Heros extends Entitie{
 
 			deplacement=nextMouv;
 			anim=nextAnim;
-			deplacement.setSpeed(TypeObject.heros, this, nextAnim);
+			deplacement.setSpeed(this, nextAnim);
 
 			return anim;
 		}
@@ -698,7 +696,7 @@ public class Heros extends Entitie{
 				int type_mouv = droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? (up==0?Saut.jump_gauche:Saut.fall_gauche) :
 					(up==0?Saut.jump_droite:Saut.fall_droite);
 				debugTime.elapsed("d", 5);
-				Mouvement mouvSuivant = new Saut(TypeObject.heros,type_mouv,partie.getFrame());
+				Mouvement mouvSuivant = new Saut(this,type_mouv,partie.getFrame());
 				debugTime.elapsed("e", 5);
 				int animSuivant = (droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? 0+up :3+up);
 				debugTime.elapsed("f", 5);
@@ -707,7 +705,7 @@ public class Heros extends Entitie{
 				animHeros = animSuivant;
 				anim=animSuivant;
 				deplacement=mouvSuivant;
-				deplacement.setSpeed(TypeObject.heros, this, anim);
+				deplacement.setSpeed(this, anim);
 				debugTime.elapsed("h", 5);
 				//landing = partie.finSaut;
 				beginSliding= computeBeginSliding(partie,blocDroitGlisse,blocGaucheGlisse,(falling&&!landing));
@@ -723,12 +721,12 @@ public class Heros extends Entitie{
 			if( (anim == 1 || anim == 3) && deplacement.animEndedOnce())
 			{
 				int next_anim = (droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? 0 :2);
-				Mouvement nextMouv = new Attente(TypeObject.heros,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?Attente.attente_gauche: Attente.attente_droite,partie.getFrame());
+				Mouvement nextMouv = new Attente(this,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?Attente.attente_gauche: Attente.attente_droite,partie.getFrame());
 
 				alignHitbox(animHeros,nextMouv,next_anim,partie,deplace,blocGaucheGlisse);
 				anim= next_anim;
 				deplacement=nextMouv;
-				deplacement.setSpeed(TypeObject.heros, this, anim);
+				deplacement.setSpeed(this, anim);
 
 				//on reinitialise les variables de saut 
 				debutSaut = false;
@@ -743,14 +741,14 @@ public class Heros extends Entitie{
 		else if(landing) //atterrissage: accroupi 
 		{
 
-			Mouvement mouvSuiv = new Saut(TypeObject.heros,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?Saut.land_gauche:Saut.land_droite,partie.getFrame());
+			Mouvement mouvSuiv = new Saut(this,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?Saut.land_gauche:Saut.land_droite,partie.getFrame());
 			int animSuiv = (droite_gauche(animHeros).equals(Mouvement.GAUCHE)? 2 : 5 );
 			//on ajuste la position du personnage pour qu'il soit centr� 
 			alignHitbox(animHeros,mouvSuiv,animSuiv,partie,deplace,blocGaucheGlisse );
 			finSaut=false;//set landing to false
 			deplacement=mouvSuiv;
 			anim= animSuiv;
-			deplacement.setSpeed(TypeObject.heros, this, anim);
+			deplacement.setSpeed(this, anim);
 
 			return(anim);
 
@@ -760,8 +758,8 @@ public class Heros extends Entitie{
 		{
 
 			int nextAnim = runBeforeJump? (droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? 0 : 4 ) : (droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? 0 : 2 );
-			Mouvement_perso nextDep=  runBeforeJump? new Course(TypeObject.heros,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?Course.course_gauche:Course.course_droite,partie.getFrame()) 
-					: new Attente(TypeObject.heros,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?Attente.attente_gauche:Attente.attente_droite,partie.getFrame());
+			Mouvement_perso nextDep=  runBeforeJump? new Course(this,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?Course.course_gauche:Course.course_droite,partie.getFrame()) 
+					: new Attente(this,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?Attente.attente_gauche:Attente.attente_droite,partie.getFrame());
 			//on ajuste la position du personnage pour qu'il soit centr� 
 			alignHitbox(animHeros,nextDep,nextAnim,partie,deplace,blocGaucheGlisse);
 			//on choisit la direction d'attente			
@@ -777,7 +775,7 @@ public class Heros extends Entitie{
 		else if(landSliding)
 		{
 
-			Mouvement nextMouv = new Attente(TypeObject.heros,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?Attente.attente_gauche: Attente.attente_droite,partie.getFrame());
+			Mouvement nextMouv = new Attente(this,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?Attente.attente_gauche: Attente.attente_droite,partie.getFrame());
 			int nextAnim = (droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? 0 : 2 );
 			alignHitbox(animHeros,nextMouv,nextAnim,partie ,deplace,blocGaucheGlisse);
 			finSaut=false;
@@ -793,11 +791,11 @@ public class Heros extends Entitie{
 		{
 
 			int nextAnim= (droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? 1 :4);
-			Mouvement nextMouv = new Saut(TypeObject.heros,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?Saut.fall_gauche: Saut.fall_droite,partie.getFrame());
+			Mouvement nextMouv = new Saut(this,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?Saut.fall_gauche: Saut.fall_droite,partie.getFrame());
 			alignHitbox(animHeros,nextMouv,nextAnim,partie,deplace,blocGaucheGlisse);
 			anim = nextAnim;
 			deplacement= nextMouv;
-			deplacement.setSpeed(TypeObject.heros, this, anim);
+			deplacement.setSpeed(this, anim);
 			localVit.x=(0);
 			nouvAnim=anim;	
 			return(anim);
@@ -849,17 +847,17 @@ public class Heros extends Entitie{
 
 			anim=nouvAnim;
 			deplacement=nouvMouv;
-			deplacement.setSpeed(TypeObject.heros, this, anim);
+			deplacement.setSpeed(this, anim);
 
 		}
 		else
 			//if(!partie.changeMouv ) // MEME MOUVEMENT QUE PRECEDEMMENT , otherwise problem with landing 
 		{
 			animationChanged=false;
-			int nextAnim = deplacement.updateAnimation(TypeObject.heros, animHeros, partie.getFrame(),conditions.getSpeedFactor());
+			int nextAnim = deplacement.updateAnimation(this, animHeros, partie.getFrame(),conditions.getSpeedFactor());
 			alignHitbox(animHeros,deplacement,nextAnim,partie,deplace,blocGaucheGlisse);
 			anim= nextAnim;
-			deplacement.setSpeed(TypeObject.heros, this, anim);
+			deplacement.setSpeed(this, anim);
 
 		}
 		debugTime.elapsed("end", 4);
@@ -941,7 +939,7 @@ public class Heros extends Entitie{
 			down=forcedDown;
 		last_align_left=left;
 		last_align_down=down;
-		super.alignHitbox(animActu,depSuiv, animSuiv, partie,deplace,left, down,TypeObject.heros,!depSuiv.IsDeplacement(Mouvement_perso.glissade));
+		super.alignHitbox(animActu,depSuiv, animSuiv, partie,deplace,left, down,this,!depSuiv.IsDeplacement(Mouvement_perso.glissade));
 	}
 
 	@Override
@@ -1010,48 +1008,49 @@ public class Heros extends Entitie{
 		Fleche fleche = null;
 		String tir_type_ =get_tir_type(special);
 		//Only give the shooter information in the fleche constructor if it is needed 
-		if(tir_type_.equals(Fleche.NORMAL))
-			fleche =new Fleche(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
-
+		
 		//MATERIEL
-		else if(tir_type_.equals(Fleche.MATERIELLE.FEU))
+		if(tir_type_.equals(TypeObject.FEU))
 			fleche =new Fleche_feu(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
-		else if(tir_type_.equals(Fleche.MATERIELLE.ELECTRIQUE))
+		else if(tir_type_.equals(TypeObject.ELECTRIQUE))
 			fleche =new Fleche_electrique(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
-		else if(tir_type_.equals(Fleche.MATERIELLE.GLACE))
+		else if(tir_type_.equals(TypeObject.GLACE))
 			fleche =new Fleche_glace(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
-		else if(tir_type_.equals(Fleche.MATERIELLE.ROCHE))
+		else if(tir_type_.equals(TypeObject.ROCHE))
 			fleche =new Fleche_roche(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 
 		//SPIRITUELLE
-		else if(tir_type_.equals(Fleche.SPIRITUELLE.LUMIERE))
+		else if(tir_type_.equals(TypeObject.LUMIERE))
 			fleche =new Fleche_lumiere(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
-		else if(tir_type_.equals(Fleche.SPIRITUELLE.GRAPPIN))
+		else if(tir_type_.equals(TypeObject.GRAPPIN))
 			fleche =new Fleche_grappin(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
-		else if(tir_type_.equals(Fleche.SPIRITUELLE.OMBRE))
+		else if(tir_type_.equals(TypeObject.OMBRE))
 			fleche =new Fleche_ombre(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
-		else if(tir_type_.equals(Fleche.SPIRITUELLE.VENT))
+		else if(tir_type_.equals(TypeObject.VENT))
 			fleche =new Fleche_vent(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 
 		//DESTRUCTEUR
-		else if(tir_type_.equals(Fleche.DESTRUCTRICE.BOGUE))
+		else if(tir_type_.equals(TypeObject.BOGUE))
 			fleche =new Fleche_bogue(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
-		else if(tir_type_.equals(Fleche.DESTRUCTRICE.FOUDRE))
+		else if(tir_type_.equals(TypeObject.FOUDRE))
 			fleche =new Fleche_foudre(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
-		else if(tir_type_.equals(Fleche.DESTRUCTRICE.EXPLOSIVE))
+		else if(tir_type_.equals(TypeObject.EXPLOSIVE))
 			fleche =new Fleche_explosive(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
-		else if(tir_type_.equals(Fleche.DESTRUCTRICE.TROU_NOIR))
+		else if(tir_type_.equals(TypeObject.TROU_NOIR))
 			fleche =new Fleche_trou_noir(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 
 		//RUSE
-		else if(tir_type_.equals(Fleche.RUSEE.AUTO_TELEGUIDEE))
+		else if(tir_type_.equals(TypeObject.AUTO_TELEGUIDEE))
 			fleche =new Fleche_auto_teleguidee(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
-		else if(tir_type_.equals(Fleche.RUSEE.CAC))
+		else if(tir_type_.equals(TypeObject.CAC))
 			fleche =new Fleche_cac(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
-		else if(tir_type_.equals(Fleche.RUSEE.RETARD))
+		else if(tir_type_.equals(TypeObject.RETARD))
 			fleche =new Fleche_retard(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
-		else if(tir_type_.equals(Fleche.RUSEE.V_FLECHE))
+		else if(tir_type_.equals(TypeObject.V_FLECHE))
 			fleche =new Fleche_v_fleche(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+
+		else if(tir_type_.equals(TypeObject.FLECHE))
+			fleche =new Fleche(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 
 		return fleche;
 	}
@@ -1061,8 +1060,8 @@ public class Heros extends Entitie{
 	 */
 	public boolean canShootArrow(AbstractModelPartie partie)
 	{
-		List<Fleche> tabFleche= partie.tabFleche;
-		Fleche f = getArrowInstance(partie,!tir_type.equals(Fleche.NORMAL),false);
+		List<Projectile> tabFleche= partie.tabFleche;
+		Fleche f = getArrowInstance(partie,!tir_type.equals(TypeObject.FLECHE),false);
 
 		boolean enough_seyeri=seyeriActionPossible(f.seyeri_cost);
 		boolean notParalyzed = conditions.getShotSpeedFactor()>0;
@@ -1075,14 +1074,14 @@ public class Heros extends Entitie{
 			boolean arrow_already_shot = false; // a similar arrow was shot but never destroyed 
 			for(int i=tabFleche.size()-1; i>=0;--i)
 			{
-				Fleche fl = tabFleche.get(i);
+				Fleche fl = (Fleche)tabFleche.get(i);
 				//If a similar arrow was shot           && I was the shooter
-				if(fl.type_fleche.equals(f.type_fleche) && fl.shooter==this)
+				if(TypeObject.isTypeOf(fl, f, true) && fl.shooter==this)
 				{
 					arrow_already_shot=true;
 					if(f.destroy_on_click)
 					{
-						Fleche f_to_destruct = tabFleche.get(i);
+						Projectile f_to_destruct = tabFleche.get(i);
 						if(!f_to_destruct.getNeedDestroy() && (f_to_destruct.tempsDetruit==0))
 							f_to_destruct.destroy(partie,true);
 					}
@@ -1099,7 +1098,7 @@ public class Heros extends Entitie{
 
 	public void shootArrow(AbstractModelPartie partie)
 	{	
-		Fleche fleche =getArrowInstance(partie,!tir_type.equals(Fleche.NORMAL),true);
+		Fleche fleche =getArrowInstance(partie,!tir_type.equals(TypeObject.FLECHE),true);
 		addSeyeri(partie, fleche.seyeri_cost);
 
 	}
@@ -1131,7 +1130,7 @@ public class Heros extends Entitie{
 		//_shooter from fleche
 		for(int j= partie.tabFleche.size()-1; j>=0;j--)
 		{
-			Heros _shooter = partie.tabFleche.get(j).shooter;
+			Heros _shooter = ((Fleche)partie.tabFleche.get(j)).shooter;
 			if(_shooter==this)
 			{
 				_shooter=null;

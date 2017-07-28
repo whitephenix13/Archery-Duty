@@ -1,4 +1,4 @@
-package fleches;
+package fleches.sprirituelle;
 
 import java.util.List;
 
@@ -11,20 +11,20 @@ import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import personnage.Heros;
 import types.Entitie;
+import types.Projectile;
 import types.Vitesse;
 
-public class Fleche_grappin extends Fleche {
+public class Fleche_grappin extends Spirituelle {
 
 	private boolean destroy_next_frame=false;
 	public Entitie collider = null;
 	private boolean dragSomething = false; // boolean to make sure that at most one object is dragged
 
-	public Fleche_grappin(List<Fleche> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor)
+	public Fleche_grappin(List<Projectile> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor)
 	{
 		super(tabFleche, current_frame,_shooter,add_to_list,damageMult,speedFactor);
 		no_more_than_one=true;
 		destroy_on_click=true;
-		type_fleche=SPIRITUELLE.GRAPPIN;
 		TEMPS_DESTRUCTION= (long) (2* Math.pow(10,8));//in nano sec = 0.5 sec 
 		damage=0*damageMult;
 	}
@@ -78,7 +78,7 @@ public class Fleche_grappin extends Fleche {
 		if((!this.needDestroy || this.tempsDetruit>0) && !dragSomething)
 		{
 			//planted is only called if the arrow collide with the world hence the grappin applies on the shooter
-			this.checkCollision=false;
+			this.setCollideWithNone();
 			this.doitDeplace=false;
 			if(!stuck)
 			{
@@ -106,7 +106,7 @@ public class Fleche_grappin extends Fleche {
 		if(colliderEntitie != null && colliderEntitie.draggable && (!this.needDestroy || this.tempsDetruit>0) && !dragSomething )
 		{
 			this.collider= colliderEntitie;
-			this.checkCollision=false;
+			this.setCollideWithNone();
 			this.doitDeplace=false;
 			collider.addSynchroSpeed(this);
 			//both arrow and object are pulled toward the hero

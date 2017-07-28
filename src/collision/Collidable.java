@@ -2,6 +2,8 @@ package collision;
 
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.vecmath.Vector2d;
 
@@ -19,13 +21,16 @@ import types.Destroyable;
 import types.Entitie;
 import types.Hitbox;
 import types.Projectile;
+import types.TypeObject;
 import types.Vitesse;
 
 //Specify that an object can enter in collision. 
 //Store the information needed to manage a collision
 public abstract class Collidable extends Destroyable{
 
-	public String type;
+	//All types that the object will not be consider when colliding
+	private List<String> immuneType =null;
+	public List<String> getImmuneType() {return immuneType;}
 	private int xpos; 
 	private int ypos; 
 	
@@ -114,8 +119,23 @@ public abstract class Collidable extends Destroyable{
 		return 0;
 	}
 	
-	public boolean checkCollision=true;
-	
+	public void setCollideWithAll()
+	{
+		this.immuneType=new ArrayList<String>();
+	}
+	public void setCollideWithout(List<String> list )
+	{
+		this.immuneType=list;
+	}
+	public void setCollideWithNone()
+	{
+		this.immuneType=Arrays.asList(TypeObject.COLLIDABLE);
+	}
+	public boolean checkCollideWithWorld()
+	{
+		return !TypeObject.isMemberOf(this, Arrays.asList(TypeObject.BLOC));
+	}
+
 	public abstract Vitesse getGlobalVit(AbstractModelPartie partie);
 	//Last norm of colliding object (most of the time: world). Null if none. The colliding object must be unpentrable, otherwise its norm is not registered as "last"
 	//WARNING: only works with single object collision. WARNING strange things might happen if the object can move 
@@ -140,7 +160,7 @@ public abstract class Collidable extends Destroyable{
 	public void init()
 	{
 		synchroSpeed= new ArrayList<Collidable>();
-		checkCollision=true;
+		//Collide with everyt
 		normCollision=null;
 		last_colli_left=false;
 		last_colli_right=false;
@@ -187,7 +207,7 @@ public abstract class Collidable extends Destroyable{
 
 
 	public void alignHitbox(int animActu,Mouvement depSuiv, int animSuiv, AbstractModelPartie partie,Deplace deplace, boolean left, boolean down,
-			String deplacement_type, boolean useTouchCollision)
+			Object obj, boolean useTouchCollision)
 	{
 		//Collect the added motion 
 		double[] res = new double[0];
@@ -216,7 +236,7 @@ public abstract class Collidable extends Destroyable{
 		String s_y =down? " down":" up";
 		String s_my =!down? " down":" up";
 
-		boolean valid=alignTestValid(depSuiv, animSuiv, partie,deplace,deplacement_type,useTouchCollision);
+		boolean valid=alignTestValid(depSuiv, animSuiv, partie,deplace,obj,useTouchCollision);
 
 		s+= (valid && s=="") ? s_x+s_y : "";
 		boolean n_glisse = depSuiv.IsDeplacement(Mouvement_perso.glissade);
@@ -232,7 +252,7 @@ public abstract class Collidable extends Destroyable{
 			xadded=dx;
 			yadded=m_dy;
 
-			valid=alignTestValid(depSuiv, animSuiv, partie,deplace,deplacement_type,useTouchCollision);
+			valid=alignTestValid(depSuiv, animSuiv, partie,deplace,obj,useTouchCollision);
 			s+= (valid && s=="") ? s_x+s_my : "";
 		}
 
@@ -248,7 +268,7 @@ public abstract class Collidable extends Destroyable{
 			xadded=m_dx;
 			yadded=dy;
 
-			valid=alignTestValid(depSuiv, animSuiv, partie,deplace,deplacement_type,useTouchCollision);
+			valid=alignTestValid(depSuiv, animSuiv, partie,deplace,obj,useTouchCollision);
 			s+= (valid && s=="") ? s_mx+s_y : "";
 
 		}
@@ -260,7 +280,7 @@ public abstract class Collidable extends Destroyable{
 			pypos(m_dy-yadded);
 			xadded=m_dx;
 			yadded=m_dy;
-			valid=alignTestValid(depSuiv, animSuiv, partie,deplace,deplacement_type,useTouchCollision);
+			valid=alignTestValid(depSuiv, animSuiv, partie,deplace,obj,useTouchCollision);
 			s+= (valid && s=="") ? s_mx+s_my : "";
 
 		}
@@ -272,10 +292,10 @@ public abstract class Collidable extends Destroyable{
 	}
 
 	public boolean alignTestValid(Mouvement depSuiv, int animSuiv, AbstractModelPartie partie,Deplace deplace, 
-			String deplacement_type, boolean useTouchCollision)
+			Object obj, boolean useTouchCollision)
 	{
 		int prev_anim = anim;
-		Mouvement prev_mouv = deplacement.Copy(deplacement_type);
+		Mouvement prev_mouv = deplacement.Copy(obj);
 		this.anim=animSuiv;
 		this.deplacement=depSuiv;
 
@@ -297,23 +317,40 @@ public abstract class Collidable extends Destroyable{
 
 	//For all the methods below: do not include the effects 
 	
-	//get all relevant collidable,ie: the one that are affected by the effect of the arrows 
+
 	public static ArrayList<Entitie> getAllEntitiesCollidable(AbstractModelPartie partie)
 	{
 		ArrayList<Entitie> objects = new ArrayList<Entitie>();
 		objects.add(partie.heros);
-		for(Monstre m : partie.tabMonstre)
+		for(Entitie m : partie.tabMonstre)
 			objects.add(m);
 		return objects;
 	}
-	//get all relevant collidable,ie: the one that are affected by the effect of the arrows 
+
+	public static List<List<Entitie>> getAllEntitiesCollidableSeparately(AbstractModelPartie partie)
+	{
+		List<List<Entitie>> objects = new ArrayList<List<Entitie>>();
+		List<Entitie> herosList = new ArrayList<Entitie>();
+		herosList.add(partie.heros);
+		objects.add(herosList);
+		objects.add(partie.tabMonstre);
+		return objects;
+	}
 	public static ArrayList<Projectile> getAllProjectileCollidable(AbstractModelPartie partie)
 	{
 		ArrayList<Projectile> objects = new ArrayList<Projectile>();
-		for(TirMonstre tirM : partie.tabTirMonstre)
-			objects.add(tirM);
-		for(Fleche f : partie.tabFleche)
+		for(Projectile f : partie.tabFleche)
 			objects.add(f);
+		for(Projectile tirM : partie.tabTirMonstre)
+			objects.add(tirM);
+		return objects;
+	}
+	
+	public static List<List<Projectile>> getAllProjectileCollidableSeparately(AbstractModelPartie partie)
+	{
+		List<List<Projectile>> objects = new ArrayList<List<Projectile>>();
+		objects.add(partie.tabFleche);
+		objects.add(partie.tabTirMonstre);
 		return objects;
 	}
 	

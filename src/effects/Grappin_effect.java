@@ -56,7 +56,6 @@ public class Grappin_effect extends Effect{
 	public Grappin_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame, Collidable _shooter )
 	{
 		shooter=_shooter;
-		name = Fleche.SPIRITUELLE.GRAPPIN;
 		xtaille =  Arrays.asList(1657);
 		ytaille =  Arrays.asList(30);
 		hitbox= Hitbox.createSquareHitboxes(1657-MAX_LENGTH,0,1657,30,1);
@@ -165,10 +164,10 @@ public class Grappin_effect extends Effect{
 	public Vitesse getModifiedVitesse(AbstractModelPartie partie,Collidable obj) {
 		//if(modified_vitesse==null)
 		//{
-		if(obj.type.equals(TypeObject.heros) && ! this.shooterDragged)
+		if(TypeObject.isTypeOf(obj, TypeObject.HEROS) && ! this.shooterDragged)
 			return new Vitesse(); 
 
-		if(!obj.type.equals(TypeObject.heros) &&  this.shooterDragged)
+		if(!TypeObject.isTypeOf(obj, TypeObject.HEROS) &&  this.shooterDragged)
 			return new Vitesse(); 
 
 		double[] XY = Deplace.angleToXY(rotation);

@@ -1,4 +1,4 @@
-package fleches;
+package fleches.sprirituelle;
 
 import java.awt.Point;
 import java.util.List;
@@ -8,7 +8,6 @@ import javax.vecmath.Vector2d;
 import collision.Collidable;
 import collision.Collision;
 import collision.GJK_EPA;
-import conditions.Condition;
 import deplacement.Deplace;
 import effects.Ombre_effect;
 import music.MusicBruitage;
@@ -16,12 +15,12 @@ import partie.AbstractModelPartie;
 import personnage.Heros;
 import types.Entitie;
 import types.Hitbox;
+import types.Projectile;
 
-public class Fleche_ombre extends Fleche {
+public class Fleche_ombre extends Spirituelle {
 
-	public Fleche_ombre(List<Fleche> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor) {
+	public Fleche_ombre(List<Projectile> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor) {
 		super(tabFleche, current_frame,_shooter,add_to_list,damageMult,speedFactor);
-		type_fleche=SPIRITUELLE.OMBRE;
 		TEMPS_DESTRUCTION= (long) (2* Math.pow(10,8));//in nano sec = 0.2 sec 
 		damage=0*damageMult;
 	}
@@ -196,7 +195,7 @@ public class Fleche_ombre extends Fleche {
 		}
 
 		this.doitDeplace=false;
-		this.checkCollision=false;
+		this.setCollideWithNone();
 	}
 	@Override
 	protected void onPlanted(List<Entitie> objects, AbstractModelPartie partie,boolean stuck)
@@ -213,7 +212,7 @@ public class Fleche_ombre extends Fleche {
 			applyArrowEffect(objects,partie,collider,normal);
 		else{
 			this.doitDeplace=false;
-			this.checkCollision=false;
+			this.setCollideWithNone();
 			return true;
 		}
 		return false;

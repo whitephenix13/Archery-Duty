@@ -37,7 +37,7 @@ public class Bloc extends Collidable{
 	}
 	public Bloc(String str, int x, int y , boolean bl, boolean back) {
 		super.init();
-		type=TypeObject.bloc;
+		
 		this.img=str;
 		this.xpos(x);
 		this.ypos(y);
@@ -45,6 +45,7 @@ public class Bloc extends Collidable{
 		fixedWhenScreenMoves=false;
 		this.bloquer=bl;
 		this.background=back;
+		this.setCollideWithAll();
 	}
 	/*public static Bloc[][] InitBlocMatrix(int xsize, int ysize)
 	{

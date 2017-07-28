@@ -26,12 +26,12 @@ public abstract class Mouvement{
 	public boolean animEndedOnce(){return animation.isEndedOnce();}
 	public int type_mouv;
 	
-	public abstract Mouvement Copy(String type);
+	public abstract Mouvement Copy(Object obj);
 	public abstract boolean IsDeplacement(Mouvement m);
 	public abstract boolean IsDeplacement(String s);
-	public abstract void setSpeed(String type,Collidable object, int anim);
-	public abstract String droite_gauche(String type,int anim);
-	public int updateAnimation(String type,int anim,int current_frame,double speedFactor) {
+	public abstract void setSpeed(Collidable object, int anim);
+	public abstract String droite_gauche(Object obj,int anim);
+	public int updateAnimation(Object obj,int anim,int current_frame,double speedFactor) {
 		return animation.update(anim,current_frame,speedFactor);
 	}
 	}

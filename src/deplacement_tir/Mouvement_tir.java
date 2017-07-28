@@ -25,6 +25,5 @@ public abstract class Mouvement_tir extends Mouvement{
 		return this.getClass().getName().equals("deplacement_tir." + s);
 	}
 	
-	public abstract Mouvement Copy(String type);
 
 }

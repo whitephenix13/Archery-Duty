@@ -30,20 +30,19 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	public TirSpirel(int _xpos, int _ypos,int _anim,int current_frame,float damageMultiplier,float speedFactor)
 	{
 		super.init();
-		type=TypeObject.tir_spirel;
 		xpos(_xpos);
 		ypos(_ypos);
 		anim=_anim;
-		deplacement= new T_normal(type,Attente.attente_gauche,current_frame);
+		deplacement= new T_normal(this,Attente.attente_gauche,current_frame);
 
 		needDestroy=false;
 		localVit=new Vitesse(0,0);
 		fixedWhenScreenMoves=false ; //true : not influenced by screen displacement (ie: use for the hero)
 
 		useGravity=false;
-		deplacement.setSpeed(TypeObject.tir_spirel,this,anim);
+		deplacement.setSpeed(this,anim);
 
-		dommage= -25*damageMultiplier;//-25
+		damage= -25*damageMultiplier;//-25
 
 		
 		//on active la musique car le tir part directement 
@@ -108,13 +107,10 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	}
 	@Override
 	public Hitbox getHitbox(Point INIT_RECT, Mouvement _dep, int _anim) {
-		Mouvement_tir temp = (Mouvement_tir) _dep.Copy(TypeObject.tir_spirel); //create the mouvement
+		Mouvement_tir temp = (Mouvement_tir) _dep.Copy(this); //create the mouvement
 		return Hitbox.plusPoint(temp.hitbox.get(_anim), new Point(xpos(),ypos()),true);
 	}
-	public Hitbox getWorldHitbox(AbstractModelPartie partie) {
-		Hitbox hit1  =Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos(),ypos()),true);
-		return Hitbox.plusPoint(hit1, new Point(partie.xScreendisp,partie.yScreendisp),true);
-	}
+	
 	@Override
 	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,boolean stuck) {
 		//project speed to ground 
@@ -130,7 +126,11 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 		
 	}
 	@Override
-	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider,Vector2d normal) {needDestroy=true;}
+	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider,Vector2d normal) {
+		if(TypeObject.isTypeOf(collider, TypeObject.FLECHE))
+			MusicBruitage.startBruitage("annulation tir");
+		needDestroy=true;
+	}
 
 
 }

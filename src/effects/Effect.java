@@ -24,7 +24,7 @@ import types.Vitesse;
 public abstract class Effect extends Collidable{
 	
 	public int typeEffect = -1; //-1 for default, 0 if special animation for the ground, 1 if special animation for ennemi/shoot collision
-	public String name;
+
 	public Fleche ref_fleche=null;
 	public void onRemoveRefFleche(AbstractModelPartie partie,boolean destroyNow){this.onUpdate(partie,true);ref_fleche=null;this.destroy(partie, destroyNow);};
 	public List<Integer> xtaille= new ArrayList<Integer>() ;

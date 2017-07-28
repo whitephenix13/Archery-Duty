@@ -16,11 +16,11 @@ public class Glissade extends Mouvement_perso
 	
 
 	//constructeur monstre
-	public Glissade(String type,int _type_mouv,int current_frame) 
+	public Glissade(Object obj,int _type_mouv,int current_frame) 
 	{
 		super();
 		type_mouv=_type_mouv;
-		if(type==TypeObject.heros)
+		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
 		{
 			xtaille =  Arrays.asList(49,49);
 			ytaille =  Arrays.asList(89,89);
@@ -47,27 +47,24 @@ public class Glissade extends Mouvement_perso
 
 		}
 	}
-	public Glissade(String type,int _type_mouv, int current_frame,Animation _animation){
-		this(type,_type_mouv,current_frame);
+	public Glissade(Object obj,int _type_mouv, int current_frame,Animation _animation){
+		this(obj,_type_mouv,current_frame);
 		animation = _animation;
 	}
-	public Mouvement Copy(String type) {
-		return new Glissade(type,type_mouv,animation.getStartFrame(),animation);
+	public Mouvement Copy(Object obj) {
+		return new Glissade(obj,type_mouv,animation.getStartFrame(),animation);
 	}
 	@Override
-	public void setSpeed(String type, Collidable object, int anim) {
-		if(type.equals(TypeObject.heros))
+	public void setSpeed(Collidable object, int anim) {
+		if(TypeObject.isTypeOf(object, TypeObject.HEROS))
 		{
 			//nothing
 		}
-		else if(type.equals(TypeObject.m_spirel))
-		{
-			//nothing
-		}
+
 	}
 	@Override
-	public String droite_gauche(String type,int anim) {
-		if(type.equals(TypeObject.heros))
+	public String droite_gauche(Object obj,int anim) {
+		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
 			if(anim<1)
 				return (Mouvement.GAUCHE);
 			else 

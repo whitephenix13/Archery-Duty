@@ -29,49 +29,13 @@ import types.Vitesse;
 
 public class Fleche extends Projectile implements InterfaceConstantes{
 	
-	public static String NORMAL="normal";
-	
-	public static class MATERIELLE
-	{
-		public static String FEU="feu";
-		public static String ELECTRIQUE="electrique";
-		public static String GLACE="glace";
-		public static String ROCHE="roche";
-
-	}
-	public static class SPIRITUELLE
-	{
-		public static String LUMIERE="lumiere";
-		public static String OMBRE="ombre";
-		public static String VENT="vent";
-		public static String GRAPPIN="grappin";
-
-	}
-	public static class DESTRUCTRICE
-	{
-		public static String FOUDRE="foudre";
-		public static String EXPLOSIVE="explosive";
-		public static String TROU_NOIR="trou_noir";
-		public static String BOGUE="bogue";
-
-	}
-	public static class RUSEE
-	{
-		public static String AUTO_TELEGUIDEE="auto_teleguidee";
-		public static String RETARD="retard";
-		public static String V_FLECHE="v_fleche";
-		public static String CAC="corps_a_corps";
-
-	}
 	public Heros shooter;
 
 	public boolean doitDeplace=false;
-	public boolean isPlanted=false; //fleche plantée dans le sol
 	public boolean generatedEffect = false;
 	public boolean nulle =false;
 	public boolean encochee =false;
 	
-	public String type_fleche= NORMAL;
 	public boolean no_more_than_one=false;
 	public boolean destroy_on_click=false;
 	
@@ -86,11 +50,9 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 	
 	public Effect flecheEffect;
 
-	public Fleche(List<Fleche> tabFleche,int current_frame,Heros _shooter,boolean add_to_list,float damageMultiplier,float _speedFactor)
+	public Fleche(List<Projectile> tabFleche,int current_frame,Heros _shooter,boolean add_to_list,float damageMultiplier,float _speedFactor)
 	{
 		super.init();
-		type = TypeObject.fleche;
-		type_fleche=NORMAL;
 		shooter=_shooter;
 		anim=0;
 		doitDeplace=false;
@@ -100,11 +62,11 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 
 		speedFactor=_speedFactor;
 		
-		deplacement = new T_normal(TypeObject.fleche,T_normal.tir,current_frame);
+		deplacement = new T_normal(this,T_normal.tir,current_frame);
 		
 		nulle=false;
 		encochee=true;
-		checkCollision=false;
+		this.setCollideWithNone();
 		if(add_to_list)
 			tabFleche.add(this);
 		
@@ -114,11 +76,18 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 		seyeri_cost=-5;
 
 	}
-	public Fleche(List<Fleche> tabFleche,int current_frame,Heros _shooter,float damageMultiplier,float speedFactor)
+	public Fleche(List<Projectile> tabFleche,int current_frame,Heros _shooter,float damageMultiplier,float speedFactor)
 	{
 		this(tabFleche,current_frame,_shooter,true,damageMultiplier,speedFactor);
 	}
-
+	@Override
+	public void setNeedDestroy()
+	{
+		needDestroy=true;
+		this.doitDeplace=false;
+		this.setCollideWithNone();
+	}
+	
 	public void setPosition(int x, int y)
 	{
 		xpos(x);
@@ -129,7 +98,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 	{
 		doitDeplace=true;
 		encochee=false;
-		checkCollision=true;
+		this.setCollideWithout(Arrays.asList(TypeObject.FLECHE,TypeObject.HEROS));
 		//get current position
 		Point2D newpos= draw_tr.transform(new Point(0,0), null);
 		xpos((int) newpos.getX()-partie.xScreendisp);
@@ -141,7 +110,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 		draw_tr.translate(-xpos(), -ypos());
 
 
-		deplacement.setSpeed(TypeObject.fleche, this, anim);
+		deplacement.setSpeed(this, anim);
 		MusicBruitage.startBruitage("arc");
 		
 	}
@@ -204,17 +173,10 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 	@Override
 	public Hitbox getHitbox(Point INIT_RECT, Mouvement _dep, int _anim) {
 		//ASSUME WE ALWAYS USE THIS WHEN THE ARROW IS SHOT (!encochee)
-		Mouvement_tir temp = (Mouvement_tir) _dep.Copy(TypeObject.fleche); //create the mouvement
+		Mouvement_tir temp = (Mouvement_tir) _dep.Copy(this); //create the mouvement
 		return Hitbox.plusPoint(temp.hitbox_rotated.get(_anim), new Point(xpos(),ypos()),true);
 	}
-	public Hitbox getWorldHitbox(AbstractModelPartie partie) {
-		Hitbox hit1 = getHitbox(partie.INIT_RECT);
-		/*if(encochee)
-			hit1=Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos(),ypos()),true);
-		else
-			hit1=Hitbox.plusPoint(deplacement.hitbox_rotated.get(anim), new Point(xpos(),ypos()),true);*/
-		return Hitbox.plusPoint(hit1, new Point(partie.xScreendisp,partie.yScreendisp),true);
-	}
+	
 		
 		
 	@Override
@@ -228,7 +190,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 		last_colli_right=collision_droite;
 		localVit= new Vitesse(0,0);
 		this.doitDeplace=false;
-		this.isPlanted=true;
+		this.setCollideWithNone();
 		ArrayList<Entitie> objects = Collidable.getAllEntitiesCollidable(partie);
 
 		onPlanted(objects,partie,stuck);
@@ -241,7 +203,9 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 	{
 		ArrayList<Entitie> objects = Collidable.getAllEntitiesCollidable(partie);
 
-		this.needDestroy = OnObjectsCollision(objects,partie,collider,normal);
+		needDestroy = OnObjectsCollision(objects,partie,collider,normal);
+		if(needDestroy)
+			this.setNeedDestroy(); // stop collision and other stuff 
 	}
 
 	@Override
@@ -266,7 +230,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 		{
 			//set the anim 
 			double[] anim_rot = deplace.getAnimRotationTir(partie,true);
-			int animFleche = deplacement.updateAnimation(TypeObject.fleche, anim, partie.getFrame(),speedFactor);
+			int animFleche = deplacement.updateAnimation(this, anim, partie.getFrame(),speedFactor);
 			rotation = anim_rot[1];
 			if(animFleche==anim)
 				animationChanged=false;
@@ -284,7 +248,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 				return(animSuivante);
 			}
 			else {
-				int animFleche = deplacement.updateAnimation(TypeObject.fleche, anim, partie.getFrame(),speedFactor);
+				int animFleche = deplacement.updateAnimation(this, anim, partie.getFrame(),speedFactor);
 				if(animFleche==anim)
 					animationChanged=false;
 				return animFleche;

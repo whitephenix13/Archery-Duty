@@ -7,6 +7,7 @@ import deplacement_tir.Mouvement_tir;
 import loading.LoadMediaThread;
 import loading.OnLoadingCallback;
 import monstre.TirMonstre;
+import types.Projectile;
 import types.TypeObject;
 
 public class ImagesTirMonstre extends LoadMediaThread{
@@ -28,10 +29,10 @@ public class ImagesTirMonstre extends LoadMediaThread{
 		setPercentage(100);
 		mediaLoaded=true;
 	}
-	public ArrayList<Image> getImage(TirMonstre tir)
+	public ArrayList<Image> getImage(Projectile tir)
 	{
 		ArrayList<Image> im = new ArrayList<Image>();
-		if(tir.type.equals(TypeObject.tir_spirel))
+		if(TypeObject.isTypeOf(tir, TypeObject.TIR_SPIREL))
 		{
 			if(tir.deplacement.IsDeplacement(Mouvement_tir.tir_normal))
 				im.add(im_SP_tir.get(tir.anim));

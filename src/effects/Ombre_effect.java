@@ -15,6 +15,7 @@ import fleches.Fleche;
 import partie.AbstractModelPartie;
 import types.Entitie;
 import types.Hitbox;
+import types.TypeObject;
 import types.Vitesse;
 
 public class Ombre_effect extends Effect{
@@ -27,7 +28,6 @@ public class Ombre_effect extends Effect{
 		anim=_anim;
 
 		ref_fleche = _ref_fleche;
-		name = Fleche.SPIRITUELLE.OMBRE;
 		xtaille =  Arrays.asList(92,92,92,92);
 		ytaille =  Arrays.asList(79,79,79,79);
 		hitbox= Hitbox.createSquareHitboxes(0,0,92,79,4);

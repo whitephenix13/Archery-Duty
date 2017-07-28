@@ -16,6 +16,7 @@ import fleches.Fleche;
 import partie.AbstractModelPartie;
 import types.Entitie;
 import types.Hitbox;
+import types.TypeObject;
 import types.Vitesse;
 
 public class Glace_effect extends Effect{
@@ -31,7 +32,6 @@ public class Glace_effect extends Effect{
 		anim=_anim;
 
 		ref_fleche = _ref_fleche;
-		name = Fleche.MATERIELLE.GLACE;
 		if(type0){
 			xtaille =  Arrays.asList(90,90,90,90,90);
 			ytaille =  Arrays.asList(72,72,72,72,72);

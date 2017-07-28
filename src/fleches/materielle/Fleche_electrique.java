@@ -1,4 +1,4 @@
-package fleches;
+package fleches.materielle;
 
 import java.util.List;
 
@@ -10,12 +10,12 @@ import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import personnage.Heros;
 import types.Entitie;
+import types.Projectile;
 
-public class Fleche_electrique extends Fleche {
+public class Fleche_electrique extends Materielle {
 
-	public Fleche_electrique(List<Fleche> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor) {
+	public Fleche_electrique(List<Projectile> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor) {
 		super(tabFleche, current_frame,_shooter,add_to_list,damageMult,speedFactor);
-		type_fleche=MATERIELLE.ELECTRIQUE;
 		TEMPS_DESTRUCTION= (long) (2* Math.pow(10,8));//in nano sec = 0.2 sec 
 		damage=0*damageMult;//TODO:
 	}
@@ -36,7 +36,7 @@ public class Fleche_electrique extends Fleche {
 				obj.currentEffects.add(this.flecheEffect);
 			}
 			this.doitDeplace=false;
-			this.checkCollision=false;
+			this.setCollideWithNone();
 		}
 	}
 	

@@ -59,7 +59,7 @@ public abstract class Entitie extends Collidable{
 		boolean isDragged = this.isDragged();
 		for(Effect eff: currentEffects)
 		{
-			if(isDragged && eff.name.equals(Fleche.SPIRITUELLE.GRAPPIN)){
+			if(isDragged && TypeObject.isTypeOf(eff, TypeObject.GRAPPIN_EFF)){
 				vit = eff.getModifiedVitesse(partie, this);
 				return vit;
 			}
@@ -82,7 +82,7 @@ public abstract class Entitie extends Collidable{
 	public boolean isDragged(){
 		for(Effect eff:currentEffects)
 		{
-			if(eff.name.equals(Fleche.SPIRITUELLE.GRAPPIN))
+			if(TypeObject.isTypeOf(eff, TypeObject.GRAPPIN_EFF))
 			{
 				Grappin_effect grap = (Grappin_effect)eff;
 				if(grap.shooterDragged && this == grap.shooter)
@@ -100,7 +100,7 @@ public abstract class Entitie extends Collidable{
 	public boolean isWindProjected(){
 		for(Effect eff:currentEffects)
 		{
-			if(eff.name.equals(Fleche.SPIRITUELLE.VENT))
+			if(TypeObject.isTypeOf(eff, TypeObject.VENT_EFF))
 			{
 				Vent_effect vent = (Vent_effect)eff;
 				if(vent.stickedCollidable==this)

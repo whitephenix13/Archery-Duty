@@ -23,10 +23,10 @@ public class Saut extends Mouvement_perso{
 	public static int land_droite = 5;
 
 	//constructeur
-	public Saut(String type,int _type_mouv,int current_frame) {
+	public Saut(Object obj,int _type_mouv,int current_frame) {
 		super();
 		type_mouv=_type_mouv;
-		if(type.equals(TypeObject.heros))
+		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
 		{
 			xtaille =  Arrays.asList(85,84,74,85,84,74);
 			ytaille =  Arrays.asList(97,105,91,97,105,91); 
@@ -61,7 +61,7 @@ public class Saut extends Mouvement_perso{
 			animation.start(Arrays.asList(1,1,5,1,1,5), current_frame, start_index, end_index);
 
 		}
-		else if(type.equals(TypeObject.m_spirel))
+		else if(TypeObject.isTypeOf(obj, TypeObject.SPIREL))
 		{
 			xtaille =  Arrays.asList(56,56,-1,-1,-1,-1,-1,-1);
 			ytaille =  Arrays.asList(75,75,-1,-1,-1,-1,-1,-1);
@@ -96,16 +96,17 @@ public class Saut extends Mouvement_perso{
 			animation.start(Arrays.asList(5,5), current_frame, start_index, end_index);
 		}
 	}
-	public Saut(String type,int _type_mouv, int current_frame,Animation _animation){
-		this(type,_type_mouv,current_frame);
+	public Saut(Object obj,int _type_mouv, int current_frame,Animation _animation){
+		this(obj,_type_mouv,current_frame);
 		animation = _animation;
 	}
-	public Mouvement Copy(String type) {
-		return new Saut(type,type_mouv,animation.getStartFrame(),animation);
+	public Mouvement Copy(Object obj) {
+		return new Saut(obj,type_mouv,animation.getStartFrame(),animation);
 	}
 	@Override
-	public void setSpeed(String type, Collidable object, int anim) {
-		if(type.equals(TypeObject.heros))
+	public void setSpeed(Collidable object, int anim) {
+
+		if(TypeObject.isTypeOf(object, TypeObject.HEROS))
 		{
 			Heros heros = null; 
 			if (object instanceof Heros) {
@@ -170,7 +171,7 @@ public class Saut extends Mouvement_perso{
 				}
 			}
 		}
-		else if(type.equals(TypeObject.m_spirel))
+		else if(TypeObject.isTypeOf(object, TypeObject.SPIREL))
 		{
 			Spirel spirel=null;
 			if(object instanceof Spirel)
@@ -194,13 +195,13 @@ public class Saut extends Mouvement_perso{
 		}
 	}
 	@Override
-	public String droite_gauche(String type,int anim) {
-		if(type.equals(TypeObject.heros))
+	public String droite_gauche(Object obj,int anim) {
+		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
 			if(anim<3)
 				return (Mouvement.GAUCHE);
 			else 
 				return(Mouvement.DROITE);
-		else if(type.equals(TypeObject.m_spirel))
+		else if(TypeObject.isTypeOf(obj, TypeObject.SPIREL))
 			if(anim<1)
 				return (Mouvement.GAUCHE);
 			else 

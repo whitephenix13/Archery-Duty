@@ -19,10 +19,10 @@ public class T_normal extends Mouvement_tir{
 	public static int tir = 0;
 
 	//constructeur des monstres 
-	public T_normal(String type,int _type_mouv,int current_frame){
+	public T_normal(Object obj,int _type_mouv,int current_frame){
 		super();
 		type_mouv=_type_mouv;
-		if(type.equals(TypeObject.fleche))
+		if(TypeObject.isTypeOf(obj, TypeObject.FLECHE))
 		{                     
 			xtaille=Arrays.asList(45,45,45,45);
 			ytaille=Arrays.asList(19,19,19,19);
@@ -45,7 +45,7 @@ public class T_normal extends Mouvement_tir{
 			animation.start(Arrays.asList(delta,2*delta,3*delta,4*delta), current_frame, 0, 4);
 
 		}
-		else if(type.equals(TypeObject.tir_spirel))
+		else if(TypeObject.isTypeOf(obj, TypeObject.TIR_SPIREL))
 		{
 
 			xtaille= Arrays.asList(114,114,34 );
@@ -68,27 +68,27 @@ public class T_normal extends Mouvement_tir{
 			animation.start(Arrays.asList(2), current_frame, 0, 1);
 		}
 	}
-	public T_normal(String type,int _type_mouv, int current_frame,Animation _animation){
-		this(type,_type_mouv,current_frame);
+	public T_normal(Object obj,int _type_mouv, int current_frame,Animation _animation){
+		this(obj,_type_mouv,current_frame);
 		animation = _animation;
 	}
 	@Override
-	public Mouvement Copy(String type) {
-		return new T_normal(type,type_mouv,animation.getStartFrame(),animation);
+	public Mouvement Copy(Object obj) {
+		return new T_normal(obj,type_mouv,animation.getStartFrame(),animation);
 	}
 	@Override
-	public void setSpeed(String type, Collidable object, int anim) {
-		if(type.equals(TypeObject.fleche))
+	public void setSpeed(Collidable object, int anim) {
+		if(TypeObject.isTypeOf(object, TypeObject.FLECHE))
 		{
 			Fleche f = (Fleche)object;
 			int speed_norm = (int)(30.0 / Config.ratio_fps());
-			if(f.type_fleche.equals(Fleche.SPIRITUELLE.GRAPPIN))
+			if(TypeObject.isTypeOf(object, TypeObject.GRAPPIN))
 				speed_norm = (int)(60.0 / Config.ratio_fps());//60
 			Vitesse vit = object.convertSpeed(speed_norm,object.rotation);
 			object.localVit.x=(vit.x);
 			object.localVit.y=(vit.y);
 		}
-		else if(type.equals(TypeObject.tir_spirel))
+		else if(TypeObject.isTypeOf(object, TypeObject.TIR_SPIREL))
 		{
 			int speed_norm = (int)(10.0 / Config.ratio_fps());
 
@@ -101,14 +101,14 @@ public class T_normal extends Mouvement_tir{
 		}
 	}
 	@Override
-	public String droite_gauche(String type,int anim) {
-		if(type.equals(TypeObject.fleche))
+	public String droite_gauche(Object obj,int anim) {
+		if(TypeObject.isTypeOf(obj, TypeObject.FLECHE))
 			if(anim<2)
 				return (Mouvement.GAUCHE);
 			else 
 				return(Mouvement.DROITE);
 		//ARBITRARY
-		else if(type.equals(TypeObject.tir_spirel))
+		else if(TypeObject.isTypeOf(obj, TypeObject.TIR_SPIREL))
 			if(anim<2)
 				return (Mouvement.GAUCHE);
 			else 
@@ -119,10 +119,10 @@ public class T_normal extends Mouvement_tir{
 		}
 	}
 	@Override
-	public int updateAnimation(String type,int anim,int current_frame,double speedFactor) {
-		if(type.equals(TypeObject.fleche))
+	public int updateAnimation(Object obj,int anim,int current_frame,double speedFactor) {
+		if(TypeObject.isTypeOf(obj, TypeObject.FLECHE))
 			return animation.update(anim,current_frame,speedFactor);
-		else  if(type.equals(TypeObject.tir_spirel))
+		else  if(TypeObject.isTypeOf(obj, TypeObject.TIR_SPIREL))
 			return animation.update(0,current_frame,speedFactor);
 		else 
 			return -1;

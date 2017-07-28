@@ -11,6 +11,7 @@ import fleches.Fleche;
 import partie.AbstractModelPartie;
 import types.Entitie;
 import types.Hitbox;
+import types.TypeObject;
 import types.Vitesse;
 
 public class Lumiere_effect extends Effect{
@@ -22,7 +23,6 @@ public class Lumiere_effect extends Effect{
 		anim=_anim;
 
 		ref_fleche = _ref_fleche;
-		name = Fleche.SPIRITUELLE.LUMIERE;
 		xtaille =  Arrays.asList(100,100,100,100,100);
 		ytaille =  Arrays.asList(100,100,100,100,100);
 		hitbox= Hitbox.createSquareHitboxes(0,0,100,100,5);

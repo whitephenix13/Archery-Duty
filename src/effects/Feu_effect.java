@@ -16,6 +16,7 @@ import fleches.Fleche;
 import partie.AbstractModelPartie;
 import types.Entitie;
 import types.Hitbox;
+import types.TypeObject;
 import types.Vitesse;
 
 public class Feu_effect extends Effect{
@@ -32,7 +33,6 @@ public class Feu_effect extends Effect{
 		anim=_anim;
 
 		ref_fleche = _ref_fleche;
-		name = Fleche.MATERIELLE.FEU;
 		if(type0){
 			xtaille =  Arrays.asList(40,40,40,40,40,40);
 			ytaille =  Arrays.asList(300,300,300,300,300,300);

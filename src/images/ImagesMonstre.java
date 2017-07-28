@@ -5,8 +5,8 @@ import java.util.ArrayList;
 
 import deplacement.Mouvement_perso;
 import loading.LoadMediaThread;
-import loading.OnLoadingCallback;
 import monstre.Monstre;
+import types.Entitie;
 import types.TypeObject;
 
 public class ImagesMonstre extends LoadMediaThread{
@@ -46,12 +46,12 @@ public class ImagesMonstre extends LoadMediaThread{
 	 * 
 	 * @return l'image a afficher
 	 */
-	public ArrayList<Image> getImage(Monstre monstre)
+	public ArrayList<Image> getImage(Entitie monstre)
 	{
 		ArrayList<Image> im = new ArrayList<Image>();
 //				im.add(this.im_electrique_aura.get(fleche.anim));
 
-		if (monstre.type.equals(TypeObject.m_spirel))
+		if (TypeObject.isTypeOf(monstre, TypeObject.SPIREL))
 		{
 			if(monstre.deplacement.IsDeplacement(Mouvement_perso.attente))
 				im.add(im_SP_attente.get(monstre.anim));

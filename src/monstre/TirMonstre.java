@@ -1,13 +1,17 @@
 package monstre;
 
-import partie.AbstractModelPartie;
-import types.Hitbox;
+import java.util.Arrays;
+
 import types.Projectile;
+import types.TypeObject;
 
 public abstract class TirMonstre extends Projectile{
 	
-	public float dommage;
-		
-	public abstract Hitbox getWorldHitbox(AbstractModelPartie partie);
-
+	public float damage;
+	@Override
+	public void init()
+	{
+		super.init();
+		this.setCollideWithout(Arrays.asList(TypeObject.MONSTRE,TypeObject.TIR_MONSTRE));
+	}
 }

@@ -20,10 +20,10 @@ public class Accroche extends Mouvement_perso{
 	public static int grimpe_droite = 3;
 
 	//constructeur des monstres 
-	public Accroche(String type,int _type_mouv, int current_frame){
+	public Accroche(Object obj,int _type_mouv, int current_frame){
 		super();
 		type_mouv=_type_mouv;
-		if(type.equals(TypeObject.heros))
+		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
 		{
 			xtaille =  Arrays.asList(83,44,83,44);
 			ytaille =  Arrays.asList(99,82,99,82);
@@ -54,24 +54,24 @@ public class Accroche extends Mouvement_perso{
 			animation.start(Arrays.asList(10,4,10,4), current_frame, start_index, end_index);
 		}
 	}
-	public Accroche(String type,int _type_mouv, int current_frame,Animation _animation){
-		this(type,_type_mouv,current_frame);
+	public Accroche(Object obj,int _type_mouv, int current_frame,Animation _animation){
+		this(obj,_type_mouv,current_frame);
 		animation = _animation;
 	}
-	public Mouvement Copy(String type) {
-		return new Accroche(type,type_mouv,animation.getStartFrame(),animation);
+	public Mouvement Copy(Object obj) {
+		return new Accroche(obj,type_mouv,animation.getStartFrame(),animation);
 	}
 	
 	@Override
-	public void setSpeed(String type, Collidable object, int anim) {
-		if(type.equals(TypeObject.heros))
+	public void setSpeed(Collidable object, int anim) {
+		if(TypeObject.isTypeOf(object, TypeObject.HEROS))
 			object.localVit= new Vitesse(0,0);
 		
 		}
 
 	@Override
-	public String droite_gauche(String type,int anim) {
-		if(type.equals(TypeObject.heros))
+	public String droite_gauche(Object obj,int anim) {
+		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
 			if(anim<2)
 				return (Mouvement.GAUCHE);
 			else 

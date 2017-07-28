@@ -66,8 +66,10 @@ public class Deplace implements InterfaceConstantes{
 
 		if(update_with_speed)
 		{
-			boolean stuck = !Collision.ejectWorldCollision(partie, object);
-
+			boolean checkColli = object.checkCollideWithWorld();
+			boolean stuck = false;
+			if(checkColli)
+				stuck = !Collision.ejectWorldCollision(partie, object);;
 			if(stuck)
 			{
 				object.handleStuck(partie);

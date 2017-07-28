@@ -17,10 +17,10 @@ public class Course extends Mouvement_perso{
 	public static int course_droite = 1;
 
 	//constructeur monstre
-	public Course(String type,int _type_mouv,int current_frame){
+	public Course(Object obj,int _type_mouv,int current_frame){
 		super();
 		type_mouv=_type_mouv;
-		if(type==TypeObject.heros)
+		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
 		{
 			xtaille =  Arrays.asList(55,79,75,82,55,79,75,82);
 			ytaille =  Arrays.asList(89,85,89,94,89,85,89,94);
@@ -48,35 +48,32 @@ public class Course extends Mouvement_perso{
 		}
 	}
 
-	public Course(String type,int _type_mouv, int current_frame,Animation _animation){
-		this(type,_type_mouv,current_frame);
+	public Course(Object obj,int _type_mouv, int current_frame,Animation _animation){
+		this(obj,_type_mouv,current_frame);
 		animation = _animation;
 	}
-	public Mouvement Copy(String type) {
-		return new Course(type,type_mouv,animation.getStartFrame(),animation);
+	public Mouvement Copy(Object obj) {
+		return new Course(obj,type_mouv,animation.getStartFrame(),animation);
 	}
 	
 	@Override
-	public void setSpeed(String type, Collidable object, int anim) {
-		if(type.equals(TypeObject.heros))
+	public void setSpeed(Collidable object, int anim) {
+		if(TypeObject.isTypeOf(object, TypeObject.HEROS))
 		{
 			assert (anim>=0 && anim <8);
 
 			int speed_norm = (int)(8.0 / Config.ratio_fps());
-			if(object.deplacement.droite_gauche(type, object.anim).equals(Mouvement.GAUCHE))
+			if(object.deplacement.droite_gauche(object, object.anim).equals(Mouvement.GAUCHE))
 			{if(object.last_colli_left){speed_norm = 0;}}
 			else
 			{if(object.last_colli_right){speed_norm = 0;}}
 			object.localVit.x = (speed_norm * ((anim<4)? -1 : 1 ));//40 for old deplace
 		}
-		else if(type.equals(TypeObject.m_spirel))
-		{
-			
-		}
+
 	}
 	@Override
-	public String droite_gauche(String type,int anim) {
-		if(type.equals(TypeObject.heros))
+	public String droite_gauche(Object obj,int anim) {
+		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
 			if(anim<4)
 				return (Mouvement.GAUCHE);
 			else 

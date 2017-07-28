@@ -17,10 +17,10 @@ public class Marche extends Mouvement_perso{
 	public static int marche_droite = 1;
 
 	//constructeur 
-	public Marche(String type,int _type_mouv,int current_frame){
+	public Marche(Object obj,int _type_mouv,int current_frame){
 		super();
 		type_mouv=_type_mouv;
-		if(type.equals(TypeObject.heros))
+		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
 		{
 
 			xtaille =  Arrays.asList(75,75,75,75,75,75,75,75);
@@ -45,7 +45,7 @@ public class Marche extends Mouvement_perso{
 			animation.start(Arrays.asList(10,20,30,40,10,20,30,40), current_frame, start_index, end_index);
 
 		}
-		else if(type.equals(TypeObject.m_spirel))
+		else if(TypeObject.isTypeOf(obj, TypeObject.SPIREL))
 		{
 			xtaille =  Arrays.asList(56,56,56,56,-1,-1,-1,-1);
 			ytaille =  Arrays.asList(75,75,75,75,-1,-1,-1,-1);
@@ -71,23 +71,23 @@ public class Marche extends Mouvement_perso{
 		}
 	}
 
-	public Marche(String type,int _type_mouv, int current_frame,Animation _animation){
-		this(type,_type_mouv,current_frame);
+	public Marche(Object obj,int _type_mouv, int current_frame,Animation _animation){
+		this(obj,_type_mouv,current_frame);
 		animation = _animation;
 	}
-	public Mouvement Copy(String type) {
-		return new Marche(type,type_mouv,animation.getStartFrame(),animation);
+	public Mouvement Copy(Object obj) {
+		return new Marche(obj,type_mouv,animation.getStartFrame(),animation);
 	}
 	@Override
-	public void setSpeed(String type, Collidable object, int anim) {
-		if(type.equals(TypeObject.heros))
+	public void setSpeed(Collidable object, int anim) {
+		if(TypeObject.isTypeOf(object, TypeObject.HEROS))
 		{
 			int speed_norm = (int)(3.0 / Config.ratio_fps());
 
 			assert (anim>=0 && anim <8);
 			object.localVit.x=(speed_norm * ((anim<4)? -1 : 1 ));//20 for old deplace
 		}
-		else if(type.equals(TypeObject.m_spirel))
+		else if(TypeObject.isTypeOf(object, TypeObject.SPIREL))
 		{
 			int speed_norm = (int)(3.0 / Config.ratio_fps());
 			if(anim<2)
@@ -98,13 +98,13 @@ public class Marche extends Mouvement_perso{
 		}
 	}
 	@Override
-	public String droite_gauche(String type,int anim) {
-		if(type.equals(TypeObject.heros))
+	public String droite_gauche(Object obj,int anim) {
+		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
 			if(anim<4)
 				return (Mouvement.GAUCHE);
 			else 
 				return(Mouvement.DROITE);
-		else if(type.equals(TypeObject.m_spirel))
+		else if(TypeObject.isTypeOf(obj, TypeObject.SPIREL))
 			if(anim<2)
 				return (Mouvement.GAUCHE);
 			else 

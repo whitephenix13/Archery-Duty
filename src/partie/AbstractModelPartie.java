@@ -24,7 +24,6 @@ import images.ImagesFlecheIcon;
 import images.ImagesHeros;
 import images.ImagesMonde;
 import images.ImagesMonstre;
-import images.ImagesPrincipal;
 import images.ImagesTirMonstre;
 import loading.DisplayLoader;
 import monstre.Monstre;
@@ -34,7 +33,9 @@ import observer.Observable;
 import observer.Observer;
 import personnage.Heros;
 import principal.InterfaceConstantes;
+import types.Entitie;
 import types.Monde;
+import types.Projectile;
 import types.Touches;
 import types.TypeObject;
 
@@ -54,9 +55,9 @@ public abstract class AbstractModelPartie extends DisplayLoader implements Obser
 	public boolean slowDown=false;
 	public int slowCount=0;
 
-	public List<Fleche> tabFleche= new ArrayList<Fleche>();
-	public List<TirMonstre> tabTirMonstre = new ArrayList<TirMonstre>();
-	public List<Monstre> tabMonstre= new ArrayList <Monstre> ();
+	public List<Projectile> tabFleche= new ArrayList<Projectile>();
+	public List<Projectile> tabTirMonstre = new ArrayList<Projectile>();
+	public List<Entitie> tabMonstre= new ArrayList <Entitie> ();
 	
 	public List<Effect> arrowsEffects = new ArrayList<Effect>();
 	
@@ -165,15 +166,15 @@ public abstract class AbstractModelPartie extends DisplayLoader implements Obser
 		if(monde==null)
 			monde = new Monde();
 		frame= 0;
-		heros= new Heros(InterfaceConstantes.LARGEUR_FENETRE/2,InterfaceConstantes.HAUTEUR_FENETRE/2,1,new Attente(TypeObject.heros,Attente.attente_gauche,frame),frame);
+		heros= new Heros(InterfaceConstantes.LARGEUR_FENETRE/2,InterfaceConstantes.HAUTEUR_FENETRE/2,1,frame);
 
 		//Action speciale pour ralentir le temps 
 		slowDown=false;
 		slowCount=0;
 
-		tabFleche= new ArrayList<Fleche>();
-		tabTirMonstre = new ArrayList<TirMonstre>();
-		tabMonstre= new ArrayList <Monstre> ();
+		tabFleche= new ArrayList<Projectile>();
+		tabTirMonstre = new ArrayList<Projectile>();
+		tabMonstre= new ArrayList <Entitie> ();
 		arrowsEffects = new ArrayList<Effect>();
 		nombreMonstreRestant= 0;
 
