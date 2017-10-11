@@ -55,6 +55,7 @@ public class Grappin_effect extends Effect{
 	private double DRAG_SPEED=15;//15
 	public Grappin_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame, Collidable _shooter )
 	{
+		super.init();
 		shooter=_shooter;
 		xtaille =  Arrays.asList(1657);
 		ytaille =  Arrays.asList(30);
@@ -75,10 +76,16 @@ public class Grappin_effect extends Effect{
 		ref_fleche=_ref_fleche;
 		TEMPS_DESTRUCTION= _ref_fleche.TEMPS_DESTRUCTION;
 
+		localVit= new Vitesse();
 		partie.arrowsEffects.add(this);
+		setFirstPos(partie);
 	}
 	
-
+	@Override
+	public int getMaxBoundingSquare()
+	{
+		return MAX_LENGTH;
+	}
 	@Override
 	public void onUpdate(AbstractModelPartie partie,boolean lastCompute) {		
 		//destroy object when heros has collide
@@ -111,7 +118,7 @@ public class Grappin_effect extends Effect{
 		//update the parameter for the mask 
 
 		Heros her = ref_fleche.shooter;
-		Hitbox herHit = her.getWorldPosition(partie);
+		Hitbox herHit = her.getHitbox(partie.INIT_RECT, partie.getScreenDisp());
 		Vector2d topleftH = Hitbox.supportPoint(new Vector2d(-1,-1), herHit.polygon);
 		Vector2d bottomrightH = Hitbox.supportPoint(new Vector2d(1,1), herHit.polygon);
 
@@ -127,8 +134,8 @@ public class Grappin_effect extends Effect{
 		double[] XY2 = Deplace.angleToXY(ref_fleche.rotation-epsilon);
 
 		//get the opposite since the direction we found was the one towards the tip
-		Vector2d fleche_tail1 = Hitbox.supportPoint(new Vector2d(-XY[0],-XY[1]),ref_fleche.getHitbox(partie.INIT_RECT).polygon);
-		Vector2d fleche_tail2 = Hitbox.supportPoint(new Vector2d(-XY2[0],-XY2[1]),ref_fleche.getHitbox(partie.INIT_RECT).polygon);
+		Vector2d fleche_tail1 = Hitbox.supportPoint(new Vector2d(-XY[0],-XY[1]),ref_fleche.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon);
+		Vector2d fleche_tail2 = Hitbox.supportPoint(new Vector2d(-XY2[0],-XY2[1]),ref_fleche.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon);
 		Point prevMiddleTailArrow = (Point) middleTailArrow.clone();
 		middleTailArrow = new Point((int)((fleche_tail1.x+fleche_tail2.x)/2),(int)((fleche_tail1.y+fleche_tail2.y)/2));
 
@@ -174,7 +181,7 @@ public class Grappin_effect extends Effect{
 		double normXY = Math.sqrt(Math.pow(XY[0],2)+Math.pow(XY[1],2));
 		modified_vitesse= new Vitesse(XY[0]*DRAG_SPEED/normXY,XY[1]*DRAG_SPEED/normXY);
 		if(!shooterDragged)
-			modified_vitesse=modified_vitesse.negate();
+			modified_vitesse.negate();
 
 		//}
 
@@ -196,15 +203,14 @@ public class Grappin_effect extends Effect{
 
 	}
 
-	@Override
-	public Point getTranslationFromTranformDraw(AbstractModelPartie partie)
+	public void setFirstPos(AbstractModelPartie partie)
 	{
 		//get the middle right of the effect
 		int x_eff = (int) (xtaille.get(anim) * Math.cos(ref_fleche.rotation) - ytaille.get(anim)/2 * Math.sin(ref_fleche.rotation));
 		int y_eff =(int) (xtaille.get(anim) * Math.sin(ref_fleche.rotation) + ytaille.get(anim)/2 * Math.cos(ref_fleche.rotation));
 
-		Point transl = new Point((int)(middleTailArrow.x)-x_eff+partie.xScreendisp, +(int)(middleTailArrow.y)-y_eff+partie.yScreendisp);
-		return transl;
+		xpos_sync((int)(middleTailArrow.x)-x_eff+partie.xScreendisp);
+		ypos_sync((int)(middleTailArrow.y)-y_eff+partie.yScreendisp);
 	}
 
 	@Override

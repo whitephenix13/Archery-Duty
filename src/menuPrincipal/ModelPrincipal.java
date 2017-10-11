@@ -1,6 +1,7 @@
 package menuPrincipal;
 
 import java.awt.Dimension;
+import java.awt.Point;
 import java.awt.Polygon;
 import java.io.IOException;
 import java.lang.management.GarbageCollectorMXBean;
@@ -24,6 +25,7 @@ import Affichage.Affichage;
 import choixNiveau.AffichageChoixNiveau;
 import choixNiveau.ControlerChoixNiveau;
 import choixNiveau.ModelChoixNiveau;
+import collision.Collision;
 import collision.GJK_EPA;
 import collision.GJK_EPA.IntersectPoint;
 import credit.AffichageCredit;
@@ -199,7 +201,10 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 			}
 			//listener
 			affich.removeListener(modeActuel);
-
+			
+			allMediaLoader.wait(partie, partie,true);
+			edit.imMonde = partie.imMonde;
+			
 			//changement de mode
 			modeActuel="Editeur";
 
@@ -391,50 +396,19 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 	}
 	public static void main(String[] args) throws InterruptedException, UnsupportedAudioFileException, IOException, LineUnavailableException, URISyntaxException 
 	{
-		/*TEST PROJECTION */
-		/*List<Vector2d> simplex = new ArrayList<Vector2d>();
-		simplex.add(new Vector2d(0,1));
-		simplex.add(new Vector2d(1,-104));
-		simplex.add(new Vector2d(1,-5));
 		
-		Vector2d dir = new Vector2d(30,5);
-		
-		IntersectPoint p1 = GJK_EPA.getEdgeInDirection(simplex, dir, null, null);
-		
-		List<Vector2d> simplex2 = new ArrayList<Vector2d>();
-		simplex2.add(new Vector2d(0,1));
-		simplex2.add(new Vector2d(1,-104));
-		simplex2.add(new Vector2d(1,-5));
-		
-		simplex2.remove(p1.index);
-		IntersectPoint p2 = GJK_EPA.getEdgeInDirection(simplex2, dir, null, null);
-
-		System.out.println(simplex.get(p1.index));
-		System.out.println(simplex2.get(p2.index));
-		
-		Polygon pol = new Polygon();
-		pol.addPoint(0, 1);
-		pol.addPoint(1, -104);
-		pol.addPoint(1, -5);
-		Vector2d v1 = Hitbox.supportPoint(dir, pol);
-		
-		Polygon pol2 = new Polygon();
-		pol2.addPoint(0, 1);
-		pol2.addPoint(1, -104);
-		pol2.addPoint(1, -5);
-	
-		Vector2d v2 = Hitbox.supportPoint(dir, pol2);
-		System.out.println(v1);
-		
-		IntersectPoint pp1 =GJK_EPA.projection(new Vector2d(0,1), new Vector2d(1,-5), dir);
-		IntersectPoint pp2 =GJK_EPA.projection(new Vector2d(1,-104), new Vector2d(1,-5), dir);
-		System.out.println((pp1==null) + " "+( pp2==null));*/
-		//END TEST
 		TypeApplication.isJar= new TypeApplication().isJar();
 		ModelPrincipal principal = new ModelPrincipal();
 		principal.Init();
 		principal.StartBoucleJeu();
+		
 
+
+		/*double dInter =25.73453721949354920933698028489358156132662764820642530121;
+		Hitbox hit1 = new Hitbox(new Point(1003,204), new Point(978,186),new Point(981,181), new Point(1006,199) );
+		Hitbox hit2 = new Hitbox(new Point(900,200), new Point(999,200), new Point(999,299), new Point(900,299) );
+		Point[] res = Collision.computeCollisionPoint(new Vector2d(-24,-17), dInter,hit1, hit2, true);
+		System.out.println(res[0]);*/
 
 		//Convertisseur conv = new Convertisseur();
 		//conv.convertir();

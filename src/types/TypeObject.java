@@ -128,4 +128,22 @@ public abstract class TypeObject {
 		}
 		return false;
 	}
+	/** Check if the given objectName is a subclass of any class name in list*/
+	public static boolean isMemberOf(String objName, List<String>l)
+	{
+		Class<?> objClass=null;
+		try {
+			objClass = Class.forName(objName);
+		} catch (ClassNotFoundException e) {e.printStackTrace();}
+		
+		if(objClass==null)
+			return false;
+		
+		for(String s : l)
+		{
+			if(isTypeOf(objClass,s))
+				return true;
+		}
+		return false;
+	}
 }

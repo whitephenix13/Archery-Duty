@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.vecmath.Vector2d;
 
+import collision.Collidable;
 import collision.Collision;
 import collision.GJK_EPA;
 import deplacement.Attente;
@@ -57,8 +58,8 @@ public class Spirel extends Monstre{
 		super.init();
 		staticSpirel=_staticSpirel;
 
-		xpos(xPo);
-		ypos(yPo); 
+		xpos_sync(xPo);
+		ypos_sync(yPo); 
 		localVit= new Vitesse(0,0);
 		deplacement=new Attente(this,Attente.attente_gauche,current_frame) ;
 		anim=1;
@@ -79,6 +80,9 @@ public class Spirel extends Monstre{
 		MINLIFE = 0;
 		life= MAXLIFE;
 	}
+	
+
+	
 	
 	public void onAddLife(){if(life==MINLIFE){needDestroy=true;}};
 	/**
@@ -169,13 +173,13 @@ public class Spirel extends Monstre{
 		//on test le cooldown de mouvement
 		if(canAction)
 		{
-			Hitbox heros_hit = heros.getWorldPosition(partie);
+			Hitbox heros_hit = heros.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
 			Vector2d heros_left_up_hit  = Hitbox.supportPoint(new Vector2d(-1,-1), heros_hit.polygon) ;
 			Vector2d heros_right_down_hit  = Hitbox.supportPoint(new Vector2d(1,1), heros_hit.polygon) ;
 			double herosXmiddle = (heros_left_up_hit.x + heros_right_down_hit.x)/2;
 			double herosYmiddle = (heros_left_up_hit.y + heros_right_down_hit.y)/2;
 
-			Hitbox monstre_hit = this.getHitbox(partie.INIT_RECT);
+			Hitbox monstre_hit = this.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
 			Vector2d monstre_left_up_hit  = Hitbox.supportPoint(new Vector2d(-1,-1), monstre_hit.polygon) ;
 			Vector2d monstre_right_down_hit  = Hitbox.supportPoint(new Vector2d(1,1), monstre_hit.polygon) ;
 			double monstreXmiddle=(monstre_left_up_hit.x + monstre_right_down_hit.x)/2;
@@ -214,7 +218,7 @@ public class Spirel extends Monstre{
 			}
 			else if (!staticSpirel) // Heros is not in range, try to move towards him
 			{
-
+				
 				//sinon on se rapproche ou on reste proche 
 				boolean blocGaucheBas= nearObstacle(partie,-1,-1);
 				boolean blocDroitBas= nearObstacle(partie,1,-1);
@@ -446,24 +450,23 @@ public class Spirel extends Monstre{
 	 */
 	public boolean nearObstacle(AbstractModelPartie partie,double right,double height)
 	{
-		Hitbox hit = getHitbox(partie.INIT_RECT);
+		Hitbox hit = getHitbox(partie.INIT_RECT,partie.getScreenDisp());
 		assert hit.polygon.npoints==4;
 		//get world hitboxes with Collision
-		Point p = new Point(partie.xScreendisp,partie.yScreendisp);
-		Hitbox objectHitboxL= fixedWhenScreenMoves? Hitbox.minusPoint(hit,p,false): hit;
 		//Shift all points towards right/left
-		for(int i=0; i<objectHitboxL.polygon.npoints; ++i){
-			objectHitboxL.polygon.xpoints[i]+=right;
-			objectHitboxL.polygon.ypoints[i]-=height;
+		for(int i=0; i<hit.polygon.npoints; ++i){
+			hit.polygon.xpoints[i]+=right;
+			hit.polygon.ypoints[i]-=height;
 		}
-		//get all hitboxes: it can be slower 
-		List<Bloc> mondeHitboxes=Collision.getMondeBlocs(partie.monde, objectHitboxL, partie.INIT_RECT, partie.TAILLE_BLOC);
+		return Collision.isWorldCollision(partie, hit, true);
+		/*//get all hitboxes: it can be slower 
+		List<Collidable> mondeHitboxes=Collision.getMondeBlocs(partie.monde, objectHitboxL, partie.INIT_RECT, partie.TAILLE_BLOC);
 		//if there is a collision between mondeHitboxes and objectHitbox, it means that lower the hitbox by 1 leads to a 
 		//collision: the object is likely to be on the ground (otherwise, it is in a bloc).
-		for(Bloc b : mondeHitboxes)
+		for(Collidable b : mondeHitboxes)
 			if(GJK_EPA.intersectsB(objectHitboxL.polygon, b.getHitbox(partie.INIT_RECT).polygon, new Vector2d(right,-height))==GJK_EPA.TOUCH)
 				return true;
-		return false;
+		return false;*/
 	}
 
 	@Override
@@ -477,7 +480,7 @@ public class Spirel extends Monstre{
 		currentValue=new CurrentValue(){		
 			@Override
 			public void res()
-			{xpos(memPos.x);ypos(memPos.y);deplacement=memDep;anim=memAnim;localVit=memVitloca;}};
+			{xpos_sync(memPos.x);ypos_sync(memPos.y);deplacement=memDep;anim=memAnim;localVit=memVitloca;}};
 	}
 	@Override
 	public void handleStuck(AbstractModelPartie partie)
@@ -501,7 +504,7 @@ public class Spirel extends Monstre{
 		last_colli_right=false;
 	}
 	@Override
-	public void resetVarDeplace()
+	public void resetVarDeplace(boolean speedUpdated)
 	{
 		resetHandleCollision=null;
 	}

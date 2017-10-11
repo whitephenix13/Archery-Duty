@@ -25,6 +25,7 @@ public class Ombre_effect extends Effect{
 	
 	public Ombre_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame,Vector2d _normalCollision)
 	{
+		super.init();
 		anim=_anim;
 
 		ref_fleche = _ref_fleche;
@@ -53,9 +54,15 @@ public class Ombre_effect extends Effect{
 		
 		normalCollision=_normalCollision;
 		partie.arrowsEffects.add(this);
+		setFirstPos(partie);
 	}
 
-
+	@Override
+	public int getMaxBoundingSquare()
+	{
+		return 92;
+	}
+	
 	@Override
 	public void updateOnCollidable(AbstractModelPartie partie,Entitie attacher)
 	{
@@ -69,8 +76,8 @@ public class Ombre_effect extends Effect{
 		return new Vitesse();
 	}
 
-	@Override
-	public Point getTranslationFromTranformDraw(AbstractModelPartie partie) {
+	
+	public void setFirstPos(AbstractModelPartie partie) {
 
 		//get the middle bottom of the effect
 		int adjustBottom = -5;
@@ -78,7 +85,7 @@ public class Ombre_effect extends Effect{
 		int y_eff_center = (int) (xtaille.get(anim)/2 * Math.sin(rotation) + (ytaille.get(anim)+adjustBottom) * Math.cos(rotation));
 
 		//get the tip of the arrow
-		Hitbox fHitbox = ref_fleche.getHitbox(partie.INIT_RECT);
+		Hitbox fHitbox = ref_fleche.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
 		
 		Vector2d v1 = Hitbox.supportPoint(Deplace.angleToVector(ref_fleche.rotation-Math.PI/10), fHitbox.polygon); //top right of unrotated hitbox (with tip pointing right)
 		Vector2d v2 = Hitbox.supportPoint(Deplace.angleToVector(ref_fleche.rotation+Math.PI/10), fHitbox.polygon); //bottom right of unrotated hitbox (with tip pointing right)
@@ -86,17 +93,13 @@ public class Ombre_effect extends Effect{
 		int x_tip_fleche =  (int) ((v1.x+v2.x)/2);
 		int y_tip_fleche= (int) ((v1.y+v2.y)/2);
 
-		return new Point(x_tip_fleche-x_eff_center+partie.xScreendisp, +y_tip_fleche-y_eff_center+partie.yScreendisp);
+		xpos_sync(x_tip_fleche-x_eff_center);
+		ypos_sync(y_tip_fleche-y_eff_center);
 	}
 	@Override
 	public AffineTransform computeTransformDraw(AbstractModelPartie partie) {
 		Point transl = getTranslationFromTranformDraw(partie);
-		AffineTransform tr=new AffineTransform(ref_fleche.draw_tr);
 		AffineTransform tr2 = new AffineTransform();
-		double[] flatmat = new double[6];
-		tr.getMatrix(flatmat);
-		tr.translate(-flatmat[4], -flatmat[5]);
-		tr.setTransform(flatmat[0], flatmat[1], flatmat[2], flatmat[3], transl.x, transl.y);
 	
 		tr2.translate(transl.x, transl.y);
 		tr2.rotate(rotation);

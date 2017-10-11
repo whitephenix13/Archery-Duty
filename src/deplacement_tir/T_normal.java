@@ -41,7 +41,7 @@ public class T_normal extends Mouvement_tir{
 
 			hitbox = Hitbox.createHitbox(hitboxCreation);
 			//animation frame, current_frame, start_index, end_index
-			int delta= 5;
+			int delta= 5;//5
 			animation.start(Arrays.asList(delta,2*delta,3*delta,4*delta), current_frame, 0, 4);
 
 		}
@@ -67,10 +67,22 @@ public class T_normal extends Mouvement_tir{
 			//animation frame, current_frame, start_index, end_index
 			animation.start(Arrays.asList(2), current_frame, 0, 1);
 		}
+		else
+			System.err.println("Unkown type "+ obj.getClass().getName());
 	}
 	public T_normal(Object obj,int _type_mouv, int current_frame,Animation _animation){
 		this(obj,_type_mouv,current_frame);
 		animation = _animation;
+	}
+	@Override
+	public int getMaxBoundingSquare(Object obj)
+	{
+		if(TypeObject.isTypeOf(obj, TypeObject.FLECHE))
+			return 45;
+		else if(TypeObject.isTypeOf(obj, TypeObject.TIR_SPIREL))
+			return 114;
+		else
+			return 0;
 	}
 	@Override
 	public Mouvement Copy(Object obj) {
@@ -99,6 +111,8 @@ public class T_normal extends Mouvement_tir{
 				case 2 : object.localVit.y=(-1*speed_norm);break;
 			}
 		}
+		else
+			System.err.println("Unkown type "+ object.getClass().getName());
 	}
 	@Override
 	public String droite_gauche(Object obj,int anim) {

@@ -9,13 +9,14 @@ import javax.swing.JPanel;
 import editeur.BarreOutil.BarreOutil;
 import editeur.Menu.menuEditeur;
 import images.ImagesMonde;
+import loading.DisplayLoader;
 import observer.Observable;
 import observer.Observer;
 import principal.InterfaceConstantes;
 import types.Monde;
 import types.StockageMonstre;
 
-public abstract class AbstractModelEditeur implements Observable{
+public abstract class AbstractModelEditeur extends DisplayLoader implements Observable{
 
 	protected BarreOutil barreOut;
 	protected menuEditeur menuEdit;
@@ -29,7 +30,7 @@ public abstract class AbstractModelEditeur implements Observable{
 	protected List<StockageMonstre> tabEditeurMonstre;
 	
 	//Utilisé pour charger les images 
-	protected ImagesMonde imMonde;
+	public ImagesMonde imMonde;
 	protected String texture;
 	
 	//monstres

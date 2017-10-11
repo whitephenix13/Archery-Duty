@@ -30,8 +30,8 @@ public class Marche extends Mouvement_perso{
 			//add for every edge, a list of point depending on the animation
 			List<Integer> xg = Arrays.asList(27,14,37,38,26,39,16,15);
 			List<Integer> xd = Arrays.asList(48,35,58,59,47,60,37,36);
-			List<Integer> yh = Arrays.asList(10,9,7,9,10,9,7,9);
-			List<Integer> yb = Arrays.asList(100,99,97,99,100,99,97,99);
+			List<Integer> yh = Arrays.asList(13,13,11,13,13,13,11,13); // Arrays.asList(10,9,7,9,10,9,7,9);
+			List<Integer> yb = Arrays.asList(99,99,97,99,99,99,97,99);
 
 			hitboxCreation.add(Hitbox.asListPoint(xg,yh));
 			hitboxCreation.add(Hitbox.asListPoint(xd,yh));
@@ -74,6 +74,16 @@ public class Marche extends Mouvement_perso{
 	public Marche(Object obj,int _type_mouv, int current_frame,Animation _animation){
 		this(obj,_type_mouv,current_frame);
 		animation = _animation;
+	}
+	@Override
+	public int getMaxBoundingSquare(Object obj)
+	{
+		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
+			return 101;
+		else if(TypeObject.isTypeOf(obj, TypeObject.SPIREL))
+			return 75;
+		else
+			return 0;
 	}
 	public Mouvement Copy(Object obj) {
 		return new Marche(obj,type_mouv,animation.getStartFrame(),animation);

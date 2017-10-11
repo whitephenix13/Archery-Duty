@@ -5,7 +5,9 @@ import java.util.List;
 import javax.vecmath.Vector2d;
 
 import collision.Collidable;
+import effects.Effect;
 import effects.Explosive_effect;
+import effects.Roche_effect;
 import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import personnage.Heros;
@@ -22,7 +24,7 @@ public class Fleche_explosive extends Destructrice {
 	}
 
 
-	void applyArrowEffect(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d collisionNormal)
+	void applyArrowEffect(List<Entitie> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d collisionNormal)
 	{
 		if(generatedEffect)
 			return;
@@ -31,6 +33,14 @@ public class Fleche_explosive extends Destructrice {
 
 		flecheEffect=new Explosive_effect(partie,this,0,partie.getFrame(),collisionNormal);
 		MusicBruitage.startBruitage("arc");
+		if(collidedObject instanceof Roche_effect)
+		{
+			Roche_effect eff = (Roche_effect) collidedObject;
+			if(eff.isWorldCollider){
+			eff.addSynchroSpeed(this);
+			eff.addSynchroSpeed(flecheEffect);
+			}
+		}
 
 		/*
 		for(Entitie obj : objects)
@@ -42,16 +52,21 @@ public class Fleche_explosive extends Destructrice {
 		this.setCollideWithNone();
 	}
 	@Override
-	protected void onPlanted(List<Entitie> objects, AbstractModelPartie partie,boolean stuck)
+	protected void onPlanted(List<Entitie> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
 	{
+		if(this.afterDecochee && stuck)
+			ejectArrow(partie,unprojectedSpeed);
 		if(stuck)
 			destroy(partie,false);
 		else
-			applyArrowEffect(objects,partie,null,this.normCollision);
+			applyArrowEffect(objects,partie,collidedObject,this.normCollision);
 	}
 	@Override
-	protected boolean OnObjectsCollision(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d normal)
+	protected boolean OnObjectsCollision(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
 	{
+		if(this.afterDecochee && (collider instanceof Effect))
+			if(((Effect)collider).isWorldCollider)
+				ejectArrow(partie,unprojectedSpeed);
 		applyArrowEffect(objects,partie,collider,normal);
 		return false;
 	}

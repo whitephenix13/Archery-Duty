@@ -48,10 +48,10 @@ public class ModelEditeur extends AbstractModelEditeur{
 		}
 		_xViewPort-= xdelta;
 		_yViewPort-= ydelta;
-		
+
 		xStartDrag=xpos;
 		yStartDrag=ypos;
-		
+
 		//on va depasser a gauche : on divise et on ajoute pour decaller a droite 
 		if((_xViewPort)<0){
 			int newXViewPort=0;
@@ -72,16 +72,16 @@ public class ModelEditeur extends AbstractModelEditeur{
 			int newYViewPort=(InterfaceConstantes.ORD_MAX*InterfaceConstantes.TAILLE_BLOC)-toDownYViewPort;
 			_yViewPort= newYViewPort;
 		}
-				xViewPort=_xViewPort;
-				yViewPort=_yViewPort;
-				repaint=true;
-				notifyObserver();
+		xViewPort=_xViewPort;
+		yViewPort=_yViewPort;
+		repaint=true;
+		notifyObserver();
 	}
 	public void releaseMoveViewport()
 	{
 		drag=false;
 	}
-	
+
 	int calculateDrawPos(int pos, int ViewPort)
 	{
 		//Il faut faire attention au repere dans lequel on est et en fonction de ce repere, on doit multiplier par le
@@ -104,7 +104,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 		int yBlocPos=calculateDrawPos(ypos,yViewPort);
 		final Bloc tempPict= new Bloc(texture,xBlocPos,yBlocPos,bloquant,background);
 		monde.niveau[xBlocPos/InterfaceConstantes.TAILLE_BLOC][yBlocPos/InterfaceConstantes.TAILLE_BLOC]=tempPict;
-		
+
 		repaint=true;
 		notifyObserver();
 	}
@@ -112,12 +112,12 @@ public class ModelEditeur extends AbstractModelEditeur{
 	{		
 		int xMonstrePos = calculateDrawPos(xpos,xViewPort);
 		int yMonstrePos= calculateDrawPos(ypos,yViewPort);
-		
+
 		if(texture==Bloc.SPIREL)
 		{
 			tabEditeurMonstre.add(new StockageMonstre(Bloc.SPIREL,new Point(xMonstrePos,yMonstrePos),staticMonstre));
 		}
-		
+
 		repaint=true;
 		notifyObserver();
 	}
@@ -144,34 +144,34 @@ public class ModelEditeur extends AbstractModelEditeur{
 			endPos[1]=yPos;
 			end=false;
 		}
-		
+
 		texture="";//on remet la souris
 
 		repaint=true;
 		notifyObserver();
 	}
-	
+
 	public void draw(Graphics g,JPanel pan)
 	{
-		 java.awt.Image image=null;
-		 Graphics2D g2 = (Graphics2D) g;
+		java.awt.Image image=null;
+		Graphics2D g2 = (Graphics2D) g;
 		int xdecalLine= (int) ((InterfaceConstantes.TAILLE_BLOC-xViewPort%InterfaceConstantes.TAILLE_BLOC)*(loupe?dezoomFactor:1));
 		int ydecalLine= (int) ((InterfaceConstantes.TAILLE_BLOC-yViewPort%InterfaceConstantes.TAILLE_BLOC)*(loupe?dezoomFactor:1));
-			
+
 		//l'indice de début d'affichage : viewPort/Taille_Bloc
-		 int xStartAff = (( (xViewPort/InterfaceConstantes.TAILLE_BLOC-1)<=0)? 0: (xViewPort/InterfaceConstantes.TAILLE_BLOC -1) ); 
-		 int xEndAff=((InterfaceConstantes.LARGEUR_FENETRE/tailleBloc+xViewPort/InterfaceConstantes.TAILLE_BLOC)+2);
-		 xEndAff= ( xEndAff >= InterfaceConstantes.ABS_MAX )? InterfaceConstantes.ABS_MAX : xEndAff;
+		int xStartAff = (( (xViewPort/InterfaceConstantes.TAILLE_BLOC-1)<=0)? 0: (xViewPort/InterfaceConstantes.TAILLE_BLOC -1) ); 
+		int xEndAff=((InterfaceConstantes.LARGEUR_FENETRE/tailleBloc+xViewPort/InterfaceConstantes.TAILLE_BLOC)+2);
+		xEndAff= ( xEndAff >= InterfaceConstantes.ABS_MAX )? InterfaceConstantes.ABS_MAX : xEndAff;
 
-		 int yStartAff = (( (yViewPort/InterfaceConstantes.TAILLE_BLOC-1)<=0)? 0: (yViewPort/InterfaceConstantes.TAILLE_BLOC -1) ); 
-		 int yEndAff=((InterfaceConstantes.HAUTEUR_FENETRE/tailleBloc+yViewPort/InterfaceConstantes.TAILLE_BLOC)+2);
-		 yEndAff= ( yEndAff >= InterfaceConstantes.ORD_MAX )? InterfaceConstantes.ORD_MAX : yEndAff;
+		int yStartAff = (( (yViewPort/InterfaceConstantes.TAILLE_BLOC-1)<=0)? 0: (yViewPort/InterfaceConstantes.TAILLE_BLOC -1) ); 
+		int yEndAff=((InterfaceConstantes.HAUTEUR_FENETRE/tailleBloc+yViewPort/InterfaceConstantes.TAILLE_BLOC)+2);
+		yEndAff= ( yEndAff >= InterfaceConstantes.ORD_MAX )? InterfaceConstantes.ORD_MAX : yEndAff;
 
-		 if(monde.niveau==null){
-			 monde.niveau= new Bloc[InterfaceConstantes.ABS_MAX][InterfaceConstantes.ORD_MAX];
-			 monde.initMonde();
-		 }
-		 
+		if(monde.niveau==null){
+			monde.niveau= new Bloc[InterfaceConstantes.ABS_MAX][InterfaceConstantes.ORD_MAX];
+			monde.initMonde();
+		}
+
 		for(int abs=xStartAff;abs<xEndAff;abs++)
 		{
 			for(int ord=yStartAff;ord<yEndAff;ord++)
@@ -181,43 +181,43 @@ public class ModelEditeur extends AbstractModelEditeur{
 				int xdraw = (int) ((tempPict.getXpos() -xViewPort)*((loupe) ? dezoomFactor : 1 ));
 				int ydraw=(int) ((tempPict.getYpos()-yViewPort)*((loupe) ? dezoomFactor : 1 ));
 				g.drawImage(imMonde.getImages(tempPict,loupe),xdraw,ydraw, null);
-				
-				//on dessine les limites de la carte 
-				 g2.setStroke(new BasicStroke(2));
-				 g2.setColor(Color.red);
 
-				 if((abs==0))
+				//on dessine les limites de la carte 
+				g2.setStroke(new BasicStroke(2));
+				g2.setColor(Color.red);
+
+				if((abs==0))
 					g2.drawLine(0, 0, 0, InterfaceConstantes.HAUTEUR_FENETRE);
-				
-				 if(abs== (InterfaceConstantes.ABS_MAX-1))
+
+				if(abs== (InterfaceConstantes.ABS_MAX-1))
 					g2.drawLine(InterfaceConstantes.LARGEUR_FENETRE-7, 0, InterfaceConstantes.LARGEUR_FENETRE-7, InterfaceConstantes.HAUTEUR_FENETRE);
-				
-				 if( (ord==0))
+
+				if( (ord==0))
 					g2.drawLine(0, 4, InterfaceConstantes.LARGEUR_FENETRE, 4);
-			
-				 if((ord==(InterfaceConstantes.ORD_MAX-1)) )
-				 {
+
+				if((ord==(InterfaceConstantes.ORD_MAX-1)) )
+				{
 					g2.drawLine(0, InterfaceConstantes.HAUTEUR_FENETRE-tailleMenu-4, InterfaceConstantes.LARGEUR_FENETRE, InterfaceConstantes.HAUTEUR_FENETRE-tailleMenu-4);
-				 }
-					g2.setStroke(new BasicStroke(1));
-					 g2.setColor(Color.black);
+				}
+				g2.setStroke(new BasicStroke(1));
+				g2.setColor(Color.black);
 
 			}
 		}
-		
+
 		//on dessine l'image du bloc choisi si il existe une texture 
 		if(texture != "")
 		{
-		image = pan.getToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/"+texture +((loupe) ? "_p" : "" )+".png"));
-		if(texture.equals(Bloc.DELETE))
-		{
-			g.drawImage(image, xMousePos-10, yMousePos-7, null);
-		}
-		else
-		{
-			g.drawImage(image, xMousePos-tailleBloc/2, yMousePos-tailleBloc/2, null);
-		}
-		
+			image = pan.getToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/"+texture +((loupe) ? "_p" : "" )+".png"));
+			if(texture.equals(Bloc.DELETE))
+			{
+				g.drawImage(image, xMousePos-10, yMousePos-7, null);
+			}
+			else
+			{
+				g.drawImage(image, xMousePos-tailleBloc/2, yMousePos-tailleBloc/2, null);
+			}
+
 		}
 		//on affiche les lignes
 		for(int abs=0;abs<InterfaceConstantes.LARGEUR_FENETRE/tailleBloc+1;abs++)
@@ -226,7 +226,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 			{
 				//a la différence du bloc, la ligne n'est pas décallé de base, il faut donc la décaller pour la faire
 				//correspondre à la vue 
-				
+
 				//ligne verticale 
 				g.drawLine(abs*tailleBloc+xdecalLine,ord*tailleBloc,abs*tailleBloc+xdecalLine,InterfaceConstantes.HAUTEUR_FENETRE+ord*tailleBloc+tailleBloc);
 				//ligne horizontale  
@@ -241,15 +241,15 @@ public class ModelEditeur extends AbstractModelEditeur{
 			int x2 = x1+xLengthZoomArea;
 			int y2 = (int) (y1+yLengthZoomArea-tailleMenu*dezoomFactor); // on decalle de la taille du menu 
 
-			 g2.setStroke(new BasicStroke(2));
-             g2.drawLine(x1,y1,x1,y2);
-             g2.drawLine(x2,y1,x2,y2);
-             g2.drawLine(x1,y1,x2,y1);
-             g2.drawLine(x1,y2,x2,y2);
-			 g2.setStroke(new BasicStroke(1));
+			g2.setStroke(new BasicStroke(2));
+			g2.drawLine(x1,y1,x1,y2);
+			g2.drawLine(x2,y1,x2,y2);
+			g2.drawLine(x1,y1,x2,y1);
+			g2.drawLine(x1,y2,x2,y2);
+			g2.setStroke(new BasicStroke(1));
 
 		}
-		
+
 		//on affiche la zone de spawn si elle existe
 		if( (startPos[0]!=-1) && (endPos[0]!=-1) )
 		{
@@ -257,7 +257,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 			int ystart = (int) ((startPos[1]-yViewPort)*((loupe) ? dezoomFactor : 1 ));
 			int xend = (int) ((endPos[0] -xViewPort)*((loupe) ? dezoomFactor : 1 ))+tailleBloc;
 			int yend = (int) ((endPos[1]-yViewPort)*((loupe) ? dezoomFactor : 1 )+tailleBloc);
-			
+
 			g2.setColor(Color.red);
 			g2.setStroke(new BasicStroke(2));
 			g2.drawLine(xstart, ystart, xstart, yend);
@@ -272,7 +272,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 			image = pan.getToolkit().getImage(getClass().getClassLoader().getResource("resources/monstres/"+tabEditeurMonstre.get(i).nom + ""+((loupe) ? "_p" : "" )+".png"));
 			g.drawImage(image, (int)((tabEditeurMonstre.get(i).pos.x -xViewPort)*((loupe) ? dezoomFactor : 1 )),(int)((tabEditeurMonstre.get(i).pos.y -yViewPort)*((loupe) ? dezoomFactor : 1 )), null);
 		}
-		
+
 		//on dessine le personnage 
 		if(persoPos[0]!=-1)
 		{
@@ -291,41 +291,41 @@ public class ModelEditeur extends AbstractModelEditeur{
 			image = pan.getToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/end"+((loupe) ? "_p" : "" )+".png"));
 			g.drawImage(image, (int)((endPos[0] -xViewPort)*((loupe) ? dezoomFactor : 1 )),(int)((endPos[1] -yViewPort)*((loupe) ? dezoomFactor : 1 )), null);
 		}
-	
+
 	}
 
-	public  void setTexture(String _texture)
+	public void setTexture(String _texture)
 	{
 		perso=false;
 		start=false;
 		end=false;
 		monstreActive=false;
-		
+		System.out.println(_texture);
 		texture=_texture;
 		if(_texture.equals(""))
 		{
-			setBloquant(false);
+			menuEdit.setBloquant(false);
 			setBackground(false);
 		}
 		else if (_texture.equals(Bloc.DELETE))
 		{
-			setBloquant(false);
+			menuEdit.setBloquant(false);
 		}
 		else if (_texture.equals(Bloc.VIDE))
 		{
-			setBloquant(false);
+			menuEdit.setBloquant(false);
 		}
 		else if (_texture.equals(Bloc.SOL))
 		{
-			setBloquant(true);
+			menuEdit.setBloquant(true);
 		}
 		else if (_texture.equals(Bloc.TERRE))
 		{
-			setBloquant(true);
+			menuEdit.setBloquant(true);
 		}
 		else if (_texture.equals(Bloc.CIEL))
 		{
-			setBloquant(false);
+			menuEdit.setBloquant(false);
 		}
 		else if (_texture.equals(Bloc.PERSO))
 		{
@@ -344,11 +344,11 @@ public class ModelEditeur extends AbstractModelEditeur{
 			monstreActive=true;
 			showStaticMonsters=true;
 		}
-		
+
 		repaint=true;
 		notifyObserver();
 	}
-	
+
 	public List<StockageMonstre> FindMonstre(int[] positionVoulue, List<StockageMonstre> listAChercher )
 	{
 		List<StockageMonstre> resultat = new ArrayList<StockageMonstre>();
@@ -363,7 +363,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 		return(resultat);
 	}
 
-	
+
 	public void deleteMonster(int x, int y)
 	{
 		//int xPos = (x/tailleBloc)*tailleBloc+xViewPort;
@@ -385,10 +385,10 @@ public class ModelEditeur extends AbstractModelEditeur{
 	public String sauver(String nom) {
 		monde.xStartMap=startPos[0];
 		monde.yStartMap=startPos[1];
-		
+
 		monde.xEndMap=endPos[0];
 		monde.yEndMap=endPos[1];
-		
+
 		monde.xStartPerso=persoPos[0];
 		monde.yStartPerso=persoPos[1];
 
@@ -407,22 +407,22 @@ public class ModelEditeur extends AbstractModelEditeur{
 		}
 		startPos[0]=_monde.xStartMap;
 		startPos[1]=_monde.yStartMap;
-		
+
 		endPos[0]=_monde.xEndMap;
 		endPos[1]=_monde.yEndMap;
-		
+
 		persoPos[0]=_monde.xStartPerso;
 		persoPos[1]=_monde.yStartPerso;
-		
+
 		tabEditeurMonstre=_monde.listMonstreOriginal;
-		
+
 		monde=_monde;
-		
+
 		repaint=true;
 		notifyObserver();
-	
+
 	}
-	
+
 	public void information() {
 		String info ="";
 		info+= "xViewPort= " + xViewPort +","+(xViewPort+InterfaceConstantes.LARGEUR_FENETRE );
@@ -434,12 +434,12 @@ public class ModelEditeur extends AbstractModelEditeur{
 		info+="\nTexture= "+ texture;
 		info+="\nLargeur fenetre= "+InterfaceConstantes.LARGEUR_FENETRE ;
 		info+="\nHauteur fenetre= "+InterfaceConstantes.HAUTEUR_FENETRE;
-				
+
 		showMessageDialog=true;
 		textMessageDialog[0]=info;
 		textMessageDialog[1]="A propos";
 		typeMessageDialog= JOptionPane.INFORMATION_MESSAGE;
-		
+
 		notifyObserver();
 	}
 
@@ -451,7 +451,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 
 		int deltaXViewPort = (InterfaceConstantes.LARGEUR_FENETRE/tailleBloc - futurNombreBlocL ) /2 * InterfaceConstantes.TAILLE_BLOC;
 		int deltaYViewPort= (InterfaceConstantes.HAUTEUR_FENETRE/tailleBloc - futurNombreBlocH ) /2 * InterfaceConstantes.TAILLE_BLOC; 
-		
+
 		boolean xMinLim= ((xViewPort+deltaXViewPort)<0) ;
 		boolean xMaxLim=( ((xViewPort+deltaXViewPort)/InterfaceConstantes.TAILLE_BLOC+futurNombreBlocL) > InterfaceConstantes.ABS_MAX );
 		boolean yMinLim=((yViewPort+deltaYViewPort)<0) ;
@@ -464,7 +464,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 			xLengthZoomArea=(int) (InterfaceConstantes.LARGEUR_FENETRE*dezoomFactor);
 			yLengthZoomArea=(int) (InterfaceConstantes.HAUTEUR_FENETRE*dezoomFactor);
 		}
-		
+
 		if( (InterfaceConstantes.ABS_MAX < futurNombreBlocL) || (InterfaceConstantes.ORD_MAX<futurNombreBlocH)  )
 		{
 			showMessageDialog=true;
@@ -474,7 +474,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 			notifyObserver();
 			return;
 		}
-		
+
 		else if(!loupe &&(xMinLim||yMinLim||xMaxLim ||yMaxLim))
 		{			
 			if(xMinLim)
@@ -483,19 +483,19 @@ public class ModelEditeur extends AbstractModelEditeur{
 				yViewPort=0;
 			if(xMaxLim )
 				xViewPort= (InterfaceConstantes.ABS_MAX-futurNombreBlocL)*futurTailleBloc;
-			
+
 			if(yMaxLim)
 				yViewPort= (InterfaceConstantes.ORD_MAX-futurNombreBlocH)*futurTailleBloc;
-			
+
 			if(!xMinLim && !xMaxLim)
 				xViewPort+=deltaXViewPort;
-			
+
 			if(!yMinLim && !yMaxLim)
 				yViewPort+=deltaYViewPort;
-			
+
 			tailleBloc = futurTailleBloc;
 			loupe=!loupe;
-			
+
 			repaint=true;
 			notifyObserver();
 		}
@@ -509,8 +509,8 @@ public class ModelEditeur extends AbstractModelEditeur{
 			repaint=true;
 			notifyObserver();
 		}
-		
-		
+
+
 	}
 
 }

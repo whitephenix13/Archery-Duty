@@ -121,18 +121,23 @@ public abstract class Monstre extends Entitie implements InterfaceConstantes, Se
 	}
 
 	@Override
-	public Hitbox getHitbox(Point INIT_RECT) {
+	public int getMaxBoundingSquare()
+	{
+		return deplacement.getMaxBoundingSquare(this);
+	}
+	@Override
+	public Hitbox getHitbox(Point INIT_RECT,Point screenDisp) {
 		return  Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos(),ypos()),true);
 	}
 
 	@Override
-	public Hitbox getHitbox(Point INIT_RECT,Mouvement _dep, int _anim) {
+	public Hitbox getHitbox(Point INIT_RECT,Point screenDisp,Mouvement _dep, int _anim) {
 		Mouvement temp = _dep.Copy(this); //create the mouvement
 		return Hitbox.plusPoint(temp.hitbox.get(_anim), new Point(xpos(),ypos()),true);	
 	}
 	
 	@Override
-	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,boolean stuck) {
+	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,Collidable collidedObject,boolean stuck) {
 		boolean collision_gauche = normal.x>0;
 		boolean collision_droite = normal.x<0;
 		//boolean collision_haut = normal.y>0;

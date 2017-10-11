@@ -29,7 +29,7 @@ public abstract class Effect extends Collidable{
 	public void onRemoveRefFleche(AbstractModelPartie partie,boolean destroyNow){this.onUpdate(partie,true);ref_fleche=null;this.destroy(partie, destroyNow);};
 	public List<Integer> xtaille= new ArrayList<Integer>() ;
 	public List<Integer> ytaille= new ArrayList<Integer>() ;
-
+	
 	public Animation animation= new Animation(); 
 	public int maxnumberloops =1;
 	private int numberloops =0;
@@ -47,6 +47,12 @@ public abstract class Effect extends Collidable{
 	public List<Hitbox> hitbox = new ArrayList<Hitbox>();
 	public List<Hitbox> hitbox_rotated = new ArrayList<Hitbox>();//used to transform the initial hitbox into a rotated one
 
+	public boolean isWorldCollider =false; //set to true if this object should be consider as a bloc for collision. Used in roche_effect
+	
+	public void init()
+	{
+		super.init();
+	}
 	public boolean isEnded()
 	{
 		//endless loop until some event stop it 
@@ -61,10 +67,14 @@ public abstract class Effect extends Collidable{
 		return numberloops>=maxnumberloops;
 	}
 	/** call each step by the main loop*/
-	public void onUpdate(AbstractModelPartie partie, boolean last) {
+	/*public void onUpdate(AbstractModelPartie partie, boolean last) {
 		draw_tr=computeTransformDraw(partie);
 		hitbox_rotated = Hitbox.convertHitbox(hitbox, partie.INIT_RECT, draw_tr, new Point(xpos(),ypos()), new Point(partie.xScreendisp,partie.yScreendisp));
 
+	}*/
+	public void onUpdate(AbstractModelPartie partie, boolean last) {
+		draw_tr=computeTransformDraw(partie);
+		hitbox_rotated = Hitbox.convertHitbox(hitbox, partie.INIT_RECT, draw_tr,new Point(xpos(),ypos()), partie.getScreenDisp());
 	}
 	/** call in deplace, apply relative effects to collidable to which the effect is attached to. For speed modifiers, use getModifiedSpeed*/
 	public abstract void updateOnCollidable(AbstractModelPartie partie,Entitie attacher);
@@ -98,7 +108,13 @@ public abstract class Effect extends Collidable{
 		//partie.arrowsEffects.remove(this); DO NOT DO THIS OTHERWISE THE EFFECT DISAPPEAR IMMEDIATLY 
 	}
 
-	public abstract Point getTranslationFromTranformDraw(AbstractModelPartie partie);
+	protected void updatePos(AbstractModelPartie partie)
+	{
+	}
+	public Point getTranslationFromTranformDraw(AbstractModelPartie partie)
+	{
+		return new Point(xpos()+partie.xScreendisp,ypos()+partie.yScreendisp);
+	}
 	public AffineTransform computeTransformDraw(AbstractModelPartie partie) {
 		Point transl = getTranslationFromTranformDraw(partie);
 		AffineTransform tr=new AffineTransform(ref_fleche.draw_tr);
@@ -110,15 +126,17 @@ public abstract class Effect extends Collidable{
 
 	
 	@Override
-	public Hitbox getHitbox(Point INIT_RECT) {
-		if(draw_tr==null || hitbox_rotated==null)
-			return hitbox.get(anim);
-		return hitbox_rotated.get(anim);
+	public Hitbox getHitbox(Point INIT_RECT,Point screenDisp) {
+		if(draw_tr==null || hitbox_rotated==null){
+			return Hitbox.plusPoint(hitbox.get(anim).copy(),new Point(xpos(),ypos()),true);
+		}
+		return Hitbox.plusPoint(hitbox_rotated.get(anim).copy(),new Point(xpos(),ypos()),true);
 	}
 
 
 	@Override
 	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
+		updatePos(partie);
 		anim=animation.update(anim,partie.getFrame(),1);
 		//doit deplace, change anim
 		boolean[] res = {true,false};
@@ -141,11 +159,11 @@ public abstract class Effect extends Collidable{
 	}
 	
 	@Override
-	public Hitbox getHitbox(Point INIT_RECT, Mouvement mouv, int _anim) {
-		return getHitbox(INIT_RECT);
+	public Hitbox getHitbox(Point INIT_RECT,Point screenDisp, Mouvement mouv, int _anim) {
+		return getHitbox(INIT_RECT,screenDisp);
 	}
 	@Override
-	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,boolean stuck) {	
+	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,Collidable collidedObject,boolean stuck) {	
 	}
 	
 	@Override
@@ -154,7 +172,7 @@ public abstract class Effect extends Collidable{
 	}
 	@Override
 	public void handleStuck(AbstractModelPartie partie) {	
-		handleWorldCollision( new Vector2d(), partie,true );
+		handleWorldCollision( new Vector2d(), partie,null,true );
 	}
 	
 	@Override
@@ -174,7 +192,7 @@ public abstract class Effect extends Collidable{
 	}
 
 	@Override
-	public void resetVarDeplace() {		
+	public void resetVarDeplace(boolean speedUpdated) {		
 	}
 
 }

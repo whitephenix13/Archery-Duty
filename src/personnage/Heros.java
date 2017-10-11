@@ -2,6 +2,7 @@ package personnage;
 
 import java.awt.Point;
 import java.awt.Polygon;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -9,6 +10,7 @@ import javax.vecmath.Vector2d;
 
 import collision.Collidable;
 import collision.Collision;
+import collision.CustomBoundingSquare;
 import collision.GJK_EPA;
 import debug.Debug_time;
 import deplacement.Accroche;
@@ -20,6 +22,7 @@ import deplacement.Mouvement;
 import deplacement.Mouvement_perso;
 import deplacement.Saut;
 import deplacement.Tir;
+import effects.Roche_effect;
 import fleches.Fleche;
 import fleches.destructrice.Fleche_bogue;
 import fleches.destructrice.Fleche_explosive;
@@ -42,7 +45,6 @@ import music.Music;
 import partie.AbstractModelPartie;
 import partie.PartieTimer;
 import principal.InterfaceConstantes;
-import types.Bloc;
 import types.Entitie;
 import types.Hitbox;
 import types.Projectile;
@@ -55,7 +57,7 @@ public class Heros extends Entitie{
 	public Mouvement nouvMouv =null;
 	//on definit son type de deplacement 
 
-	
+
 	private float seyeri=InterfaceConstantes.MAXSEYERI;
 	private float not_enough_seyeri=0; // variable to keep track of the amount of seyeri that a rejected action required (used for visual effect)
 	public void setNotEnoughSeyeri(float val){not_enough_seyeri=val;not_enough_seyeri_counter=10;}
@@ -108,9 +110,16 @@ public class Heros extends Entitie{
 	public int current_slot = 0;
 	//Which arrows are equiped per affinity
 	//private String[] slots = {TypeObject.BOGUE,TypeObject.EXPLOSIVE,TypeObject.FOUDRE,TypeObject.TROU_NOIR};
-	//private String[] slots = {TypeObject.ELECTRIQUE,TypeObject.FEU,TypeObject.GLACE,TypeObject.ROCHE};
-	private String[] slots = {TypeObject.VENT,TypeObject.GRAPPIN,TypeObject.OMBRE,TypeObject.LUMIERE};
+	//private String[] slots = {TypeObject.ROCHE,TypeObject.FEU,TypeObject.GLACE,TypeObject.ELECTRIQUE};
+	//private String[] slots = {TypeObject.VENT,TypeObject.GRAPPIN,TypeObject.OMBRE,TypeObject.LUMIERE};
 	//private String[] slots = {TypeObject.AUTO_TELEGUIDEE,TypeObject.CAC,TypeObject.RETARD,TypeObject.V_FLECHE};
+
+	//private String[] slots = {TypeObject.ROCHE,TypeObject.VENT,TypeObject.OMBRE,TypeObject.LUMIERE};
+	//private String[] slots = {TypeObject.ELECTRIQUE,TypeObject.EXPLOSIVE,TypeObject.FEU,TypeObject.GLACE};
+	//private String[] slots = {TypeObject.GRAPPIN,TypeObject.LUMIERE,TypeObject.OMBRE,TypeObject.ROCHE};
+	private String[] slots = {TypeObject.ROCHE,TypeObject.TROU_NOIR,TypeObject.OMBRE,TypeObject.FEU};
+
+
 	public String[] getSlots(){return slots;}
 	/**
 	 * 
@@ -166,8 +175,8 @@ public class Heros extends Entitie{
 		MAXLIFE = 100;
 		MINLIFE = 0;
 		life= MAXLIFE;
-		xpos(xPo);
-		ypos(yPo); 
+		xpos_sync(xPo);
+		ypos_sync(yPo); 
 		localVit= new Vitesse(0,0);
 		fixedWhenScreenMoves=true;
 		deplacement=new Attente(this,Attente.attente_gauche,current_frame);
@@ -178,9 +187,9 @@ public class Heros extends Entitie{
 		controlScreenMotion=true;
 		this.setCollideWithout(Arrays.asList(TypeObject.HEROS,TypeObject.FLECHE));
 	}
-	
+
 	public void onAddLife(){};
-	
+
 	public String droite_gauche (int anim){
 		return deplacement.droite_gauche(this, anim);
 	}
@@ -237,7 +246,7 @@ public class Heros extends Entitie{
 			}
 		}
 	}
-	
+
 	public float getSeyeri()
 	{
 		return(seyeri);
@@ -278,19 +287,27 @@ public class Heros extends Entitie{
 			return normCollision;
 	}
 
+	@Override
+	public int getMaxBoundingSquare()
+	{
+		return deplacement.getMaxBoundingSquare(this);
+	}
 
-	public Hitbox getHitbox(Point INIT_RECT) {
+	@Override
+	public Hitbox getHitbox(Point INIT_RECT,Point screenDisp) {
 		try{
-			return  Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos(),ypos()),true);}
+			//As the heros is fixed when the screen move (position relative to screen), need to substract ScreenDisp
+			return  Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos()-screenDisp.x,ypos()-screenDisp.y),true);}
 		catch(IndexOutOfBoundsException e)
 		{
 			return new Hitbox();
 		}
 	}
-	public Hitbox getHitbox(Point INIT_RECT, Mouvement _dep, int _anim) {
+	@Override
+	public Hitbox getHitbox(Point INIT_RECT,Point screenDisp, Mouvement _dep, int _anim) {
 		try{
 			Mouvement_perso temp = (Mouvement_perso) _dep.Copy(this); //create the mouvement
-			return Hitbox.plusPoint(temp.hitbox.get(_anim), new Point(xpos(),ypos()),true);
+			return Hitbox.plusPoint(temp.hitbox.get(_anim), new Point(xpos()-screenDisp.x,ypos()-screenDisp.y),true);
 		}
 		catch(IndexOutOfBoundsException e)
 		{
@@ -306,16 +323,16 @@ public class Heros extends Entitie{
 	public Hitbox getGliss_Accroch_Hitbox(AbstractModelPartie partie, boolean gliss, boolean right)//used to get slide hitbox
 	{
 		//Hand coded, only two possible deplacement: Course or Saut 
-		int up = getGlobalVit(partie).y<0? 0 : (deplacement.IsDeplacement(Mouvement_perso.saut)?4 : -3); //if gliss: up of hand
+		int up = getGlobalVit(partie).y<0? 0 : (deplacement.IsDeplacement(Mouvement_perso.saut)?4 : 0); //if gliss: up of hand
 		int down = getGlobalVit(partie).y<0? 27 : (deplacement.IsDeplacement(Mouvement_perso.saut)?31 : 24);//if gliss: down of hand
 		if(!gliss)
 		{
 			//small square below hand: if it is in collision while the hand is not: heros should change to Accroche
-			up=down+1;
+			up=   down+1;
 			down = down + 15;
 		}
-		//assume the Heros hitbox is a square/rectangle not rotated 
-		Hitbox herosHit = this.getHitbox(partie.INIT_RECT);
+		//WARNING assume the Heros hitbox is a square/rectangle not rotated 
+		Hitbox herosHit = this.getHitbox(partie.getScreenDisp(),partie.getScreenDisp());
 
 		List<Vector2d> upLeftP = Hitbox.supportsPoint(new Vector2d(-1,-1), herosHit.polygon);
 		List<Vector2d> downLeftP = Hitbox.supportsPoint(new Vector2d(-1,1), herosHit.polygon);
@@ -348,7 +365,43 @@ public class Heros extends Entitie{
 		return new Hitbox(p);	
 	}
 
-	public Hitbox getWorldPosition(AbstractModelPartie partie)
+	/**
+	 * @param ref_object: the object that pushes "this" by motion
+	 * @param motion: value by which the collidable has to be moved for the test
+	 * @param collidableToMove: collidable to have to be ejected
+	 * @param motionToApply: motion to apply to the collidable that have to be ejected
+	 * @return false if moving this by motion is not possible(collision with world or effects) or if ref_object and this are not colliding ,true otherwise (AND APPLY THE MOTION)
+	 */
+	@Override
+	public boolean requestMoveBy(AbstractModelPartie partie,Collidable ref_object,Point motion,List<Collidable> collidableToMove, List<Point> motionToApply)
+	{
+		//Debug_stack stack = new Debug_stack(); 
+		//stack.print(-1);
+		if(this.checkCollideWithWorld())
+			if(Collision.testcollisionObjects(partie, this, ref_object, false))
+			{
+				Point appliedMotion = new Point();//not set to null so that we can retrieve the desired motion
+				boolean considerEffects = true;
+				if(!Collision.ejectWorldCollision(partie, this,ref_object,motion,appliedMotion,considerEffects) || (appliedMotion.x==0 && appliedMotion.y==0)){
+					return false; // ejection was not successful,  "this" is preventing ref_object to move, return false
+				}
+				else
+				{
+					//"this" is not preventing ref_object to move: return true (done later) and add it to the collidableToMove list
+					collidableToMove.add(this);
+					motionToApply.add(appliedMotion);
+					//apply motion
+					this.pxpos(appliedMotion.x);
+					this.pypos(appliedMotion.y);
+				}
+
+			}
+		//In this case, the object does not consider collision with the world(or is not colliding with ref_object), hence it should no be moved by the ref_object.
+		//However as it is not preventing the ref_object from moving, the function returns true (but the object is not registred in collidableToMove)
+		return true;
+	}
+
+	/*public Hitbox getWorldPosition(AbstractModelPartie partie)
 	{
 		int xCompScreenMove=0; 
 		int yCompScreenMove=0;
@@ -377,30 +430,30 @@ public class Heros extends Entitie{
 		Point p = new Point(xCompScreenMove,
 				yCompScreenMove);
 		return Hitbox.minusPoint(hit,p,false);
-	}
+	}*/
 	public boolean isGrounded(AbstractModelPartie partie)
 	{
-		Hitbox hit = getHitbox(partie.INIT_RECT);
+		Hitbox hit = getHitbox(partie.INIT_RECT,partie.getScreenDisp());
 		assert hit.polygon.npoints==4;
 		//get world hitboxes with Collision
-		Point p = new Point(partie.xScreendisp,partie.yScreendisp);
-		Hitbox objectHitboxL= fixedWhenScreenMoves? Hitbox.minusPoint(hit,p,false): hit;
 		//lowers all points by 1 at most 
-		for(int i=0; i<objectHitboxL.polygon.npoints; ++i)
-			objectHitboxL.polygon.ypoints[i]+=1;
+		for(int i=0; i<hit.polygon.npoints; ++i)
+			hit.polygon.ypoints[i]+=1;
 		//get all hitboxes: it can be slower 
-		List<Bloc> mondeHitboxes=Collision.getMondeBlocs(partie.monde, objectHitboxL, partie.INIT_RECT, partie.TAILLE_BLOC);
+		boolean res =  Collision.isWorldCollision(partie,hit,true);
+		return res;
+		/*List<Collidable> mondeHitboxes=Collision.getMondeBlocs(partie.monde, objectHitboxL, partie.INIT_RECT, partie.TAILLE_BLOC);
 		//if there is a collision between mondeHitboxes and objectHitbox, it means that lower the hitbox by 1 leads to a 
 		//collision: the object is likely to be on the ground (otherwise, it is in a bloc).
-		for(Bloc b : mondeHitboxes){
+		for(Collidable b : mondeHitboxes){
 			if(GJK_EPA.intersectsB(objectHitboxL.polygon, b.getHitbox(partie.INIT_RECT).polygon, new Vector2d(0,1))==GJK_EPA.TOUCH)
 			{
 				return true;
 			}}
-		return false;
+		return false;*/
 	}
 	@Override
-	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,boolean stuck) {
+	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,Collidable collidedObject,boolean stuck) {
 		boolean collision_gauche = normal.x>0;
 		boolean collision_droite = normal.x<0;
 		//boolean collision_haut = normal.y>0;
@@ -457,7 +510,7 @@ public class Heros extends Entitie{
 		currentValue=new CurrentValue(){		
 			@Override
 			public void res()
-			{xpos(memPos.x);ypos(memPos.y);deplacement=memDep;anim=memAnim;localVit=(memVitloca);}};
+			{xpos_sync(memPos.x);ypos_sync(memPos.y);deplacement=memDep;anim=memAnim;localVit=(memVitloca);}};
 	}
 	@Override
 	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
@@ -465,6 +518,7 @@ public class Heros extends Entitie{
 		try {
 			animationChanged=true;
 			anim=changeMouv(nouvMouv, nouvAnim, partie,deplace);
+			afterChangeMouv(partie);
 			partie.changeMouv= false;
 			doitDeplace=true;
 
@@ -475,7 +529,7 @@ public class Heros extends Entitie{
 		return res;
 	}
 
-
+	private Collidable accrocheCol=null;
 	/**
 	 * Donne l'animation suivante, en fonction du mouvement en cours et de son animation 
 	 * 
@@ -495,58 +549,63 @@ public class Heros extends Entitie{
 		Debug_time debugTime = new Debug_time();
 		debugTime.init();
 
-		boolean blocDroitGlisse=false;
-		boolean blocGaucheGlisse=false;
+		Hitbox blocDroitGlisseHit = null;
+		Hitbox blocGaucheGlisseHit = null;
 
-		boolean blocDroitAccroche=false;//true if accroche special hitbox is colliding with world 
-		boolean blocGaucheAccroche=false;
+		Hitbox blocDroitAccrocheHit = null;//not null if accroche special hitbox is colliding with world 
+		Hitbox blocGaucheAccrocheHit = null;
 
 		int animHeros=anim;
 		//translate all object hitboxes, see collision to get full formula
-		Point deplaceEcran =new Point(partie.xScreendisp,partie.yScreendisp);
-		Hitbox herosHitbox= Hitbox.minusPoint(getHitbox(partie.INIT_RECT),deplaceEcran,false);
+		Hitbox herosHitbox= getHitbox(partie.getScreenDisp(),partie.getScreenDisp());
 		debugTime.elapsed("monde bloc", 4);
 
-		List<Bloc> mondeBlocs = Collision.getMondeBlocs(partie.monde,herosHitbox, partie.INIT_RECT,partie.TAILLE_BLOC);
+		List<Collidable> mondeBlocs = Collision.getMondeBlocs(partie.monde,herosHitbox, partie.INIT_RECT,partie.getScreenDisp(),partie.TAILLE_BLOC);
+		List<Collidable> effectColl = Collidable.getAllCollidableEffect(partie, CustomBoundingSquare.getScreen());
+		List<Collidable> allColli = new ArrayList<Collidable>();
+		allColli.addAll(mondeBlocs);
+		allColli.addAll(effectColl);
 
 		debugTime.elapsed("loop collision", 4);
 
-		for(Bloc mondeBloc : mondeBlocs)
+		for(Collidable coll : allColli)
 		{
 			debugTime.elapsed("get hitbox", 5);
 
-			Hitbox mondeBox = mondeBloc.getHitbox(partie.INIT_RECT);
-			Polygon p_glissade_d= Hitbox.minusPoint(getGliss_Accroch_Hitbox(partie,true,true),deplaceEcran,false).polygon;
-			Polygon p_glissade_g= Hitbox.minusPoint(getGliss_Accroch_Hitbox(partie,true,false),deplaceEcran,false).polygon;
-			Polygon p_accroche_d= Hitbox.minusPoint(getGliss_Accroch_Hitbox(partie,false,true),deplaceEcran,false).polygon;
-			Polygon p_accroche_g= Hitbox.minusPoint(getGliss_Accroch_Hitbox(partie,false,false),deplaceEcran,false).polygon;
+			Hitbox box = coll.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
+			Polygon p_glissade_d= getGliss_Accroch_Hitbox(partie,true,true).polygon;
+			Polygon p_glissade_g= getGliss_Accroch_Hitbox(partie,true,false).polygon;
+			Polygon p_accroche_d= getGliss_Accroch_Hitbox(partie,false,true).polygon;
+			Polygon p_accroche_g= getGliss_Accroch_Hitbox(partie,false,false).polygon;
 
 
-			Polygon p_monde= mondeBox.polygon;
-			int a = GJK_EPA.intersectsB(p_glissade_d,p_monde, getGlobalVit(partie).vect2d());
-			int b = GJK_EPA.intersectsB(p_glissade_g,p_monde, getGlobalVit(partie).vect2d());
-			int c = GJK_EPA.intersectsB(p_accroche_d,p_monde, getGlobalVit(partie).vect2d());
-			int d = GJK_EPA.intersectsB(p_accroche_g,p_monde, getGlobalVit(partie).vect2d());
+			Polygon p_coll= box.polygon;
+			int a = GJK_EPA.intersectsB(p_glissade_d,p_coll, getGlobalVit(partie).vect2d());
+			int b = GJK_EPA.intersectsB(p_glissade_g,p_coll, getGlobalVit(partie).vect2d());
+			int c = GJK_EPA.intersectsB(p_accroche_d,p_coll, getGlobalVit(partie).vect2d());
+			int d = GJK_EPA.intersectsB(p_accroche_g,p_coll, getGlobalVit(partie).vect2d());
 
-			blocDroitGlisse=blocDroitGlisse||
-					((a==GJK_EPA.TOUCH) || (a==GJK_EPA.INTER ));
+			accrocheCol = coll;
 
-			blocGaucheGlisse=blocGaucheGlisse||
-					((b==GJK_EPA.TOUCH) || (b==GJK_EPA.INTER));
+			blocDroitGlisseHit=((a==GJK_EPA.TOUCH) || (a==GJK_EPA.INTER ))?box:blocDroitGlisseHit;
 
-			blocDroitAccroche= blocDroitAccroche ||
-					((c==GJK_EPA.TOUCH) || (c==GJK_EPA.INTER ));
+			blocGaucheGlisseHit=((b==GJK_EPA.TOUCH) || (b==GJK_EPA.INTER))?box :blocGaucheGlisseHit ;
 
-			blocGaucheAccroche= blocGaucheAccroche ||
-					((d==GJK_EPA.TOUCH) || (d==GJK_EPA.INTER ));
+			blocDroitAccrocheHit= ((c==GJK_EPA.TOUCH) || (c==GJK_EPA.INTER ))?box : blocDroitAccrocheHit;
 
-			if( (blocDroitGlisse || blocGaucheGlisse) && (blocDroitAccroche && blocGaucheAccroche))
+			blocGaucheAccrocheHit= ((d==GJK_EPA.TOUCH) || (d==GJK_EPA.INTER ))?box : blocGaucheAccrocheHit ;
+
+			if( ( (blocDroitGlisseHit!=null) || (blocGaucheGlisseHit!=null)) && ((blocDroitAccrocheHit !=null) && (blocGaucheAccrocheHit!=null)))
 			{
 				break;
 			}
 		}
 		debugTime.elapsed("after init 1", 4);
 
+		boolean blocDroitGlisse=blocDroitGlisseHit!=null;
+		boolean blocGaucheGlisse=blocGaucheGlisseHit!=null;
+		boolean blocDroitAccroche=blocDroitAccrocheHit!=null;
+		boolean blocGaucheAccroche=blocGaucheAccrocheHit!=null;
 
 		// le heros est en chute libre
 		boolean falling = !isGrounded(partie);
@@ -577,9 +636,9 @@ public class Heros extends Entitie{
 
 		//special case, dealing with stop of accroche 
 		boolean stopAccrocheD = deplacement.IsDeplacement(Mouvement_perso.accroche) && !(blocDroitGlisse && blocDroitAccroche) 
-				&& (droite_gauche(animHeros).equals(Mouvement.DROITE));
+				&& (droite_gauche(animHeros).equals(Mouvement.DROITE)) && (anim != 1) && (anim != 3);
 		boolean stopAccrocheG = deplacement.IsDeplacement(Mouvement_perso.accroche) && !(blocGaucheGlisse && blocGaucheAccroche) 
-				&& (droite_gauche(animHeros).equals(Mouvement.GAUCHE));
+				&& (droite_gauche(animHeros).equals(Mouvement.GAUCHE))&& (anim != 1) && (anim != 3);
 		if(stopAccrocheD || stopAccrocheG)
 		{
 			Mouvement nextMouv = new Attente(this,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?Attente.attente_gauche: Attente.attente_droite,partie.getFrame());
@@ -589,6 +648,7 @@ public class Heros extends Entitie{
 			anim= nextAnim;
 			deplacement=nextMouv;
 			localVit.y=(0);
+
 			return(anim);
 
 		}
@@ -598,7 +658,7 @@ public class Heros extends Entitie{
 		//le heros d�croche du mur
 		boolean endSliding = deplacement.IsDeplacement(Mouvement_perso.glissade) && 
 				((!blocDroitGlisse && droite_gauche(animHeros).equals(Mouvement.GAUCHE)) ||
-						(!blocGaucheGlisse && droite_gauche(animHeros)==(Mouvement.DROITE)));
+						(!blocGaucheGlisse && droite_gauche(animHeros)==(Mouvement.DROITE)) || !falling) ;
 
 		int anim=animHeros;
 
@@ -644,8 +704,7 @@ public class Heros extends Entitie{
 
 		if((beginAccroche_r || beginAccroche_l) && !deplacement.IsDeplacement(Mouvement_perso.accroche))
 		{
-			//WARNING: problem if the action is not succeeded 
-			accrocheCooldownTimer=PartieTimer.me.getElapsedNano();
+			//TODO: 
 			Mouvement nextMouv= new Accroche(this, beginAccroche_l? Accroche.accroche_gauche:Accroche.accroche_droite,partie.getFrame());
 			int nextAnim = (beginAccroche_l?0:2);
 
@@ -653,31 +712,60 @@ public class Heros extends Entitie{
 			int xdir = beginAccroche_l ? -1 :1;
 			int ydir = -1; //get upper part of hitbox
 
-			double ycurrentup = Hitbox.supportPoint(new Vector2d(0,ydir), getHitbox(partie.INIT_RECT,deplacement, animHeros).polygon).y;
+			double ycurrentup = Hitbox.supportPoint(new Vector2d(0,ydir), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),deplacement, animHeros).polygon).y;
 			//get value to align hitbox 
-			double dx= Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,deplacement, animHeros).polygon).x -
-					Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,nextMouv, nextAnim).polygon).x;
+			double dx= Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),deplacement, animHeros).polygon).x -
+					Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouv, nextAnim).polygon).x;
 
 			double dy= ycurrentup -
-					Hitbox.supportPoint(new Vector2d(0,ydir), getHitbox(partie.INIT_RECT,nextMouv, nextAnim).polygon).y;
+					Hitbox.supportPoint(new Vector2d(0,ydir), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouv, nextAnim).polygon).y;
 
-			pxpos((int) dx);
-			pypos((int)dy);	
+			//align to lower bloc: make ycurrentup align with top of collider hitbox 
 
-			//align to lower bloc
-			double yScreenDispMod= partie.getXYScreendispMod(false);
-			double align_to_ground =(int) (ycurrentup- yScreenDispMod)/ InterfaceConstantes.TAILLE_BLOC * InterfaceConstantes.TAILLE_BLOC + InterfaceConstantes.TAILLE_BLOC
-					-(ycurrentup -yScreenDispMod) ;
+			double colliderTopY=0;
+			if(beginAccroche_r)
+			{
+				colliderTopY= Hitbox.supportPoint(new Vector2d(0,-1), blocDroitAccrocheHit.polygon).y;
+			}
+			else
+			{
+				colliderTopY= Hitbox.supportPoint(new Vector2d(0,-1), blocGaucheAccrocheHit.polygon).y;
+			}
+			double align_to_ground = colliderTopY-ycurrentup;
 
-			pypos((int) align_to_ground);
+			pxpos_sync((int)dx);
+			pypos_sync((int)dy);
+			pypos_sync((int) align_to_ground);
 
-			useGravity=false;
 
-			deplacement=nextMouv;
-			anim=nextAnim;
-			deplacement.setSpeed(this, nextAnim);
+			boolean motionSuccess = true;
+			motionSuccess= alignTestValid(nextMouv,nextAnim, partie,deplace, this, true);
+			//WARNING: problem if the action is not succeeded 
+			accrocheCooldownTimer=PartieTimer.me.getElapsedNano();
 
-			return anim;
+			if(motionSuccess){
+				for(Collidable eff : partie.arrowsEffects){
+					Roche_effect r_eff = (Roche_effect) eff;
+					if(r_eff!=null  && (r_eff.typeEffect==0) && (eff == accrocheCol))
+					{
+						r_eff.registerAccrocheCol(this);
+					}
+				}
+				useGravity=false;
+				
+				deplacement=nextMouv;
+				anim=nextAnim;
+				deplacement.setSpeed(this, nextAnim);
+
+				return anim;
+			}
+			else
+			{
+				pxpos_sync((int)-dx);
+				pypos_sync((int)-dy);
+				pypos_sync((int)-align_to_ground);
+			}
+
 		}
 
 		debugTime.elapsed("fall", 4);
@@ -727,6 +815,8 @@ public class Heros extends Entitie{
 				anim= next_anim;
 				deplacement=nextMouv;
 				deplacement.setSpeed(this, anim);
+
+
 
 				//on reinitialise les variables de saut 
 				debutSaut = false;
@@ -808,9 +898,10 @@ public class Heros extends Entitie{
 
 		if(partie.changeMouv && allowed)
 		{
-			if(nouvMouv.IsDeplacement(Mouvement_perso.accroche) && ( (nouvAnim == 1) || (nouvAnim == 3)))
-			{
+			boolean accroche_not_enough_space = false;
 
+			if(nouvMouv.IsDeplacement(Mouvement_perso.accroche) && ( (nouvAnim == 1) || (nouvAnim == 3)))
+			{				
 				//manually align hitbox 
 				int xdir = (nouvAnim == 1) ? -1 :1;
 				int ydir_up = -1; //get upper part of hitbox
@@ -819,21 +910,48 @@ public class Heros extends Entitie{
 				//top of hitbox should now be bottom of next hitbox 
 				//Manually align hitbox 
 
-
-				double ycurrentup = Hitbox.supportPoint(new Vector2d(0,ydir_up), getHitbox(partie.INIT_RECT,deplacement, animHeros).polygon).y;
+				double ycurrentup = Hitbox.supportPoint(new Vector2d(0,ydir_up), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),deplacement, animHeros).polygon).y;
 				//get value to align hitbox 
-				double dx= Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,deplacement, animHeros).polygon).x -
-						Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,nouvMouv, nouvAnim).polygon).x;
+				double next_x = Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nouvMouv, nouvAnim).polygon).x;
+				double dx= Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),deplacement, animHeros).polygon).x -
+						next_x;
 
+				double next_y_bottom = Hitbox.supportPoint(new Vector2d(0,ydir_down), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nouvMouv, nouvAnim).polygon).y;
+				double dy= ycurrentup -next_y_bottom;
 
-				double dy= ycurrentup -
-						Hitbox.supportPoint(new Vector2d(0,ydir_down), getHitbox(partie.INIT_RECT,nouvMouv, nouvAnim).polygon).y;
+				//Variables to test  if the heros would have enough space to stand up
+				Mouvement nextMouv_space = new Attente(this,droite_gauche(nouvAnim).equals(Mouvement.GAUCHE) ?Attente.attente_gauche: Attente.attente_droite,
+						partie.getFrame());
+				int nextAnim_space = (droite_gauche(nouvAnim).equals(Mouvement.GAUCHE) ? 0 : 2 );
+				double x_space= Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouv_space, nextAnim_space).polygon).x;
+				double y_bottom_space= Hitbox.supportPoint(new Vector2d(0,ydir_down), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouv_space, nextAnim_space).polygon).y;
 
+				//Normal match 
 				int xdecall = 12 *  ((nouvAnim==1)? -1:1);
-				pxpos((int) (dx + xdecall));
-				pypos( (int) (dy-1));
+				pxpos_sync((int) (dx + xdecall));
+				pypos_sync( (int) (dy-1));
+
+				//test if the heros would have enough space to stand up
+				double dx_space= next_x -x_space;
+				double dy_space= next_y_bottom -y_bottom_space;
+				//test if heros collide when stand up 
+				pxpos_sync( (int) (dx_space));
+				pypos_sync( (int) (dy_space));
+
+				Hitbox attenteHit = getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouv_space, nextAnim_space).copy();
+				accroche_not_enough_space=Collision.isWorldCollision(partie,attenteHit , true);
+				pxpos_sync( (int) (-dx_space));
+				pypos_sync( (int) (-dy_space));
+				//revert motion if stuck
+				if(accroche_not_enough_space)
+				{
+					pxpos_sync((int) (-dx - xdecall));
+					pypos_sync( (int) (1-dy));
+
+				}
 
 			}
+
 			else{
 				alignHitbox(animHeros,nouvMouv,nouvAnim,partie,deplace,blocGaucheGlisse);
 			}
@@ -845,9 +963,12 @@ public class Heros extends Entitie{
 					runBeforeJump=false;
 			}
 
-			anim=nouvAnim;
-			deplacement=nouvMouv;
-			deplacement.setSpeed(this, anim);
+			if(!accroche_not_enough_space)
+			{
+				anim=nouvAnim;
+				deplacement=nouvMouv;
+				deplacement.setSpeed(this, anim);
+			}
 
 		}
 		else
@@ -868,18 +989,33 @@ public class Heros extends Entitie{
 
 	}
 
+	public void afterChangeMouv(AbstractModelPartie partie)
+	{
+		if(!deplacement.IsDeplacement(Mouvement_perso.accroche)){
+			//unregister accroche from roche_effect
+			for(Collidable eff : partie.arrowsEffects){
+				if(eff instanceof Roche_effect)
+				{
+					Roche_effect r_eff = (Roche_effect) eff;
+					if(r_eff.typeEffect==0)
+						r_eff.unregisterAccrocheCol(this);
+				}
+			}
+			accrocheCol=null;
+		}
+	}
+
 	private boolean[] computeSlide_Accroche(AbstractModelPartie partie,boolean slide, boolean blocDroitGlisse, boolean blocGaucheGlisse, boolean blocDroitAccroche, boolean blocGaucheAccroche, boolean falling)
 	{
 		boolean blocGauche = slide? blocGaucheGlisse : (!blocGaucheGlisse && blocGaucheAccroche);
 		boolean blocDroit = slide? blocDroitGlisse:  (!blocDroitGlisse && blocDroitAccroche);
+		boolean falling_running = ( falling && deplacement.IsDeplacement(Mouvement_perso.course)) || deplacement.IsDeplacement(Mouvement_perso.saut);
 		boolean accrocheCooldownDone = slide? true : (PartieTimer.me.getElapsedNano() - accrocheCooldownTimer) > InterfaceConstantes.ACCROCHE_COOLDOWN;
 		//Special case in which accroche should not happen : if object is dragged or if wind arrow stick to it 
 		boolean no_accroche= slide? false  : (this.isDragged()||this.isWindProjected());
-		boolean res_d = (deplacement.IsDeplacement(Mouvement_perso.saut)||deplacement.IsDeplacement(Mouvement_perso.course)) 
-				&& (blocGauche&&(last_colli_left||getGlobalVit(partie).x<0)) && falling && !no_accroche && accrocheCooldownDone; 
-		boolean res_g = (deplacement.IsDeplacement(Mouvement_perso.saut)||deplacement.IsDeplacement(Mouvement_perso.course)) 
-				&& (blocDroit && (last_colli_right||getGlobalVit(partie).x>0)) && falling && !no_accroche && accrocheCooldownDone; 
-	
+		boolean res_d =  (blocGauche&&(last_colli_left||getGlobalVit(partie).x<0)) && falling_running && !no_accroche && accrocheCooldownDone; 
+		boolean res_g =  (blocDroit && (last_colli_right||getGlobalVit(partie).x>0))&& falling_running  && !no_accroche && accrocheCooldownDone; 
+
 		boolean[] res ={res_d,res_g};
 		//caution for accroche, res_d is actually res_l, and res_l res_d
 		return res;
@@ -969,7 +1105,7 @@ public class Heros extends Entitie{
 	}
 	@Override
 	public void handleStuck(AbstractModelPartie partie) {
-		System.out.println("heros stuck");
+		System.out.println("heros stuck "+ deplacement.getClass().getName()+" "+ anim);
 		if(currentValue!=null)
 			currentValue.res();
 
@@ -993,7 +1129,7 @@ public class Heros extends Entitie{
 	}
 
 	@Override
-	public void resetVarDeplace() {
+	public void resetVarDeplace(boolean speedUpdated) {
 		resetHandleCollision=null;
 	}
 	/**
@@ -1008,49 +1144,49 @@ public class Heros extends Entitie{
 		Fleche fleche = null;
 		String tir_type_ =get_tir_type(special);
 		//Only give the shooter information in the fleche constructor if it is needed 
-		
+
 		//MATERIEL
 		if(tir_type_.equals(TypeObject.FEU))
-			fleche =new Fleche_feu(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_feu(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 		else if(tir_type_.equals(TypeObject.ELECTRIQUE))
-			fleche =new Fleche_electrique(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_electrique(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 		else if(tir_type_.equals(TypeObject.GLACE))
-			fleche =new Fleche_glace(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_glace(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 		else if(tir_type_.equals(TypeObject.ROCHE))
-			fleche =new Fleche_roche(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_roche(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 
 		//SPIRITUELLE
 		else if(tir_type_.equals(TypeObject.LUMIERE))
-			fleche =new Fleche_lumiere(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
+			fleche =new Fleche_lumiere(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type_.equals(TypeObject.GRAPPIN))
 			fleche =new Fleche_grappin(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type_.equals(TypeObject.OMBRE))
 			fleche =new Fleche_ombre(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type_.equals(TypeObject.VENT))
-			fleche =new Fleche_vent(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
+			fleche =new Fleche_vent(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 
 		//DESTRUCTEUR
 		else if(tir_type_.equals(TypeObject.BOGUE))
-			fleche =new Fleche_bogue(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_bogue(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type_.equals(TypeObject.FOUDRE))
-			fleche =new Fleche_foudre(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_foudre(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 		else if(tir_type_.equals(TypeObject.EXPLOSIVE))
-			fleche =new Fleche_explosive(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_explosive(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 		else if(tir_type_.equals(TypeObject.TROU_NOIR))
-			fleche =new Fleche_trou_noir(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_trou_noir(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 
 		//RUSE
 		else if(tir_type_.equals(TypeObject.AUTO_TELEGUIDEE))
-			fleche =new Fleche_auto_teleguidee(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_auto_teleguidee(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 		else if(tir_type_.equals(TypeObject.CAC))
-			fleche =new Fleche_cac(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_cac(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 		else if(tir_type_.equals(TypeObject.RETARD))
-			fleche =new Fleche_retard(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_retard(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 		else if(tir_type_.equals(TypeObject.V_FLECHE))
-			fleche =new Fleche_v_fleche(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_v_fleche(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
 
 		else if(tir_type_.equals(TypeObject.FLECHE))
-			fleche =new Fleche(partie.tabFleche,partie.getFrame(),null,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
+			fleche =new Fleche(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 
 		return fleche;
 	}
@@ -1062,38 +1198,49 @@ public class Heros extends Entitie{
 	{
 		List<Projectile> tabFleche= partie.tabFleche;
 		Fleche f = getArrowInstance(partie,!tir_type.equals(TypeObject.FLECHE),false);
-
+		int arrow_max_instance= f.MAX_NUMBER_INSTANCE;
+		int current_instance = 0;
 		boolean enough_seyeri=seyeriActionPossible(f.seyeri_cost);
 		boolean notParalyzed = conditions.getShotSpeedFactor()>0;
 		if(!enough_seyeri)
 			setNotEnoughSeyeri(-1*f.seyeri_cost);
-		boolean can_shoot_more_than_one = true;
+		boolean can_shoot_one_more = true;
 
+		//for Fleche_roche 
+		Fleche first_fleche = null;
 		//Only create the arrow if none other arrows of this type were shot by shooter 
-		if(f.no_more_than_one){
-			boolean arrow_already_shot = false; // a similar arrow was shot but never destroyed 
+		if(arrow_max_instance>0){
 			for(int i=tabFleche.size()-1; i>=0;--i)
 			{
 				Fleche fl = (Fleche)tabFleche.get(i);
 				//If a similar arrow was shot           && I was the shooter
-				if(TypeObject.isTypeOf(fl, f, true) && fl.shooter==this)
+				// canReshoot is to handle the case of flecheBogue were arrows are instantiated and shot but the heros can create new ones 
+				if(TypeObject.isTypeOf(fl, f, true) && fl.shooter==this && !fl.getCanReshot())
 				{
-					arrow_already_shot=true;
-					if(f.destroy_on_click)
-					{
-						Projectile f_to_destruct = tabFleche.get(i);
-						if(!f_to_destruct.getNeedDestroy() && (f_to_destruct.tempsDetruit==0))
-							f_to_destruct.destroy(partie,true);
+					//In case of Fleche roche: do not count it if the effect is in destroy animation 
+					boolean shouldCountArrow = f.shouldCountArrow(fl);
+					if(shouldCountArrow)
+						first_fleche= fl;
+					
+					if(shouldCountArrow){
+						current_instance+=1;
+						if(current_instance>=arrow_max_instance)
+						{
+							can_shoot_one_more=fl.OnArrowReshot(partie,first_fleche);
+							break;
+						}
 					}
-					break;
 				}
+				//TODO: check if this is safe to remove this 
+				/*else if(!fl.getCanReshot()) 
+				{
+					arrow_already_shot=false; // allow reshoot
+				}*/
 			}
-
-			can_shoot_more_than_one=!arrow_already_shot;
 		}
 
 
-		return (enough_seyeri && notParalyzed && can_shoot_more_than_one);
+		return (enough_seyeri && notParalyzed && can_shoot_one_more);
 	}
 
 	public void shootArrow(AbstractModelPartie partie)

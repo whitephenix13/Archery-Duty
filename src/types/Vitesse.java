@@ -8,15 +8,12 @@ import collision.GJK_EPA;
 import principal.InterfaceConstantes;
 
 @SuppressWarnings("serial")
-public class Vitesse implements Serializable{
+public class Vitesse  implements Serializable{
 	public double x=0;
 	public double y=0;
 	public Vitesse() {};
 	public Vitesse(double xx, double yy){x=xx; y=yy;}
-	public Vector2d vect2d()
-	{
-		return new Vector2d(x,y);
-	}
+
 	public Vitesse add(Vitesse vit2)
 	{
 		return new Vitesse(x+vit2.x,y+vit2.y);
@@ -25,9 +22,9 @@ public class Vitesse implements Serializable{
 	{
 		return new Vitesse(x*val,y*val);
 	}
-	public Vitesse negate()
+	public Vector2d vect2d()
 	{
-		return new Vitesse(-x,-y);
+		return new Vector2d(x,y);
 	}
 	public double norm2()
 	{
@@ -36,6 +33,13 @@ public class Vitesse implements Serializable{
 	public double norm()
 	{
 		return(Math.sqrt(norm2()));
+	}
+	public void negate()
+	{
+		Vector2d negated = vect2d();
+		negated.negate();
+		x=negated.x;
+		y=negated.y;
 	}
 	public Vitesse Copy()
 	{

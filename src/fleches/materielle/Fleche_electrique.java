@@ -5,11 +5,14 @@ import java.util.List;
 import javax.vecmath.Vector2d;
 
 import collision.Collidable;
+import effects.Effect;
 import effects.Electrique_effect;
+import effects.Roche_effect;
 import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import personnage.Heros;
 import types.Entitie;
+import types.Hitbox;
 import types.Projectile;
 
 public class Fleche_electrique extends Materielle {
@@ -20,8 +23,10 @@ public class Fleche_electrique extends Materielle {
 		damage=0*damageMult;//TODO:
 	}
 	@Override
-	protected void onPlanted(List<Entitie> objects, AbstractModelPartie partie,boolean stuck)
+	protected void onPlanted(List<Entitie> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
 	{
+		if(this.afterDecochee && stuck)
+			ejectArrow(partie,unprojectedSpeed);
 		if(stuck){
 			destroy(partie,false);
 			return;
@@ -35,20 +40,31 @@ public class Fleche_electrique extends Materielle {
 			{
 				obj.currentEffects.add(this.flecheEffect);
 			}
+			if(collidedObject instanceof Roche_effect)
+			{
+				Roche_effect eff = (Roche_effect) collidedObject;
+				if(eff.isWorldCollider){
+					eff.addSynchroSpeed(this);
+					eff.addSynchroSpeed(flecheEffect);
+				}
+			}
 			this.doitDeplace=false;
 			this.setCollideWithNone();
 		}
 	}
-	
+
 	@Override
-	protected boolean OnObjectsCollision(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d normal)
+	protected boolean OnObjectsCollision(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
 	{
+		if(this.afterDecochee && (collider instanceof Effect))
+			if(((Effect)collider).isWorldCollider)
+				ejectArrow(partie,unprojectedSpeed);
 		if(!generatedEffect){
 			generatedEffect=true;
 
 			flecheEffect=new Electrique_effect(partie,this,0,partie.getFrame(),normal,1);
 			MusicBruitage.startBruitage("arc");
-			
+
 		}
 		return true;
 	}

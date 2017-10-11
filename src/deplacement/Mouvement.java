@@ -27,6 +27,10 @@ public abstract class Mouvement{
 	public int type_mouv;
 	
 	public abstract Mouvement Copy(Object obj);
+	/**
+	 * @return the maximum length or height that the hitbox can reached for this motion(often =max(xtaille,ytaille). This value will be multiplied by sqrt(2) to handle diagonals of squares
+	 * */
+	public abstract int getMaxBoundingSquare(Object obj);
 	public abstract boolean IsDeplacement(Mouvement m);
 	public abstract boolean IsDeplacement(String s);
 	public abstract void setSpeed(Collidable object, int anim);

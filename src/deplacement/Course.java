@@ -12,7 +12,7 @@ import types.Hitbox;
 import types.TypeObject;
 
 public class Course extends Mouvement_perso{
-	
+
 	public static int course_gauche = 0;
 	public static int course_droite = 1;
 
@@ -52,10 +52,17 @@ public class Course extends Mouvement_perso{
 		this(obj,_type_mouv,current_frame);
 		animation = _animation;
 	}
+
+	@Override
+	public int getMaxBoundingSquare(Object obj)
+	{
+		return 100;
+	}
+
 	public Mouvement Copy(Object obj) {
 		return new Course(obj,type_mouv,animation.getStartFrame(),animation);
 	}
-	
+
 	@Override
 	public void setSpeed(Collidable object, int anim) {
 		if(TypeObject.isTypeOf(object, TypeObject.HEROS))

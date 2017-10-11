@@ -6,6 +6,8 @@ import javax.vecmath.Vector2d;
 
 import collision.Collidable;
 import collision.Collision;
+import effects.Effect;
+import effects.Roche_effect;
 import effects.Vent_effect;
 import music.MusicBruitage;
 import partie.AbstractModelPartie;
@@ -24,8 +26,10 @@ public class Fleche_vent extends Spirituelle{
 		damage=0*damageMult;
 	}
 	@Override
-	protected void onPlanted(List<Entitie> objects, AbstractModelPartie partie,boolean stuck)
+	protected void onPlanted(List<Entitie> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
 	{
+		if(this.afterDecochee&& stuck)
+			ejectArrow(partie,unprojectedSpeed);
 		if(stuck)
 		{
 			this.destroy(partie,false);
@@ -45,20 +49,36 @@ public class Fleche_vent extends Spirituelle{
 			obj.registerEffect(flecheEffect);
 			obj.localVit= new Vitesse(0,0);
 		}
+
+		boolean stickToHeros =false;
 		//If the arrow is planted on the ground and collide with the heros hitbox, attach it to the heros
 		if(Collision.testcollisionObjects(partie, this, partie.heros,true)){
 			partie.heros.addSynchroSpeed(this);
+			partie.heros.addSynchroSpeed(flecheEffect);
 			Vent_effect eff = (Vent_effect) flecheEffect;
 			eff.stickedCollidable=this.shooter;
+			stickToHeros=true;
+		}
+		if(!stickToHeros && (collidedObject instanceof Roche_effect))
+		{
+			Roche_effect eff = (Roche_effect) collidedObject;
+			if(eff.isWorldCollider){
+				eff.addSynchroSpeed(this);
+				eff.addSynchroSpeed(flecheEffect);
+			}
 		}
 		this.doitDeplace=false;
 		this.setCollideWithNone();
 		arrowExploded=true;
 	}
-	
+
 	@Override
-	protected boolean OnObjectsCollision(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d normal)
+	protected boolean OnObjectsCollision(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
 	{
+		if(this.afterDecochee && (collider instanceof Effect))
+			if(((Effect)collider).isWorldCollider)
+				ejectArrow(partie,unprojectedSpeed);
+
 		if(arrowExploded)
 			return false;
 

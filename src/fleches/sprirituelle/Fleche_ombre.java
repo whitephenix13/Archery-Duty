@@ -9,7 +9,9 @@ import collision.Collidable;
 import collision.Collision;
 import collision.GJK_EPA;
 import deplacement.Deplace;
+import effects.Effect;
 import effects.Ombre_effect;
+import effects.Roche_effect;
 import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import personnage.Heros;
@@ -29,12 +31,7 @@ public class Fleche_ombre extends Spirituelle {
 	void teleportSwitch(Collidable object1,Collidable object2,AbstractModelPartie partie,Vector2d normal)
 	{
 		//Get hitbox from object 1
-		Hitbox object1Hitbox = object1.getHitbox(partie.INIT_RECT);
-		int xCompScreenMove=0; 
-		int yCompScreenMove=0;
-		if(object1.fixedWhenScreenMoves){xCompScreenMove=partie.xScreendisp;yCompScreenMove=partie.yScreendisp;}
-		Point p = new Point(xCompScreenMove,yCompScreenMove);
-		object1Hitbox= Hitbox.minusPoint(object1Hitbox,p,false);
+		Hitbox object1Hitbox = object1.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
 
 		//Get points to match 
 		Vector2d v1 = Hitbox.supportPoint(new Vector2d(1,1), object1Hitbox.polygon);
@@ -49,12 +46,7 @@ public class Fleche_ombre extends Spirituelle {
 		double y2 = v1.y;
 
 		//Get hitbox from object 2
-		Hitbox object2Hitbox = object2.getHitbox(partie.INIT_RECT);
-		xCompScreenMove=0; 
-		yCompScreenMove=0;
-		if(object2.fixedWhenScreenMoves){xCompScreenMove=partie.xScreendisp;yCompScreenMove=partie.yScreendisp;}
-		p = new Point(xCompScreenMove,yCompScreenMove);
-		object2Hitbox= Hitbox.minusPoint(object2Hitbox,p,false);
+		Hitbox object2Hitbox = object2.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
 
 		//Get points to match 
 		Vector2d v1_2 = Hitbox.supportPoint(new Vector2d(1,1), object2Hitbox.polygon);
@@ -76,26 +68,26 @@ public class Fleche_ombre extends Spirituelle {
 		{
 			if(!object1TP){
 				//teleport the object
-				object1.pxpos((int) allDeltaPos[i].x);
-				object1.pypos((int) allDeltaPos[i].y);
+				object1.pxpos_sync((int) allDeltaPos[i].x);
+				object1.pypos_sync((int) allDeltaPos[i].y);
 				//test stuck
 				if(Collision.isWorldCollision(partie, object1, true)){
 					//revert position
-					object1.pxpos((int) -allDeltaPos[i].x);
-					object1.pypos((int) -allDeltaPos[i].y);
+					object1.pxpos_sync((int) -allDeltaPos[i].x);
+					object1.pypos_sync((int) -allDeltaPos[i].y);
 				}
 				else
 					object1TP=true;
 			}
 			if(!object2TP){
 				//teleport the object
-				object2.pxpos((int) -allDeltaPos[i].x);
-				object2.pypos((int) -allDeltaPos[i].y);
+				object2.pxpos_sync((int) -allDeltaPos[i].x);
+				object2.pypos_sync((int) -allDeltaPos[i].y);
 				//test stuck
 				if(Collision.isWorldCollision(partie, object2, true)){
 					//revert position
-					object2.pxpos((int) allDeltaPos[i].x);
-					object2.pypos((int) allDeltaPos[i].y);
+					object2.pxpos_sync((int) allDeltaPos[i].x);
+					object2.pypos_sync((int) allDeltaPos[i].y);
 				}
 				else
 					object2TP=true;
@@ -115,11 +107,11 @@ public class Fleche_ombre extends Spirituelle {
 			Deplace.deplaceEcran(delta,partie,object2);
 		}
 	}
-	
+
 	void teleportToArrow(Collidable object,AbstractModelPartie partie,Vector2d normal)
 	{
 		//get the teleportation point 
-		Hitbox fHitbox = getHitbox(partie.INIT_RECT);
+		Hitbox fHitbox = getHitbox(partie.INIT_RECT,partie.getScreenDisp());
 
 		Vector2d v1 = Hitbox.supportPoint(Deplace.angleToVector(rotation-Math.PI/10), fHitbox.polygon); //top right of unrotated hitbox (with tip pointing right)
 		Vector2d v2 = Hitbox.supportPoint(Deplace.angleToVector(rotation+Math.PI/10), fHitbox.polygon); //bottom right of unrotated hitbox (with tip pointing right)
@@ -131,11 +123,7 @@ public class Fleche_ombre extends Spirituelle {
 		Vector2d dir1 = GJK_EPA.projectVectorTo90(normal,true,0.01);
 		Vector2d dir2 = GJK_EPA.projectVectorTo90(normal,true,-0.01);
 
-		int xCompScreenMove=0; 
-		int yCompScreenMove=0;
-		if(object.fixedWhenScreenMoves){xCompScreenMove=partie.xScreendisp;yCompScreenMove=partie.yScreendisp;}
-		Point p = new Point(xCompScreenMove,yCompScreenMove);
-		Hitbox objectHitbox= Hitbox.minusPoint(object.getHitbox(partie.INIT_RECT),p,false);
+		Hitbox objectHitbox= object.getHitbox(partie.INIT_RECT, partie.getScreenDisp());
 
 		/**Condider 3 reference points for the object: imagine the case where the arrow is shot in the ground. The three possible reference are : 
 		 * bottom middle, bottom left and bottom right */
@@ -154,13 +142,13 @@ public class Fleche_ombre extends Spirituelle {
 		for(i=0; i< 3; ++i)
 		{
 			//teleport the object
-			object.pxpos((int) allDeltaPos[i].x);
-			object.pypos((int) allDeltaPos[i].y);
+			object.pxpos_sync((int) allDeltaPos[i].x);
+			object.pypos_sync((int) allDeltaPos[i].y);
 			//test stuck
 			if(Collision.isWorldCollision(partie, object, true)){
 				//revert position
-				object.pxpos((int) -allDeltaPos[i].x);
-				object.pypos((int) -allDeltaPos[i].y);
+				object.pxpos_sync((int) -allDeltaPos[i].x);
+				object.pypos_sync((int) -allDeltaPos[i].y);
 			}
 			//teleportation succeed : move screen if needed and exit loop
 			else
@@ -175,7 +163,7 @@ public class Fleche_ombre extends Spirituelle {
 			}
 		}
 	}
-	void applyArrowEffect(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d collisionNormal)
+	void applyArrowEffect(List<Entitie> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d collisionNormal)
 	{
 		if(generatedEffect)
 			return;
@@ -185,29 +173,44 @@ public class Fleche_ombre extends Spirituelle {
 		flecheEffect=new Ombre_effect(partie,this,0,partie.getFrame(),collisionNormal);
 		MusicBruitage.startBruitage("arc");
 
-		if(collider == null)
+		if(collidedObject == null|| !(collidedObject instanceof Entitie))
 			teleportToArrow(shooter,partie,collisionNormal);
 		else
-			teleportSwitch(shooter,collider,partie,collisionNormal);
+			teleportSwitch(shooter,collidedObject,partie,collisionNormal);
 		for(Entitie obj : objects)
 		{
 			obj.currentEffects.add(flecheEffect);
+		}
+
+		if(collidedObject instanceof Roche_effect)
+		{
+			Roche_effect eff = (Roche_effect) collidedObject;
+			if(eff.isWorldCollider){
+				eff.addSynchroSpeed(this);
+				eff.addSynchroSpeed(flecheEffect);
+			}
 		}
 
 		this.doitDeplace=false;
 		this.setCollideWithNone();
 	}
 	@Override
-	protected void onPlanted(List<Entitie> objects, AbstractModelPartie partie,boolean stuck)
+	protected void onPlanted(List<Entitie> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
 	{
+		if(this.afterDecochee && stuck)
+			ejectArrow(partie,unprojectedSpeed);
 		if(stuck)
 			destroy(partie,false);
 		else
-			applyArrowEffect(objects,partie,null,this.normCollision);
+			applyArrowEffect(objects,partie,collidedObject,this.normCollision);
 	}
 	@Override
-	protected boolean OnObjectsCollision(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d normal)
+	protected boolean OnObjectsCollision(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
 	{
+		if(this.afterDecochee && (collider instanceof Effect))
+			if(((Effect)collider).isWorldCollider)
+				ejectArrow(partie,unprojectedSpeed);
+
 		if(collider instanceof Entitie)
 			applyArrowEffect(objects,partie,collider,normal);
 		else{

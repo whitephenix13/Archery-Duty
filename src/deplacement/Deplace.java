@@ -8,6 +8,7 @@ import collision.Collidable;
 import collision.Collision;
 import debug.Debug_time;
 import effects.Effect;
+import fleches.materielle.Fleche_roche;
 import partie.AbstractModelPartie;
 import personnage.Heros;
 import principal.InterfaceConstantes;
@@ -23,6 +24,7 @@ public class Deplace implements InterfaceConstantes{
 
 	public void DeplaceObject(Collidable object, Mouvement nouvMouv, AbstractModelPartie partie)
 	{
+
 		Debug_time debugTime = new Debug_time();
 		debugTime.init();
 		boolean isHeros = object instanceof Heros;
@@ -48,7 +50,6 @@ public class Deplace implements InterfaceConstantes{
 		
 		debugTime.elapsed("gravity and friction", 3);
 
-		
 		if(useGravity)
 			gravite.gravite(object);
 
@@ -68,16 +69,32 @@ public class Deplace implements InterfaceConstantes{
 		{
 			boolean checkColli = object.checkCollideWithWorld();
 			boolean stuck = false;
-			if(checkColli)
-				stuck = !Collision.ejectWorldCollision(partie, object);;
+			if(checkColli){
+				stuck = !Collision.ejectWorldCollision(partie, object);
+			}
 			if(stuck)
 			{
 				object.handleStuck(partie);
 			}
 			else
 				object.handleDeplacementSuccess(partie);
+			
+			
 		}
-		object.resetVarDeplace();
+		else //update with no speed, ie just check if collide with world
+		{
+			boolean checkColli = object.checkCollideWithWorld();
+			boolean stuck = false;
+			if(checkColli){
+				stuck = Collision.isWorldCollision(partie, object, true);
+			}
+			if(stuck)
+			{
+				object.handleStuck(partie);
+			}
+		}
+			
+		object.resetVarDeplace(update_with_speed);
 		
 		debugTime.elapsed("deplace ecran", 3);
 
@@ -98,7 +115,8 @@ public class Deplace implements InterfaceConstantes{
 			//Apply conditions damage 
 			enti.addLife(enti.conditions.conditionDamageReceived());
 		}
-
+		
+	
 	}
 
 
@@ -118,10 +136,11 @@ public class Deplace implements InterfaceConstantes{
 		int largeur_fenetre=0;
 		int hauteur_fenetre=0;
 
-		int left_xpos_hit = (int) Hitbox.supportPoint(new Vector2d(-1,0), object.getHitbox(partie.INIT_RECT).polygon).x;
-		int right_xpos_hit = (int) Hitbox.supportPoint(new Vector2d(1,0), object.getHitbox(partie.INIT_RECT).polygon).x;
-		int up_ypos_hit = (int) Hitbox.supportPoint(new Vector2d(0,-1), object.getHitbox(partie.INIT_RECT).polygon).y;
-		int down_ypos_hit = (int) Hitbox.supportPoint(new Vector2d(0,1), object.getHitbox(partie.INIT_RECT).polygon).y;
+		//Add partie.getScreenDisp() to get the relative position with respect to the screen 
+		int left_xpos_hit = (int) Hitbox.supportPoint(new Vector2d(-1,0), object.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon).x+partie.xScreendisp;
+		int right_xpos_hit = (int) Hitbox.supportPoint(new Vector2d(1,0), object.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon).x+partie.xScreendisp;
+		int up_ypos_hit = (int) Hitbox.supportPoint(new Vector2d(0,-1), object.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon).y+partie.yScreendisp;
+		int down_ypos_hit = (int) Hitbox.supportPoint(new Vector2d(0,1), object.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon).y+partie.yScreendisp;
 		int xpos_hit=0;
 		int ypos_hit=0;
 		//les conditions limites sont aux 3/7
@@ -160,10 +179,10 @@ public class Deplace implements InterfaceConstantes{
 	public static void deplaceEcran(Point delta,  AbstractModelPartie partie, Collidable object)
 	{
 		partie.xScreendisp+= delta.x;
-		object.pxpos(delta.x,object.fixedWhenScreenMoves); 
+		object.pxpos_sync(delta.x,object.fixedWhenScreenMoves); 
 
 		partie.yScreendisp+=  delta.y;
-		object.pypos(delta.y,object.fixedWhenScreenMoves); 
+		object.pypos_sync(delta.y,object.fixedWhenScreenMoves); 
 		
 	}
 	/**
@@ -187,12 +206,13 @@ public class Deplace implements InterfaceConstantes{
 		double[] XY = angleToXY(angle);
 		return new Vector2d(XY[0],XY[1]);
 	}
-	public static double[] angleToXY(double angle)
+	public static double[] angleToXY(double _angle)
 	{
+		double angle=(_angle+2*Math.PI)%(2*Math.PI);
 		double[] XY = new double[2];
-		double tol = Math.PI/10;
+		double tol = 0.5 * Math.PI/180 ;
 		boolean close_270 = Math.abs(angle-3*Math.PI/2)<tol;
-		boolean close_90 = Math.abs(angle-Math.PI/2)<tol;
+		boolean close_90 = Math.abs(angle-Math.PI/2)<tol ;
 		boolean direction_up = !(angle>=Math.PI && angle <= 2* Math.PI)  ;
 		boolean direction_left = (angle>=Math.PI/2 && angle <= 1.5 * Math.PI);
 
@@ -223,14 +243,14 @@ public class Deplace implements InterfaceConstantes{
 		 * 
 		 * 
 		 * */
-		double tolerance = 0;
+		double tolerance =0;
 		Heros heros = partie.heros;
 		boolean isFiring = heros.deplacement.IsDeplacement(Mouvement_perso.tir);
 		double xcenter= heros.xpos()+ (isFiring? heros.deplacement.x_center_tir.get(heros.anim) : 
 			(heros.deplacement.xtaille.get(heros.anim)/2));
 
 		double ycenter= heros.ypos()+(isFiring? heros.deplacement.y_center_tir.get(heros.anim):
-			(heros.deplacement.ytaille.get(heros.anim)/4));//arms at neck level
+			(heros.deplacement.ytaille.get(heros.anim)/4))-6;//arms at neck level
 
 		double xPosRelative= partie.getXPositionSouris()-xcenter; 
 		double yPosRelative= partie.getYPositionSouris()-ycenter;

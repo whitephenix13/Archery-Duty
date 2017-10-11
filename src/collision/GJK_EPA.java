@@ -1,5 +1,6 @@
 package collision;
 
+import java.awt.Point;
 import java.awt.Polygon;
 import java.util.ArrayList;
 import java.util.List;
@@ -172,7 +173,6 @@ public abstract class GJK_EPA {
 				index = i;
 			}
 		}
-
 		return new Vector2d( polygon.xpoints[ index ], polygon.ypoints[ index ] );
 	}
 
@@ -309,11 +309,14 @@ public abstract class GJK_EPA {
 		public Vector2d normal; //normal of the simplex edge containing the intersect point
 
 		public int index; //index of where to add the point in the simplex list
-		public IntersectPoint(double d,double nd, Vector2d n)
+		
+		public Vector2d intersect = null;
+		public IntersectPoint(double d,double nd, Vector2d n, Vector2d _inter)
 		{
 			distance=d; 
 			distanceNormal= nd;
 			normal=n;
+			intersect=_inter;
 		}
 
 	}
@@ -321,35 +324,33 @@ public abstract class GJK_EPA {
 	/**Expansion algorithm which iteratively adds a point in order to expand the simplex. Stop when the distance to the closest edge is close to the one of the point added */
 	public static double EPA(Polygon shapeA, Polygon shapeB, List<Vector2d> simplex, Vector2d dir, List<Vector2d> outNormal)
 	{
-		
-
 		while(true)
 		{
+			
 			double distance = FLOAT_MAX;
 
 			IntersectPoint edgeInDirection = getEdgeInDirection(simplex, dir,shapeA, shapeB);
-
 			if(edgeInDirection==null)
 				return 0;
 
+			
 			final Vector2d edgeNormal = edgeInDirection.normal;
 			//get support point in direction of edge's normal
 			final Vector2d sup = support( shapeA,edgeNormal  );
 			sup.sub( support( shapeB, new Vector2d( -edgeNormal.x, -edgeNormal.y ) ) ); 
-			//get support point in direction of edge's normal
+		
+			distance = edgeInDirection.distanceNormal;
 			double d = sup.dot(edgeNormal);
-
+			
+			
 			if( (d - distance) <= TOLERANCE)
 			{
-	
-
 				edgeInDirection.normal= correctNormal(edgeInDirection.normal);
-				
 				outNormal.add(edgeInDirection.normal);
 				return edgeInDirection.distance;
 			}
 			else{
-				
+
 				simplex.add(edgeInDirection.index,sup);
 			}
 
@@ -382,9 +383,16 @@ public abstract class GJK_EPA {
 			v.x=0;
 		if(Math.abs(v.y)==0)
 			v.y=0;
-		
+
 		return v;
 	}
+	/**
+	 * Check if point is between min(p1,p2) and max(p1,p2)
+	 * @param p1
+	 * @param p2
+	 * @param point
+	 * @return
+	 */
 	public static boolean containValue(double p1, double p2,double point)
 	{
 		if( ( (Math.min(p1, p2)-TOLERANCE)<= point) && ( (Math.max(p1, p2)+TOLERANCE)>= point) )
@@ -392,7 +400,17 @@ public abstract class GJK_EPA {
 		else
 			return false;
 	}
-
+	/**
+	 * Test if ptest.x is between min(p1.x,p2.x) and max(p1.x,p2.x) and same for ptest.y
+	 * @param px
+	 * @param py
+	 * @param ptest
+	 * @return
+	 */
+	public static boolean containValue(Vector2d p1, Vector2d p2,Vector2d ptest)
+	{
+		return (containValue(p1.x,p2.x,ptest.x) && containValue(p1.y,p2.y,ptest.y));
+	}
 	public static Vector2d supportPoint(Vector2d dir, List<Vector2d> l)
 	{
 		Vector2d res= l.get(0);
@@ -423,10 +441,36 @@ public abstract class GJK_EPA {
 				j = 0;
 			else
 				j = i+1;
-			intersectTest = projection(simplex.get(i),simplex.get(j),dir);
+			Vector2d origin = new Vector2d(0,0);
+			intersectTest = getProjectionDistance(simplex.get(i),simplex.get(j),dir,origin);
 			//System.out.println("Projection: " +simplex.get(i) +" "+simplex.get(j)+ " "+dir);
 			if(intersectTest!=null)
 			{
+				//check if the next one can't be better ie normal distance shorter
+				if((i+1)<simplex.size())
+				{
+					int i2 = i+1;
+					int j2 = (i2+1 == simplex.size())? 0 : i2+1;
+					IntersectPoint intersectTest2 = getProjectionDistance(simplex.get(i2),simplex.get(j2),dir,origin);
+					if(intersectTest2!=null && (intersectTest2.distanceNormal<intersectTest.distanceNormal)){
+						intersectTest=intersectTest2;
+						i=i2;
+						j=j2;
+					}
+				}
+				//in the case where i=0 also check the last one 
+				if(i==0 && ((i+1)< simplex.size()))
+				{
+					int i2 = simplex.size()-1;
+					int j2 = 0;
+					IntersectPoint intersectTest2 = getProjectionDistance(simplex.get(i2),simplex.get(j2),dir,origin);
+					if(intersectTest2!=null && (intersectTest2.distanceNormal<intersectTest.distanceNormal)){
+						intersectTest=intersectTest2;
+						i=i2;
+						j=j2;
+					}
+				}
+				
 				//System.out.println(intersectTest.normal);
 				intersectTest.index=j;
 				if(intersectTest.normal==null)
@@ -460,52 +504,61 @@ public abstract class GJK_EPA {
 				}
 				//if(intersectTest.distanceNormal>TOLERANCE )){
 				return intersectTest;
-				
+
 				//else
-					//memIntersectTest=intersectTest; //continue to look for a better point if exists 
+				//memIntersectTest=intersectTest; //continue to look for a better point if exists 
 
 			}
 		}
-		
+
 		return memIntersectTest;
 	}
 
 
-	//calculate the projection of the origin in the direction dir on the segment [p1,p2]
-	
-	public static IntersectPoint projection(Vector2d p1, Vector2d p2, Vector2d dir)
+	/**calculate the projection of the point A in the direction dir on the segment [p1,p2]
+	 * allDirection: if true check intersection in dir AND -dir */
+	public static Vector2d projection(Vector2d p1, Vector2d p2, Vector2d dir, Vector2d A,boolean allDirection)
 	{
-		//(1)y=ax+b avec pt intercection P={X,Y} et X[min(p1.x,p2.x),max(p1.x,p2.x)], Y[min(p1.y,p2.y),max(p1.y,p2.y)]
-		//(2)D : y= dir.y/dir.x * x
+		//(1)y=a1x+b1 avec pt intercection P={X,Y} et X[min(p1.x,p2.x),max(p1.x,p2.x)], Y[min(p1.y,p2.y),max(p1.y,p2.y)]
+		//(2)D : y= a2 * x + b2 with a2 = dir.y/dir.x and b2 = (A.y - a2 * A.x)  
 
-		//X=b/(dir.y/dir.x-a) exist if a!=+inf, dir.x !=0 , dir.y/dir.x != a
+		//a2 = dir.y/dir.x and b2 = (A.y - a2 * A.x)  
+
+		//By subsitution of y from 2 to 1 a2 x + b2 = a1 x + b1 : x = (b1-b2)/(a2-a1) exist if a1 != inf, dir.x !=0 , dir.y/dir.x != a1
 		//Y=aX+b
-
 		Vector2d intersectP=null;
+		//Check if the input are relevants: direction non zero and two distinct points for the segment 
 		if( (dir.x==0 && dir.y==0) || (p1.x==p2.x && p1.y==p2.y))
 			return null;
-		if(p1.x==p2.x && dir.x==0)//a is infinite : (1)x=p1.x, (2): x=0: point d'intersection= origine (0,0)
+
+		if(p1.x==p2.x && dir.x==0)//the segment and direction are vertical lines : a1 is infinite : (1)x=constante=p1.x, (2): x=p1.x=p2.x=A.x
 		{
-			if(p1.x!=0)
+			if(p1.x!=A.x)
 				return null;
 			else
 			{
-				if(dir.dot(p1)>=0)
-					intersectP=p1;
-				else
+				Vector2d p1_p2 = new Vector2d(p2.x-p1.x,p2.y-p1.y);
+				if(dir.dot(p1_p2)>=0) //dir is in the same direction the the vector starting in p1 and ending in p2
 					intersectP=p2;
+				else
+					intersectP=p1;
 			}
 
 
 
 		}
-		else if(p1.x==p2.x)//a is infinite : (1)x=p1.x, (2) y= dir.y/dir.x * x
+		else if(p1.x==p2.x)//a is infinite : (1)x=p1.x, (2) y= a2 * x + b2
 		{
-			double Y= dir.y/dir.x * p1.x;
+			double a2 = dir.y/dir.x; 
+			double Y= a2 * p1.x + (A.y - a2 * A.x);
 			intersectP= new Vector2d(p1.x,Y);
 
-			if(!containValue(p1.y,p2.y, Y) || (intersectP.dot(dir)<0) )
+			//check if point is in the segment and that the projection was done with respect to the correct direction
+			Vector2d projVect = new Vector2d(intersectP.x-A.x,intersectP.y-A.y);
+
+			if(!containValue(p1.y,p2.y, Y) || (!allDirection && projVect.dot(dir)<0) )
 				return null;
+			
 
 		}
 		else if(dir.x==0)// (1) y=ax+b, (2)x=dir.x
@@ -515,59 +568,88 @@ public abstract class GJK_EPA {
 			double Y= b; //a*dir.x = 0
 			intersectP=new Vector2d(dir.x,Y);
 
-			if( intersectP.dot(dir)<0)// check if the point is in the opposite direction
+			if(!containValue(p1.x,p2.x, dir.x) || !containValue(p1.y,p2.y, Y) || (!allDirection && intersectP.dot(dir)<0))// check if the point is in the opposite direction
 				return null;
 
 		}
 		else 
 		{
-			double a= (p2.y-p1.y)/(p2.x-p1.x);
-			double b = p1.y-a*p1.x;
-			double dirSlope =dir.y/dir.x; 
-			if( Math.abs(dirSlope)== Math.abs(a))//(1) y=ax+b, (2) y=ax
+			//(1) y=a1x+b1, (2) y=a2x+b2
+			//a2 = dir.y/dir.x and b2 = (A.y - a2 * A.x)  
+
+			double a1= (p2.y-p1.y)/(p2.x-p1.x);
+			double b1 = p1.y-a1*p1.x;
+			double a2 =dir.y/dir.x; 
+			double b2 = A.y - a2 * A.x;
+			if(a1== a2)//(1) y=a1x+b1, (2) y=a2x+b2
 			{
-				if(b!=0)
+				if(b1!=b2)
 					return null;
 				else 
 				{
-					if(dir.dot(p1)>=0)
-						intersectP=p1;
-					else
+					Vector2d p1_p2 = new Vector2d(p2.x-p1.x,p2.y-p1.y);
+					if(dir.dot(p1_p2)>=0) //dir is in the same direction the the vector starting in p1 and ending in p2
 						intersectP=p2;
+					else
+						intersectP=p1;
 				}
 			}
+			//X = (b1-b2)/(a2-a1)
+			//Y= a2 * X + b2
 			else //(1) y=ax+b, (2) y= dir.y/dir.x* x
 			{
-				double X=b/(dirSlope-a);
-				double Y=dirSlope*X;
+				double X=(b1-b2)/(a2-a1);
+				double Y=0;
+				if(a2>Math.pow(10, 12))//a2 is close to infinite, compte Y with 1
+					Y=a1*X+ b1;
+				else
+					Y=a2*X+ b2;
+				
 				intersectP=new Vector2d(X,Y);
-				if ( (!containValue(p1.x,p2.x, X)) || (!containValue(p1.y,p2.y, Y)) || (intersectP.dot(dir)<0) )
+				//compute the vector [A,intersectP]
+				Vector2d projVect = new Vector2d(intersectP.x-A.x,intersectP.y-A.y);
+
+				if ( (!containValue(p1.x,p2.x, X)) || (!containValue(p1.y,p2.y, Y)) || (!allDirection && projVect.dot(dir)<0) )
 					return null;
 			}
 		}
-		assert (intersectP!=null);
+		return intersectP;
+	}
+
+	//Calculate the distance from A to segment, the normal to the segment, (or return null) and store those information in IntresectPoint
+	public static IntersectPoint getProjectionDistance(Vector2d p1, Vector2d p2, Vector2d dir, Vector2d A)
+	{
+		Vector2d projectedP=projection(p1,p2,dir,A,false);
+		if(projectedP==null)
+			return null;
+		//Compute the normal to the segment 
+
 		//normal to segment [p2.x-p1.x,p2.y-p1.y] is [-1,1].[p2.y-p1.y,p2.x-p1.x](left 90°) or [1,-1].[p2.y-p1.y,p2.x-p1.x](right 90°)
 		//plus we want the normal n to verify: n . intersectP >0
 		Vector2d n = new Vector2d(p1.y-p2.y,p2.x-p1.x); // *[-1,1]
 		n.normalize();
+
 		Vector2d v = new Vector2d(dir.x,dir.y);
 		v.normalize();
 
-		if(n.dot(intersectP)<0)
+		Vector2d projVect = new Vector2d(projectedP.x-A.x,projectedP.y-A.y);
+		if(n.dot(projVect)<0) //compute the normal such that the A point is considered to be INSIDE
 			n=new Vector2d(-n.x, -n.y);
-		else if (n.dot(intersectP)==0)
-			if(n.dot(dir)<0)
+		else if (n.dot(projVect)==0) // if the direction and the segment where parallel
+			if(n.dot(dir)<0) //check the normal direction using the original dir 
 				n=new Vector2d(-n.x, -n.y);
 			else if(n.dot(dir)==0)
 			{
 				//special case, handled in getEdgeInDirection
-				return new IntersectPoint(intersectP.dot(v),0,null);
+				return new IntersectPoint(projectedP.dot(v),0,null,projectedP);
 			}
-		double distance = intersectP.dot(v);
-		double distanceNormal= intersectP.dot(n);
+		double distance = projVect.dot(v);
+		double distanceNormal= projVect.dot(n);
 		//double distance = intersectP.length();
-		return new IntersectPoint(distance,distanceNormal,n);
+		return new IntersectPoint(distance,distanceNormal,n,projectedP);
 	}
+
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }

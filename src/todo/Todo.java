@@ -3,23 +3,31 @@ package todo;
 public class Todo {
 	
 	//Version 0.2.2
+			
+	//TODO: remove debug from computeCollisionPoint in collision
+	//TODO: use collision point for ALL effects 
+	//TODO: correct effect display priority ? 
 	
-
-	//TODO: transfert music from phone to computer 
-	//TODO: fleche bogue 
+	//TODO: check how addition of same condition works (it should reset the timer)
 	
+	//TODO: clean collision
+	//TODO: make some effect perpendicualr to ground ? (trou noir, vent)
+	
+	//TODO: fleche vent: align effect with arrow when stick to hero ? 
+	//TODO: fleche ombre, heros stau accroche 
 	//TODO: load only relevant part of the world 
 	//TODO: correct Partie timer when system pause 
 	//TODO: CHeck arrows colliding to themselves (the reason why you can't infinite push with wind?)
 	//TODO: pre-init grappin to avoid use GC call
 	//TODO: set the java parameter for .jar
 	//TODO: add switch arrow touch option 
-	
+	//TODO: correct fleches values with respect to table
+	//TODO: check if grappin still pull ennemis (vitesse.negate changed)
 		//MATERIEL
 	//TODO: Electrique: Object: create area that paralyse ennemy: can't shoot for a while. Ennemi: damage + create a electic ball moving back in the same direction as arrow: destroy all projectiles and disappear when wall it or after time
 	//TODO: Glace : Object: create a stalactite submitted to gravity                       Ennemi: damage + slow down
 	//TODO: Roche: Object : create a pillar                                                Ennemi: damage + vulnerable
-	//TODO: Feu: Object: create a wave of fire pillar                                      Ennemi: damage + burn
+	// Feu: Object: create a wave of fire pillar                                      Ennemi: damage + burn
 
 	//SPIRITUEL
 	// Lumiere: boost surrounding beings : speed, jump, damage x2 
@@ -31,7 +39,7 @@ public class Todo {
 	//TODO: Foudre : lightning going through enemies  
 	//TODO: Explosif : huge damage (+ projection? ): need time out so that combo with ombre: tp ennemy in explosion?
 	//TODO: Trou noir: suck ennemis + damage 
-	//TODO: Bogue: arrows all around player 
+	//: Bogue: arrows all around player 
 	
 	//RUSE
 	//TODO: auto-teleguidée: goes to nearest ennemi

@@ -27,6 +27,7 @@ public class Electrique_effect extends Effect{
 	
 	public Electrique_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame,Vector2d _normalCollision,int typeEffect)
 	{
+		super.init();
 		this.typeEffect=typeEffect;
 		type0 = typeEffect==0;
 		anim=_anim;
@@ -72,9 +73,17 @@ public class Electrique_effect extends Effect{
 		
 		normalCollision=_normalCollision;
 		partie.arrowsEffects.add(this);
+		setFirstPos(partie);
 	}
 
-
+	@Override
+	public int getMaxBoundingSquare()
+	{
+		if(type0)
+			return 200;
+		else
+			return 120;
+	}
 	@Override
 	public Vitesse getModifiedVitesse(AbstractModelPartie partie,
 			Collidable obj) {
@@ -88,8 +97,7 @@ public class Electrique_effect extends Effect{
 				attacher.conditions.addNewCondition(Condition.PARALYSIE, DUREE_PARALYSIE);
 	}
 
-	@Override
-	public Point getTranslationFromTranformDraw(AbstractModelPartie partie) {
+	private void setFirstPos(AbstractModelPartie partie) {
 
 		//get the middle bottom of the effect
 		int adjustBottom = type0? -5 : 0;
@@ -99,7 +107,7 @@ public class Electrique_effect extends Effect{
 		int y_eff_center = (int) (xtaille.get(anim)/2 * Math.sin(rotation) + (ytaille.get(anim)/divider+adjustBottom) * Math.cos(rotation));
 
 		//get the tip of the arrow
-		Hitbox fHitbox = ref_fleche.getHitbox(partie.INIT_RECT);
+		Hitbox fHitbox = ref_fleche.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
 
 		Vector2d v1 = Hitbox.supportPoint(Deplace.angleToVector(ref_fleche.rotation-Math.PI/10), fHitbox.polygon); //top right of unrotated hitbox (with tip pointing right)
 		Vector2d v2 = Hitbox.supportPoint(Deplace.angleToVector(ref_fleche.rotation+Math.PI/10), fHitbox.polygon); //bottom right of unrotated hitbox (with tip pointing right)
@@ -107,21 +115,17 @@ public class Electrique_effect extends Effect{
 		int x_tip_fleche =  (int) ((v1.x+v2.x)/2);
 		int y_tip_fleche= (int) ((v1.y+v2.y)/2);
 
-		return new Point(x_tip_fleche-x_eff_center+partie.xScreendisp, +y_tip_fleche-y_eff_center+partie.yScreendisp);
+		xpos_sync(x_tip_fleche-x_eff_center);
+		ypos_sync(y_tip_fleche-y_eff_center);
 	}
+	
 	@Override
 	public AffineTransform computeTransformDraw(AbstractModelPartie partie) {
 		if(!type0)
 			return super.computeTransformDraw(partie);
 		
 		Point transl = getTranslationFromTranformDraw(partie);
-		AffineTransform tr=new AffineTransform(ref_fleche.draw_tr);
 		AffineTransform tr2 = new AffineTransform();
-		double[] flatmat = new double[6];
-		tr.getMatrix(flatmat);
-		tr.translate(-flatmat[4], -flatmat[5]);
-		tr.setTransform(flatmat[0], flatmat[1], flatmat[2], flatmat[3], transl.x, transl.y);
-
 		tr2.translate(transl.x, transl.y);
 		tr2.rotate(rotation);
 		return tr2;

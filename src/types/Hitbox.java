@@ -9,6 +9,8 @@ import java.util.List;
 
 import javax.vecmath.Vector2d;
 
+import collision.GJK_EPA;
+
 public class Hitbox {
 
 	public Polygon polygon;
@@ -31,6 +33,16 @@ public class Hitbox {
 	public Hitbox(Polygon _p )
 	{
 		polygon=_p;
+	}
+
+	public Hitbox copy()
+	{
+		Hitbox copy = new Hitbox();
+		for(int i=0; i< this.polygon.npoints; i++)
+		{
+			copy.polygon.addPoint(this.polygon.xpoints[i], this.polygon.ypoints[i]);
+		}
+		return copy;
 	}
 
 	/** Create a square hitbox whose bounds are xmin,xmax,ymin,ymax*/
@@ -76,7 +88,7 @@ public class Hitbox {
 		{
 			hitboxes.add(new Hitbox());	
 		}
-		
+
 		for(int edge=0; edge<list.size(); ++edge)
 		{
 			List<Point> edgelist= list.get(edge);
@@ -88,16 +100,29 @@ public class Hitbox {
 		}
 		return hitboxes;
 	}
-	public String toString()
+	public static String polyToString(Polygon poly)
 	{
 		String s="";
-		for(int i=0; i<polygon.npoints; ++i)
+		for(int i=0; i<poly.npoints; ++i)
 		{
-			Polygon poly = polygon;
 			Point p = new Point(poly.xpoints[i],poly.ypoints[i]);
 			s+=(i==0? "" : " ")+"("+p.x+","+p.y+")";
 		}		
 		return s;
+	}
+	public static String simplexToString(List<Vector2d> simplex)
+	{
+		String s="";
+		for(int i=0; i<simplex.size(); ++i)
+		{
+			Point p = new Point((int)simplex.get(i).x,(int)simplex.get(i).y);
+			s+=(i==0? "" : " ")+"("+p.x+","+p.y+")";
+		}		
+		return s;
+	}
+	public String toString()
+	{
+		return polyToString(polygon);
 	}
 
 	public static Vector2d supportPoint(Vector2d dir, Polygon poly)
@@ -149,7 +174,26 @@ public class Hitbox {
 
 		return res;
 	}
-	
+
+	public static List<Hitbox> convertHitbox(List<Hitbox> current, Point INIT_RECT,AffineTransform tr) {
+		List<Hitbox> new_rotated_hit = new ArrayList<Hitbox>();
+
+		for (int i = 0; i<current.size(); ++i)
+		{
+			Polygon current_pol = current.get(i).polygon; 
+			Polygon new_pol = new Polygon();
+			for(int j = 0; j<current_pol.npoints; ++j)
+			{
+				Point2D temp = tr.transform(new Point(current_pol.xpoints[j],current_pol.ypoints[j]), null);
+				new_pol.addPoint((int)Math.round(temp.getX()),(int)Math.round(temp.getY()));
+
+			}
+			new_rotated_hit.add(new Hitbox(new_pol));
+		}
+
+		return new_rotated_hit;
+	}
+	//TODO: clean ? 
 	public static List<Hitbox> convertHitbox(List<Hitbox> current, Point INIT_RECT,AffineTransform tr,Point pos,Point screendisp) {
 		List<Hitbox> new_rotated_hit = new ArrayList<Hitbox>();
 
@@ -161,30 +205,30 @@ public class Hitbox {
 			{
 				Point2D temp = tr.transform(new Point(current_pol.xpoints[j],current_pol.ypoints[j]), null);
 				new_pol.addPoint((int)Math.round(temp.getX()-pos.x-screendisp.x),(int)Math.round(temp.getY()-pos.y-screendisp.y));
-				
+
 			}
 			new_rotated_hit.add(new Hitbox(new_pol));
 		}
 
 		return new_rotated_hit;
 	}
-	
+
 	public static Hitbox rotateHitbox(Hitbox hit, int angle)
 	{
 		assert (hit.polygon.npoints==4);
 		Hitbox res = new Hitbox();
-		Point center = getHitboxCenter(hit);
+		Vector2d center = getHitboxCenter(hit);
 
 		for(int i=0; i<hit.polygon.npoints; ++i)
 		{
 			Polygon poly = hit.polygon;
-			Point p = rotatePoint(new Point(poly.xpoints[i],poly.ypoints[i]),center,angle);
-			res.polygon.addPoint(p.x,p.y);
+			Vector2d p = rotatePoint(new Vector2d(poly.xpoints[i],poly.ypoints[i]),center,angle);
+			res.polygon.addPoint((int)p.x,(int)p.y);
 		}		
 		return(res);
 	}
 
-	private static Point rotatePoint(Point point,Point centre, int angle)
+	private static Vector2d rotatePoint(Vector2d point,Vector2d centre, int angle)
 	{
 		//
 		//en posant X'= X-xc et Y'= Y-yc, on a (translation au centre) 
@@ -201,7 +245,7 @@ public class Hitbox {
 		//on obtient ainsi x et y 
 		// 
 		///
-		Point res = new Point();
+		Vector2d res = new Vector2d();
 		float alpha = (float) (Math.atan((float)(point.y-centre.y)/(point.x-centre.x))- Math.toRadians(angle));
 		float l = (float) ((float)(point.x-centre.x)/(Math.cos(alpha + Math.toRadians(angle) )));
 
@@ -210,24 +254,27 @@ public class Hitbox {
 		return(res);
 	}
 
-	public static Point getHitboxCenter(Hitbox hitbox )
+	public static Vector2d getHitboxCenter(Hitbox hitbox )
 	{
 		assert (hitbox.polygon.npoints==4);
 		///on trace les deux diagonales, l'intersection des deux droites donnent le centre
 		// Les droites sont de la forme ( a(x-x1) +y1  )
 		Polygon poly = hitbox.polygon;
-		Point p0 = new Point(poly.xpoints[0],poly.ypoints[0]);
-		Point p1 = new Point(poly.xpoints[1],poly.ypoints[1]);
-		Point p2 = new Point(poly.xpoints[2],poly.ypoints[2]);
-		Point p3 = new Point(poly.xpoints[3],poly.ypoints[3]);
+		Vector2d p0 = new Vector2d(poly.xpoints[0],poly.ypoints[0]);
+		Vector2d p1 = new Vector2d(poly.xpoints[1],poly.ypoints[1]);
+		Vector2d p2 = new Vector2d(poly.xpoints[2],poly.ypoints[2]);
+		Vector2d p3 = new Vector2d(poly.xpoints[3],poly.ypoints[3]);
 
-		float a1= (float)(p0.y-p2.y)/(p0.x-p2.x);
-		float a2= (float)(p1.y-p3.y)/(p1.x-p3.x);
-		Point res = new Point();
-		res.x= (int)((float)(a1*p0.x-a2*p1.x+p1.y-p0.y)/(a1-a2));
-		res.y=(int)(a1*(res.x-p0.x)+p0.y);
+		Vector2d dir = new Vector2d(p1.x-p3.x,p1.y-p3.y);
+		Vector2d middle = GJK_EPA.projection(p0, p2, dir, p3, true);
+		/*float a1= (float) ((float)(p0.y-p2.y)/(p0.x-p2.x));
+		float a2= (float) ((float)(p1.y-p3.y)/(p1.x-p3.x));
+		Vector2d res = new Vector2d();
+		res.x= ((float)(a1*p0.x-a2*p1.x+p1.y-p0.y)/(a1-a2));
+		res.y=(a1*(res.x-p0.x)+p0.y);
+		return res;*/
 
-		return(res);
+		return(middle);
 	}
 
 	public static Hitbox minusPoint(Hitbox hit, Point p, boolean copy)
@@ -312,6 +359,43 @@ public class Hitbox {
 		inRect = inRect && (tBox.x<=tTest && tTest<tBox.y );
 
 		return inRect;
+	}
+
+	public static boolean contains(Polygon poly, Point p)
+	{
+		return (poly.contains(p) || onBorder(poly,p));
+	}
+	/**
+	 * Compensate the lack of information of the method poly.contains(point) by also checking the border 
+	 * @param p
+	 * @param poly
+	 * @return
+	 */
+	public static boolean onBorder(Polygon poly, Point p)
+	{
+		int size = poly.npoints;
+		double threshold = Math.pow(10, -9);
+		for(int i=0; i<size;i++)
+		{
+			int j = (i+1)%size;
+			//test if p is on the segment poly[i] poly[j]
+			Point p1 = new Point(poly.xpoints[i],poly.ypoints[i]);
+			Point p2 = new Point(poly.xpoints[j],poly.ypoints[j]);
+			//for fast computation, asssume p1 != p2
+			if(p.x == p1.x && (p.y == p1.y))
+				return true;
+			else if(p.x == p2.x && (p.y == p2.y))
+				return true;
+			//Here, the three points are different, test if they are aligned
+			else if(  Math.abs((p.y-p1.y)* (p2.x-p.x) - (p2.y-p.y) *(p.x-p1.x)) < threshold)
+			{
+				//Test if p is between p1 and p2 : ie  (p-p1) . dot (p-p2) <0
+				int dotProd = (p.x-p1.x) * (p.x-p2.x) + (p.y-p1.y) * (p.y-p2.y)  ;
+				if( dotProd< 0 )
+					return true;
+			}
+		}
+		return false;
 	}
 
 	/*private boolean pEquals(Point p1, Point p2)

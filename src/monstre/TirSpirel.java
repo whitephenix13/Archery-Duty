@@ -30,8 +30,8 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	public TirSpirel(int _xpos, int _ypos,int _anim,int current_frame,float damageMultiplier,float speedFactor)
 	{
 		super.init();
-		xpos(_xpos);
-		ypos(_ypos);
+		xpos_sync(_xpos);
+		ypos_sync(_ypos);
 		anim=_anim;
 		deplacement= new T_normal(this,Attente.attente_gauche,current_frame);
 
@@ -72,7 +72,7 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	}
 	@Override
 	public void handleStuck(AbstractModelPartie partie) {
-		handleWorldCollision(new Vector2d(0,0), partie,true);
+		handleWorldCollision(new Vector2d(0,0), partie,null,true);
 	}
 	@Override
 	public void handleDeplacementSuccess(AbstractModelPartie partie) {
@@ -89,7 +89,7 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 		//nothing
 	}
 	@Override
-	public void resetVarDeplace() {
+	public void resetVarDeplace(boolean speedUpdated) {
 		//nothing
 	}
 	/**
@@ -102,17 +102,17 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	}
 
 	@Override
-	public Hitbox getHitbox(Point INIT_RECT) {
+	public Hitbox getHitbox(Point INIT_RECT,Point screenDisp) {
 		return  Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos(),ypos()),true);
 	}
 	@Override
-	public Hitbox getHitbox(Point INIT_RECT, Mouvement _dep, int _anim) {
+	public Hitbox getHitbox(Point INIT_RECT,Point screenDisp, Mouvement _dep, int _anim) {
 		Mouvement_tir temp = (Mouvement_tir) _dep.Copy(this); //create the mouvement
 		return Hitbox.plusPoint(temp.hitbox.get(_anim), new Point(xpos(),ypos()),true);
 	}
 	
 	@Override
-	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,boolean stuck) {
+	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,Collidable collidedObject,boolean stuck) {
 		//project speed to ground 
 		boolean collision_gauche = normal.x>0;
 		boolean collision_droite = normal.x<0;

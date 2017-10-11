@@ -5,11 +5,14 @@ import java.util.List;
 import javax.vecmath.Vector2d;
 
 import collision.Collidable;
+import effects.Effect;
 import effects.Lumiere_effect;
+import effects.Roche_effect;
 import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import personnage.Heros;
 import types.Entitie;
+import types.Hitbox;
 import types.Projectile;
 
 public class Fleche_lumiere extends Spirituelle {
@@ -34,22 +37,36 @@ public class Fleche_lumiere extends Spirituelle {
 		{
 			obj.currentEffects.add(this.flecheEffect);
 		}
+		if(collider instanceof Roche_effect)
+		{
+			Roche_effect eff = (Roche_effect) collider;
+			if(eff.isWorldCollider){
+				eff.addSynchroSpeed(this);
+				eff.addSynchroSpeed(flecheEffect);
+			}
+		}
 		this.doitDeplace=false;
 		this.setCollideWithNone();
 
 
 	}
 	@Override
-	protected void onPlanted(List<Entitie> objects, AbstractModelPartie partie,boolean stuck)
+	protected void onPlanted(List<Entitie> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
 	{
+		if(this.afterDecochee && stuck)
+			ejectArrow(partie,unprojectedSpeed);
 		if(stuck)
 			destroy(partie,false);
 		else
-			applyArrowEffect(objects,partie,null);
+			applyArrowEffect(objects,partie,collidedObject);
 	}
 	@Override
-	protected boolean OnObjectsCollision(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d normal)
+	protected boolean OnObjectsCollision(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
 	{
+		if(this.afterDecochee && (collider instanceof Effect))
+			if(((Effect)collider).isWorldCollider)
+				ejectArrow(partie,unprojectedSpeed);
+
 		applyArrowEffect(objects,partie,collider);
 		return false;
 	}

@@ -13,10 +13,10 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import Affichage.Affichage;
-import deplacement.Attente;
+import collision.Collidable;
+import debug.DebugDraw;
 import deplacement.Deplace;
 import effects.Effect;
-import fleches.Fleche;
 import images.ImagesCondition;
 import images.ImagesEffect;
 import images.ImagesFleche;
@@ -26,8 +26,6 @@ import images.ImagesMonde;
 import images.ImagesMonstre;
 import images.ImagesTirMonstre;
 import loading.DisplayLoader;
-import monstre.Monstre;
-import monstre.TirMonstre;
 import music.MusicBruitage;
 import observer.Observable;
 import observer.Observer;
@@ -37,7 +35,6 @@ import types.Entitie;
 import types.Monde;
 import types.Projectile;
 import types.Touches;
-import types.TypeObject;
 
 public abstract class AbstractModelPartie extends DisplayLoader implements Observable {
 	//frame flag 
@@ -46,6 +43,10 @@ public abstract class AbstractModelPartie extends DisplayLoader implements Obser
 	public int getFrame(){return frame;}
 	//repaint flag 
 	public boolean computationDone=false;
+	
+	/**Override the draw method to debug with draw*/
+	public DebugDraw debugDraw =null;
+
 	
 	protected Deplace deplace = new Deplace();
 	public Monde monde = null;
@@ -59,7 +60,7 @@ public abstract class AbstractModelPartie extends DisplayLoader implements Obser
 	public List<Projectile> tabTirMonstre = new ArrayList<Projectile>();
 	public List<Entitie> tabMonstre= new ArrayList <Entitie> ();
 	
-	public List<Effect> arrowsEffects = new ArrayList<Effect>();
+	public List<Collidable> arrowsEffects = new ArrayList<Collidable>();
 	
 	protected int nombreMonstreRestant= 0;
 
@@ -110,6 +111,8 @@ public abstract class AbstractModelPartie extends DisplayLoader implements Obser
 	//variable to know to displacement of the screen
 	public int xScreendisp = 0;
 	public int yScreendisp = 0;
+	public Point getScreenDisp()
+	{return new Point(xScreendisp,yScreendisp);}
 	/**
 	 * 
 	 * @param x return xScreendispBloc, false: return yScreendispBloc
@@ -175,7 +178,7 @@ public abstract class AbstractModelPartie extends DisplayLoader implements Obser
 		tabFleche= new ArrayList<Projectile>();
 		tabTirMonstre = new ArrayList<Projectile>();
 		tabMonstre= new ArrayList <Entitie> ();
-		arrowsEffects = new ArrayList<Effect>();
+		arrowsEffects = new ArrayList<Collidable>();
 		nombreMonstreRestant= 0;
 
 		lEffaceFleche= new ArrayList<Integer>();
@@ -239,6 +242,8 @@ public abstract class AbstractModelPartie extends DisplayLoader implements Obser
 	public abstract void drawBar(Graphics g,int number_rectangles, int[] x, int[] y, int[] width, int[] height,Color[] colors);
 	
 	public abstract BufferedImage apply_width_mask(BufferedImage original,BufferedImage previousMaskedIm, int w_start, int last_start,float transparency);
+	public abstract BufferedImage apply_height_mask(BufferedImage original,BufferedImage previousMaskedIm, int h_start_mask,float transparency);
+
 	public abstract BufferedImage toBufferedImage(Image img);
 
 	//Implémentation du pattern observer

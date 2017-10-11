@@ -35,7 +35,7 @@ public class Saut extends Mouvement_perso{
 			//add for every edge, a list of point depending on the animation
 			List<Integer> xg = Arrays.asList(35,27,27,10,12,4);
 			List<Integer> xd = Arrays.asList(74,71,69,49,56,46);
-			List<Integer> yh = Arrays.asList(8,5,5,8,5,5);
+			List<Integer> yh = Arrays.asList(10,12,0,10,12,0);
 			List<Integer> yb = Arrays.asList(96,98,86,96,98,86);
 
 			hitboxCreation.add(Hitbox.asListPoint(xg,yh));
@@ -99,6 +99,16 @@ public class Saut extends Mouvement_perso{
 	public Saut(Object obj,int _type_mouv, int current_frame,Animation _animation){
 		this(obj,_type_mouv,current_frame);
 		animation = _animation;
+	}
+	@Override
+	public int getMaxBoundingSquare(Object obj)
+	{
+		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
+			return 105;
+		else if(TypeObject.isTypeOf(obj, TypeObject.SPIREL))
+			return 75;
+		else
+			return 0;
 	}
 	public Mouvement Copy(Object obj) {
 		return new Saut(obj,type_mouv,animation.getStartFrame(),animation);

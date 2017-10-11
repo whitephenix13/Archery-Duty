@@ -89,7 +89,7 @@ public class ImagesEffect extends LoadMediaThread{
 			count ++;
 		}
 		setPercentage((int)(100.0*count/nb));
-		for(int i=0; i<10; ++i){
+		for(int i=0; i<5; ++i){
 			im_roche_effect[0].add(getIm("resources/fleches/effects/roche/0/"+i+".png",true));
 			count ++;
 		}

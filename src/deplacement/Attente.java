@@ -75,6 +75,16 @@ public class Attente extends Mouvement_perso{
 		animation = _animation;
 	}
 	
+	@Override
+	public int getMaxBoundingSquare(Object obj)
+	{
+		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
+			return 100;
+		else if(TypeObject.isTypeOf(obj, TypeObject.SPIREL))
+			return 75;
+		else
+			return 0;
+	}
 	public Mouvement Copy(Object obj) {
 		return new Attente(obj,type_mouv,animation.getStartFrame(),animation);
 	}

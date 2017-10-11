@@ -13,7 +13,7 @@ public class Glissade extends Mouvement_perso
 {
 	public static int glissade_gauche = 0;
 	public static int glissade_droite = 1;
-	
+
 
 	//constructeur monstre
 	public Glissade(Object obj,int _type_mouv,int current_frame) 
@@ -38,7 +38,7 @@ public class Glissade extends Mouvement_perso
 			hitboxCreation.add(Hitbox.asListPoint(xg,yb));
 
 			hitbox = Hitbox.createHitbox(hitboxCreation);
-			
+
 
 			//animation frame, current_frame, start_index, end_index
 			int start_index =type_mouv==glissade_gauche ? 0 : 1;
@@ -50,6 +50,11 @@ public class Glissade extends Mouvement_perso
 	public Glissade(Object obj,int _type_mouv, int current_frame,Animation _animation){
 		this(obj,_type_mouv,current_frame);
 		animation = _animation;
+	}
+	@Override
+	public int getMaxBoundingSquare(Object obj)
+	{
+		return 90;
 	}
 	public Mouvement Copy(Object obj) {
 		return new Glissade(obj,type_mouv,animation.getStartFrame(),animation);

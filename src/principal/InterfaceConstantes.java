@@ -23,13 +23,13 @@ public interface InterfaceConstantes {
 	static long ACCROCHE_COOLDOWN = (long) (2* Math.pow(10, 8));
 	
 	static int NB_MONSTRES_MAX=100;
-	static int SLOW_DOWN_FACTOR = 4;
+	static int SLOW_DOWN_FACTOR = 4;//4
 	//type de spawn
 	int SPAWN_ALEATOIRE = 0; 
 	int SPAWN_PROGRAMME = 1;
 	
 	static int loopTime = 3600000; // 1 heure
-	 Dimension tailleEcran = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+	Dimension tailleEcran = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
 	
 	
 	static int LARGEUR_FENETRE =  (int)tailleEcran.getWidth();//1366
@@ -44,7 +44,6 @@ public interface InterfaceConstantes {
 	static Hitbox SCREEN =new Hitbox(InterfaceConstantes.HG_FENETRE,InterfaceConstantes.BG_FENETRE,
 									InterfaceConstantes.BD_FENETRE,InterfaceConstantes.HD_FENETRE);
 		
-	
 	//permet de determiner les vitesses de chute, de deplacement et de saut 
 	long TDash= 150;
 	//durée d'invincibilité lorsque le héros est touché 

@@ -190,6 +190,7 @@ public class menuEditeur {
 }
 	
 	public void setBloquant(boolean _bloquant){	
+		System.out.println("set bloquant "+ _bloquant );
 		affichageEditeur.controlerEditeur.edit.setBloquant(_bloquant);
 		r_bloquant.setSelected(_bloquant);
 		r_nonBloquant.setSelected(!_bloquant);

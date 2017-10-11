@@ -16,6 +16,8 @@ public abstract class Entitie extends Collidable{
 	public float MINLIFE ;
 	protected float life;
 	public ArrayList<Effect> currentEffects;
+	
+	public double last_feu_effect_update = -1;
 
 	public abstract void onAddLife();
 

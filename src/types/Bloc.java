@@ -23,7 +23,7 @@ public class Bloc extends Collidable{
 	public static String SOURIS = "souris";
 	public static String SPIREL = "spirel";
 	public static String START = "start";
-	public static String TERRE = "tree";
+	public static String TERRE = "terre";
 
 
 	private String img =VIDE;
@@ -39,8 +39,8 @@ public class Bloc extends Collidable{
 		super.init();
 		
 		this.img=str;
-		this.xpos(x);
-		this.ypos(y);
+		this.xpos_sync(x);
+		this.ypos_sync(y);
 		localVit= new Vitesse(0,0);
 		fixedWhenScreenMoves=false;
 		this.bloquer=bl;
@@ -71,15 +71,22 @@ public class Bloc extends Collidable{
 	{
 		return("Bloc de "+img+" en pos " + xpos +","+ypos+" bloquant: "+ bloquer +" background: "+ background);
 	}*/
-
+	public boolean isVide()
+	{
+		if(img.equals(VIDE))
+			return true;
+		else
+			return false;
+	}
+	
 	//mutateur
 	public void setImg(String str){
 		this.img=str;
 	}
 
 	public void setPos(int x,int y){
-		xpos(x);
-		ypos(y);
+		xpos_sync(x);
+		ypos_sync(y);
 	}
 
 	public void setBloquer(boolean bloque){
@@ -113,7 +120,14 @@ public class Bloc extends Collidable{
 	{
 		return null;
 	}
-	public Hitbox getHitbox(Point INIT_RECT) {
+	
+	@Override
+	public int getMaxBoundingSquare()
+	{
+		return deplacement.getMaxBoundingSquare(this);
+	}
+	
+	public Hitbox getHitbox(Point INIT_RECT,Point screenDisp) {
 		if(!bloquer)
 			return null;
 
@@ -127,11 +141,11 @@ public class Bloc extends Collidable{
 		return new Hitbox(p);
 
 	}
-	public Hitbox getHitbox(Point INIT_RECT, Mouvement mouv, int _anim) {
-		return getHitbox(INIT_RECT);
+	public Hitbox getHitbox(Point INIT_RECT,Point screenDisp, Mouvement mouv, int _anim) {
+		return getHitbox(INIT_RECT,screenDisp);
 	}
 	@Override
-	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,boolean stuck) {
+	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,Collidable collidedObject,boolean stuck) {
 		//no collision handle: this bloc si currently static which means that the only objects that can collides with it are
 		//mobile objects. We'll rather call the handleCollision of the mobile objects 
 		//REMOVEfor(int i= currentEffects.size()-1;i>=0;i--)
@@ -174,7 +188,7 @@ public class Bloc extends Collidable{
 
 	}
 	@Override
-	public void resetVarDeplace() {
+	public void resetVarDeplace(boolean speedUpdated) {
 		//do nothing
 	}
 	@Override

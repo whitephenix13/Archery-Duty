@@ -14,6 +14,7 @@ import conditions.Condition;
 import deplacement.Deplace;
 import fleches.Fleche;
 import partie.AbstractModelPartie;
+import partie.PartieTimer;
 import types.Entitie;
 import types.Hitbox;
 import types.TypeObject;
@@ -25,8 +26,12 @@ public class Feu_effect extends Effect{
 	boolean type0 ;
 	int shift ;
 	double DUREE_BRULURE = 5;
+	double UPDATE_TIME = 0.05 ; //s
+	double damage = -5;
+	
 	public Feu_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame,Vector2d _normalCollision,int typeEffect,int shift)
 	{
+		super.init();
 		this.shift=shift;
 		this.typeEffect=typeEffect;
 		type0 = typeEffect==0;
@@ -68,27 +73,39 @@ public class Feu_effect extends Effect{
 		localVit= new Vitesse();
 		normalCollision=_normalCollision;
 		partie.arrowsEffects.add(this);
+		setFirstPos(partie);
 	}
 
+	@Override
+	public int getMaxBoundingSquare()
+	{
+		if(type0)
+			return 300;
+		else
+			return 100;
+	}
 
-	
 	@Override
 	public void updateOnCollidable(AbstractModelPartie partie,Entitie attacher)
 	{
-		if(!type0)
+		if(!type0){
 			if(Collision.testcollisionObjects(partie, this, attacher,true))
-				attacher.conditions.addNewCondition(Condition.BRULURE, DUREE_BRULURE);
+				attacher.conditions.addNewCondition(Condition.BRULURE, DUREE_BRULURE);}
+		else
+			if((PartieTimer.me.getElapsedNano() - attacher.last_feu_effect_update)>UPDATE_TIME*Math.pow(10, 9) && Collision.testcollisionObjects(partie, this, attacher,true)){
+				attacher.addLife(damage);
+				attacher.last_feu_effect_update=PartieTimer.me.getElapsedNano();
+			}
 	}
-	
+
 	@Override
 	public Vitesse getModifiedVitesse(AbstractModelPartie partie,
 			Collidable obj) {
 		return new Vitesse();
 	}
-	
-	
-	@Override
-	public Point getTranslationFromTranformDraw(AbstractModelPartie partie) {
+
+
+	public void setFirstPos(AbstractModelPartie partie) {
 
 		//get the middle bottom of the effect
 		int adjustBottom = type0? -5 : 0;
@@ -98,7 +115,7 @@ public class Feu_effect extends Effect{
 		int y_eff_center = (int) (xtaille.get(anim)/2 * Math.sin(rotation) + (ytaille.get(anim)/divider+adjustBottom) * Math.cos(rotation));
 
 		//get the tip of the arrow
-		Hitbox fHitbox = ref_fleche.getHitbox(partie.INIT_RECT);
+		Hitbox fHitbox = ref_fleche.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
 
 		Vector2d v1 = Hitbox.supportPoint(Deplace.angleToVector(ref_fleche.rotation-Math.PI/10), fHitbox.polygon); //top right of unrotated hitbox (with tip pointing right)
 		Vector2d v2 = Hitbox.supportPoint(Deplace.angleToVector(ref_fleche.rotation+Math.PI/10), fHitbox.polygon); //bottom right of unrotated hitbox (with tip pointing right)
@@ -106,30 +123,27 @@ public class Feu_effect extends Effect{
 		int x_tip_fleche =  (int) ((v1.x+v2.x)/2);
 		int y_tip_fleche= (int) ((v1.y+v2.y)/2);
 
-		return new Point(x_tip_fleche-x_eff_center+partie.xScreendisp, +y_tip_fleche-y_eff_center+partie.yScreendisp);
+		int xshift = type0? (int) (shift * Math.cos(rotation)):0;
+		int yshift = type0? (int) (shift * Math.sin(rotation)):0;
+		
+		xpos_sync(x_tip_fleche-x_eff_center+xshift);
+		ypos_sync( y_tip_fleche-y_eff_center+yshift);
 	}
 	@Override
 	public AffineTransform computeTransformDraw(AbstractModelPartie partie) {
 		if(!type0)
 			return super.computeTransformDraw(partie);
-		
+
 		Point transl = getTranslationFromTranformDraw(partie);
-		AffineTransform tr=new AffineTransform(ref_fleche.draw_tr);
 		AffineTransform tr2 = new AffineTransform();
-		double[] flatmat = new double[6];
-		tr.getMatrix(flatmat);
-		tr.translate(-flatmat[4], -flatmat[5]);
-		tr.setTransform(flatmat[0], flatmat[1], flatmat[2], flatmat[3], transl.x, transl.y);
-		
-		int xshift = type0? (int) (shift * Math.cos(rotation)):0;
-		int yshift = type0? (int) (shift * Math.sin(rotation)):0;
-		tr2.translate(transl.x+xshift, transl.y+yshift);
+
+		tr2.translate(transl.x, transl.y);
 		tr2.rotate(rotation);
 
 		return tr2;
 	}
-	
 
-	
+
+
 
 }

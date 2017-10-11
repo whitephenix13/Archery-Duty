@@ -11,6 +11,7 @@ public class Animation {
 	private int start_index=0;//this index is used 
 	private int end_index=0;//this is the strict limit, anim (= [start_index,end_index-1]
 	private boolean animation_ended =false;
+	public void resetAnimationEnded(){animation_ended=false;}
 	public int getStartFrame(){return start_frame;};
 	public int getStartIndex(){return start_index;};
 	public int getEndIndex(){return end_index;};
@@ -18,6 +19,7 @@ public class Animation {
 	public void resetEndedOnce(){animation_ended=false;}
 
 	private List<Integer> animationFrame = new ArrayList<Integer>();//pos i indicates max frame of animation i
+	public List<Integer> getAnimationFrame(){return animationFrame;}
 	public int num_anim=0;
 	public Animation()
 	{

@@ -1,6 +1,5 @@
 package effects;
 
-import java.awt.Image;
 import java.awt.Point;
 import java.util.Arrays;
 
@@ -11,7 +10,6 @@ import fleches.Fleche;
 import partie.AbstractModelPartie;
 import types.Entitie;
 import types.Hitbox;
-import types.TypeObject;
 import types.Vitesse;
 
 public class Lumiere_effect extends Effect{
@@ -20,6 +18,7 @@ public class Lumiere_effect extends Effect{
 
 	public Lumiere_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame)
 	{
+		super.init();
 		anim=_anim;
 
 		ref_fleche = _ref_fleche;
@@ -35,9 +34,14 @@ public class Lumiere_effect extends Effect{
 		
 		localVit= new Vitesse();
 		partie.arrowsEffects.add(this);
+		setFirstPos(partie);
 	}
 
-
+	@Override
+	public int getMaxBoundingSquare()
+	{
+		return 100;
+	}
 	@Override
 	public void updateOnCollidable(AbstractModelPartie partie,Entitie attacher)
 	{
@@ -50,8 +54,8 @@ public class Lumiere_effect extends Effect{
 			Collidable obj) {
 		return new Vitesse();
 	}
-	@Override
-	public Point getTranslationFromTranformDraw(AbstractModelPartie partie) {
+	
+	public void setFirstPos(AbstractModelPartie partie) {
 		int fanim = ref_fleche.anim;
 		//get the middle of the effect
 		int x_eff_center = (int) (xtaille.get(anim)/2 * Math.cos(rotation) - ytaille.get(anim)/2 * Math.sin(rotation));
@@ -63,8 +67,8 @@ public class Lumiere_effect extends Effect{
 		int y_tip_fleche= (int) (ref_fleche.ypos() + ref_fleche.deplacement.xtaille.get(fanim) * Math.sin(rotation) 
 				+ ref_fleche.deplacement.ytaille.get(fanim)/2 * Math.cos(rotation));
 		
-		Point transl = new Point(x_tip_fleche-x_eff_center+partie.xScreendisp, +y_tip_fleche-y_eff_center+partie.yScreendisp);
-		return transl;
+		xpos_sync(x_tip_fleche-x_eff_center);
+		ypos_sync(y_tip_fleche-y_eff_center);
 	}
 
 	

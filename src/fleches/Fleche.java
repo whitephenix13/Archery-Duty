@@ -12,11 +12,13 @@ import javax.vecmath.Vector2d;
 
 import collision.Collidable;
 import collision.Collision;
+import debug.Debug_stack;
 import deplacement.Deplace;
 import deplacement.Mouvement;
 import deplacement_tir.Mouvement_tir;
 import deplacement_tir.T_normal;
 import effects.Effect;
+import effects.Roche_effect;
 import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import personnage.Heros;
@@ -28,26 +30,26 @@ import types.TypeObject;
 import types.Vitesse;
 
 public class Fleche extends Projectile implements InterfaceConstantes{
-	
+
 	public Heros shooter;
 
 	public boolean doitDeplace=false;
 	public boolean generatedEffect = false;
 	public boolean nulle =false;
 	public boolean encochee =false;
-	
-	public boolean no_more_than_one=false;
-	public boolean destroy_on_click=false;
-	
+	public boolean afterDecochee = false; //set to true after first decochee and before second deplace.
+
+	public int MAX_NUMBER_INSTANCE=-1;//<0 for no restriction 
+
 	public AffineTransform draw_tr=null;
 	//relative to heros position
 	public List<Integer> xanchor=Arrays.asList(28,20,45,45,40,30,55,52,70,35);
 	public List<Integer> yanchor=Arrays.asList(30,20,22,25,45,50,65,42,30,40);
-		
+
 	public float damage;
 	public float seyeri_cost;
 	private boolean animationChanged=false;
-	
+
 	public Effect flecheEffect;
 
 	public Fleche(List<Projectile> tabFleche,int current_frame,Heros _shooter,boolean add_to_list,float damageMultiplier,float _speedFactor)
@@ -61,19 +63,21 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 		localVit= new Vitesse(0,0);
 
 		speedFactor=_speedFactor;
-		
+
 		deplacement = new T_normal(this,T_normal.tir,current_frame);
-		
+
 		nulle=false;
 		encochee=true;
 		this.setCollideWithNone();
 		if(add_to_list)
 			tabFleche.add(this);
-		
+
 		TEMPS_DESTRUCTION = (long) Math.pow(10, 9);//nanos, 1sec 
-		
-		damage = -50 * damageMultiplier;
-		seyeri_cost=-5;
+
+		damage = -10 * damageMultiplier;
+		seyeri_cost=0;//-5
+
+		draw_tr=new AffineTransform();
 
 	}
 	public Fleche(List<Projectile> tabFleche,int current_frame,Heros _shooter,float damageMultiplier,float speedFactor)
@@ -87,32 +91,57 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 		this.doitDeplace=false;
 		this.setCollideWithNone();
 	}
-	
+
 	public void setPosition(int x, int y)
 	{
-		xpos(x);
-		ypos(y);
+		xpos_sync(x);
+		ypos_sync(y);
 	}
-	
+
 	public void flecheDecochee(AbstractModelPartie partie,Deplace deplace)
 	{
 		doitDeplace=true;
 		encochee=false;
+		afterDecochee=true;
 		this.setCollideWithout(Arrays.asList(TypeObject.FLECHE,TypeObject.HEROS));
 		//get current position
 		Point2D newpos= draw_tr.transform(new Point(0,0), null);
-		xpos((int) newpos.getX()-partie.xScreendisp);
-		ypos((int) newpos.getY()-partie.yScreendisp);
-		
+		xpos_sync((int) newpos.getX()-partie.xScreendisp);
+		ypos_sync((int) newpos.getY()-partie.yScreendisp);
+
 		deplacement.hitbox_rotated  = Hitbox.convertHitbox(deplacement.hitbox,partie.INIT_RECT,draw_tr,new Point(xpos(),ypos()),new Point(partie.xScreendisp,partie.yScreendisp));
 
 		//reset the 0 of the transformation. usefull since the position changed from 0 to its drawing position (~700,400)
 		draw_tr.translate(-xpos(), -ypos());
 
 
-		deplacement.setSpeed(this, anim);
+		//deplacement.setSpeed(this, anim);
 		MusicBruitage.startBruitage("arc");
-		
+
+	}
+	public boolean getCanReshot()
+	{
+		return false;
+	}
+	/**
+	 * 
+	 * @param f
+	 * @return In the canShootArrow function for Heros; Determine if this arrow should count for the total number of arrows that are involved for canShootArrow
+	 */
+	public boolean shouldCountArrow(Fleche f)
+	{
+		return true;
+	}
+	/**
+	 * 
+	 * @param partie
+	 * @param firstFleche
+	 * @return true if allow that arrow is rehoot, false otherwise 
+	 */
+
+	public boolean OnArrowReshot(AbstractModelPartie partie,Fleche firstFleche)
+	{
+		return false;
 	}
 	/**
 	 * Called when the effect created by this arrow ends
@@ -122,7 +151,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 		//Default behaviour is to destroy the arrow if the related effect is detroyed 
 		this.destroy(partie, destroyNow);
 	}
-	
+
 	//Method to redefined. Action to execute before an arrow is detroyed. Mainly, stop the effect before all references are lost 
 	public void beforeFlecheDestroyed(AbstractModelPartie partie){};
 	@Override
@@ -139,10 +168,51 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 	public void onDestroy(AbstractModelPartie partie){
 		//do nothing when detroyed 
 	}
-	
-	protected void onPlanted(List<Entitie> objects,AbstractModelPartie partie,boolean stuck)
+
+	/**
+	 * Eject arrow out of the colliding objects only if afterDecochee is set to true
+	 * @return false if stuck
+	 */
+	protected boolean ejectArrow(AbstractModelPartie partie,Vector2d unprojectedSpeed)
 	{
-		this.timer();
+		return ejectArrow(partie,unprojectedSpeed,null);
+	}
+	/**
+	 * Eject arrow out of the colliding objects only if afterDecochee is set to true
+	 * @return false if stuck
+	 */
+	protected boolean ejectArrow(AbstractModelPartie partie,Vector2d unprojectedSpeed,Collidable[] resCollidableObject)
+	{
+		int MAX_EJECT = 40;
+		boolean success = true;
+		if(afterDecochee)
+		{
+			afterDecochee=false;
+			Vector2d ejectVect = new Vector2d(unprojectedSpeed.x,unprojectedSpeed.y);
+			ejectVect.normalize();
+			ejectVect=new Vector2d(ejectVect.x*MAX_EJECT,ejectVect.y*MAX_EJECT);
+			boolean setColliInfo = true;
+			boolean warnColli = false;
+			success = Collision.ejectWorldCollision(partie, this, ejectVect,true,setColliInfo,warnColli,resCollidableObject);
+		}
+		return success;
+	}
+	protected void onPlanted(List<Entitie> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d unprojectedSpeed, boolean stuck)
+	{
+		this.doitDeplace=false;
+
+		if(this.afterDecochee&&stuck)
+			ejectArrow(partie,unprojectedSpeed,null);
+		if(collidedObject instanceof Roche_effect)
+		{
+			Roche_effect eff = (Roche_effect) collidedObject;
+			if(eff.isWorldCollider){
+				eff.addSynchroSpeed(this);
+				if(flecheEffect!=null)
+					eff.addSynchroSpeed(flecheEffect);
+			}
+		}
+		this.destroy(partie, false);
 	}
 	/**
 	 * 
@@ -151,59 +221,70 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 	 * @param collider
 	 * @return true if need immediate destroy
 	 */
-	protected boolean OnObjectsCollision (List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d normal)
+	protected boolean OnObjectsCollision (List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
 	{
+		if(this.afterDecochee && (collider instanceof Effect))
+			if(((Effect)collider).isWorldCollider)
+				ejectArrow(partie,unprojectedSpeed);
 		return true;
 	}
-	
+
 	public Vector2d getNormCollision()
 	{
 		return null;
 	}
-	
-	
+
 	@Override
-	public Hitbox getHitbox(Point INIT_RECT) {
+	public int getMaxBoundingSquare()
+	{
+		return deplacement.getMaxBoundingSquare(this);
+	}
+
+	@Override
+	public Hitbox getHitbox(Point INIT_RECT,Point screenDisp) {
 		if(!encochee)
 			return  Hitbox.plusPoint(deplacement.hitbox_rotated.get(anim), new Point(xpos(),ypos()),true);	
 		else
-			return  Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos(),ypos()),true);	
+			return  Hitbox.plusPoint(deplacement.hitbox_rotated.get(anim), new Point(xpos(),ypos()),true);	
 	}
-	
+
 	@Override
-	public Hitbox getHitbox(Point INIT_RECT, Mouvement _dep, int _anim) {
+	public Hitbox getHitbox(Point INIT_RECT,Point screenDisp, Mouvement _dep, int _anim) {
 		//ASSUME WE ALWAYS USE THIS WHEN THE ARROW IS SHOT (!encochee)
 		Mouvement_tir temp = (Mouvement_tir) _dep.Copy(this); //create the mouvement
 		return Hitbox.plusPoint(temp.hitbox_rotated.get(_anim), new Point(xpos(),ypos()),true);
 	}
-	
-		
-		
+
+
+
 	@Override
-	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,boolean stuck) {
-		
+	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,Collidable collidedObject,boolean stuck) {
+
 		boolean collision_gauche = normal.x>0;
 		boolean collision_droite = normal.x<0;
 		//boolean collision_haut = normal.y>0;
 		//boolean collision_bas = normal.y<0;	
 		last_colli_left=collision_gauche;
 		last_colli_right=collision_droite;
+		Vector2d prevLocalVit = this.getGlobalVit(partie).vect2d();
 		localVit= new Vitesse(0,0);
 		this.doitDeplace=false;
 		this.setCollideWithNone();
 		ArrayList<Entitie> objects = Collidable.getAllEntitiesCollidable(partie);
 
-		onPlanted(objects,partie,stuck);
-		
-		
+		onPlanted(objects,partie,collidedObject,prevLocalVit,stuck);
+
+
 	}
 	@Override
 	public void handleObjectCollision(AbstractModelPartie partie,
 			Collidable collider,Vector2d normal) 
 	{
+
+
 		ArrayList<Entitie> objects = Collidable.getAllEntitiesCollidable(partie);
 
-		needDestroy = OnObjectsCollision(objects,partie,collider,normal);
+		needDestroy = OnObjectsCollision(objects,partie,collider,this.getGlobalVit(partie).vect2d(),normal);
 		if(needDestroy)
 			this.setNeedDestroy(); // stop collision and other stuff 
 	}
@@ -218,9 +299,15 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 	}
 	@Override
 	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
-			try {
-				anim=changeAnim(partie,deplace);} 
-			catch (InterruptedException e) {e.printStackTrace();}
+		if(encochee){
+			deplacement.hitbox_rotated=Hitbox.convertHitbox(deplacement.hitbox,partie.INIT_RECT,draw_tr,new Point(xpos(),ypos()),partie.getScreenDisp());
+		}
+		else if(afterDecochee){
+			deplacement.setSpeed(this, anim);}
+
+		try {
+			anim=changeAnim(partie,deplace);} 
+		catch (InterruptedException e) {e.printStackTrace();}
 		boolean[] res = {doitDeplace,animationChanged};
 		return res;
 	}
@@ -253,9 +340,10 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 					animationChanged=false;
 				return animFleche;
 			}
-			
+
 		}
-		return (anim+1)%4;
+		else
+			return deplacement.updateAnimation(this, anim, partie.getFrame(),speedFactor);
 	}
 	public int gravityAnim(AbstractModelPartie partie)
 	{
@@ -300,20 +388,20 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 			throw new IllegalArgumentException("Fleche/gravityAnim: Unknown values");
 		}
 	}
-	
+
 	public void decallageFleche(int animSuivante, AbstractModelPartie partie)
 	{
 		// on veut que le centre bas des flèches coincident 
-		Point positionFinal=placerCentreBasFleche(this,animSuivante,partie.INIT_RECT);
+		Point positionFinal=placerCentreBasFleche(this,animSuivante,partie.INIT_RECT,partie.getScreenDisp());
 
 		// on effectue le decallage
-		xpos(positionFinal.x);
-		ypos(positionFinal.y);
+		xpos_sync(positionFinal.x);
+		ypos_sync(positionFinal.y);
 
 		//si il y a collision lors du changement d'animation, on doit arreter la fleche
 		if (!Collision.ejectWorldCollision(partie , this))
 		{
-			handleWorldCollision(new Vector2d(), partie,false);
+			//handleWorldCollision(new Vector2d(), partie,false); called by ejectWorldCollision
 		}
 
 	}
@@ -362,22 +450,22 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 	 * @param anim, animation de la fleche
 	 * @return la valeur de xpos et ypos pour la fleche
 	 */	
-	public Point placerCentreBasFleche(Fleche fleche,int nouvAnim,Point INIT_RECT)
+	public Point placerCentreBasFleche(Fleche fleche,int nouvAnim,Point INIT_RECT,Point screenDisp)
 	{
-		Point currentCenter = centreBasFleche(fleche.getHitbox(INIT_RECT),fleche.anim);
-		Point nextCenter = centreBasFleche(fleche.getHitbox(INIT_RECT, fleche.deplacement, nouvAnim),nouvAnim);
+		Point currentCenter = centreBasFleche(fleche.getHitbox(INIT_RECT,screenDisp),fleche.anim);
+		Point nextCenter = centreBasFleche(fleche.getHitbox(INIT_RECT,screenDisp, fleche.deplacement, nouvAnim),nouvAnim);
 
 		return new Point(currentCenter.x-nextCenter.x,currentCenter.y-nextCenter.y);
 
 	}
 	@Override
 	public void handleStuck(AbstractModelPartie partie) {
-		handleWorldCollision( new Vector2d(), partie,true );
+		handleWorldCollision( new Vector2d(), partie,null,true );
 	}
 	@Override
 	public void handleDeplacementSuccess(AbstractModelPartie partie) {
 		// TODO Auto-generated method stub
-		
+
 	}
 	@Override
 	public void resetVarBeforeCollision()
@@ -385,8 +473,10 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 		//nothing
 	}
 	@Override
-	public void resetVarDeplace() {
-		//nothing
+	public void resetVarDeplace(boolean speedUpdated) {
+		if(afterDecochee && speedUpdated){
+			afterDecochee=false;
+		}
 	}
 
 	@Override

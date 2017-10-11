@@ -24,8 +24,11 @@ public class Tir extends Mouvement_perso
 			
 			List<List<Point>> hitboxCreation = new ArrayList<List<Point>>();
 			//add for every edge, a list of point depending on the animation
-			List<Integer> xg = Arrays.asList(11,11,26,28,32,18,25,16,38,11);
-			List<Integer> xd = Arrays.asList(31,31,46,48,52,38,45,36,58,31);
+			//List<Integer> xg = Arrays.asList(11,11,26,28,32,18,25,16,38,11);
+			//List<Integer> xd = Arrays.asList(31,31,46,48,52,38,45,36,58,31);
+			
+			List<Integer> xg = Arrays.asList(5,5,20,28,32,18,25,16,30,5);
+			List<Integer> xd = Arrays.asList(31,31,46,54,58,46,51,42,56,31);
 			List<Integer> yh = Arrays.asList(19,11,0 ,0 ,11,19,27,15,15,27);
 			List<Integer> yb = Arrays.asList(102,94,83,83,94,102,110,98,98,110);
 
@@ -55,6 +58,16 @@ public class Tir extends Mouvement_perso
 		this(obj,_type_mouv,current_frame);
 		animation = _animation;
 	}
+	
+	@Override
+	public int getMaxBoundingSquare(Object obj)
+	{
+		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
+			return 112;
+		else
+			return 0;
+	}
+	
 	public Mouvement Copy(Object obj) {
 		return new Tir(obj,type_mouv,animation.getStartFrame(),animation);
 	}

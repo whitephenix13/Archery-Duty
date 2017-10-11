@@ -30,9 +30,9 @@ public class Accroche extends Mouvement_perso{
 
 			List<List<Point>> hitboxCreation = new ArrayList<List<Point>>();
 			//add for every edge, a list of point depending on the animation
-			List<Integer> xg = Arrays.asList(42,4 ,11,4);
+			List<Integer> xg = Arrays.asList(42,4 ,11,13); //Arrays.asList(42,4 ,11,4);
 			List<Integer> xd = Arrays.asList(71,28,40,39);
-			List<Integer> yh = Arrays.asList(12,4,12,13);
+			List<Integer> yh = Arrays.asList(12,4,12,4); //  Arrays.asList(12,4,12,13)
 			List<Integer> yb = Arrays.asList(94,67,94,67);
 
 			hitboxCreation.add(Hitbox.asListPoint(xg,yh));
@@ -58,6 +58,13 @@ public class Accroche extends Mouvement_perso{
 		this(obj,_type_mouv,current_frame);
 		animation = _animation;
 	}
+	
+	@Override
+	public int getMaxBoundingSquare(Object obj)
+	{
+		return 100;
+	}
+
 	public Mouvement Copy(Object obj) {
 		return new Accroche(obj,type_mouv,animation.getStartFrame(),animation);
 	}

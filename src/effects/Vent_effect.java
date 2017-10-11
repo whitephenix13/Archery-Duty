@@ -1,6 +1,7 @@
 package effects;
 
 import java.awt.Point;
+import java.awt.geom.AffineTransform;
 import java.util.Arrays;
 
 import javax.vecmath.Vector2d;
@@ -36,12 +37,13 @@ public class Vent_effect extends Effect{
 
 	public Vent_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame)
 	{
+		super.init();
 		anim=_anim;
 
 		ref_fleche = _ref_fleche;
-		xtaille =  Arrays.asList(164,191,259,400);
-		ytaille =  Arrays.asList(159,222,349,400);
-		hitbox = Hitbox.createSquareHitboxes(Arrays.asList(0,0,0,0),Arrays.asList(0,0,0,0),Arrays.asList(164,191,259,400),Arrays.asList(159,222,349,400));
+		xtaille =  Arrays.asList(400,400,400,400);
+		ytaille =  Arrays.asList(400,400,400,400);
+		hitbox = Hitbox.createSquareHitboxes(Arrays.asList(125,123,74,0),Arrays.asList(109,110,0,0),Arrays.asList(291,298,336,400),Arrays.asList(274,313,349,400));
 
 		rotation = _ref_fleche.rotation;
 		int start_index =0;
@@ -51,8 +53,13 @@ public class Vent_effect extends Effect{
 
 		localVit = new Vitesse();
 		partie.arrowsEffects.add(this);
+		setFirstPos(partie);
 	}
-
+	@Override
+	public int getMaxBoundingSquare()
+	{
+		return 400;
+	}
 	@Override
 	public void updateOnCollidable(AbstractModelPartie partie,Entitie attacher)
 	{
@@ -89,16 +96,14 @@ public class Vent_effect extends Effect{
 		int EJECT_DISTANCE = getEJECT_DISTANCE();
 
 		//find where object is precisely using the middle of the hitbox
-		Hitbox obj_hit = obj.getHitbox(partie.INIT_RECT);
-		if(obj.fixedWhenScreenMoves)
-			obj_hit=Hitbox.minusPoint(obj.getHitbox(partie.INIT_RECT), new Point(partie.xScreendisp,partie.yScreendisp),false);
+		Hitbox obj_hit = obj.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
 		Vector2d obj_left_up_hit = Hitbox.supportPoint(new Vector2d(-1,-1),obj_hit.polygon);
 		Vector2d obj_right_down_hit = Hitbox.supportPoint(new Vector2d(1,1),obj_hit.polygon);
 		double objXmiddle = (obj_left_up_hit.x + obj_right_down_hit.x)/2;
 		double objYmiddle = (obj_left_up_hit.y + obj_right_down_hit.y)/2;
 
 		//use the tip of the arrow 
-		Hitbox fleche_hit = ref_fleche.getHitbox(partie.INIT_RECT);
+		Hitbox fleche_hit = ref_fleche.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
 		//Test if x is close to 0
 		double[] XY = Deplace.angleToXY(ref_fleche.rotation);
 
@@ -130,8 +135,7 @@ public class Vent_effect extends Effect{
 
 	}
 
-	@Override
-	public Point getTranslationFromTranformDraw(AbstractModelPartie partie) {
+	public void setFirstPos(AbstractModelPartie partie) {
 		int fanim = ref_fleche.anim;
 		//get the middle of the effect
 		int x_eff_center = (int) (xtaille.get(anim)/2 * Math.cos(rotation) - ytaille.get(anim)/2 * Math.sin(rotation));
@@ -143,10 +147,19 @@ public class Vent_effect extends Effect{
 		int y_tip_fleche= (int) (ref_fleche.ypos() + ref_fleche.deplacement.xtaille.get(fanim) * Math.sin(rotation) 
 				+ ref_fleche.deplacement.ytaille.get(fanim)/2 * Math.cos(rotation));
 
-		Point transl = new Point(x_tip_fleche-x_eff_center+partie.xScreendisp, +y_tip_fleche-y_eff_center+partie.yScreendisp);
-		return transl;
+		xpos_sync(x_tip_fleche-x_eff_center);
+		ypos_sync(y_tip_fleche-y_eff_center);
 	}
 
+	@Override
+	public AffineTransform computeTransformDraw(AbstractModelPartie partie) {
+		
+		Point transl = getTranslationFromTranformDraw(partie);
+		AffineTransform tr2 = new AffineTransform();
+		tr2.translate(transl.x, transl.y);
+		tr2.rotate(rotation);
+		return tr2;
+	}
 
 	@Override
 	public void onDestroy(AbstractModelPartie partie)

@@ -6,11 +6,15 @@ import javax.vecmath.Vector2d;
 
 import collision.Collidable;
 import deplacement.Deplace;
+import effects.Effect;
 import effects.Grappin_effect;
+import effects.Roche_effect;
+import fleches.Fleche;
 import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import personnage.Heros;
 import types.Entitie;
+import types.Hitbox;
 import types.Projectile;
 import types.Vitesse;
 
@@ -23,8 +27,7 @@ public class Fleche_grappin extends Spirituelle {
 	public Fleche_grappin(List<Projectile> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor)
 	{
 		super(tabFleche, current_frame,_shooter,add_to_list,damageMult,speedFactor);
-		no_more_than_one=true;
-		destroy_on_click=true;
+		MAX_NUMBER_INSTANCE=1;
 		TEMPS_DESTRUCTION= (long) (2* Math.pow(10,8));//in nano sec = 0.5 sec 
 		damage=0*damageMult;
 	}
@@ -68,13 +71,15 @@ public class Fleche_grappin extends Spirituelle {
 	}
 
 	@Override
-	protected void onPlanted(List<Entitie> objects,AbstractModelPartie partie,boolean stuck)
+	protected void onPlanted(List<Entitie> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
 	{
+		if(this.afterDecochee && stuck)
+			ejectArrow(partie,unprojectedSpeed);
 		if(stuck){
 			destroy(partie,false);
 			return;
 		}
-		
+
 		if((!this.needDestroy || this.tempsDetruit>0) && !dragSomething)
 		{
 			//planted is only called if the arrow collide with the world hence the grappin applies on the shooter
@@ -88,6 +93,14 @@ public class Fleche_grappin extends Spirituelle {
 				grap.isDragging=true;
 				grap.shooterDragged=true;
 				dragSomething=true;
+				if(collidedObject instanceof Roche_effect)
+				{
+					Roche_effect eff = (Roche_effect) collidedObject;
+					if(eff.isWorldCollider){
+						eff.addSynchroSpeed(this);
+						eff.addSynchroSpeed(flecheEffect);
+					}
+				}
 			}
 			else
 			{
@@ -98,8 +111,12 @@ public class Fleche_grappin extends Spirituelle {
 
 
 	@Override
-	protected boolean OnObjectsCollision(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d normal)
+	protected boolean OnObjectsCollision(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
 	{
+		if(this.afterDecochee && (collider instanceof Effect))
+			if(((Effect)collider).isWorldCollider)
+				ejectArrow(partie,unprojectedSpeed);
+
 		boolean isColliderEntitie = collider instanceof Entitie;
 		Entitie colliderEntitie = isColliderEntitie?  (Entitie) collider : null;
 
@@ -136,6 +153,13 @@ public class Fleche_grappin extends Spirituelle {
 			MusicBruitage.startBruitage("arc");
 		}
 
+	}
+	@Override
+	public boolean OnArrowReshot(AbstractModelPartie partie, Fleche firstFleche)
+	{
+		if(!getNeedDestroy() && (tempsDetruit==0))
+			destroy(partie,true);
+		return false;
 	}
 	@Override
 	public void beforeFlecheDestroyed(AbstractModelPartie partie)

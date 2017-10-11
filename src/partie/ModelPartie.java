@@ -6,7 +6,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Point;
-import java.awt.Polygon;
 import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.geom.AffineTransform;
@@ -34,13 +33,11 @@ import deplacement.Saut;
 import deplacement.Tir;
 import effects.Effect;
 import fleches.Fleche;
+import fleches.destructrice.Fleche_bogue;
 import images.ImagesEffect;
 import menuPrincipal.AbstractModelPrincipal;
-import monstre.Monstre;
 import monstre.Spirel;
-import monstre.TirMonstre;
 import music.Music;
-import music.MusicBruitage;
 import option.Config;
 import personnage.Heros;
 import principal.InterfaceConstantes;
@@ -54,7 +51,6 @@ import types.TypeObject;
 
 public class ModelPartie extends AbstractModelPartie{
 
-
 	public ModelPartie(Touches _touches)
 	{
 		touches = _touches;
@@ -67,8 +63,8 @@ public class ModelPartie extends AbstractModelPartie{
 		INIT_RECT.x= (monde.xStartPerso-InterfaceConstantes.LARGEUR_FENETRE/2)/100*100;//49 900
 		INIT_RECT.y= (monde.yStartPerso-InterfaceConstantes.HAUTEUR_FENETRE/2)/100*100;//49 700
 
-		heros.xpos((InterfaceConstantes.LARGEUR_FENETRE/2+(INIT_RECT.x==monde.xStartPerso-InterfaceConstantes.LARGEUR_FENETRE/2? 0:100 ))/100*100);
-		heros.ypos((InterfaceConstantes.HAUTEUR_FENETRE/2+(INIT_RECT.y==monde.yStartPerso-InterfaceConstantes.HAUTEUR_FENETRE/2? 0:100 ))/100*100);
+		heros.xpos_sync((InterfaceConstantes.LARGEUR_FENETRE/2+(INIT_RECT.x==monde.xStartPerso-InterfaceConstantes.LARGEUR_FENETRE/2? 0:100 ))/100*100);
+		heros.ypos_sync((InterfaceConstantes.HAUTEUR_FENETRE/2+(INIT_RECT.y==monde.yStartPerso-InterfaceConstantes.HAUTEUR_FENETRE/2? 0:100 ))/100*100);
 		//on fait apparaitre les monstres 
 		nombreMonstreRestant=100;
 		spawnMonster(nombreMonstreRestant,typeDeSpawn);
@@ -96,9 +92,8 @@ public class ModelPartie extends AbstractModelPartie{
 			}
 
 		}
-		
 		firstNonFocused=true;
-		
+
 		//int x= heros.xPos + heros.deplacement.xdecallsprite[heros.anim]; //la vrai position du heros necessite encore un - variablesPartieRapide.xdeplaceEcran
 		//int y= heros.yPos+ heros.deplacement.ydecallsprite[heros.anim]; 
 
@@ -135,7 +130,7 @@ public class ModelPartie extends AbstractModelPartie{
 			debugTime.elapsed("deplaceEntities", 2);
 
 			//DEPLACEMENT ENTITIES
-			
+
 			for(Entitie ent : Collidable.getAllEntitiesCollidable(this))
 			{
 				Mouvement mouv = ent.deplacement;
@@ -149,7 +144,7 @@ public class ModelPartie extends AbstractModelPartie{
 				else
 					ent.setNeedDestroy();
 			}
-			
+			 
 			debugTime.elapsed("deplaceProjectiles", 2);
 
 			//DEPLACEMENT PROJECTILES 
@@ -162,65 +157,75 @@ public class ModelPartie extends AbstractModelPartie{
 					proj.setNeedDestroy();
 			}
 
+			//UPDATE AND DEPLACEMENT OF EFFECTS
+			for(Collidable col : arrowsEffects)
+			{
+				Effect eff = (Effect) col;
+				boolean shouldBeDestroyed = ((PartieTimer.me.getElapsedNano()-eff.tempsDetruit) > eff.TEMPS_DESTRUCTION) && eff.tempsDetruit>0;
+				boolean ended = eff.isEnded();
+				if(!shouldBeDestroyed && !ended){
+					deplace.DeplaceObject(eff, eff.deplacement, this);
+					eff.onUpdate(this, false);
+				}
+				else if(shouldBeDestroyed)
+					eff.setNeedDestroy();
+				else
+					eff.destroy(this, true);
+			}
+
 			//COLLISION ENTITIES/PROJECTILE 
 			List<List<Entitie>> allEntities = Collidable.getAllEntitiesCollidableSeparately(this);
 			List<List<Projectile>> allProjectiles = Collidable.getAllProjectileCollidableSeparately(this);
-			
+
 			//Compare groups of projectile between them (ie: fleche and tirMonstre)
 			for(int i=0; i<(allProjectiles.size()-1);i++)
 				for(int j=i+1; j<(allProjectiles.size());j++)
 				{
 					List<Projectile> groupI = allProjectiles.get(i);
 					List<Projectile> groupJ = allProjectiles.get(j);
-					
-					//Check if the two groups collides 
-					Projectile proj0I = groupI.size()>0 ? groupI.get(0):null;
-					Projectile proj0J = groupJ.size()>0 ? groupJ.get(0):null;
-					
-					if(proj0I==null || (proj0J==null) || (TypeObject.isMemberOf(proj0I, proj0J.getImmuneType())) || (TypeObject.isMemberOf(proj0J, proj0I.getImmuneType())))
-						continue;
-					
+
+
 					for(int i_index =0; i_index<groupI.size(); i_index++)
-						for(int j_index =0; j_index<groupJ.size(); j_index++)
+						for(int j_index =0; j_index<groupJ.size(); j_index++){
+							if(TypeObject.isMemberOf(groupI.get(i_index), groupJ.get(j_index).getImmuneType()) || 
+									(TypeObject.isMemberOf(groupJ.get(j_index), groupI.get(i_index).getImmuneType())))
+								continue;
 							Collision.collisionObjects(this, groupI.get(i_index), groupJ.get(j_index),true);//Object are warn if collision in this function
+						}
 				}
-			
+
 			//Compare groups of entities and projectiles between them (ie: fleche and monstre)
 			for(int i=0; i<(allEntities.size());i++)
 				for(int j=0; j<(allProjectiles.size());j++)
 				{
 					List<Entitie> groupEntitie = allEntities.get(i);
 					List<Projectile> groupProjectile = allProjectiles.get(j);
-					
-					//Check if the two groups collides 
-					Entitie entitie0 = groupEntitie.size()>0 ? groupEntitie.get(0):null;
-					Projectile proj0 = groupProjectile.size()>0 ? groupProjectile.get(0):null;
-					
-					if(entitie0==null || (proj0==null) || (TypeObject.isMemberOf(entitie0, proj0.getImmuneType())) || (TypeObject.isMemberOf(proj0, entitie0.getImmuneType() )))
-						continue;
-					
+
 					for(int i_index =0; i_index<groupEntitie.size(); i_index++)
-						for(int j_index =0; j_index<groupProjectile.size(); j_index++)
+						for(int j_index =0; j_index<groupProjectile.size(); j_index++){
+							if((TypeObject.isMemberOf(groupEntitie.get(i_index), groupProjectile.get(j_index).getImmuneType())) 
+									|| (TypeObject.isMemberOf(groupProjectile.get(j_index), groupEntitie.get(i_index).getImmuneType() )))
+								continue;
 							Collision.collisionObjects(this, groupEntitie.get(i_index), groupProjectile.get(j_index),true);//Object are warn if collision in this function
+						}
 				}
-			
-			
+
+
 			//Update Variables after collisions 
 			nombreMonstreRestant=tabMonstre.size();
 			//on met a jour le heros si il est touché avant de l'afficher
 			heros.miseAjourTouche();
 			heros.miseAJourSeyeri(this);
-			
+
 			debugTime.elapsed("effect updates", 2);
 
 
-			//update effects anim or delete them 
-			gestionEffect();
+
 
 			//update conditions for all entities. Only do it at the end to be sure that all entities received the same information on the conditions
 			for(Entitie c : Collidable.getAllEntitiesCollidable(this))
 				c.conditions.updateConditionState();
-			
+
 			debugTime.elapsed("object destruction preparation", 2);
 
 			//PREPARE OBJECTS FOR DESTRUCTION 
@@ -268,10 +273,10 @@ public class ModelPartie extends AbstractModelPartie{
 	{
 		for(int i=0;i<arrowsEffects.size();++i)
 		{
-			Effect eff = arrowsEffects.get(i);
+			Effect eff = (Effect) arrowsEffects.get(i);
 			//if anim ended: delete
 			double tempsEffect=  PartieTimer.me.getElapsedNano()-eff.tempsDetruit;
-			
+
 			if(!eff.isEnded() && tempsEffect>eff.TEMPS_DESTRUCTION && eff.tempsDetruit>0)
 			{
 				eff.setNeedDestroy();
@@ -363,10 +368,17 @@ public class ModelPartie extends AbstractModelPartie{
 	}
 
 	//INPUTS 
+	private boolean nextDirectionRightInBothCase = true; 
 	public void keyDownAction () 
 	{
 		if(!finPartie)
 		{
+			boolean bothDirection = (inputPartie.courseDroiteDown || inputPartie.marcheDroiteDown) &&  (inputPartie.courseGaucheDown || inputPartie.marcheGaucheDown);
+			boolean courseDroiteDown = inputPartie.courseDroiteDown  && (bothDirection? nextDirectionRightInBothCase : true );
+			boolean marcheDroiteDown = inputPartie.marcheDroiteDown  && (bothDirection? nextDirectionRightInBothCase : true );
+			boolean marcheGaucheDown = inputPartie.marcheGaucheDown  && (bothDirection? !nextDirectionRightInBothCase : true );
+			boolean courseGaucheDown = inputPartie.courseGaucheDown  && (bothDirection? !nextDirectionRightInBothCase : true );
+
 			if(inputPartie.pauseDown )
 			{
 				inPause=!inPause;
@@ -410,12 +422,12 @@ public class ModelPartie extends AbstractModelPartie{
 						}
 					}
 				}
-					
+
 				boolean heros_shoots = heros.flecheEncochee||heros.doitEncocherFleche;
 				boolean heros_accroche = heros.deplacement.IsDeplacement(Mouvement_perso.accroche);
 				boolean heros_glisse = heros.deplacement.IsDeplacement(Mouvement_perso.glissade);
 				//COURSE DROITE
-				if(inputPartie.courseDroiteDown && !heros_glisse && !heros_accroche && !heros_shoots && !isDragged)
+				if(courseDroiteDown && !heros_glisse && !heros_accroche && !heros_shoots && !isDragged)
 				{
 					//si on ne courrait pas vers la droite avant
 					if(! (heros.deplacement.IsDeplacement(Mouvement_perso.course) && heros.anim>=4))
@@ -431,7 +443,7 @@ public class ModelPartie extends AbstractModelPartie{
 				}
 
 				//MARCHE DROITE 
-				else if(inputPartie.marcheDroiteDown&& !heros_shoots && !isDragged)
+				else if(marcheDroiteDown&& !heros_shoots && !isDragged)
 				{
 					if(heros_glisse)
 					{
@@ -502,7 +514,7 @@ public class ModelPartie extends AbstractModelPartie{
 					}
 				}
 				//COURSE GAUCHE
-				if(inputPartie.courseGaucheDown && !heros_glisse && !heros_accroche && !heros_shoots && !isDragged)
+				if(courseGaucheDown && !heros_glisse && !heros_accroche && !heros_shoots && !isDragged)
 				{
 					//si on ne courrait pas vers la gauche avant 
 					if(! (heros.deplacement.IsDeplacement(Mouvement_perso.course) && heros.anim<4))
@@ -518,7 +530,7 @@ public class ModelPartie extends AbstractModelPartie{
 					}
 				}
 				//MARCHE GAUCHE 
-				else if(inputPartie.marcheGaucheDown&& !heros_shoots && !isDragged)
+				else if(marcheGaucheDown&& !heros_shoots && !isDragged)
 				{
 
 					if(heros_glisse)
@@ -648,7 +660,7 @@ public class ModelPartie extends AbstractModelPartie{
 						heros.nouvMouv= new Saut(heros,heros.nouvAnim==0?Saut.jump_gauche:Saut.jump_droite,frame );
 					}
 				}
-
+				nextDirectionRightInBothCase = bothDirection?nextDirectionRightInBothCase : ((inputPartie.marcheDroiteDown || inputPartie.courseDroiteDown)? false : true );
 				//touches pour lesquels maintenir appuyé ne change rien
 				inputPartie.sautDown =false;
 			}
@@ -682,10 +694,16 @@ public class ModelPartie extends AbstractModelPartie{
 				heros.flecheEncochee=false;
 				changeMouv=true;
 
+				for(int i=0; i<tabFleche.size();i++)
+				{
+					Fleche f = (Fleche)tabFleche.get(i);
+					if(f.encochee)
+						f.flecheDecochee(this,deplace);
+				}
+
+
 				heros.nouvAnim= (heros.droite_gauche(heros.anim).equals(Mouvement.GAUCHE) ? 0 : 2) ;
 				heros.nouvMouv= new Attente(heros,heros.nouvAnim==0? Attente.attente_gauche:Attente.attente_droite,frame);
-				Fleche f = (Fleche)tabFleche.get(tabFleche.size()-1);
-				f.flecheDecochee(this,deplace);
 				//TODO:
 				if(normal_2tir_R)
 				{}
@@ -783,7 +801,7 @@ public class ModelPartie extends AbstractModelPartie{
 			inputPartie.sautDown=false;
 			inputPartie.sautReleased=false;
 		}
-		
+
 		//SWITCH ARROW 
 		if(inputPartie.arrowReleased>-1)
 			inputPartie.arrowReleased=-1;
@@ -861,10 +879,13 @@ public class ModelPartie extends AbstractModelPartie{
 		drawPerso(g,false);
 		drawFleches(g,false);
 		drawTirMonstres(g,false);
-		drawEffects(g,pan,true);
+		drawEffects(g,pan,false );
 		drawInterface(g);
 
+		if(debugDraw != null)
+			debugDraw.draw(g);
 	}
+
 
 	public void drawMonde(Graphics g,boolean drawHitbox) 
 	{
@@ -920,7 +941,7 @@ public class ModelPartie extends AbstractModelPartie{
 			drawBar(g,2,x,y,width,height,colors);
 
 			ArrayList<Condition> allcondis = m.conditions.getAllConditions();
-			int xMiddle = Hitbox.getHitboxCenter(m.getHitbox(INIT_RECT)).x-m.xpos();
+			int xMiddle = (int) (Hitbox.getHitboxCenter(m.getHitbox(INIT_RECT,getScreenDisp())).x-m.xpos());
 			int xStartDrawCondi = m.conditions.getXStartDraw(xDraw, xMiddle, allcondis.size());
 			int yStartDrawCondi = m.conditions.getYStartDraw(y[0]-25);
 
@@ -929,13 +950,13 @@ public class ModelPartie extends AbstractModelPartie{
 				if(condi.blinkDisplay)
 					g.drawImage(imConditions.getImage(condi.name), xStartDrawCondi+25*i ,yStartDrawCondi ,null);
 			}
-					
-			
+
+
 			//drawBar(g,xDraw/2+xDraw_d/2-InterfaceConstantes.MAXLIFE/2,yDraw-10,InterfaceConstantes.MAXLIFE,5,m.getLife(),Color.BLACK,Color.GREEN);
 			if(drawHitbox)
 			{
-				Hitbox hitbox= m.getHitbox(INIT_RECT);
-				drawPolygon(g,hitbox,true);
+				Hitbox hitbox= m.getHitbox(INIT_RECT,getScreenDisp());
+				drawPolygon(g,hitbox);
 			}
 		}
 
@@ -982,7 +1003,7 @@ public class ModelPartie extends AbstractModelPartie{
 					g.drawImage(l_image.get(i), heros.xpos(),heros.ypos(),null);
 			}
 			ArrayList<Condition> allcondis = heros.conditions.getAllConditions();
-			int xMiddle = Hitbox.getHitboxCenter(heros.getHitbox(INIT_RECT)).x-heros.xpos();
+			int xMiddle = (int) (Hitbox.getHitboxCenter(heros.getHitbox(INIT_RECT,getScreenDisp())).x-heros.xpos())+xScreendisp;
 			int xStartDrawCondi = heros.conditions.getXStartDraw(heros.xpos(), xMiddle, allcondis.size());
 			int yStartDrawCondi = heros.conditions.getYStartDraw(heros.ypos()-25);
 			for(int i =0; i<allcondis.size();++i){
@@ -994,8 +1015,8 @@ public class ModelPartie extends AbstractModelPartie{
 
 		if(drawHitbox)
 		{
-			Hitbox hitbox= heros.getHitbox(INIT_RECT);
-			drawPolygon(g,hitbox,false);
+			Hitbox hitbox= heros.getHitbox(INIT_RECT,getScreenDisp());
+			drawPolygon(g,hitbox);
 			if(anchor!=null){
 				g.setColor(Color.red);
 				g.drawString("o", anchor.x, anchor.y);
@@ -1019,12 +1040,15 @@ public class ModelPartie extends AbstractModelPartie{
 			for(int i=0;i<tabFleche.size();++i) 
 			{
 				Fleche fleche = (Fleche) tabFleche.get(i);
+				if(!fleche.isVisible)
+					continue;
 				int anim=fleche.anim;
 				int hanim = heros.anim;
 				Point pos = new Point();
 				Point anchor = new Point(0,0); //only arrows towards its center
 				Point taille = new Point(fleche.deplacement.xtaille.get(anim),fleche.deplacement.ytaille.get(anim));
 				AffineTransform tr;
+
 				if(fleche.encochee)
 				{
 					Point f_anchor = new Point(fleche.xanchor.get(hanim),fleche.yanchor.get(hanim));
@@ -1032,9 +1056,8 @@ public class ModelPartie extends AbstractModelPartie{
 					//Anchor is relative to position: true_anchor = world anchor - mypos
 					//world anchor = heros pos + heros anchor, mypos = heros  pos + fleche anchor
 					anchor=new Point(heros.deplacement.x_rot_pos.get(hanim)-f_anchor.x,
-							heros.deplacement.y_rot_pos.get(hanim)-f_anchor.y);
+							heros.deplacement.y_rot_pos.get(hanim)-f_anchor.y);					
 					tr = getRotatedTransform(pos,anchor, taille, fleche.rotation);
-
 				}
 				else
 				{
@@ -1045,6 +1068,7 @@ public class ModelPartie extends AbstractModelPartie{
 					double[] flatmat = new double[6];
 					tr.getMatrix(flatmat);
 					tr.setTransform(flatmat[0], flatmat[1], flatmat[2], flatmat[3], transl.x, transl.y);
+
 				}
 				if(fleche.encochee){
 					fleche.draw_tr=tr;
@@ -1055,8 +1079,8 @@ public class ModelPartie extends AbstractModelPartie{
 
 				if(drawHitbox)
 				{
-					Hitbox hitbox= fleche.getHitbox(INIT_RECT);
-					drawPolygon(g,hitbox,true);
+					Hitbox hitbox= fleche.getHitbox(INIT_RECT,getScreenDisp());
+					drawPolygon(g,hitbox);
 				}
 			}
 		}
@@ -1083,8 +1107,8 @@ public class ModelPartie extends AbstractModelPartie{
 
 				if(drawHitbox)
 				{
-					Hitbox hitbox= tir.getHitbox(INIT_RECT);
-					drawPolygon(g,hitbox,true);
+					Hitbox hitbox= tir.getHitbox(INIT_RECT,getScreenDisp());
+					drawPolygon(g,hitbox);
 				}
 
 			}
@@ -1101,11 +1125,10 @@ public class ModelPartie extends AbstractModelPartie{
 		//Draw arrow effect
 		for(int i =0; i< arrowsEffects.size(); ++i)
 		{
-			Effect eff = arrowsEffects.get(i);
-			
-			if(eff.getNeedDestroy())
+			Effect eff = (Effect)arrowsEffects.get(i);
+
+			if(eff.getNeedDestroy() || eff.isEnded())
 				continue;
-			int anim = eff.anim;
 			AffineTransform tr = eff.draw_tr;
 
 			ArrayList<Image> images = imEffect.getImage(eff);
@@ -1117,8 +1140,8 @@ public class ModelPartie extends AbstractModelPartie{
 			}
 			if(drawHitbox)
 			{
-				Hitbox hitbox= eff.getHitbox(INIT_RECT);
-				drawPolygon(g,hitbox,true);
+				Hitbox hitbox= eff.getHitbox(INIT_RECT,getScreenDisp());
+				drawPolygon(g,hitbox);
 			}
 		}
 		//Affichage du slow motion 
@@ -1160,7 +1183,7 @@ public class ModelPartie extends AbstractModelPartie{
 			int ydecall = i==heros.current_slot?10:0;
 			g.drawImage(imFlecheIcon.getImage(s), 10 + 25*i, 80+ydecall, null);
 		}
-		
+
 		//nombre de monstre restant
 		g.setColor(Color.BLACK);
 		g.setFont(new Font(g.getFont().getFontName(),g.getFont().getStyle(), 20 ));
@@ -1233,15 +1256,15 @@ public class ModelPartie extends AbstractModelPartie{
 		g2d.translate(-xt,-yt);
 	}
 
-	public void drawPolygon(Graphics g, Hitbox h,boolean addScreenDisp)
+	public void drawPolygon(Graphics g, Hitbox h)
 	{
-		drawPolygon(g,h,addScreenDisp,Color.red);
+		drawPolygon(g,h,Color.red);
 	}
-	public void drawPolygon(Graphics g, Hitbox h,boolean addScreenDisp,Color c)
+	public void drawPolygon(Graphics g, Hitbox h,Color c)
 	{
 		g.setColor(c);
-		if(addScreenDisp)
-			h=Hitbox.plusPoint(h, new Point(xScreendisp,yScreendisp),true);
+		//make the hitbox relative to the screen
+		h=Hitbox.plusPoint(h,getScreenDisp(),true);
 		g.drawPolygon(h.polygon);
 		g.setColor(Color.BLACK);
 	}
@@ -1279,6 +1302,7 @@ public class ModelPartie extends AbstractModelPartie{
 	}
 
 
+	//used for grappin effect 
 	public BufferedImage apply_width_mask(BufferedImage original,BufferedImage previousMaskedIm, int w_start, int last_start,float transparency)
 	{
 		int width = original.getWidth();
@@ -1308,6 +1332,43 @@ public class ModelPartie extends AbstractModelPartie{
 				int color = current_rgb & 0x00ffffff; // Mask preexisting alpha
 				int prev_alpha = current_rgb & 0xff000000;
 				int alpha = prev_alpha & (c.getRGB() << 24); // Shift blue to alpha
+				previousMaskedIm.setRGB(i, j, (color | alpha));
+			}
+		}
+		return previousMaskedIm;
+	}
+
+	//used for roche effect 
+	public BufferedImage apply_height_mask(BufferedImage original,BufferedImage previousMaskedIm, int h_start_mask,float transparency)
+	{
+		int width = original.getWidth();
+		int height = original.getHeight();
+		if(width==-1 || height == -1)
+			return original;
+
+		int desired_alpha = (int)(255* transparency);
+		Color c = new Color(desired_alpha,desired_alpha,desired_alpha);
+		Color nullC = new Color(255-desired_alpha,255-desired_alpha,255-desired_alpha);
+
+
+		//make the first part transparent (ie visible)
+		for(int i =0; i<width;i++){
+			for(int j=0;j<h_start_mask;j++){
+				int current_rgb = original.getRGB(i, j);
+				int color = current_rgb & 0x00ffffff; // Mask preexisting alpha
+				int prev_alpha = current_rgb & 0xff000000;
+				int alpha = prev_alpha & (c.getRGB() << 24); // Shift blue to alpha
+				previousMaskedIm.setRGB(i, j, (color | alpha));
+			}
+		}
+		
+		//make the second part invisible 
+		for(int i =0; i<width;i++){
+			for(int j=h_start_mask;j<height;j++){
+				int current_rgb = original.getRGB(i, j);
+				int color = current_rgb & 0x00ffffff; // Mask preexisting alpha
+				int prev_alpha = current_rgb & 0xff000000;
+				int alpha = prev_alpha & (nullC.getRGB() << 24); // Shift blue to alpha
 				previousMaskedIm.setRGB(i, j, (color | alpha));
 			}
 		}
