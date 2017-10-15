@@ -114,7 +114,7 @@ public abstract class Collision implements InterfaceConstantes{
 	 * @param hit2= world
 	 * @return {collisionPoint, minimumEjectPoint to apply to make sure that an object is out of collision}
 	 */
-	public static Point[] computeCollisionPoint(Vector2d dir, double dInter, Hitbox hit_eject, Hitbox hit2,boolean debug)
+	public static Point[] computeCollisionPoint(Vector2d dir, double dInter, Hitbox hit_eject, Hitbox hit2)
 	{
 
 		Vector2d ejectVect = new Vector2d();
@@ -744,8 +744,7 @@ public abstract class Collision implements InterfaceConstantes{
 						{
 							intersectedCol=col;
 							intersectedHit=object2Hitbox.copy();
-							boolean debug = (object1 instanceof Fleche);
-							Point[] res = computeCollisionPoint(new Vector2d(ejectDeplacement.x,ejectDeplacement.y),dInter,object1Hitbox,object2Hitbox,debug);
+							Point[] res = computeCollisionPoint(new Vector2d(ejectDeplacement.x,ejectDeplacement.y),dInter,object1Hitbox,object2Hitbox);
 							intersectedCollision= res[0];
 							Vector2d projectedEPA = GJK_EPA.projectVectorTo90(EPA_normal,false,0);
 							ejectFromCollisionPoint=new Point((int) (projectedEPA.x),(int)(projectedEPA.y));

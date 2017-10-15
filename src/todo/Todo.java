@@ -4,7 +4,7 @@ public class Todo {
 	
 	//Version 0.2.2
 			
-	//TODO: remove debug from computeCollisionPoint in collision
+	//TODO: remove all todo from affichePartie
 	//TODO: use collision point for ALL effects 
 	//TODO: correct effect display priority ? 
 	
@@ -14,15 +14,14 @@ public class Todo {
 	//TODO: make some effect perpendicualr to ground ? (trou noir, vent)
 	
 	//TODO: fleche vent: align effect with arrow when stick to hero ? 
-	//TODO: fleche ombre, heros stau accroche 
-	//TODO: load only relevant part of the world 
+	//TODO: fleche vent : test spam // CHeck arrows colliding to themselves? 
+	//TODO: fleche ombre, heros stuck if accroche 
 	//TODO: correct Partie timer when system pause 
-	//TODO: CHeck arrows colliding to themselves (the reason why you can't infinite push with wind?)
-	//TODO: pre-init grappin to avoid use GC call
 	//TODO: set the java parameter for .jar
-	//TODO: add switch arrow touch option 
+	//TODO: Switch arrow button
 	//TODO: correct fleches values with respect to table
 	//TODO: check if grappin still pull ennemis (vitesse.negate changed)
+	//TODO: add icon for normal arrow 
 		//MATERIEL
 	//TODO: Electrique: Object: create area that paralyse ennemy: can't shoot for a while. Ennemi: damage + create a electic ball moving back in the same direction as arrow: destroy all projectiles and disappear when wall it or after time
 	//TODO: Glace : Object: create a stalactite submitted to gravity                       Ennemi: damage + slow down
@@ -47,6 +46,7 @@ public class Todo {
 	//TODO: v-fleche lente //bounce shots // make no gravity area 
 	//TODO: cac: tire 3 flèches à portée réduite 
 	
+	//TODO: load only relevant part of the world 
 	//TODO: more optimization: use sprite sheet 
 	//TODO: warning, arrow speed slow down is broken: can gather arrows 
 	//TODO: optimiser la taille du monde chargé dans partie rapide 

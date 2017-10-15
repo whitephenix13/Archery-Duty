@@ -115,8 +115,9 @@ public class Affichage extends JFrame implements InterfaceConstantes, Observer
 				this.revalidate();
 				affichagePartie.requestGameFocus();
 			}
+			this.repaint();
 		}
-		this.repaint();
+		
 	}
 
 
@@ -193,7 +194,6 @@ public class Affichage extends JFrame implements InterfaceConstantes, Observer
 	//}}
 	public void update() {
 		this.repaint();
-		this.getContentPane().repaint();
 	}
 }
 

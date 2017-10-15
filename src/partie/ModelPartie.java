@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.List;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
@@ -33,7 +34,6 @@ import deplacement.Saut;
 import deplacement.Tir;
 import effects.Effect;
 import fleches.Fleche;
-import fleches.destructrice.Fleche_bogue;
 import images.ImagesEffect;
 import menuPrincipal.AbstractModelPrincipal;
 import monstre.Spirel;
@@ -390,6 +390,9 @@ public class ModelPartie extends AbstractModelPartie{
 			{
 				if(inputPartie.arrowDown>-1)
 				{
+					if(heros.current_slot != inputPartie.arrowDown)
+						arrowSlotIconChanged=true;
+
 					heros.current_slot=inputPartie.arrowDown;
 				}
 				boolean isDragged = this.heros.isDragged();
@@ -870,16 +873,14 @@ public class ModelPartie extends AbstractModelPartie{
 
 
 	//DRAW
-	public void drawPartie(Graphics g,JPanel pan) {
-
-		pan.setOpaque(false);
+	public void drawPartie(Graphics g) {
 
 		drawMonde(g,false);
 		drawMonstres(g,false);
 		drawPerso(g,false);
 		drawFleches(g,false);
 		drawTirMonstres(g,false);
-		drawEffects(g,pan,false );
+		drawEffects(g,false );
 		drawInterface(g);
 
 		if(debugDraw != null)
@@ -1120,7 +1121,7 @@ public class ModelPartie extends AbstractModelPartie{
 
 	}
 
-	public void drawEffects(Graphics g, JPanel pan,boolean drawHitbox) {
+	public void drawEffects(Graphics g,boolean drawHitbox) {
 		Graphics2D g2d = (Graphics2D)g;
 		//Draw arrow effect
 		for(int i =0; i< arrowsEffects.size(); ++i)
@@ -1174,16 +1175,7 @@ public class ModelPartie extends AbstractModelPartie{
 		drawBar(g,3,x_s,y_s,width_s,height_s,colors_s);
 
 		heros.decreaseNotEnoughSeyeriCounter();
-
-
-		//nombre de monstre restant
-		for(int i=0; i<heros.getSlots().length;++i)
-		{
-			String s = heros.getSlots()[i];
-			int ydecall = i==heros.current_slot?10:0;
-			g.drawImage(imFlecheIcon.getImage(s), 10 + 25*i, 80+ydecall, null);
-		}
-
+	
 		//nombre de monstre restant
 		g.setColor(Color.BLACK);
 		g.setFont(new Font(g.getFont().getFontName(),g.getFont().getStyle(), 20 ));

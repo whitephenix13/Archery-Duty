@@ -90,10 +90,16 @@ public abstract class TypeObject {
 					public static String OMBRE=Fleche_ombre.class.getName();
 					public static String VENT=Fleche_vent.class.getName();
 					public static String GRAPPIN=Fleche_grappin.class.getName();
-	
-				//can add all different type of fleche if needed 
+				
+				public static String[] DESTRUCTRICE_CLASS = {FOUDRE,EXPLOSIVE,TROU_NOIR,BOGUE};
+				public static String[] MATERIELLE_CLASS = {FEU,ELECTRIQUE,GLACE,ROCHE};
+				public static String[] RUSEE_CLASS = {AUTO_TELEGUIDEE,RETARD,V_FLECHE,CAC};
+				public static String[] SPRIRITUELLE_CLASS = {LUMIERE,OMBRE,VENT,GRAPPIN};
+
+				
 			public static String TIR_MONSTRE = TirMonstre.class.getName();
 				public static String TIR_SPIREL = TirSpirel.class.getName();
+	
 	
 	
 	/** Check if the given object is of type or of subclass of obj2. Use exactMatch=true to check for same class*/
@@ -146,4 +152,5 @@ public abstract class TypeObject {
 		}
 		return false;
 	}
+	
 }

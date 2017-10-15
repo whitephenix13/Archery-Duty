@@ -2,6 +2,7 @@ package images;
 
 import java.awt.Image;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import fleches.Fleche;
 import loading.LoadMediaThread;
@@ -17,7 +18,7 @@ public class ImagesFlecheIcon extends LoadMediaThread{
 	Image im_ombre= null;
 	Image im_vent= null;
 	Image im_grappin= null;
-	
+
 	Image im_foudre= null;
 	Image im_explosive= null;
 	Image im_trou_noir= null;
@@ -110,6 +111,37 @@ public class ImagesFlecheIcon extends LoadMediaThread{
 		return im;
 
 	}
+
+	/**
+	 * 
+	 * @param name: string corresponding to the arrow type (ie: feu) 
+	 * @return Returns all images of the same class (ie: materielle) than the arrow 
+	 */
+	public Image[]  getAllImagesOfSameClass(String name,String[] outArrowType)
+	{
+		Image[] res = new Image[4];
+		String[][] allArrowType = {TypeObject.DESTRUCTRICE_CLASS,TypeObject.MATERIELLE_CLASS,TypeObject.MATERIELLE_CLASS,TypeObject.SPRIRITUELLE_CLASS};
+		for(int i = 0; i<4; ++i){
+			if(Arrays.asList(allArrowType[i]).contains(name))
+			{
+				int index = 1;
+				res[0]= getImage(name);
+				outArrowType[0]=name;
+				for(String s : allArrowType[i])
+				{
+					if(!s.equals(name))
+					{
+						res[index]= getImage(s);
+						outArrowType[index]=s;
+						index+=1;
+					}
+				}
+				break;
+			}
+		}
+		return res;
+	}
+
 	@Override
 	public void loadMedia(String media_categorie, String filename) {
 		// TODO Auto-generated method stub

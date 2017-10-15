@@ -117,10 +117,15 @@ public class Heros extends Entitie{
 	//private String[] slots = {TypeObject.ROCHE,TypeObject.VENT,TypeObject.OMBRE,TypeObject.LUMIERE};
 	//private String[] slots = {TypeObject.ELECTRIQUE,TypeObject.EXPLOSIVE,TypeObject.FEU,TypeObject.GLACE};
 	//private String[] slots = {TypeObject.GRAPPIN,TypeObject.LUMIERE,TypeObject.OMBRE,TypeObject.ROCHE};
-	private String[] slots = {TypeObject.ROCHE,TypeObject.TROU_NOIR,TypeObject.OMBRE,TypeObject.FEU};
+	private String[] slots = {TypeObject.ROCHE,TypeObject.BOGUE,TypeObject.OMBRE,TypeObject.FEU};
 
 
 	public String[] getSlots(){return slots;}
+	public void changeSlot(AbstractModelPartie partie,int slotNum,String newArrow)
+	{
+		slots[slotNum]=newArrow;
+		addSeyeri(partie, -25);
+	}
 	/**
 	 * 
 	 * @param special is the arrow special or regular
@@ -224,26 +229,10 @@ public class Heros extends Entitie{
 			tempsSeyeri=PartieTimer.me.getElapsedNano();
 			boolean continueSlow = true;
 			if(partie.slowDown)
-			{
-				continueSlow=addSeyeri(partie,-0.5f);
-			}
+				addSeyeri(partie,-0.5f);
+			
 			else
-			{
-				continueSlow=addSeyeri(partie,0.5f);
-			}
-
-			if(!continueSlow)
-			{
-				partie.slowDown=false;
-				PartieTimer.me.changedSlowMotion(false);
-				partie.slowCount=0;
-
-				if(partie.slowDown)
-					Music.me.slowDownMusic();
-				else
-					Music.me.endSlowDownMusic();
-
-			}
+				addSeyeri(partie,0.5f);
 		}
 	}
 
@@ -266,16 +255,28 @@ public class Heros extends Entitie{
 			return true;
 
 	}
-	public boolean addSeyeri(AbstractModelPartie partie,float add)
+	public void addSeyeri(AbstractModelPartie partie,float add)
 	{
+		boolean minimum_reached =false;
 		seyeri += add;
 		if(seyeri>InterfaceConstantes.MAXSEYERI){seyeri=InterfaceConstantes.MAXSEYERI;}
 		if(seyeri<InterfaceConstantes.MINSEYERI)
 		{
 			seyeri=InterfaceConstantes.MINSEYERI;
-			return false;
+			minimum_reached=true;
 		}
-		return true;
+		if(minimum_reached)
+		{
+			partie.slowDown=false;
+			PartieTimer.me.changedSlowMotion(false);
+			partie.slowCount=0;
+
+			if(partie.slowDown)
+				Music.me.slowDownMusic();
+			else
+				Music.me.endSlowDownMusic();
+
+		}
 
 	}
 

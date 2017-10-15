@@ -401,14 +401,7 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		ModelPrincipal principal = new ModelPrincipal();
 		principal.Init();
 		principal.StartBoucleJeu();
-		
 
-
-		/*double dInter =25.73453721949354920933698028489358156132662764820642530121;
-		Hitbox hit1 = new Hitbox(new Point(1003,204), new Point(978,186),new Point(981,181), new Point(1006,199) );
-		Hitbox hit2 = new Hitbox(new Point(900,200), new Point(999,200), new Point(999,299), new Point(900,299) );
-		Point[] res = Collision.computeCollisionPoint(new Vector2d(-24,-17), dInter,hit1, hit2, true);
-		System.out.println(res[0]);*/
 
 		//Convertisseur conv = new Convertisseur();
 		//conv.convertir();

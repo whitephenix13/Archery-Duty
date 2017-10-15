@@ -145,6 +145,7 @@ public abstract class AbstractModelPartie extends DisplayLoader implements Obser
 	//variables pour l'affichage 
 	protected boolean disableBoutonsFin=false;
 	protected boolean setAffichageOption=false; 
+	protected boolean arrowSlotIconChanged =true;
 
 	private ArrayList<Observer> listObserver = new ArrayList<Observer>();
 	//}}
@@ -219,7 +220,7 @@ public abstract class AbstractModelPartie extends DisplayLoader implements Obser
 	public abstract void startPartie(int typeDeSpawn);
 	public abstract void play(Affichage affich) ;
 
-	public abstract void drawPartie(Graphics g,JPanel pan);
+	public abstract void drawPartie(Graphics g);
 
 	public abstract void drawMonde(Graphics g,boolean drawHitbox);
 	public abstract void drawMonstres(Graphics g,boolean drawHitbox);
@@ -234,7 +235,7 @@ public abstract class AbstractModelPartie extends DisplayLoader implements Obser
 	public abstract void drawPerso(Graphics g,boolean drawHitbox);
 	public abstract void drawFleches(Graphics g,boolean drawHitbox);
 	public abstract void drawTirMonstres(Graphics g,boolean drawHitbox);
-	public abstract void drawEffects(Graphics g,JPanel pan,boolean drawHitbox);
+	public abstract void drawEffects(Graphics g,boolean drawHitbox);
 	public abstract void drawInterface(Graphics g);
 	public abstract void drawHitbox(Graphics g,int xdraw, int draw,int width, int height);
 	public abstract void drawHitbox(Graphics g,int xdraw, int draw,int width, int height,Integer angle);
