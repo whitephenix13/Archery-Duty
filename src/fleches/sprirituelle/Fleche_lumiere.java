@@ -1,5 +1,6 @@
 package fleches.sprirituelle;
 
+import java.awt.Point;
 import java.util.List;
 
 import javax.vecmath.Vector2d;
@@ -12,7 +13,6 @@ import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import personnage.Heros;
 import types.Entitie;
-import types.Hitbox;
 import types.Projectile;
 
 public class Fleche_lumiere extends Spirituelle {
@@ -23,14 +23,14 @@ public class Fleche_lumiere extends Spirituelle {
 		damage=0*damageMult;
 	}
 
-	void applyArrowEffect(List<Entitie> objects,AbstractModelPartie partie,Collidable collider)
+	void applyArrowEffect(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d normal,Point pColli, Point correctedPColli)
 	{
 		if(generatedEffect)
 			return;
 
 		generatedEffect=true;
 
-		flecheEffect=new Lumiere_effect(partie,this,0,partie.getFrame());
+		flecheEffect=new Lumiere_effect(partie,this,0,partie.getFrame(),normal,pColli,correctedPColli);
 		MusicBruitage.startBruitage("arc");
 
 		for(Entitie obj : objects)
@@ -58,7 +58,7 @@ public class Fleche_lumiere extends Spirituelle {
 		if(stuck)
 			destroy(partie,false);
 		else
-			applyArrowEffect(objects,partie,collidedObject);
+			applyArrowEffect(objects,partie,collidedObject,normCollision,pointCollision,correctedPointCollision);
 	}
 	@Override
 	protected boolean OnObjectsCollision(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
@@ -67,7 +67,7 @@ public class Fleche_lumiere extends Spirituelle {
 			if(((Effect)collider).isWorldCollider)
 				ejectArrow(partie,unprojectedSpeed);
 
-		applyArrowEffect(objects,partie,collider);
+		applyArrowEffect(objects,partie,collider,normal,null,null);
 		return false;
 	}
 

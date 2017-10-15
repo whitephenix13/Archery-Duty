@@ -56,12 +56,17 @@ public class Grappin_effect extends Effect{
 	public Grappin_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame, Collidable _shooter )
 	{
 		super.init();
+		
+		anim=_anim;
+		ref_fleche=_ref_fleche;
+		localVit= new Vitesse();
+		rotation = 0;
 		shooter=_shooter;
+		
 		xtaille =  Arrays.asList(1657);
 		ytaille =  Arrays.asList(30);
 		hitbox= Hitbox.createSquareHitboxes(1657-MAX_LENGTH,0,1657,30,1);
 
-		rotation = 0;
 
 		int start_index =0;
 		int end_index =1;
@@ -71,12 +76,9 @@ public class Grappin_effect extends Effect{
 		xplace=2;
 		yplace=1;
 
-		anim=_anim;
 
-		ref_fleche=_ref_fleche;
 		TEMPS_DESTRUCTION= _ref_fleche.TEMPS_DESTRUCTION;
 
-		localVit= new Vitesse();
 		partie.arrowsEffects.add(this);
 		setFirstPos(partie);
 	}

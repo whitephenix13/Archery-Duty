@@ -163,14 +163,14 @@ public class Fleche_ombre extends Spirituelle {
 			}
 		}
 	}
-	void applyArrowEffect(List<Entitie> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d collisionNormal)
+	void applyArrowEffect(List<Entitie> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d collisionNormal,Point pColli, Point correctedPColli)
 	{
 		if(generatedEffect)
 			return;
 
 		generatedEffect=true;
 
-		flecheEffect=new Ombre_effect(partie,this,0,partie.getFrame(),collisionNormal);
+		flecheEffect=new Ombre_effect(partie,this,0,partie.getFrame(),collisionNormal,pColli,correctedPColli);
 		MusicBruitage.startBruitage("arc");
 
 		if(collidedObject == null|| !(collidedObject instanceof Entitie))
@@ -202,7 +202,7 @@ public class Fleche_ombre extends Spirituelle {
 		if(stuck)
 			destroy(partie,false);
 		else
-			applyArrowEffect(objects,partie,collidedObject,this.normCollision);
+			applyArrowEffect(objects,partie,collidedObject,normCollision,pointCollision,correctedPointCollision);
 	}
 	@Override
 	protected boolean OnObjectsCollision(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
@@ -212,7 +212,7 @@ public class Fleche_ombre extends Spirituelle {
 				ejectArrow(partie,unprojectedSpeed);
 
 		if(collider instanceof Entitie)
-			applyArrowEffect(objects,partie,collider,normal);
+			applyArrowEffect(objects,partie,collider,normal,null,null);
 		else{
 			this.doitDeplace=false;
 			this.setCollideWithNone();

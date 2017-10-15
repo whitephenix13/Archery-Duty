@@ -30,9 +30,6 @@ import types.Vitesse;
 
 public class Roche_effect extends Effect{
 
-	Vector2d normalCollision=null;
-	Point pointCollision = null;
-	Point correctedPointCollision = null;
 	boolean type0 ;
 
 	double DUREE_DEFAILLANCE = 3;
@@ -76,27 +73,11 @@ public class Roche_effect extends Effect{
 	public Roche_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame,Vector2d _normalCollision,Point _pointCollision,
 			Point _correctedPointCollision, int typeEffect)
 	{
-		super.init();
+		super.init(_anim,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,typeEffect,typeEffect == 0);
 		this.setCollideWithAll();
-		this.typeEffect=typeEffect;
 		type0 = typeEffect==0;
 
 		this.isWorldCollider= type0? true :false;
-
-		anim=_anim;
-
-		ref_fleche = _ref_fleche;
-		_normalCollision = GJK_EPA.projectVectorTo90(_normalCollision,false,0);
-		double crossProdNorm = _normalCollision.y; // axis.x * _normalCollision.y  -axis.y * _normalCollision.x
-		double dotProd = _normalCollision.x;
-		double effectRotation = Math.atan(crossProdNorm/dotProd) ;
-		boolean minus_zero = ((Double)effectRotation).equals(new Double(-0.0));
-		effectRotation += minus_zero? -Math.PI/2 : Math.PI/2;
-
-		rotation = type0?effectRotation:ref_fleche.rotation;
-		normalCollision=_normalCollision;
-		pointCollision=_pointCollision;
-		correctedPointCollision=_correctedPointCollision;
 
 		if(type0){
 			xtaille =  Arrays.asList(100,100,100,100,100);
@@ -495,16 +476,10 @@ public class Roche_effect extends Effect{
 		int x_eff_center = (int) ((xtaille.get(anim))/2 * Math.cos(rotation) - ((ytaille.get(anim))/divider+pilar_correction) * Math.sin(rotation));
 		int y_eff_center = (int) ((xtaille.get(anim))/2 * Math.sin(rotation) + ((ytaille.get(anim))/divider+pilar_correction) * Math.cos(rotation));
 		Point firstPos = new Point();
-		if(type0 && (pointCollision!=null))
+		if(type0)
 		{
-			firstPos = new Point((int)pointCollision.x+correctedPointCollision.x-x_eff_center, (int)pointCollision.y+correctedPointCollision.y-y_eff_center);
-
-		} else if(type0)
-			try {
-				throw(new Exception("No Collision Point"));
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			firstPos=super.setFirstPos(new Point(x_eff_center,y_eff_center));
+		} 
 		else
 		{
 			Hitbox fHitbox = ref_fleche.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
@@ -580,14 +555,8 @@ public class Roche_effect extends Effect{
 	public AffineTransform computeTransformDraw(AbstractModelPartie partie) {
 		if(!type0)
 			return super.computeTransformDraw(partie);
-
-		Point transl = getTranslationFromTranformDraw(partie);
-		AffineTransform tr2 = new AffineTransform();
-
-		tr2.translate(transl.x, transl.y);
-		tr2.rotate(rotation);
-
-		return tr2;
+		else
+			return super.computeTransformDrawRotated(partie);
 	}
 
 }

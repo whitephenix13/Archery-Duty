@@ -4,30 +4,26 @@ public class Todo {
 	
 	//Version 0.2.2
 			
-	//TODO: remove all todo from affichePartie
-	//TODO: use collision point for ALL effects 
-	//TODO: correct effect display priority ? 
+	//TODO: Partie timer : correct when system pause 
+	//TODO: Conditions : check if time correctly reset when new condition + Spam fleche feu => ennemi don't get damage 
+	//TODO: Fleche vent : spam on ennemi not working 
+	//TODO: Fleche vent : align effect with arrow when stick to hero ? 
+	//TODO: Fleche vent : better feeling (more ejected from the ground? shift the arrow at each animation change? )
+	//TODO: Fleche ombre : heros stuck if accroche 
 	
-	//TODO: check how addition of same condition works (it should reset the timer)
-	
-	//TODO: clean collision
-	//TODO: make some effect perpendicualr to ground ? (trou noir, vent)
-	
-	//TODO: fleche vent: align effect with arrow when stick to hero ? 
-	//TODO: fleche vent : test spam // CHeck arrows colliding to themselves? 
-	//TODO: fleche ombre, heros stuck if accroche 
-	//TODO: correct Partie timer when system pause 
-	//TODO: set the java parameter for .jar
-	//TODO: Switch arrow button
-	//TODO: correct fleches values with respect to table
-	//TODO: check if grappin still pull ennemis (vitesse.negate changed)
-	//TODO: add icon for normal arrow 
-		//MATERIEL
-	//TODO: Electrique: Object: create area that paralyse ennemy: can't shoot for a while. Ennemi: damage + create a electic ball moving back in the same direction as arrow: destroy all projectiles and disappear when wall it or after time
-	//TODO: Glace : Object: create a stalactite submitted to gravity                       Ennemi: damage + slow down
-	//TODO: Roche: Object : create a pillar                                                Ennemi: damage + vulnerable
-	// Feu: Object: create a wave of fire pillar                                      Ennemi: damage + burn
+	//TODO: Collision point not found :  while shooting grappin arrow fromt he air to the ground 
+	//TODO: Effect display priority : order the display of effect, entitie,projectile ... 
 
+	//TODO: Game balance: correct fleches values with respect to table
+	//TODO: Clean: collision
+	//TODO: Optimization: optimize game when spam arrow (lag) + optimize allocated memory for the program (currently -Xms3000m)
+
+	//MATERIEL
+	//TODO: Electrique: Object: create area that paralyse ennemy: can't shoot for a while.
+	//TODO: Glace : Object: create a stalactite submitted to gravity                      
+	// Roche: Object : create a pillar                                              
+	// Feu: Object: create a wave of fire pillar                                 
+	
 	//SPIRITUEL
 	// Lumiere: boost surrounding beings : speed, jump, damage x2 
 	// Ombre: teleport+ malus
@@ -38,7 +34,7 @@ public class Todo {
 	//TODO: Foudre : lightning going through enemies  
 	//TODO: Explosif : huge damage (+ projection? ): need time out so that combo with ombre: tp ennemy in explosion?
 	//TODO: Trou noir: suck ennemis + damage 
-	//: Bogue: arrows all around player 
+	// Bogue: arrows all around player 
 	
 	//RUSE
 	//TODO: auto-teleguidée: goes to nearest ennemi

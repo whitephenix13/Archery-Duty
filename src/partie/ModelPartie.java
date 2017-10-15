@@ -880,7 +880,7 @@ public class ModelPartie extends AbstractModelPartie{
 		drawPerso(g,false);
 		drawFleches(g,false);
 		drawTirMonstres(g,false);
-		drawEffects(g,false );
+		drawEffects(g,true );
 		drawInterface(g);
 
 		if(debugDraw != null)

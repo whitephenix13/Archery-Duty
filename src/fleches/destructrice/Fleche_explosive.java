@@ -1,5 +1,6 @@
 package fleches.destructrice;
 
+import java.awt.Point;
 import java.util.List;
 
 import javax.vecmath.Vector2d;
@@ -24,14 +25,15 @@ public class Fleche_explosive extends Destructrice {
 	}
 
 
-	void applyArrowEffect(List<Entitie> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d collisionNormal)
+	void applyArrowEffect(List<Entitie> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d collisionNormal,Point _pointCollision,
+			Point _correctedPointCollision)
 	{
 		if(generatedEffect)
 			return;
 
 		generatedEffect=true;
 
-		flecheEffect=new Explosive_effect(partie,this,0,partie.getFrame(),collisionNormal);
+		flecheEffect=new Explosive_effect(partie,this,0,partie.getFrame(),collisionNormal,_pointCollision,_correctedPointCollision);
 		MusicBruitage.startBruitage("arc");
 		if(collidedObject instanceof Roche_effect)
 		{
@@ -59,7 +61,7 @@ public class Fleche_explosive extends Destructrice {
 		if(stuck)
 			destroy(partie,false);
 		else
-			applyArrowEffect(objects,partie,collidedObject,this.normCollision);
+			applyArrowEffect(objects,partie,collidedObject,this.normCollision,this.pointCollision,this.correctedPointCollision);
 	}
 	@Override
 	protected boolean OnObjectsCollision(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
@@ -67,7 +69,7 @@ public class Fleche_explosive extends Destructrice {
 		if(this.afterDecochee && (collider instanceof Effect))
 			if(((Effect)collider).isWorldCollider)
 				ejectArrow(partie,unprojectedSpeed);
-		applyArrowEffect(objects,partie,collider,normal);
+		applyArrowEffect(objects,partie,collider,normal,null,null);
 		return false;
 	}
 }

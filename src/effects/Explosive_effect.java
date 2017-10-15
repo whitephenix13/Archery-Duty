@@ -19,15 +19,12 @@ import types.TypeObject;
 import types.Vitesse;
 
 public class Explosive_effect extends Effect{
-
-	Vector2d normalCollision=null;
 	
-	public Explosive_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame,Vector2d _normalCollision)
+	public Explosive_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame,Vector2d _normalCollision,Point _pointCollision,
+			Point _correctedPointCollision)
 	{
-		super.init();
-		anim=_anim;
+		super.init(_anim,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,typeEffect,true);
 
-		ref_fleche = _ref_fleche;
 		xtaille =  Arrays.asList(400,400,400,400,400,400,400,400,400,400,400,400);
 		ytaille =  Arrays.asList(400,400,400,400,400,400,400,400,400,400,400,400);
 		hitbox= Hitbox.createSquareHitboxes(
@@ -37,25 +34,12 @@ public class Explosive_effect extends Effect{
 				Arrays.asList(213,238,265,318,306,318,325,328,340,346,340,371));
 
 
-		//AXIS FOR ANGLE IS (1,0) 
-		_normalCollision = GJK_EPA.projectVectorTo90(_normalCollision,false,0);
-		double crossProdNorm = _normalCollision.y; // axis.x * _normalCollision.y  -axis.y * _normalCollision.x
-		double dotProd = _normalCollision.x;
-		double effectRotation = Math.atan(crossProdNorm/dotProd) ;
-		boolean minus_zero = ((Double)effectRotation).equals(new Double(-0.0));
-		effectRotation += minus_zero? -Math.PI/2 : Math.PI/2;
-		
-		rotation =  effectRotation;
-
 		//(new Float(0.0)).equals(new Float(-0.0))
 		int start_index =0;
 		int end_index =12;
 		animation.start(Arrays.asList(3,6,9,12,15,18,21,24,27,30,33,36), current_frame, start_index, end_index);
 		maxnumberloops = 1;
-
-		localVit=new Vitesse();
 		
-		normalCollision=_normalCollision;
 		partie.arrowsEffects.add(this);
 		setFirstPos(partie);
 	}
@@ -63,21 +47,13 @@ public class Explosive_effect extends Effect{
 	public void setFirstPos(AbstractModelPartie partie) {
 
 		//get the middle of the effect
-		int adjustBottom = -5;
-		int x_eff_center = (int) (xtaille.get(anim)/2 * Math.cos(rotation) - (ytaille.get(anim)/2+adjustBottom) * Math.sin(rotation));
-		int y_eff_center = (int) (xtaille.get(anim)/2 * Math.sin(rotation) + (ytaille.get(anim)/2+adjustBottom) * Math.cos(rotation));
+		int x_eff_center = (int) (xtaille.get(anim)/2 * Math.cos(rotation) - (ytaille.get(anim)/2) * Math.sin(rotation));
+		int y_eff_center = (int) (xtaille.get(anim)/2 * Math.sin(rotation) + (ytaille.get(anim)/2) * Math.cos(rotation));
 
-		//get the tip of the arrow
-		Hitbox fHitbox = ref_fleche.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
-		
-		Vector2d v1 = Hitbox.supportPoint(Deplace.angleToVector(ref_fleche.rotation-Math.PI/10), fHitbox.polygon); //top right of unrotated hitbox (with tip pointing right)
-		Vector2d v2 = Hitbox.supportPoint(Deplace.angleToVector(ref_fleche.rotation+Math.PI/10), fHitbox.polygon); //bottom right of unrotated hitbox (with tip pointing right)
-
-		int x_tip_fleche =  (int) ((v1.x+v2.x)/2);
-		int y_tip_fleche= (int) ((v1.y+v2.y)/2);
-
-		xpos_sync(x_tip_fleche-x_eff_center);
-		ypos_sync(y_tip_fleche-y_eff_center);
+		Point firstPos = super.setFirstPos(new Point(x_eff_center,y_eff_center));
+	
+		xpos_sync(firstPos.x);
+		ypos_sync(firstPos.y);
 	}
 	
 	@Override
@@ -99,13 +75,7 @@ public class Explosive_effect extends Effect{
 
 	@Override
 	public AffineTransform computeTransformDraw(AbstractModelPartie partie) {
-		Point transl = getTranslationFromTranformDraw(partie);
-		AffineTransform tr2 = new AffineTransform();
-	
-		tr2.translate(transl.x, transl.y);
-		tr2.rotate(rotation);
-		
-		return tr2;
+		return super.computeTransformDrawRotated(partie);
 	}
 	
 

@@ -178,7 +178,7 @@ public class AffichagePartie extends JFrame implements Observer{
 				controlerPartie.partie.showLoading(g);
 				return;
 			}
-			if(!controlerPartie.partie.computationDone){
+			if(!controlerPartie.partie.computationDone && !controlerPartie.partie.getFinPartie()){
 				return;
 			}
 			controlerPartie.partie.computationDone=false;
@@ -293,7 +293,7 @@ public class AffichagePartie extends JFrame implements Observer{
 					Rectangle bounds = allpanelSlot[i].getBounds();
 					allpanelSlot[i].setBounds(bounds.x,bounds.y-SHIFT_VAL,bounds.width,bounds.height);
 				}
-				else if(controlerPartie.partie.heros.current_slot == i)
+				if(controlerPartie.partie.heros.current_slot == i)
 				{
 					Rectangle bounds = allpanelSlot[i].getBounds();
 					allpanelSlot[i].setBounds(bounds.x,bounds.y+SHIFT_VAL,bounds.width,bounds.height);
@@ -305,6 +305,7 @@ public class AffichagePartie extends JFrame implements Observer{
 			controlerPartie.partie.arrowSlotIconChanged=false;
 		}
 
+		panelPartie.requestFocus();
 		panelPartie.repaint();
 		//this.revalidate();
 
@@ -504,19 +505,14 @@ public class AffichagePartie extends JFrame implements Observer{
 
 		@Override
 		public void mouseClicked(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-
 		}
 
 		@Override
 		public void mouseEntered(MouseEvent arg0) {
-
 		}
 
 		@Override
 		public void mouseExited(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-
 		}
 
 		@Override
@@ -524,7 +520,6 @@ public class AffichagePartie extends JFrame implements Observer{
 			if( (controlerPartie.partie.finPartie) || (!controlerPartie.partie.finPartie &&controlerPartie.partie.inPause))
 				return;
 
-			//TODO: warning, when switch the first arrow of the slot, be source to reset choosing arrow to correct value  
 			ArrowSlotButton[][] allSlots = {bSlot1,bSlot2,bSlot3,bSlot4};
 			JPanel[] allpanelSlot = {panelSlot1,panelSlot2,panelSlot3,panelSlot4};
 			ArrowSlotButton source_but = (ArrowSlotButton)e.getSource();
@@ -578,8 +573,6 @@ public class AffichagePartie extends JFrame implements Observer{
 
 		@Override
 		public void mouseReleased(MouseEvent arg0) {
-			// TODO Auto-generated method stub
-
 		}
 
 	}
@@ -628,10 +621,18 @@ public class AffichagePartie extends JFrame implements Observer{
 		doitRevalidate=true;
 	}
 
+	private void onGameRestart()
+	{
+		panelPartie.removeAll();
+		panelPartie.add(panelSlots);
+		DisableAllSlotButton(false);
+		//last_shifted=-1;
+	}
+	
 	public void update() {	
 		if(controlerPartie.partie.getDisableBoutonsFin()){
 			EnableBoutonsFin(false);
-			panelPartie.removeAll();
+			onGameRestart();
 		}
 
 		if(controlerPartie.partie.setAffichageOption)

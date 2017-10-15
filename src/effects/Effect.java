@@ -10,6 +10,7 @@ import java.util.List;
 import javax.vecmath.Vector2d;
 
 import collision.Collidable;
+import collision.GJK_EPA;
 import debug.Debug_stack;
 import deplacement.Animation;
 import deplacement.Deplace;
@@ -22,6 +23,10 @@ import types.Hitbox;
 import types.Vitesse;
 
 public abstract class Effect extends Collidable{
+	
+	protected Vector2d normalCollision=null;
+	protected Point pointCollision = null;
+	protected Point correctedPointCollision = null;
 	
 	public int typeEffect = -1; //-1 for default, 0 if special animation for the ground, 1 if special animation for ennemi/shoot collision
 
@@ -49,9 +54,33 @@ public abstract class Effect extends Collidable{
 
 	public boolean isWorldCollider =false; //set to true if this object should be consider as a bloc for collision. Used in roche_effect
 	
-	public void init()
+	/**
+	 * 
+	 * @param _normalCollision
+	 * @param useRefArrowRotation false: compute the projected rotation to main x/y axis (angle = -Pi:Pi, -Pi/2 0 Pi/2 -
+	 */
+	public void init(int _anim,Fleche _ref_fleche,Vector2d _normalCollision,Point _pointCollision,
+			Point _correctedPointCollision,int _typeEffect,boolean useProjectedRot)
 	{
 		super.init();
+		
+		anim=_anim;
+		ref_fleche = _ref_fleche;
+		normalCollision=_normalCollision;
+		pointCollision=_pointCollision;
+		correctedPointCollision=_correctedPointCollision;
+		typeEffect=_typeEffect;
+		localVit= new Vitesse();
+
+		//AXIS FOR ANGLE IS (1,0) 
+		_normalCollision = GJK_EPA.projectVectorTo90(_normalCollision,false,0);
+		double crossProdNorm = _normalCollision.y; // axis.x * _normalCollision.y  -axis.y * _normalCollision.x
+		double dotProd = _normalCollision.x;
+		double effectRotation = Math.atan(crossProdNorm/dotProd) ;
+		boolean minus_zero = ((Double)effectRotation).equals(new Double(-0.0));
+		effectRotation += minus_zero? -Math.PI/2 : Math.PI/2;
+
+		rotation =  useProjectedRot?effectRotation:ref_fleche.rotation;
 	}
 	public boolean isEnded()
 	{
@@ -111,6 +140,22 @@ public abstract class Effect extends Collidable{
 	protected void updatePos(AbstractModelPartie partie)
 	{
 	}
+	protected Point setFirstPos(Point effCenter)
+	{
+		return new Point((int)pointCollision.x+correctedPointCollision.x-effCenter.x, (int)pointCollision.y+correctedPointCollision.y-effCenter.y);
+
+	}
+	protected Point getArrowTip(AbstractModelPartie partie)
+	{
+		Hitbox fHitbox = ref_fleche.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
+
+		Vector2d v1 = Hitbox.supportPoint(Deplace.angleToVector(ref_fleche.rotation-Math.PI/10), fHitbox.polygon); //top right of unrotated hitbox (with tip pointing right)
+		Vector2d v2 = Hitbox.supportPoint(Deplace.angleToVector(ref_fleche.rotation+Math.PI/10), fHitbox.polygon); //bottom right of unrotated hitbox (with tip pointing right)
+
+		int x_tip_fleche =  (int) ((v1.x+v2.x)/2);
+		int y_tip_fleche= (int) ((v1.y+v2.y)/2);
+		return new Point(x_tip_fleche,y_tip_fleche);
+	}
 	public Point getTranslationFromTranformDraw(AbstractModelPartie partie)
 	{
 		return new Point(xpos()+partie.xScreendisp,ypos()+partie.yScreendisp);
@@ -123,7 +168,14 @@ public abstract class Effect extends Collidable{
 		tr.setTransform(flatmat[0], flatmat[1], flatmat[2], flatmat[3], transl.x, transl.y);
 		return tr;
 	}
-
+	public AffineTransform computeTransformDrawRotated(AbstractModelPartie partie)
+	{
+		Point transl = getTranslationFromTranformDraw(partie);
+		AffineTransform tr2 = new AffineTransform();
+		tr2.translate(transl.x, transl.y);
+		tr2.rotate(rotation);
+		return tr2;
+	}
 	
 	@Override
 	public Hitbox getHitbox(Point INIT_RECT,Point screenDisp) {

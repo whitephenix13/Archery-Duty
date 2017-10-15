@@ -21,18 +21,14 @@ import types.Vitesse;
 
 public class Glace_effect extends Effect{
 
-	Vector2d normalCollision=null;
-
 	boolean type0 ;
 	double DUREE_LENTEUR=3;
-	public Glace_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame,Vector2d _normalCollision,int typeEffect)
+	public Glace_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame,Vector2d _normalCollision,Point _pointCollision,
+			Point _correctedPointCollision,int typeEffect)
 	{
-		super.init();
-		this.typeEffect=typeEffect;
+		super.init(_anim,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,typeEffect,typeEffect == 0);
 		type0 = typeEffect==0;
-		anim=_anim;
 
-		ref_fleche = _ref_fleche;
 		if(type0){
 			xtaille =  Arrays.asList(90,90,90,90,90);
 			ytaille =  Arrays.asList(72,72,72,72,72);
@@ -48,16 +44,7 @@ public class Glace_effect extends Effect{
 			hitbox= Hitbox.createSquareHitboxes(0,0,100,100,4);
 		}
 
-		rotation = _ref_fleche.rotation;//arrow's rotation
-		//AXIS FOR ANGLE IS (1,0) 
-		_normalCollision = GJK_EPA.projectVectorTo90(_normalCollision,false,0);
-		double crossProdNorm = _normalCollision.y; // axis.x * _normalCollision.y  -axis.y * _normalCollision.x
-		double dotProd = _normalCollision.x;
-		double effectRotation = Math.atan(crossProdNorm/dotProd) ;
-		boolean minus_zero = ((Double)effectRotation).equals(new Double(-0.0));
-		effectRotation += minus_zero? -Math.PI/2 : Math.PI/2;
 
-		rotation =  type0?effectRotation:ref_fleche.rotation;
 		//(new Float(0.0)).equals(new Float(-0.0))
 		int start_index =0;
 		int end_index = type0? 5 : 4;
@@ -65,8 +52,6 @@ public class Glace_effect extends Effect{
 		animation.start(animTimes, current_frame, start_index, end_index);
 		maxnumberloops = 1;
 
-		localVit= new Vitesse();
-		normalCollision=_normalCollision;
 		partie.arrowsEffects.add(this);
 		setFirstPos(partie);
 	}
@@ -87,7 +72,7 @@ public class Glace_effect extends Effect{
 			if(Collision.testcollisionObjects(partie, this, attacher,true))
 				attacher.conditions.addNewCondition(Condition.LENTEUR, DUREE_LENTEUR);
 	}
-	
+
 	@Override
 	public Vitesse getModifiedVitesse(AbstractModelPartie partie,
 			Collidable obj) {
@@ -95,41 +80,35 @@ public class Glace_effect extends Effect{
 	}
 
 	public void setFirstPos(AbstractModelPartie partie) {
-
 		//get the middle bottom of the effect
-		int adjustBottom = type0? -5 : 0;
-		int divider = type0? 1:2;
-		int x_eff_center = (int) (xtaille.get(anim)/2 * Math.cos(rotation) - (ytaille.get(anim)/divider+adjustBottom) * Math.sin(rotation));
-		int y_eff_center = (int) (xtaille.get(anim)/2 * Math.sin(rotation) + (ytaille.get(anim)/divider+adjustBottom) * Math.cos(rotation));
+		int ydivider = type0? 1:2;
 
-		//get the tip of the arrow
-		Hitbox fHitbox = ref_fleche.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
+		int x_eff_center = (int) (xtaille.get(anim)/2 * Math.cos(rotation) - (ytaille.get(anim)/ydivider) * Math.sin(rotation));
+		int y_eff_center = (int) (xtaille.get(anim)/2 * Math.sin(rotation) + (ytaille.get(anim)/ydivider) * Math.cos(rotation));
 
-		Vector2d v1 = Hitbox.supportPoint(Deplace.angleToVector(ref_fleche.rotation-Math.PI/10), fHitbox.polygon); //top right of unrotated hitbox (with tip pointing right)
-		Vector2d v2 = Hitbox.supportPoint(Deplace.angleToVector(ref_fleche.rotation+Math.PI/10), fHitbox.polygon); //bottom right of unrotated hitbox (with tip pointing right)
+		Point firstPos = new Point();
+		if(type0)
+			firstPos = super.setFirstPos(new Point(x_eff_center,y_eff_center));
+		else{
+			//get the tip of the arrow
+			Point arrowTip = super.getArrowTip(partie);
 
-		int x_tip_fleche =  (int) ((v1.x+v2.x)/2);
-		int y_tip_fleche= (int) ((v1.y+v2.y)/2);
+			firstPos=new Point(arrowTip.x-x_eff_center,arrowTip.y-y_eff_center);
 
-		xpos_sync(x_tip_fleche-x_eff_center);
-		ypos_sync(y_tip_fleche-y_eff_center);
-		
+		}
+		xpos_sync(firstPos.x);
+		ypos_sync(firstPos.y);
+
 	}
 	@Override
 	public AffineTransform computeTransformDraw(AbstractModelPartie partie) {
 		if(!type0)
 			return super.computeTransformDraw(partie);
-		
-		Point transl = getTranslationFromTranformDraw(partie);
-		AffineTransform tr2 = new AffineTransform();
-		
-		tr2.translate(transl.x, transl.y);
-		tr2.rotate(rotation);
-
-		return tr2;
+		else
+			return super.computeTransformDrawRotated(partie);
 	}
 
 
-	
+
 
 }

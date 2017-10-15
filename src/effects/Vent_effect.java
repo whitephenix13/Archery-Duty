@@ -35,23 +35,21 @@ public class Vent_effect extends Effect{
 	private Integer stickXVit = null;
 	private Integer stickYVit = null;
 
-	public Vent_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame)
+	public Vent_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame,Vector2d _normalCollision,Point _pointCollision,
+			Point _correctedPointCollision)
 	{
-		super.init();
+		super.init(_anim,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,typeEffect,false);
 		anim=_anim;
 
-		ref_fleche = _ref_fleche;
 		xtaille =  Arrays.asList(400,400,400,400);
 		ytaille =  Arrays.asList(400,400,400,400);
 		hitbox = Hitbox.createSquareHitboxes(Arrays.asList(125,123,74,0),Arrays.asList(109,110,0,0),Arrays.asList(291,298,336,400),Arrays.asList(274,313,349,400));
 
-		rotation = _ref_fleche.rotation;
 		int start_index =0;
 		int end_index =4;
 		animation.start(Arrays.asList(4,8,12,16), current_frame, start_index, end_index);
 		maxnumberloops = 1;
 
-		localVit = new Vitesse();
 		partie.arrowsEffects.add(this);
 		setFirstPos(partie);
 	}
@@ -136,29 +134,29 @@ public class Vent_effect extends Effect{
 	}
 
 	public void setFirstPos(AbstractModelPartie partie) {
-		int fanim = ref_fleche.anim;
-		//get the middle of the effect
-		int x_eff_center = (int) (xtaille.get(anim)/2 * Math.cos(rotation) - ytaille.get(anim)/2 * Math.sin(rotation));
-		int y_eff_center = (int) (xtaille.get(anim)/2 * Math.sin(rotation) + ytaille.get(anim)/2 * Math.cos(rotation));
 
-		//get the tip of the arrow
-		int x_tip_fleche =  (int) (ref_fleche.xpos() + ref_fleche.deplacement.xtaille.get(fanim) * Math.cos(rotation) 
-				- ref_fleche.deplacement.ytaille.get(fanim)/2 * Math.sin(rotation));
-		int y_tip_fleche= (int) (ref_fleche.ypos() + ref_fleche.deplacement.xtaille.get(fanim) * Math.sin(rotation) 
-				+ ref_fleche.deplacement.ytaille.get(fanim)/2 * Math.cos(rotation));
+		boolean worldCollision = pointCollision!=null;
+		//get the middle bottom of the effect
+		int x_eff_center = (int) (xtaille.get(anim)/2 * Math.cos(rotation) - (ytaille.get(anim)/2) * Math.sin(rotation));
+		int y_eff_center = (int) (xtaille.get(anim)/2 * Math.sin(rotation) + (ytaille.get(anim)/2) * Math.cos(rotation));
 
-		xpos_sync(x_tip_fleche-x_eff_center);
-		ypos_sync(y_tip_fleche-y_eff_center);
+		Point firstPos = new Point();
+		if(worldCollision)
+			firstPos = super.setFirstPos(new Point(x_eff_center,y_eff_center));
+		else{
+			//get the tip of the arrow
+			Point arrowTip = super.getArrowTip(partie);
+
+			firstPos=new Point(arrowTip.x-x_eff_center,arrowTip.y-y_eff_center);
+
+		}
+		xpos_sync(firstPos.x);
+		ypos_sync(firstPos.y);
 	}
 
 	@Override
 	public AffineTransform computeTransformDraw(AbstractModelPartie partie) {
-		
-		Point transl = getTranslationFromTranformDraw(partie);
-		AffineTransform tr2 = new AffineTransform();
-		tr2.translate(transl.x, transl.y);
-		tr2.rotate(rotation);
-		return tr2;
+		return super.computeTransformDrawRotated(partie);
 	}
 
 	@Override

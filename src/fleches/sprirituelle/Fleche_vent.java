@@ -41,7 +41,7 @@ public class Fleche_vent extends Spirituelle{
 		if(!generatedEffect){
 			generatedEffect=true;
 
-			flecheEffect=new Vent_effect(partie,this,0,partie.getFrame());
+			flecheEffect=new Vent_effect(partie,this,0,partie.getFrame(),normCollision,pointCollision,correctedPointCollision);
 			MusicBruitage.startBruitage("vent_effect");
 		}
 		for(Entitie obj : objects)
@@ -85,7 +85,7 @@ public class Fleche_vent extends Spirituelle{
 		if(!generatedEffect){
 			generatedEffect=true;
 
-			flecheEffect=new Vent_effect(partie,this,0,partie.getFrame());
+			flecheEffect=new Vent_effect(partie,this,0,partie.getFrame(),normal,null,null);
 			MusicBruitage.startBruitage("vent_effect");
 		}
 		for(Entitie obj : objects)

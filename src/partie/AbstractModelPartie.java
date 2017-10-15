@@ -211,6 +211,7 @@ public abstract class AbstractModelPartie extends DisplayLoader implements Obser
 	{
 		disableBoutonsFin=false;
 		setAffichageOption=false;
+		arrowSlotIconChanged =true;
 	}
 
 	//public abstract void HandlePressedInput(int input);

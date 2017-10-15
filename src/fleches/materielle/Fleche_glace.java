@@ -33,7 +33,7 @@ public class Fleche_glace extends Materielle {
 		if(!generatedEffect){
 			generatedEffect=true;
 
-			flecheEffect=new Glace_effect(partie,this,0,partie.getFrame(),this.normCollision,0);
+			flecheEffect=new Glace_effect(partie,this,0,partie.getFrame(),normCollision,pointCollision,correctedPointCollision,0);
 			MusicBruitage.startBruitage("arc");
 			if(collidedObject instanceof Roche_effect)
 			{
@@ -56,7 +56,7 @@ public class Fleche_glace extends Materielle {
 		if(!generatedEffect){
 			generatedEffect=true;
 
-			flecheEffect=new Glace_effect(partie,this,0,partie.getFrame(),normal,1);
+			flecheEffect=new Glace_effect(partie,this,0,partie.getFrame(),normal,null,null,1);
 			MusicBruitage.startBruitage("arc");
 			for(Entitie obj : objects)
 			{

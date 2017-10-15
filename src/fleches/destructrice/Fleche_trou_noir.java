@@ -35,7 +35,7 @@ public class Fleche_trou_noir extends Destructrice {
 		if(!generatedEffect){
 			generatedEffect=true;
 
-			flecheEffect=new Trou_noir_effect(partie,this,0,partie.getFrame());
+			flecheEffect=new Trou_noir_effect(partie,this,0,partie.getFrame(),normCollision,pointCollision,correctedPointCollision);
 			MusicBruitage.startBruitage("arc");
 			if(collidedObject instanceof Roche_effect)
 			{

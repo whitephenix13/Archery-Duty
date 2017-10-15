@@ -34,7 +34,7 @@ public class Fleche_electrique extends Materielle {
 		if(!generatedEffect){
 			generatedEffect=true;
 
-			flecheEffect=new Electrique_effect(partie,this,0,partie.getFrame(),this.normCollision,0);
+			flecheEffect=new Electrique_effect(partie,this,0,partie.getFrame(),this.normCollision,this.pointCollision,this.correctedPointCollision,0);
 			MusicBruitage.startBruitage("arc");
 			for(Entitie obj : objects)
 			{
@@ -62,7 +62,7 @@ public class Fleche_electrique extends Materielle {
 		if(!generatedEffect){
 			generatedEffect=true;
 
-			flecheEffect=new Electrique_effect(partie,this,0,partie.getFrame(),normal,1);
+			flecheEffect=new Electrique_effect(partie,this,0,partie.getFrame(),normal,null,null,1);
 			MusicBruitage.startBruitage("arc");
 
 		}

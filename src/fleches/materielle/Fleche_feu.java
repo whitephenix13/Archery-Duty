@@ -37,9 +37,9 @@ public class Fleche_feu extends Materielle {
 			generatedEffect=true;
 			Vector2d arrowDir = Deplace.angleToVector(rotation);
 			int sign = ((this.normCollision.x<0 && arrowDir.y<0) || (this.normCollision.y<0 && arrowDir.x<0))?-1 : 1;
-			Feu_effect flecheEffect=new Feu_effect(partie,this,0,partie.getFrame(),this.normCollision,0,0);
-			Feu_effect flecheEffect2=new Feu_effect(partie,this,0,partie.getFrame(),this.normCollision,0,sign*40);
-			Feu_effect flecheEffect3=new Feu_effect(partie,this,0,partie.getFrame(),this.normCollision,0,sign*80);
+			Feu_effect flecheEffect=new Feu_effect(partie,this,0,partie.getFrame(),normCollision,pointCollision,correctedPointCollision,0,0);
+			Feu_effect flecheEffect2=new Feu_effect(partie,this,0,partie.getFrame(),normCollision,pointCollision,correctedPointCollision,0,sign*40);
+			Feu_effect flecheEffect3=new Feu_effect(partie,this,0,partie.getFrame(),normCollision,pointCollision,correctedPointCollision,0,sign*80);
 
 			for(Entitie obj : objects)
 			{
@@ -73,7 +73,7 @@ public class Fleche_feu extends Materielle {
 		if(!generatedEffect){
 			generatedEffect=true;
 
-			flecheEffect=new Feu_effect(partie,this,0,partie.getFrame(),normal,1,0);
+			flecheEffect=new Feu_effect(partie,this,0,partie.getFrame(),normal,null,null,1,0);
 			MusicBruitage.startBruitage("arc");
 			for(Entitie obj : objects)
 			{
