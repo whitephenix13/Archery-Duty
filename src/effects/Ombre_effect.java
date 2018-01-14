@@ -39,6 +39,7 @@ public class Ombre_effect extends Effect{
 
 		partie.arrowsEffects.add(this);
 		setFirstPos(partie);
+		this.onUpdate(partie, false); //update rotated hitbox and drawtr
 	}
 
 	@Override
@@ -51,7 +52,7 @@ public class Ombre_effect extends Effect{
 	public void updateOnCollidable(AbstractModelPartie partie,Entitie attacher)
 	{
 		if(Collision.testcollisionObjects(partie, this, attacher,true))
-			attacher.conditions.addNewCondition(Condition.LENTEUR, LENTEUR_DUREE);
+			attacher.conditions.addNewCondition(Condition.LENTEUR, LENTEUR_DUREE,System.identityHashCode(this));
 	}
 	
 	@Override

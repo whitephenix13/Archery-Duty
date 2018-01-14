@@ -48,15 +48,15 @@ public class T_normal extends Mouvement_tir{
 		else if(TypeObject.isTypeOf(obj, TypeObject.TIR_SPIREL))
 		{
 
-			xtaille= Arrays.asList(114,114,34 );
-			ytaille= Arrays.asList(34 ,34 ,114);
+			xtaille= Arrays.asList(36,63,114);
+			ytaille= Arrays.asList(25,34,34);
 
 			List<List<Point>> hitboxCreation = new ArrayList<List<Point>>();
 			//add for every edge, a list of point depending on the animation
 			List<Integer> xg = Arrays.asList(0,0,0);
-			List<Integer> xd = Arrays.asList(114,114,34);
+			List<Integer> xd = Arrays.asList(36,63,114);
 			List<Integer> yh = Arrays.asList(0,0,0);
-			List<Integer> yb = Arrays.asList(34,34,114);
+			List<Integer> yb = Arrays.asList(25,34,34);
 
 			hitboxCreation.add(Hitbox.asListPoint(xg,yh));
 			hitboxCreation.add(Hitbox.asListPoint(xd,yh));
@@ -65,7 +65,9 @@ public class T_normal extends Mouvement_tir{
 
 			hitbox = Hitbox.createHitbox(hitboxCreation);
 			//animation frame, current_frame, start_index, end_index
-			animation.start(Arrays.asList(2), current_frame, 0, 1);
+			int delta = 2;
+			animation.setLoop(false);
+			animation.start(Arrays.asList(delta,2*delta,3*delta), current_frame, 0, 3);
 		}
 		else
 			System.err.println("Unkown type "+ obj.getClass().getName());
@@ -103,13 +105,9 @@ public class T_normal extends Mouvement_tir{
 		else if(TypeObject.isTypeOf(object, TypeObject.TIR_SPIREL))
 		{
 			int speed_norm = (int)(10.0 / Config.ratio_fps());
-
-			switch(anim)
-			{
-				case 0 : object.localVit.x=(1*speed_norm);break;
-				case 1 : object.localVit.x=(-1*speed_norm);break;
-				case 2 : object.localVit.y=(-1*speed_norm);break;
-			}
+			Vitesse vit = object.convertSpeed(speed_norm,object.rotation);
+			object.localVit.x=(vit.x);
+			object.localVit.y=(vit.y);
 		}
 		else
 			System.err.println("Unkown type "+ object.getClass().getName());

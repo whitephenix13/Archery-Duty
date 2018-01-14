@@ -58,6 +58,7 @@ public class Electrique_effect extends Effect{
 		
 		partie.arrowsEffects.add(this);
 		setFirstPos(partie);
+		this.onUpdate(partie, false); //update rotated hitbox and drawtr
 	}
 
 	@Override
@@ -78,7 +79,7 @@ public class Electrique_effect extends Effect{
 	{
 		if(type0)
 			if(Collision.testcollisionObjects(partie, this, attacher,true))
-				attacher.conditions.addNewCondition(Condition.PARALYSIE, DUREE_PARALYSIE);
+				attacher.conditions.addNewCondition(Condition.PARALYSIE, DUREE_PARALYSIE,System.identityHashCode(this));
 	}
 
 	private void setFirstPos(AbstractModelPartie partie) {

@@ -5,6 +5,7 @@ import java.awt.Point;
 import javax.vecmath.Vector2d;
 
 import collision.Collidable;
+import collision.Collision;
 import deplacement.Attente;
 import deplacement.Deplace;
 import deplacement.Mouvement;
@@ -27,14 +28,14 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	 * 
 	 * @return le nombre de tour de boucle a attendre avant de redeplacer le monstre
 	 */	
-	public TirSpirel(int _xpos, int _ypos,int _anim,int current_frame,float damageMultiplier,float speedFactor)
+	public TirSpirel(AbstractModelPartie partie,int _xpos, int _ypos,int _anim, double _rotation,int current_frame,float damageMultiplier,float _speedFactor)
 	{
 		super.init();
 		xpos_sync(_xpos);
 		ypos_sync(_ypos);
 		anim=_anim;
 		deplacement= new T_normal(this,Attente.attente_gauche,current_frame);
-
+		rotation = _rotation;
 		needDestroy=false;
 		localVit=new Vitesse(0,0);
 		fixedWhenScreenMoves=false ; //true : not influenced by screen displacement (ie: use for the hero)
@@ -43,12 +44,23 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 		deplacement.setSpeed(this,anim);
 
 		damage= -25*damageMultiplier;//-25
+		speedFactor=_speedFactor;
 
 		
 		//on active la musique car le tir part directement 
 		MusicBruitage.startBruitage("laser");
+		//set transform 
+		draw_tr = partie.getRotatedTransform(new Point(xpos(),ypos()),new Point(0,0), 
+				new Point(deplacement.xtaille.get(anim),deplacement.ytaille.get(anim)), rotation);
 
-		
+		//rotate hitbox
+		deplacement.hitbox_rotated=Hitbox.convertHitbox(deplacement.hitbox,partie.INIT_RECT,draw_tr,new Point(xpos(),ypos()),new Point(0,0));
+
+		//If collide, destroy it 
+		if(Collision.isWorldCollision(partie, this, true))
+		{
+			this.destroy(partie, true);
+		}
 	}
 	
 	public Vector2d getNormCollision()
@@ -56,9 +68,31 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 		return null;
 	}
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie,Deplace deplace){
-		//nothing specific to do 
-		boolean[] res = {true,false};
+	public boolean[] deplace(AbstractModelPartie partie,Deplace deplace, boolean update_with_speed){
+		boolean animationChanged = false;
+		//update rotation : not needed 
+		//switch anim 
+		int prev_anim = anim;
+		anim=deplacement.updateAnimation(this, anim, partie.getFrame(),speedFactor,false);
+		animationChanged = (prev_anim != anim);
+		if(animationChanged)
+		{
+			//align mid right of tir with previous mid right
+			int x_current_mid = (int) (deplacement.xtaille.get(anim)* 1 * Math.cos(rotation) - (deplacement.ytaille.get(anim)*0.5f) * Math.sin(rotation));
+			int y_current_mid = (int) (deplacement.xtaille.get(anim)* 1 * Math.sin(rotation) + (deplacement.ytaille.get(anim)*0.5f) * Math.cos(rotation));
+		
+			int x_prev_mid = (int) (deplacement.xtaille.get(prev_anim)* 1 * Math.cos(rotation) - (deplacement.ytaille.get(prev_anim)*0.5f) * Math.sin(rotation));
+			int y_prev_mid = (int) (deplacement.xtaille.get(prev_anim)* 1 * Math.sin(rotation) + (deplacement.ytaille.get(prev_anim)*0.5f) * Math.cos(rotation));
+		
+			pxpos(x_prev_mid-x_current_mid);
+			pypos(y_prev_mid-y_current_mid);
+
+		}
+		//update hitbox: draw transform did not changed => not needed
+
+		//set speed of deplacement
+		//update draw transform: not needed
+		boolean[] res = {true,animationChanged};
 		return res;
 	}
 	
@@ -103,12 +137,12 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 
 	@Override
 	public Hitbox getHitbox(Point INIT_RECT,Point screenDisp) {
-		return  Hitbox.plusPoint(deplacement.hitbox.get(anim), new Point(xpos(),ypos()),true);
+		return  Hitbox.plusPoint(deplacement.hitbox_rotated.get(anim), new Point(xpos(),ypos()),true);	
 	}
 	@Override
 	public Hitbox getHitbox(Point INIT_RECT,Point screenDisp, Mouvement _dep, int _anim) {
 		Mouvement_tir temp = (Mouvement_tir) _dep.Copy(this); //create the mouvement
-		return Hitbox.plusPoint(temp.hitbox.get(_anim), new Point(xpos(),ypos()),true);
+		return Hitbox.plusPoint(temp.hitbox_rotated.get(_anim), new Point(xpos(),ypos()),true);
 	}
 	
 	@Override

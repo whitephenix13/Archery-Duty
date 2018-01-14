@@ -108,6 +108,8 @@ public class Roche_effect extends Effect{
 
 		int initialEject = 2;
 		ejectCollidable(partie,initialEject,true);
+		this.onUpdate(partie, false); //update rotated hitbox and drawtr
+
 		//if the eject failed, the object is stuck (for example when arrow roche shot in corner) then destroy it
 	}
 
@@ -312,7 +314,7 @@ public class Roche_effect extends Effect{
 	{
 		if(!type0)
 			if(Collision.testcollisionObjects(partie, this, attacher,true))
-				attacher.conditions.addNewCondition(Condition.DEFAILLANCE, DUREE_DEFAILLANCE);
+				attacher.conditions.addNewCondition(Condition.DEFAILLANCE, DUREE_DEFAILLANCE,System.identityHashCode(this));
 	}
 
 	private void ejectCollidable(AbstractModelPartie partie,int initEject,boolean init)
@@ -396,7 +398,7 @@ public class Roche_effect extends Effect{
 
 	}
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
+	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace, boolean update_with_speed) {
 
 		//update the hitbox : 
 		if(type0){

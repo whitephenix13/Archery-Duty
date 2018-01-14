@@ -9,10 +9,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import partie.PartieTimer;
+import types.Vitesse;
 
 public class ConditionHandler {
 	public Map<String,Condition> conditionsMap = new HashMap<String,Condition>();
-	
+
 	private int XDRAW_TOLERANCE = 5; 
 	private int YDRAW_TOLERANCE = 10; 
 
@@ -31,26 +32,27 @@ public class ConditionHandler {
 		conditionsMap.put(Condition.REGENERATION, null);
 		conditionsMap.put(Condition.RESISTANCE, null);
 		conditionsMap.put(Condition.VITESSE, null);
+		conditionsMap.put(Condition.MOTION, null);
 
 	}
-	
+
 	/*if not working, go back to https://stackoverflow.com/questions/5245093/using-comparator-to-make-custom-sort */
-	List<String> conditionOrder = Arrays.asList(Condition.BRULURE,Condition.PARALYSIE,Condition.DEFAILLANCE,Condition.FAIBLESSE,
+	List<String> conditionOrder = Arrays.asList(Condition.MOTION,Condition.BRULURE,Condition.PARALYSIE,Condition.DEFAILLANCE,Condition.FAIBLESSE,
 			Condition.LENTEUR,Condition.RESISTANCE,Condition.REGENERATION,Condition.PRECISION,Condition.FORCE,Condition.VITESSE);
-	
+
 	Comparator<Condition> conditionComparator = new Comparator<Condition>(){
 
-	    @Override
-	    public int compare(final Condition o1, final Condition o2){
-	        // let your comparator look up your car's color in the custom order
-	        return Integer.valueOf(
-	        		conditionOrder.indexOf(o1.name))
-	            .compareTo(
-	                Integer.valueOf(
-	                	conditionOrder.indexOf(o2.name)));
-	    }
+		@Override
+		public int compare(final Condition o1, final Condition o2){
+			// let your comparator look up your car's color in the custom order
+			return Integer.valueOf(
+					conditionOrder.indexOf(o1.name))
+					.compareTo(
+							Integer.valueOf(
+									conditionOrder.indexOf(o2.name)));
+		}
 	};
-	
+
 	/** Get damage from burn or healing*/
 	public double conditionDamageReceived()
 	{
@@ -73,19 +75,19 @@ public class ConditionHandler {
 		}
 		return damage;
 	} 
-	 /** Reduce or enhance damage received*/
+	/** Reduce or enhance damage received*/
 	public double onDamageReceived(double damage)
 	{
 		double factor =1; 
 		Condition defaillance = conditionsMap.get(Condition.DEFAILLANCE);
 		Condition resistance = conditionsMap.get(Condition.RESISTANCE);
-		
+
 		if(defaillance != null)
 			factor*=defaillance.FACTOR;
-		
+
 		if(resistance != null)
 			factor*=resistance.FACTOR;
-		
+
 		return damage*factor;
 	}
 	/** Reduce or enhance damage given */
@@ -94,16 +96,16 @@ public class ConditionHandler {
 		float factor =1; 
 		Condition force = conditionsMap.get(Condition.FORCE);
 		Condition faiblesse = conditionsMap.get(Condition.FAIBLESSE);
-		
+
 		if(force != null)
 			factor*=force.FACTOR;
-		
+
 		if(faiblesse != null)
 			factor*=faiblesse.FACTOR;
-		
+
 		return factor;
 	} 
-	
+
 	/** Allow or not shoot */
 	public float getShotSpeedFactor()
 	{
@@ -111,34 +113,55 @@ public class ConditionHandler {
 		Condition paralysie = conditionsMap.get(Condition.PARALYSIE);
 		if(paralysie != null)
 			factor*=paralysie.FACTOR;
-		
+
 		Condition precision = conditionsMap.get(Condition.PRECISION);
 		if(precision != null)
 			factor*=precision.FACTOR;
-		
+
 		return factor;
-		
+
 	} 
-	
+
 	/** Multiply or reduce speed */
 	public double getSpeedFactor()
 	{
 		double factor =1; 
 		Condition lenteur = conditionsMap.get(Condition.LENTEUR);
 		Condition vitesse = conditionsMap.get(Condition.VITESSE);
-		
+
 		if(lenteur != null)
 			factor*=lenteur.FACTOR;
-		
+
 		if(vitesse != null)
 			factor*=vitesse.FACTOR;
-		
+
 		return factor;
 	} 
-	
-	/** Add a new condition to the list or replace existing one */
-	public void addNewCondition(String name,double _duree)
+
+	/**
+	 * return the localVit change induced by the condition
+	 */
+	public Vitesse getModifiedVitesse()
 	{
+		Condition motion = conditionsMap.get(Condition.MOTION);
+		if(motion != null)
+			return ((C_Motion)motion).getModifiedVitesse();
+		else
+			return new Vitesse(0,0);
+	}
+
+	/** Add a new condition to the list or replace existing one */
+	public void addNewCondition(String name,double _duree, Vitesse init_speed,int id)
+	{
+		if(conditionsMap.containsKey(name))
+		{
+			Condition condi = conditionsMap.get(name);
+			if(condi != null){
+				condi.onAddCondition(_duree,init_speed,id);
+				return;
+			}
+		}
+
 		if(name.equals(Condition.BRULURE))
 			conditionsMap.put(name, new C_Brulure(_duree));
 		else if(name.equals(Condition.REGENERATION))
@@ -152,7 +175,7 @@ public class ConditionHandler {
 
 		else if(name.equals(Condition.PARALYSIE))
 			conditionsMap.put(name, new C_Paralysie(_duree));		
-		
+
 		else if(name.equals(Condition.PRECISION))
 			conditionsMap.put(name, new C_Precision(_duree));		
 
@@ -167,6 +190,9 @@ public class ConditionHandler {
 
 		else if(name.equals(Condition.FAIBLESSE))
 			conditionsMap.put(name, new C_Faiblesse(_duree));
+
+		else if(name.equals(Condition.MOTION))
+			conditionsMap.put(name, new C_Motion(init_speed));
 		else{
 			try {
 				throw(new Exception("Condition not known: "+ name));
@@ -175,16 +201,34 @@ public class ConditionHandler {
 			}
 		}
 	}  
-	
+
+	public void addNewCondition(String name,double _duree,int id)
+	{
+		addNewCondition(name,_duree,new Vitesse(),id);
+	}  
 	/** Remove conditions that expired */
 	public void updateConditionState()
 	{
 		for(String key : conditionsMap.keySet()){
 			Condition condi = conditionsMap.get(key);
-			if(condi!=null && condi.ended())
-				conditionsMap.put(key, null);
+			if(condi!=null){
+				condi.Update();
+				if(condi.ended()){
+					conditionsMap.put(key, null);
+				}
+			}
 		}
 	} 
+	
+	public void OnAttacherCollided()
+	{
+		for(String key : conditionsMap.keySet()){
+			Condition condi = conditionsMap.get(key);
+			if(condi!=null){
+				condi.OnAttacherCollided();
+			}
+		}
+	}
 	
 	/** Returns all active conditions and update the blinkDisplay value from the conditions*/ 
 	public ArrayList<Condition> getAllConditions()
@@ -193,7 +237,7 @@ public class ConditionHandler {
 		for(String key : conditionsMap.keySet())
 		{
 			Condition condi = conditionsMap.get(key);
-			if(condi != null){
+			if(condi != null && !condi.name.equals(Condition.MOTION)){
 				activeCondi.add(condi);
 				//test if the object should start/continue blinking by checking the remaining time 
 				double currentT = PartieTimer.me.getElapsedNano();
@@ -209,10 +253,10 @@ public class ConditionHandler {
 			}
 		}
 		Collections.sort(activeCondi, conditionComparator);
-				
+
 		return activeCondi;
 	}
-	
+
 	/**
 	 * Return the x value to which the conditions should be drawn 
 	 * 
@@ -245,8 +289,8 @@ public class ConditionHandler {
 		lastYDraw=res;
 		return res;
 	}
-	
-	
-	
-	
+
+
+
+
 }

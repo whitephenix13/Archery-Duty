@@ -227,12 +227,11 @@ public class Heros extends Entitie{
 		if((PartieTimer.me.getElapsedNano()-tempsSeyeri)*Math.pow(10, -6)>InterfaceConstantes.TEMPS_VAR_SEYERI)
 		{
 			tempsSeyeri=PartieTimer.me.getElapsedNano();
-			boolean continueSlow = true;
 			if(partie.slowDown)
-				addSeyeri(partie,-0.5f);
+				addSeyeri(partie,-0.15f * InterfaceConstantes.SLOW_DOWN_FACTOR);
 			
 			else
-				addSeyeri(partie,0.5f);
+				addSeyeri(partie,0.25f * InterfaceConstantes.SLOW_DOWN_FACTOR);
 		}
 	}
 
@@ -455,12 +454,11 @@ public class Heros extends Entitie{
 	}
 	@Override
 	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,Collidable collidedObject,boolean stuck) {
+		conditions.OnAttacherCollided();
 		boolean collision_gauche = normal.x>0;
 		boolean collision_droite = normal.x<0;
 		//boolean collision_haut = normal.y>0;
 		boolean collision_bas = normal.y<0;
-		//System.out.println("collision "+ (collision_gauche?"gauche ": "" )+(collision_droite?"droite ": "")+(collision_bas?"bas ": "")+(collision_haut?"haut ": "") + 
-		//		vit.x +" "+vit.y);
 		last_colli_left=collision_gauche;
 		last_colli_right=collision_droite;
 
@@ -496,8 +494,10 @@ public class Heros extends Entitie{
 	{
 		if(TypeObject.isTypeOf(collider, TypeObject.TIR_MONSTRE))
 		{
-			if(!invincible)
+			if(!invincible){
+				TirMonstre tm = (TirMonstre)collider;
 				touche(((TirMonstre)collider).damage);
+			}
 		}
 	}
 
@@ -514,11 +514,11 @@ public class Heros extends Entitie{
 			{xpos_sync(memPos.x);ypos_sync(memPos.y);deplacement=memDep;anim=memAnim;localVit=(memVitloca);}};
 	}
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
+	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace, boolean update_with_speed) {
 		boolean doitDeplace=false;
 		try {
 			animationChanged=true;
-			anim=changeMouv(nouvMouv, nouvAnim, partie,deplace);
+			anim=changeMouv(nouvMouv, nouvAnim, partie,deplace, update_with_speed);
 			afterChangeMouv(partie);
 			partie.changeMouv= false;
 			doitDeplace=true;
@@ -545,7 +545,7 @@ public class Heros extends Entitie{
 	 * @return la nouvelle animation 
 	 * 
 	 */	
-	public int changeMouv(Mouvement nouvMouv, int nouvAnim, AbstractModelPartie partie,Deplace deplace) throws InterruptedException
+	public int changeMouv(Mouvement nouvMouv, int nouvAnim, AbstractModelPartie partie,Deplace deplace, boolean update_with_speed) throws InterruptedException
 	{
 		Debug_time debugTime = new Debug_time();
 		debugTime.init();
@@ -613,6 +613,8 @@ public class Heros extends Entitie{
 		wasGrounded=!falling;
 		if(falling)
 			useGravity=falling && !this.deplacement.IsDeplacement(Mouvement_perso.accroche) && !isDragged();
+		else if(update_with_speed)
+			useGravity=false;
 		//le heros chute ou cours vers un mur: il commence � glisser sur le mur 
 		boolean[] beginSliding= computeBeginSliding(partie,blocDroitGlisse,blocGaucheGlisse,falling); 
 		boolean beginSliding_r= beginSliding[0] ;
@@ -626,7 +628,8 @@ public class Heros extends Entitie{
 		updateVarSaut(falling, beginAccroche_r || beginAccroche_l, beginSliding_r || beginSliding_l);
 
 		//le heros atteri alors qu'il �tait en chute libre,
-		boolean landing = (finSaut||!falling) && deplacement.IsDeplacement(Mouvement_perso.saut) && (animHeros ==1 || animHeros ==4);
+		boolean landing = (!falling) && deplacement.IsDeplacement(Mouvement_perso.saut) && (animHeros == 1 || animHeros == 4 ||
+				( (animHeros == 0 || animHeros ==  3) && this.getGlobalVit(partie).y>=0 ));
 		boolean standup = deplacement.IsDeplacement(Mouvement_perso.saut) && (animHeros ==2 || animHeros ==5)  && deplacement.animEndedOnce();
 		//deal with the case where the heros was ejected while standing up
 		if(standup && falling)
@@ -660,7 +663,7 @@ public class Heros extends Entitie{
 		boolean endSliding = deplacement.IsDeplacement(Mouvement_perso.glissade) && 
 				((!blocDroitGlisse && droite_gauche(animHeros).equals(Mouvement.GAUCHE)) ||
 						(!blocGaucheGlisse && droite_gauche(animHeros)==(Mouvement.DROITE)) || !falling) ;
-
+		
 		int anim=animHeros;
 
 		debugTime.elapsed("after init 2, fleche", 4);
@@ -746,10 +749,12 @@ public class Heros extends Entitie{
 
 			if(motionSuccess){
 				for(Collidable eff : partie.arrowsEffects){
-					Roche_effect r_eff = (Roche_effect) eff;
-					if(r_eff!=null  && (r_eff.typeEffect==0) && (eff == accrocheCol))
-					{
-						r_eff.registerAccrocheCol(this);
+					if(eff instanceof Roche_effect){
+						Roche_effect r_eff = (Roche_effect) eff;
+						if((r_eff.typeEffect==0) && (eff == accrocheCol))
+						{
+							r_eff.registerAccrocheCol(this);
+						}
 					}
 				}
 				useGravity=false;
@@ -775,35 +780,23 @@ public class Heros extends Entitie{
 		if(falling)
 		{
 			peutSauter=false;
-			debugTime.elapsed("a", 5);
-
-			if(!(deplacement.IsDeplacement(Mouvement_perso.glissade)||deplacement.IsDeplacement(Mouvement_perso.course)||deplacement.IsDeplacement(Mouvement_perso.accroche)))
+			if(!(deplacement.IsDeplacement(Mouvement_perso.glissade)||deplacement.IsDeplacement(Mouvement_perso.course)
+					||deplacement.IsDeplacement(Mouvement_perso.accroche)))
 			{
-				debugTime.elapsed("b", 5);
 				int up = getGlobalVit(partie).y>=0 ? 1 : 0;
-				debugTime.elapsed("c", 5);
 				int type_mouv = droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? (up==0?Saut.jump_gauche:Saut.fall_gauche) :
 					(up==0?Saut.jump_droite:Saut.fall_droite);
-				debugTime.elapsed("d", 5);
 				Mouvement mouvSuivant = new Saut(this,type_mouv,partie.getFrame());
-				debugTime.elapsed("e", 5);
 				int animSuivant = (droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? 0+up :3+up);
-				debugTime.elapsed("f", 5);
 				alignHitbox(animHeros,mouvSuivant,animSuivant,partie,deplace,blocGaucheGlisse );		
-				debugTime.elapsed("g", 5);
 				animHeros = animSuivant;
 				anim=animSuivant;
 				deplacement=mouvSuivant;
 				deplacement.setSpeed(this, anim);
-				debugTime.elapsed("h", 5);
 				//landing = partie.finSaut;
 				beginSliding= computeBeginSliding(partie,blocDroitGlisse,blocGaucheGlisse,(falling&&!landing));
-				debugTime.elapsed("i", 5);
-
 			}
 		}
-
-		debugTime.elapsed("big if ", 4);
 
 		if(deplacement.IsDeplacement(Mouvement_perso.accroche))
 		{			
@@ -831,7 +824,6 @@ public class Heros extends Entitie{
 		}
 		else if(landing) //atterrissage: accroupi 
 		{
-
 			Mouvement mouvSuiv = new Saut(this,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?Saut.land_gauche:Saut.land_droite,partie.getFrame());
 			int animSuiv = (droite_gauche(animHeros).equals(Mouvement.GAUCHE)? 2 : 5 );
 			//on ajuste la position du personnage pour qu'il soit centr� 
@@ -1013,7 +1005,7 @@ public class Heros extends Entitie{
 		boolean falling_running = ( falling && deplacement.IsDeplacement(Mouvement_perso.course)) || deplacement.IsDeplacement(Mouvement_perso.saut);
 		boolean accrocheCooldownDone = slide? true : (PartieTimer.me.getElapsedNano() - accrocheCooldownTimer) > InterfaceConstantes.ACCROCHE_COOLDOWN;
 		//Special case in which accroche should not happen : if object is dragged or if wind arrow stick to it 
-		boolean no_accroche= slide? false  : (this.isDragged()||this.isWindProjected());
+		boolean no_accroche= slide? false  : this.isDragged(); // (this.isDragged()||this.isWindProjected());
 		boolean res_d =  (blocGauche&&(last_colli_left||getGlobalVit(partie).x<0)) && falling_running && !no_accroche && accrocheCooldownDone; 
 		boolean res_g =  (blocDroit && (last_colli_right||getGlobalVit(partie).x>0))&& falling_running  && !no_accroche && accrocheCooldownDone; 
 

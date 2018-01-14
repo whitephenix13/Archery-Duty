@@ -2,20 +2,14 @@ package todo;
 
 public class Todo {
 	
-	//Version 0.2.2
-			
-	//TODO: Partie timer : correct when system pause 
-	//TODO: Conditions : check if time correctly reset when new condition + Spam fleche feu => ennemi don't get damage 
-	//TODO: Fleche vent : spam on ennemi not working 
-	//TODO: Fleche vent : align effect with arrow when stick to hero ? 
-	//TODO: Fleche vent : better feeling (more ejected from the ground? shift the arrow at each animation change? )
-	//TODO: Fleche ombre : heros stuck if accroche 
+	//Version 0.2.3
+	//DONE: corrected aim accuracy
+	//DONE: better feel for fleche vent + corrected bugs 
+	//DONE: correct super slide and heavy gravity when jump on corner of a block
+	//DONE: corrected problem condition display 
+	//DONE: created a custom image display system that allows for different layers 
+	//DONE: maximum arrow distance 
 	
-	//TODO: Collision point not found :  while shooting grappin arrow fromt he air to the ground 
-	//TODO: Effect display priority : order the display of effect, entitie,projectile ... 
-
-	//TODO: Game balance: correct fleches values with respect to table
-	//TODO: Clean: collision
 	//TODO: Optimization: optimize game when spam arrow (lag) + optimize allocated memory for the program (currently -Xms3000m)
 
 	//MATERIEL
@@ -25,7 +19,7 @@ public class Todo {
 	// Feu: Object: create a wave of fire pillar                                 
 	
 	//SPIRITUEL
-	// Lumiere: boost surrounding beings : speed, jump, damage x2 
+	// Lumiere: boost surrounding beings : speed, jump, resistance? x2 
 	// Ombre: teleport+ malus
 	// Vent: projette en l'air
 	// Grappin
@@ -55,7 +49,7 @@ public class Todo {
 	//TODO: score quand tue un ennemi + combo + temps de fin de niveau // temps 
 	//TODO: effet ralentissement: taille en fonction de la fenetre
 	//TODO: effet slow motion (garder en mémoire les images des mouvements précédants et les afficher avec transparance)
-	//TODO: permttre le resize fenetre
+	//TODO: permttre le resize fenetre: utiliser plugin graphique pour interface: windowBuilder ou 
 	//TODO: ajouter des plugins angel chore, ou celesta
 	//TODO: creer des "blocs" event
 	//TODO: creer un tutoriel

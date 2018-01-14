@@ -4,11 +4,13 @@ import java.util.ArrayList;
 
 import collision.Collidable;
 import conditions.ConditionHandler;
+import deplacement.Mouvement_perso;
 import effects.Effect;
 import effects.Grappin_effect;
 import effects.Vent_effect;
-import fleches.Fleche;
+import monstre.Spirel;
 import partie.AbstractModelPartie;
+import personnage.Heros;
 
 public abstract class Entitie extends Collidable{
 	public ConditionHandler conditions;
@@ -16,7 +18,7 @@ public abstract class Entitie extends Collidable{
 	public float MINLIFE ;
 	protected float life;
 	public ArrayList<Effect> currentEffects;
-	
+
 	public double last_feu_effect_update = -1;
 
 	public abstract void onAddLife();
@@ -25,7 +27,7 @@ public abstract class Entitie extends Collidable{
 	{
 		return(life);
 	}
-	
+
 	public void addLife(double add)
 	{
 		if(add<0)
@@ -59,18 +61,26 @@ public abstract class Entitie extends Collidable{
 	public Vitesse getGlobalVit(AbstractModelPartie partie){
 		Vitesse vit = localVit.Copy().times(conditions.getSpeedFactor());
 		boolean isDragged = this.isDragged();
-		for(Effect eff: currentEffects)
+		//Do not apply any effect when accroche 
+		boolean applyEffects = true;
+		if(this instanceof Heros)
 		{
-			if(isDragged && TypeObject.isTypeOf(eff, TypeObject.GRAPPIN_EFF)){
-				vit = eff.getModifiedVitesse(partie, this);
-				return vit;
-			}
-			vit =vit.add(eff.getModifiedVitesse(partie, this));
+			applyEffects = !((Heros)this).deplacement.IsDeplacement(Mouvement_perso.accroche);
 		}
-
+		if(applyEffects){
+			for(Effect eff: currentEffects)
+			{
+				if(isDragged && TypeObject.isTypeOf(eff, TypeObject.GRAPPIN_EFF)){
+					vit = eff.getModifiedVitesse(partie, this);
+					return vit;
+				}
+				vit =vit.add(eff.getModifiedVitesse(partie, this));
+			}
+			vit = vit.add(conditions.getModifiedVitesse());
+		}
 		return vit;
 	}
-	
+
 	public void registerEffect(Effect eff)
 	{
 		currentEffects.add(eff);
@@ -79,7 +89,7 @@ public abstract class Entitie extends Collidable{
 	{
 		currentEffects.remove(eff);
 	}
-	
+
 	public boolean draggable =true;
 	public boolean isDragged(){
 		for(Effect eff:currentEffects)
@@ -99,7 +109,7 @@ public abstract class Entitie extends Collidable{
 	 * 
 	 * @return true if collidable has a wind arrow stick to it 
 	 */
-	public boolean isWindProjected(){
+	/*public boolean isWindProjected(){
 		for(Effect eff:currentEffects)
 		{
 			if(TypeObject.isTypeOf(eff, TypeObject.VENT_EFF))
@@ -111,5 +121,5 @@ public abstract class Entitie extends Collidable{
 		}
 		return false;
 
-	}
+	}*/
 }

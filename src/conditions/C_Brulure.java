@@ -11,10 +11,11 @@ public class C_Brulure extends Condition{
 	{
 		name=BRULURE;
 		DUREE= _duree*Math.pow(10, 9); //sec 
-		STEP = 1*Math.pow(10, 9); //damage every seconds
+		STEP = 1*Math.pow(10, 9); //in nano : damage every seconds
 		DAMAGE = -5; //5 damage every STEP
 		
 		startTime=PartieTimer.me.getElapsedNano();
 		lastStepTime=PartieTimer.me.getElapsedNano();
 	}
+
 }

@@ -26,7 +26,7 @@ public class Feu_effect extends Effect{
 	int shift ;
 	double DUREE_BRULURE = 5;
 	double UPDATE_TIME = 0.05 ; //s
-	double damage = -5;
+	double damage = -3;
 	
 	public Feu_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame,Vector2d _normalCollision,Point _pointCollision,
 			Point _correctedPointCollision,int typeEffect,int shift)
@@ -60,6 +60,7 @@ public class Feu_effect extends Effect{
 
 		partie.arrowsEffects.add(this);
 		setFirstPos(partie);
+		this.onUpdate(partie, false); //update rotated hitbox and drawtr
 	}
 
 	@Override
@@ -76,7 +77,7 @@ public class Feu_effect extends Effect{
 	{
 		if(!type0){
 			if(Collision.testcollisionObjects(partie, this, attacher,true))
-				attacher.conditions.addNewCondition(Condition.BRULURE, DUREE_BRULURE);}
+				attacher.conditions.addNewCondition(Condition.BRULURE, DUREE_BRULURE,System.identityHashCode(this));}
 		else
 			if((PartieTimer.me.getElapsedNano() - attacher.last_feu_effect_update)>UPDATE_TIME*Math.pow(10, 9) && Collision.testcollisionObjects(partie, this, attacher,true)){
 				attacher.addLife(damage);

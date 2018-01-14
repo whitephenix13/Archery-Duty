@@ -21,6 +21,7 @@ public class Fleche_lumiere extends Spirituelle {
 		super(tabFleche, current_frame,_shooter,add_to_list,damageMult,speedFactor);
 		TEMPS_DESTRUCTION= (long) (2* Math.pow(10,8));//in nano sec = 0.2 sec 
 		damage=0*damageMult;
+		seyeri_cost = -15;
 	}
 
 	void applyArrowEffect(List<Entitie> objects,AbstractModelPartie partie,Collidable collider,Vector2d normal,Point pColli, Point correctedPColli)

@@ -14,7 +14,6 @@ import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import personnage.Heros;
 import types.Entitie;
-import types.Hitbox;
 import types.Projectile;
 import types.Vitesse;
 
@@ -30,11 +29,13 @@ public class Fleche_grappin extends Spirituelle {
 		MAX_NUMBER_INSTANCE=1;
 		TEMPS_DESTRUCTION= (long) (2* Math.pow(10,8));//in nano sec = 0.5 sec 
 		damage=0*damageMult;
+		seyeri_cost = -10;
 	}
+	
 
 	//only move arrow if the grappin length is long enough
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
+	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace, boolean update_with_speed) {
 		if(collider!=null)
 			if(collider.getNeedDestroy()){
 				collider=null;
@@ -42,7 +43,7 @@ public class Fleche_grappin extends Spirituelle {
 			}
 		//doitDeplace, animationChanged
 		max_speed_norm = -1;
-		boolean[] res = super.deplace(partie, deplace);
+		boolean[] res = super.deplace(partie, deplace, update_with_speed);
 		double speedNorm = this.getGlobalVit(partie).norm();
 		if(generatedEffect && (this.tempsDetruit==0) && (!this.getNeedDestroy()) )
 		{
@@ -73,6 +74,10 @@ public class Fleche_grappin extends Spirituelle {
 	@Override
 	protected void onPlanted(List<Entitie> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
 	{
+		//Handle case where effect is destroyed but last compute is true just for display purpose
+		if(flecheEffect ==null)
+			return;
+		
 		if(this.afterDecochee && stuck)
 			ejectArrow(partie,unprojectedSpeed);
 		if(stuck){

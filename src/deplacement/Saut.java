@@ -58,7 +58,7 @@ public class Saut extends Mouvement_perso{
 				start_index=4;end_index=5;}
 			else if(type_mouv==land_droite){
 				start_index=5;end_index=6;}
-			animation.start(Arrays.asList(1,1,5,1,1,5), current_frame, start_index, end_index);
+			animation.start(Arrays.asList(1,1,2,1,1,2), current_frame, start_index, end_index);
 
 		}
 		else if(TypeObject.isTypeOf(obj, TypeObject.SPIREL))
@@ -147,7 +147,7 @@ public class Saut extends Mouvement_perso{
 					object.localVit.y=(vitSaut);
 					heros.debutSaut =false;
 				}
-				else if(heros.finSaut)
+				else if(heros.finSaut || (anim == 2 || anim == 5))
 				{
 					object.localVit.y=(0);
 				}

@@ -7,6 +7,7 @@ import javax.vecmath.Vector2d;
 import collision.Collidable;
 import effects.Roche_effect;
 import effects.Trou_noir_effect;
+import fleches.Fleche;
 import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import personnage.Heros;
@@ -22,7 +23,7 @@ public class Fleche_trou_noir extends Destructrice {
 		TEMPS_DESTRUCTION= (long) (2* Math.pow(10,8));//in nano sec = 0.2 sec 
 		damage=0*damageMult;//TODO:
 	}
-
+	
 	@Override
 	protected void onPlanted(List<Entitie> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
 	{

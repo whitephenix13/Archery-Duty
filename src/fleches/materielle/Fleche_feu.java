@@ -9,11 +9,11 @@ import deplacement.Deplace;
 import effects.Effect;
 import effects.Feu_effect;
 import effects.Roche_effect;
+import fleches.Fleche;
 import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import personnage.Heros;
 import types.Entitie;
-import types.Hitbox;
 import types.Projectile;
 
 public class Fleche_feu extends Materielle {
@@ -21,8 +21,11 @@ public class Fleche_feu extends Materielle {
 	public Fleche_feu(List<Projectile> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor) {
 		super(tabFleche, current_frame,_shooter,add_to_list,damageMult,speedFactor);
 		TEMPS_DESTRUCTION= (long) (2* Math.pow(10,8));//in nano sec = 0.2 sec 
-		damage=0*damageMult;//TODO:
+		damage=-10*damageMult;
+		seyeri_cost = -10;
 	}
+	
+
 	@Override
 	protected void onPlanted(List<Entitie> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
 	{

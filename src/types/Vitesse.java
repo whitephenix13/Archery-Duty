@@ -13,6 +13,7 @@ public class Vitesse  implements Serializable{
 	public double y=0;
 	public Vitesse() {};
 	public Vitesse(double xx, double yy){x=xx; y=yy;}
+	public Vitesse(Vector2d v){x=v.x; y=v.y;}
 
 	public Vitesse add(Vitesse vit2)
 	{
@@ -36,10 +37,12 @@ public class Vitesse  implements Serializable{
 	}
 	public void negate()
 	{
-		Vector2d negated = vect2d();
-		negated.negate();
-		x=negated.x;
-		y=negated.y;
+		x= -x;
+		y= -y;
+	}
+	public Vitesse negated()
+	{
+		return new Vitesse(-x,-y);
 	}
 	public Vitesse Copy()
 	{
@@ -48,9 +51,13 @@ public class Vitesse  implements Serializable{
 	//can use useGravity of Heros to detect if it is on ground or not 
 	public static Vitesse applyFriction(Vitesse vit,boolean onGround,double minEnvirSpeed)
 	{
+		double frict = (!onGround?InterfaceConstantes.AIRFRICTION:InterfaceConstantes.FRICTION);
+		return applyFriction(vit,frict,minEnvirSpeed);
+	}
+	public static Vitesse applyFriction(Vitesse vit,double frict,double minEnvirSpeed)
+	{
 		boolean negx = vit.x<0;
 		boolean negy = vit.y<0;
-		double frict = (!onGround?InterfaceConstantes.AIRFRICTION:InterfaceConstantes.FRICTION);
 		double newVitX= vit.x - (vit.x* frict);
 		double newVitY= vit.y - (vit.y* frict);
 		

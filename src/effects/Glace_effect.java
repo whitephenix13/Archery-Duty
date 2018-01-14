@@ -54,6 +54,7 @@ public class Glace_effect extends Effect{
 
 		partie.arrowsEffects.add(this);
 		setFirstPos(partie);
+		this.onUpdate(partie, false); //update rotated hitbox and drawtr
 	}
 
 	@Override
@@ -70,7 +71,7 @@ public class Glace_effect extends Effect{
 	{
 		if(!type0)
 			if(Collision.testcollisionObjects(partie, this, attacher,true))
-				attacher.conditions.addNewCondition(Condition.LENTEUR, DUREE_LENTEUR);
+				attacher.conditions.addNewCondition(Condition.LENTEUR, DUREE_LENTEUR,System.identityHashCode(this));
 	}
 
 	@Override

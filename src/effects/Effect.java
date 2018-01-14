@@ -147,15 +147,9 @@ public abstract class Effect extends Collidable{
 	}
 	protected Point getArrowTip(AbstractModelPartie partie)
 	{
-		Hitbox fHitbox = ref_fleche.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
-
-		Vector2d v1 = Hitbox.supportPoint(Deplace.angleToVector(ref_fleche.rotation-Math.PI/10), fHitbox.polygon); //top right of unrotated hitbox (with tip pointing right)
-		Vector2d v2 = Hitbox.supportPoint(Deplace.angleToVector(ref_fleche.rotation+Math.PI/10), fHitbox.polygon); //bottom right of unrotated hitbox (with tip pointing right)
-
-		int x_tip_fleche =  (int) ((v1.x+v2.x)/2);
-		int y_tip_fleche= (int) ((v1.y+v2.y)/2);
-		return new Point(x_tip_fleche,y_tip_fleche);
+		return Fleche.getArrowTip(partie, ref_fleche, true);
 	}
+	
 	public Point getTranslationFromTranformDraw(AbstractModelPartie partie)
 	{
 		return new Point(xpos()+partie.xScreendisp,ypos()+partie.yScreendisp);
@@ -187,7 +181,7 @@ public abstract class Effect extends Collidable{
 
 
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
+	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace, boolean update_with_speed) {
 		updatePos(partie);
 		anim=animation.update(anim,partie.getFrame(),1);
 		//doit deplace, change anim

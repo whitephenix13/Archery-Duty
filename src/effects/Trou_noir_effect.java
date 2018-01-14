@@ -32,6 +32,7 @@ public class Trou_noir_effect extends Effect{
 
 		partie.arrowsEffects.add(this);
 		setFirstPos(partie);
+		this.onUpdate(partie, false); //update rotated hitbox and drawtr
 	}
 	@Override
 	public int getMaxBoundingSquare()

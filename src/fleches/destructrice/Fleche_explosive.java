@@ -9,6 +9,7 @@ import collision.Collidable;
 import effects.Effect;
 import effects.Explosive_effect;
 import effects.Roche_effect;
+import fleches.Fleche;
 import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import personnage.Heros;
@@ -24,7 +25,7 @@ public class Fleche_explosive extends Destructrice {
 		damage=0*damageMult;
 	}
 
-
+	
 	void applyArrowEffect(List<Entitie> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d collisionNormal,Point _pointCollision,
 			Point _correctedPointCollision)
 	{

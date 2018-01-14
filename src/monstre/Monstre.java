@@ -40,10 +40,6 @@ public abstract class Monstre extends Entitie implements InterfaceConstantes, Se
 	public int nouvAnim;
 
 	protected ResetHandleCollision resetHandleCollision;
-
-	public List<Integer> xDecallagePlacementTir= new ArrayList<Integer>();
-	public List<Integer> yDecallagePlacementTir=  new ArrayList<Integer>();
-
 	Image SPattente0; 
 	Image SPattente1;
 
@@ -138,6 +134,7 @@ public abstract class Monstre extends Entitie implements InterfaceConstantes, Se
 	
 	@Override
 	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,Collidable collidedObject,boolean stuck) {
+		conditions.OnAttacherCollided();
 		boolean collision_gauche = normal.x>0;
 		boolean collision_droite = normal.x<0;
 		//boolean collision_haut = normal.y>0;

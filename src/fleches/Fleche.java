@@ -38,7 +38,9 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 	public boolean nulle =false;
 	public boolean encochee =false;
 	public boolean afterDecochee = false; //set to true after first decochee and before second deplace.
-
+	private Point targetedPoint = null; // The point in world coordinate that was cliked when the arrow was shot. Used to get more accurate direction
+	private boolean targetReached = false; // set to true when close to target to avoid that the arrow goes back and forth around the target
+	
 	public int MAX_NUMBER_INSTANCE=-1;//<0 for no restriction 
 
 	public AffineTransform draw_tr=null;
@@ -74,8 +76,8 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 
 		TEMPS_DESTRUCTION = (long) Math.pow(10, 9);//nanos, 1sec 
 
-		damage = -10 * damageMultiplier;
-		seyeri_cost=0;//-5
+		damage = -5 * damageMultiplier;
+		seyeri_cost=-8;//-5
 
 		draw_tr=new AffineTransform();
 
@@ -84,6 +86,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 	{
 		this(tabFleche,current_frame,_shooter,true,damageMultiplier,speedFactor);
 	}
+
 	@Override
 	public void setNeedDestroy()
 	{
@@ -297,17 +300,70 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 			public void res()
 			{}};*/
 	}
+	
+	public AffineTransform updateTransform(AbstractModelPartie partie)
+	{
+		if(encochee)
+		{
+			int hanim = partie.heros.anim;
+			Point pos = new Point();
+			Point anchor = new Point(0,0); //only arrows towards its center
+			Point taille = new Point(deplacement.xtaille.get(anim),deplacement.ytaille.get(anim));
+			Point f_anchor = new Point(xanchor.get(hanim),yanchor.get(hanim));
+			pos=new Point(partie.heros.xpos()+f_anchor.x,partie.heros.ypos()+f_anchor.y);
+			//Anchor is relative to position: true_anchor = world anchor - mypos
+			//world anchor = heros pos + heros anchor, mypos = heros  pos + fleche anchor
+			anchor=new Point(partie.heros.deplacement.x_rot_pos.get(hanim)-f_anchor.x,
+					partie.heros.deplacement.y_rot_pos.get(hanim)-f_anchor.y);					
+			draw_tr = partie.getRotatedTransform(pos,anchor, taille, rotation);
+		}
+		return draw_tr;
+	}
+	private boolean updateRotation(AbstractModelPartie partie)
+	{
+		if(targetedPoint==null)
+			return false;
+		//get arrow tip
+		Hitbox fHitbox = getHitbox(partie.INIT_RECT,partie.getScreenDisp());
+
+		Vector2d v1 = Hitbox.supportPoint(Deplace.angleToVector(rotation-Math.PI/10), fHitbox.polygon); //top right of unrotated hitbox (with tip pointing right)
+		Vector2d v2 = Hitbox.supportPoint(Deplace.angleToVector(rotation+Math.PI/10), fHitbox.polygon); //bottom right of unrotated hitbox (with tip pointing right)
+
+		Vector2d arrowTip = new Vector2d(((v1.x+v2.x)/2),((v1.y+v2.y)/2));
+		
+		Vector2d deltaPos = new Vector2d(targetedPoint.x-arrowTip.x,targetedPoint.y-arrowTip.y);
+		double dist = deltaPos.length();
+		int threshold = 100;
+		
+		if(dist > threshold && !targetReached)
+		{
+			//0° points to the right 
+			//90° points to the bottom
+			rotation = Deplace.XYtoAngle(deltaPos.x, deltaPos.y);
+			return true;
+		}
+		else if(dist <= threshold)
+			targetReached=true;
+
+		return false;
+	}
+	
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
+	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace, boolean update_with_speed) {
 		if(encochee){
 			deplacement.hitbox_rotated=Hitbox.convertHitbox(deplacement.hitbox,partie.INIT_RECT,draw_tr,new Point(xpos(),ypos()),partie.getScreenDisp());
 		}
-		else if(afterDecochee){
-			deplacement.setSpeed(this, anim);}
+		else{
+			updateRotation(partie);
+			deplacement.setSpeed(this, anim);
+		}
 
 		try {
 			anim=changeAnim(partie,deplace);} 
 		catch (InterruptedException e) {e.printStackTrace();}
+		
+		updateTransform(partie);
+		
 		boolean[] res = {doitDeplace,animationChanged};
 		return res;
 	}
@@ -315,6 +371,8 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 	{
 		if(encochee && !doitDeplace)
 		{
+			//memorize world desired position 
+			targetedPoint = new Point(partie.getXPositionSouris()-partie.xScreendisp,partie.getYPositionSouris()-partie.yScreendisp);
 			//set the anim 
 			double[] anim_rot = deplace.getAnimRotationTir(partie,true);
 			int animFleche = deplacement.updateAnimation(this, anim, partie.getFrame(),speedFactor);
@@ -458,6 +516,24 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 		return new Point(currentCenter.x-nextCenter.x,currentCenter.y-nextCenter.y);
 
 	}
+	
+	public static Vector2d getArrowTip(AbstractModelPartie partie,Fleche f)
+	{
+		Hitbox fHitbox = f.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
+
+		Vector2d v1 = Hitbox.supportPoint(Deplace.angleToVector(f.rotation-Math.PI/10), fHitbox.polygon); //top right of unrotated hitbox (with tip pointing right)
+		Vector2d v2 = Hitbox.supportPoint(Deplace.angleToVector(f.rotation+Math.PI/10), fHitbox.polygon); //bottom right of unrotated hitbox (with tip pointing right)
+
+		int x_tip_fleche =  (int) ((v1.x+v2.x)/2);
+		int y_tip_fleche= (int) ((v1.y+v2.y)/2);
+		return new Vector2d(x_tip_fleche,y_tip_fleche);
+	}
+	public static Point getArrowTip(AbstractModelPartie partie,Fleche f,boolean point)
+	{
+		Vector2d v =  getArrowTip(partie,f);
+		return new Point((int)v.x,(int)v.y);
+	}
+	
 	@Override
 	public void handleStuck(AbstractModelPartie partie) {
 		handleWorldCollision( new Vector2d(), partie,null,true );

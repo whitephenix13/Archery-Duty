@@ -10,13 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
-import javax.swing.JPanel;
 
 import Affichage.Affichage;
+import Affichage.DrawImageHandler;
 import collision.Collidable;
 import debug.DebugDraw;
 import deplacement.Deplace;
-import effects.Effect;
 import images.ImagesCondition;
 import images.ImagesEffect;
 import images.ImagesFleche;
@@ -61,6 +60,8 @@ public abstract class AbstractModelPartie extends DisplayLoader implements Obser
 	public List<Entitie> tabMonstre= new ArrayList <Entitie> ();
 	
 	public List<Collidable> arrowsEffects = new ArrayList<Collidable>();
+	
+	protected DrawImageHandler imageDrawer = new DrawImageHandler();
 	
 	protected int nombreMonstreRestant= 0;
 
@@ -182,6 +183,8 @@ public abstract class AbstractModelPartie extends DisplayLoader implements Obser
 		arrowsEffects = new ArrayList<Collidable>();
 		nombreMonstreRestant= 0;
 
+		imageDrawer = new DrawImageHandler();
+		
 		lEffaceFleche= new ArrayList<Integer>();
 		lEffaceMonstre= new ArrayList<Integer>();
 		lEffaceTirMonstre= new ArrayList<Integer>();
@@ -232,16 +235,13 @@ public abstract class AbstractModelPartie extends DisplayLoader implements Obser
 	 * @param rotation
 	 * @return
 	 */
+	
 	public abstract AffineTransform getRotatedTransform(Point pos, Point anchor, Point taille, double rotation);
 	public abstract void drawPerso(Graphics g,boolean drawHitbox);
 	public abstract void drawFleches(Graphics g,boolean drawHitbox);
 	public abstract void drawTirMonstres(Graphics g,boolean drawHitbox);
 	public abstract void drawEffects(Graphics g,boolean drawHitbox);
 	public abstract void drawInterface(Graphics g);
-	public abstract void drawHitbox(Graphics g,int xdraw, int draw,int width, int height);
-	public abstract void drawHitbox(Graphics g,int xdraw, int draw,int width, int height,Integer angle);
-	public abstract void drawHitbox(Graphics g,int xdraw, int draw,int width, int height,Integer angle,Point origine);
-	public abstract void drawBar(Graphics g,int number_rectangles, int[] x, int[] y, int[] width, int[] height,Color[] colors);
 	
 	public abstract BufferedImage apply_width_mask(BufferedImage original,BufferedImage previousMaskedIm, int w_start, int last_start,float transparency);
 	public abstract BufferedImage apply_height_mask(BufferedImage original,BufferedImage previousMaskedIm, int h_start_mask,float transparency);

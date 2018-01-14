@@ -40,14 +40,13 @@ public class Deplace implements InterfaceConstantes{
 		debugTime.elapsed("object.deplace", 3);
 		
 		boolean update_with_speed = ( !partie.slowDown || (partie.slowDown && partie.slowCount==0));
-		boolean[] shouldMov_changedAnim=object.deplace(partie, this);
+		boolean[] shouldMov_changedAnim=object.deplace(partie, this, update_with_speed);
 		boolean shouldMove= shouldMov_changedAnim[0];
 		boolean changedAnim= shouldMov_changedAnim[1];
 		if(!shouldMove)
 			return;
 
 		boolean useGravity = object.useGravity && update_with_speed;
-		
 		debugTime.elapsed("gravity and friction", 3);
 
 		if(useGravity)
@@ -186,13 +185,12 @@ public class Deplace implements InterfaceConstantes{
 		
 	}
 	/**
-	 * Renvoie l'animation d'une fleche encochée/du héros en fonction de la position de la souris 
-	 * @return l'animation de la fleche/du heros
+	 * Return an angle between 0 and 2*PI
 	 */	
 
 	public static double XYtoAngle(double xPosRelative, double yPosRelative)
 	{
-		double angle= Math.atan(yPosRelative/xPosRelative);
+		double angle= Math.atan(yPosRelative/xPosRelative); // between -PI/2 PI/2
 		if(xPosRelative<0 && yPosRelative>0)
 			angle= Math.PI + angle;
 		if(xPosRelative<0 && yPosRelative<=0)
@@ -251,7 +249,7 @@ public class Deplace implements InterfaceConstantes{
 
 		double ycenter= heros.ypos()+(isFiring? heros.deplacement.y_center_tir.get(heros.anim):
 			(heros.deplacement.ytaille.get(heros.anim)/4))-6;//arms at neck level
-
+		
 		double xPosRelative= partie.getXPositionSouris()-xcenter; 
 		double yPosRelative= partie.getYPositionSouris()-ycenter;
 		double angle= XYtoAngle(xPosRelative, yPosRelative);

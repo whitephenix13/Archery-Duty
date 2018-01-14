@@ -214,7 +214,7 @@ public abstract class Collidable extends Destroyable{
 	 * @return [shouldMove,changedAnimation] shouldMove: if the collision (hence movement) have to be applied to this object. 
 	 * changedAnimation : if the animation changed due to a change of movement or a change in droite_gauche
 	 */
-	public abstract boolean[] deplace(AbstractModelPartie partie, Deplace deplace);
+	public abstract boolean[] deplace(AbstractModelPartie partie, Deplace deplace, boolean update_with_speed);
 	//Use the function trick to memorize the reset values
 	protected class CurrentValue{public void res(){};}
 	public abstract void applyFriction(double minlocalSpeed, double minEnvirSpeed);
@@ -373,7 +373,8 @@ public abstract class Collidable extends Destroyable{
 		double x = norm_speed * cos_angle;
 		double y = norm_speed * sin_angle;
 		//TODO: changed, removed (int) 
-		return new Vitesse(Math.round(x),Math.round(y));
+		//CHANGED return new Vitesse(Math.round(x),Math.round(y));
+		return new Vitesse(x,y);
 	}
 
 	//For all the methods below: do not include the effects 
@@ -390,7 +391,7 @@ public abstract class Collidable extends Destroyable{
 		p.addPoint(center.x-half_L, center.y+half_L);
 		return p;
 	}
-	private static boolean objectInBoundingSquare(AbstractModelPartie partie,Collidable col, Collidable refObject) 
+	public static boolean objectInBoundingSquare(AbstractModelPartie partie,Collidable col, Collidable refObject) 
 	{
 		if(refObject==null)
 			return true;
@@ -500,34 +501,7 @@ public abstract class Collidable extends Destroyable{
 		}
 		return objects;
 	}
-
-	/**Get all effects that are collidable (such as bloc) and that are on screen */
-	//TODO: comment
-	/*public static List<Collidable> getAllCollidableEffect(AbstractModelPartie partie,boolean checkOnScreen)
-	{
-		List<Collidable> list = new ArrayList<Collidable>();
-		for(Collidable col : partie.arrowsEffects)
-		{
-			Effect eff = (Effect) col;
-			if(eff.isWorldCollider && !eff.checkCollideWithNone())
-			{
-				if(!checkOnScreen)
-					list.add(col);
-				else
-				{
-					Point CompScreenMove = new Point(0,0);
-					if(!col.fixedWhenScreenMoves)
-						CompScreenMove= new Point(-partie.xScreendisp,-partie.yScreendisp);
-
-					Hitbox hit = Hitbox.minusPoint(col.getHitbox(partie.INIT_RECT),CompScreenMove,false);
-					boolean onScreen  = Collision.testcollisionHitbox(partie, hit, InterfaceConstantes.SCREEN);
-					if(onScreen)
-						list.add(col);
-				}
-			}
-		}
-		return list;
-	}*/
+	
 	/**Get all effects that are collidable (such as bloc)*/
 	public static List<Collidable> getAllCollidableEffect(AbstractModelPartie partie)
 	{

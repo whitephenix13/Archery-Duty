@@ -73,9 +73,6 @@ public class Spirel extends Monstre{
 		//Param from Collidable
 		fixedWhenScreenMoves=false;
 
-		xDecallagePlacementTir= Arrays.asList(30,-60,20);
-		yDecallagePlacementTir= Arrays.asList(0 ,0,-100);
-		
 		MAXLIFE = 100;
 		MINLIFE = 0;
 		life= MAXLIFE;
@@ -139,7 +136,7 @@ public class Spirel extends Monstre{
 	 * @param Monde, le niveau en cours 
 	 */		
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie,Deplace deplace)
+	public boolean[] deplace(AbstractModelPartie partie,Deplace deplace, boolean update_with_speed)
 	{
 		//compute the next desired movement 
 		IA(partie.tabTirMonstre,partie.heros,partie);
@@ -205,13 +202,33 @@ public class Spirel extends Monstre{
 
 				//changeMouv (monstre,partie);
 				//envoie du projectile
-				int xtir_dir = droite_gauche(anim).equals(Mouvement.GAUCHE)? 1 : 0;
-				int ytir_dir = 2;
+				double tir1_rotation = droite_gauche(anim).equals(Mouvement.GAUCHE)?Math.PI : 0;
+				double tir2_rotation = 3*Math.PI/2;
 				
-				tabTirMonstre.add(new TirSpirel(xpos()+xDecallagePlacementTir.get(xtir_dir),ypos()+yDecallagePlacementTir.get(xtir_dir),
-						xtir_dir,partie.getFrame(),conditions.getDamageFactor(),conditions.getShotSpeedFactor()));	
-				tabTirMonstre.add(new TirSpirel(xpos()+xDecallagePlacementTir.get(ytir_dir),ypos()+yDecallagePlacementTir.get(ytir_dir),
-						ytir_dir,partie.getFrame(),conditions.getDamageFactor(),conditions.getShotSpeedFactor()));	
+				int xdecal1 =  (int)(deplacement.xtaille.get(anim)/2 * Math.cos(tir1_rotation)) ;
+				int ydecal1 =  (int)(deplacement.xtaille.get(anim)/2 * Math.sin(tir1_rotation)) ;
+				
+				int xdecal2 =  (int)(deplacement.xtaille.get(anim)/2 * Math.cos(tir2_rotation));
+				int ydecal2 =  (int)(deplacement.xtaille.get(anim)/2 * Math.sin(tir2_rotation));
+				
+				//to get the middle of the tir 
+				int x_decall_tir1 = (int) (36* 0.5 * Math.cos(tir1_rotation));
+				int y_decall_tir1 = (int) ( (25*0.5f) * Math.cos(tir1_rotation));
+				
+				int x_decall_tir2 = (int) ((-25*0.5f) * Math.sin(tir2_rotation));
+				int y_decall_tir2 = (int) (36* 0.5 * Math.sin(tir2_rotation));
+		
+				
+				int xmid = xpos()+deplacement.xtaille.get(anim)/2;
+				int ymid = ypos()+deplacement.ytaille.get(anim)/2;
+				//int x_current_mid = (int) (deplacement.xtaille.get(anim)* 1 * Math.cos(rotation) - (deplacement.ytaille.get(anim)*0.5f) * Math.sin(rotation));
+				//int y_current_mid = (int) (deplacement.xtaille.get(anim)* 1 * Math.sin(rotation) + (deplacement.ytaille.get(anim)*0.5f) * Math.cos(rotation));
+				
+				
+				tabTirMonstre.add(new TirSpirel(partie,xmid -x_decall_tir1+xdecal1  , ymid - y_decall_tir1+ydecal1 ,
+						0,tir1_rotation,partie.getFrame(),conditions.getDamageFactor(),conditions.getShotSpeedFactor()));	
+				tabTirMonstre.add(new TirSpirel(partie, xmid-x_decall_tir2+xdecal2 , ymid-y_decall_tir2+ydecal2  ,
+						0,tir2_rotation,partie.getFrame(),conditions.getDamageFactor(),conditions.getShotSpeedFactor()));	
 
 				cooldown=true;
 

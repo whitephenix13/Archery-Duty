@@ -165,7 +165,7 @@ public class Bloc extends Collidable{
 		//do nothing
 	}
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
+	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace, boolean update_with_speed) {
 		//Do nothing
 		boolean[] res = {false,false};
 		return res;

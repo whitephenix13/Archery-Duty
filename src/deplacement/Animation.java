@@ -6,11 +6,13 @@ import java.util.List;
 import option.Config;
 
 public class Animation {
-
+	
 	private int start_frame=0;
 	private int start_index=0;//this index is used 
 	private int end_index=0;//this is the strict limit, anim (= [start_index,end_index-1]
 	private boolean animation_ended =false;
+	private boolean loop = true;
+	public void setLoop(boolean val){loop=val;}
 	public void resetAnimationEnded(){animation_ended=false;}
 	public int getStartFrame(){return start_frame;};
 	public int getStartIndex(){return start_index;};
@@ -41,11 +43,15 @@ public class Animation {
 	{
 		return ((current_frame-start_frame)*Config.getDeltaFrame(false));
 	}
+	
+	public int update(int anim,int current_frame,double speedFactor)
+	{
+		return update(anim,current_frame,speedFactor,false);
+	}
 	/**
 	 * Return the corresponding anim value
 	 * */
-	
-	public int update(int anim,int current_frame,double speedFactor)
+	public int update(int anim,int current_frame,double speedFactor,boolean log)
 	{
 		if(start_frame==-1)
 		{
@@ -54,9 +60,11 @@ public class Animation {
 		}
 		//elapsed frame > change frame number
 		boolean switch_anim = (current_frame-start_frame)*speedFactor>(animationFrame.get(anim)*Config.ratio_fps());
+		if(log)
+			System.out.println(switch_anim);
 		if(anim==(end_index-1))
 		{
-			if(switch_anim){
+			if(switch_anim && loop){
 				//restart animation from beginning
 				animation_ended=true;
 				start(null,current_frame,start_index,end_index);
@@ -72,6 +80,7 @@ public class Animation {
 				return anim;
 		}
 	}
+
 	public void end()
 	{
 		start_frame=-1;

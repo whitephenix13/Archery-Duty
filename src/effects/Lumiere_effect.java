@@ -35,6 +35,7 @@ public class Lumiere_effect extends Effect{
 		
 		partie.arrowsEffects.add(this);
 		setFirstPos(partie);
+		this.onUpdate(partie, false); //update rotated hitbox and drawtr
 	}
 
 	@Override
@@ -46,7 +47,7 @@ public class Lumiere_effect extends Effect{
 	public void updateOnCollidable(AbstractModelPartie partie,Entitie attacher)
 	{
 		if(Collision.testcollisionObjects(partie, this, attacher,true))
-			attacher.conditions.addNewCondition(Condition.VITESSE, DUREE_VITESSE);
+			attacher.conditions.addNewCondition(Condition.VITESSE, DUREE_VITESSE,System.identityHashCode(this));
 	}
 	
 	@Override

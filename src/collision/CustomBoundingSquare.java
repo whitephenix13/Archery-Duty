@@ -31,9 +31,13 @@ public class CustomBoundingSquare extends Collidable{
 	}
 	public static CustomBoundingSquare getScreen()
 	{
+		return getScreen(new Point(0,0));
+	}
+	public static CustomBoundingSquare getScreen(Point screenDisp)
+	{
 		return new CustomBoundingSquare(
-				new Point( (InterfaceConstantes.BD_FENETRE.x + InterfaceConstantes.HG_FENETRE.x)/2, 
-						(InterfaceConstantes.BD_FENETRE.y + InterfaceConstantes.HG_FENETRE.y)/2 ),
+				new Point( screenDisp.x+(InterfaceConstantes.BD_FENETRE.x + InterfaceConstantes.HG_FENETRE.x)/2, 
+						screenDisp.y+(InterfaceConstantes.BD_FENETRE.y + InterfaceConstantes.HG_FENETRE.y)/2 ),
 				true, 
 				 ((InterfaceConstantes.BD_FENETRE.x - InterfaceConstantes.HG_FENETRE.x)/2));
 	}
@@ -94,7 +98,7 @@ public class CustomBoundingSquare extends Collidable{
 	}
 
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
+	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace, boolean update_with_speed) {
 		// TODO Auto-generated method stub
 		return null;
 	}

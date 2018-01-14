@@ -1,6 +1,7 @@
 package conditions;
 
 import partie.PartieTimer;
+import types.Vitesse;
 
 public abstract class Condition {
 	public String name;
@@ -19,6 +20,7 @@ public abstract class Condition {
 	public static String FORCE = "force";
 	public static String FAIBLESSE = "faiblesse";
 	
+	public static String MOTION = "motion";
 	//Time during which the condition is applied 
 	protected double DUREE = 0;//in nanos
 	protected double startTime = 0;
@@ -39,9 +41,30 @@ public abstract class Condition {
 	
 	public boolean ended()
 	{
-		if((PartieTimer.me.getElapsedNano()-startTime) >DUREE )
+		if(DUREE > 0  && (PartieTimer.me.getElapsedNano()-startTime) >DUREE )
 			return true; 
 		return false;
 	}
 	
+	/**
+	 * Called when an already existing condition is applied again 
+	 */
+	public void onAddCondition(double _duree,Vitesse _initSpeed,int id)
+	{
+		double current_time = PartieTimer.me.getElapsedNano();
+		
+		DUREE = _duree*Math.pow(10, 9);
+		startTime = current_time;
+		blinkDisplay=true;
+	}
+	
+	public void OnAttacherCollided()
+	{
+		
+	}
+	
+	public void Update()
+	{
+		
+	}
 }

@@ -1,10 +1,8 @@
 package deplacement;
 
 import collision.Collidable;
-import fleches.Fleche;
-import monstre.Monstre;
-import monstre.TirMonstre;
 import option.Config;
+import personnage.Heros;
 import principal.InterfaceConstantes;
 
 public class Gravite implements InterfaceConstantes

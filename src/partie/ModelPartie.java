@@ -15,13 +15,14 @@ import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.List;
 
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JPanel;
 
 import Affichage.Affichage;
+import Affichage.DrawImageHandler;
+import Affichage.DrawImageItem;
 import collision.Collidable;
 import collision.Collision;
+import collision.CustomBoundingSquare;
 import conditions.Condition;
 import debug.Debug_time;
 import deplacement.Accroche;
@@ -33,6 +34,7 @@ import deplacement.Mouvement_perso;
 import deplacement.Saut;
 import deplacement.Tir;
 import effects.Effect;
+import effects.Trou_noir_effect;
 import fleches.Fleche;
 import images.ImagesEffect;
 import menuPrincipal.AbstractModelPrincipal;
@@ -138,10 +140,11 @@ public class ModelPartie extends AbstractModelPartie{
 					Heros h = (Heros)ent;
 					mouv=h.nouvMouv;
 				}
-				boolean shouldBeDestroyed = ((PartieTimer.me.getElapsedNano()-ent.tempsDetruit) > ent.TEMPS_DESTRUCTION) && ent.tempsDetruit>0;
+				boolean shouldBeDestroyed = ent.getNeedDestroy() || ((PartieTimer.me.getElapsedNano()-ent.tempsDetruit) > ent.TEMPS_DESTRUCTION) && ent.tempsDetruit>0;
 				if(!shouldBeDestroyed)
 					deplace.DeplaceObject(ent, mouv, this);
-				else
+				//Handle case where deplace set need destroy to true 
+				if(shouldBeDestroyed )
 					ent.setNeedDestroy();
 			}
 			 
@@ -150,10 +153,15 @@ public class ModelPartie extends AbstractModelPartie{
 			//DEPLACEMENT PROJECTILES 
 			for(Projectile proj : Collidable.getAllProjectileCollidable(this))
 			{
-				boolean shouldBeDestroyed = ((PartieTimer.me.getElapsedNano()-proj.tempsDetruit) > proj.TEMPS_DESTRUCTION) && proj.tempsDetruit>0;
+				//Pos is incorrect for Fleche when encochee hence never destroy it in that case.
+				//Otherwise destroy projectile if too far out of screen 
+				boolean destroyTooFar = (proj instanceof Fleche? !((Fleche)proj).encochee : true) &&
+						!Collidable.objectInBoundingSquare(this,proj,CustomBoundingSquare.getScreen()); 
+				boolean shouldBeDestroyed =  destroyTooFar || proj.getNeedDestroy() || ((PartieTimer.me.getElapsedNano()-proj.tempsDetruit) > proj.TEMPS_DESTRUCTION) && proj.tempsDetruit>0;
 				if(!shouldBeDestroyed)
 					deplace.DeplaceObject(proj, proj.deplacement, this);
-				else
+				//Handle case where deplace set need destroy to true 
+				if(shouldBeDestroyed )
 					proj.setNeedDestroy();
 			}
 
@@ -187,10 +195,15 @@ public class ModelPartie extends AbstractModelPartie{
 
 					for(int i_index =0; i_index<groupI.size(); i_index++)
 						for(int j_index =0; j_index<groupJ.size(); j_index++){
-							if(TypeObject.isMemberOf(groupI.get(i_index), groupJ.get(j_index).getImmuneType()) || 
-									(TypeObject.isMemberOf(groupJ.get(j_index), groupI.get(i_index).getImmuneType())))
+							Projectile proj_i = groupI.get(i_index);
+							Projectile proj_j = groupJ.get(j_index);
+							
+							if(proj_i.getNeedDestroy() || proj_j.getNeedDestroy())
+								continue; 
+							if(TypeObject.isMemberOf(proj_i, proj_j.getImmuneType()) || 
+									(TypeObject.isMemberOf(proj_j, proj_i.getImmuneType())))
 								continue;
-							Collision.collisionObjects(this, groupI.get(i_index), groupJ.get(j_index),true);//Object are warn if collision in this function
+							Collision.collisionObjects(this, proj_i, proj_j,true);//Object are warn if collision in this function
 						}
 				}
 
@@ -203,10 +216,16 @@ public class ModelPartie extends AbstractModelPartie{
 
 					for(int i_index =0; i_index<groupEntitie.size(); i_index++)
 						for(int j_index =0; j_index<groupProjectile.size(); j_index++){
-							if((TypeObject.isMemberOf(groupEntitie.get(i_index), groupProjectile.get(j_index).getImmuneType())) 
-									|| (TypeObject.isMemberOf(groupProjectile.get(j_index), groupEntitie.get(i_index).getImmuneType() )))
+							Entitie ent = groupEntitie.get(i_index);
+							Projectile proj = groupProjectile.get(j_index);
+							
+							if(ent.getNeedDestroy() || proj.getNeedDestroy())
+								continue; 
+							
+							if((TypeObject.isMemberOf(ent,proj.getImmuneType())) 
+									|| (TypeObject.isMemberOf(proj,ent.getImmuneType() )))
 								continue;
-							Collision.collisionObjects(this, groupEntitie.get(i_index), groupProjectile.get(j_index),true);//Object are warn if collision in this function
+							Collision.collisionObjects(this, ent, proj,true);//Object are warn if collision in this function
 						}
 				}
 
@@ -367,6 +386,15 @@ public class ModelPartie extends AbstractModelPartie{
 		}
 	}
 
+	/*
+	 * INFORMATIVE FUNCTION 
+	 * public Point convertToWorld(Point pos, boolean fixedWhenScreenMoves)
+	{
+		if(fixedWhenScreenMoves)
+			return new Point(pos.x-xScreendisp,pos.y-yScreendisp);
+		else
+			return pos;
+	}*/
 	//INPUTS 
 	private boolean nextDirectionRightInBothCase = true; 
 	public void keyDownAction () 
@@ -707,7 +735,6 @@ public class ModelPartie extends AbstractModelPartie{
 
 				heros.nouvAnim= (heros.droite_gauche(heros.anim).equals(Mouvement.GAUCHE) ? 0 : 2) ;
 				heros.nouvMouv= new Attente(heros,heros.nouvAnim==0? Attente.attente_gauche:Attente.attente_droite,frame);
-				//TODO:
 				if(normal_2tir_R)
 				{}
 				heros.last_shoot_time= System.nanoTime();
@@ -880,9 +907,11 @@ public class ModelPartie extends AbstractModelPartie{
 		drawPerso(g,false);
 		drawFleches(g,false);
 		drawTirMonstres(g,false);
-		drawEffects(g,true );
+		drawEffects(g,false );
 		drawInterface(g);
-
+		
+		imageDrawer.drawAll(g);
+		
 		if(debugDraw != null)
 			debugDraw.draw(g);
 	}
@@ -907,15 +936,17 @@ public class ModelPartie extends AbstractModelPartie{
 				{
 					int xDraw=tempPict.getXpos()+ xScreendisp- INIT_RECT.x;
 					int yDraw=tempPict.getYpos()+ yScreendisp- INIT_RECT.y;
-					g.drawImage(imMonde.getImages(tempPict,false),xDraw,yDraw, null);
+					imageDrawer.addImage(new DrawImageItem(imMonde.getImages(tempPict,false),xDraw,yDraw, null,DrawImageHandler.MONDE));
 
 					if(drawHitbox && tempPict.getBloquer())
 					{
-						drawHitbox(g,xDraw, yDraw, InterfaceConstantes.TAILLE_BLOC-1, InterfaceConstantes.TAILLE_BLOC-1);
-						g.setColor(Color.BLACK);
-						g.setFont(new Font(g.getFont().getFontName(),g.getFont().getStyle(), 20 ));
-						g.drawString("("+tempPict.getXpos()/TAILLE_BLOC+","+tempPict.getYpos()/TAILLE_BLOC+")", xDraw, yDraw+TAILLE_BLOC/2);
-						g.setColor(Color.RED);
+						Hitbox hitbox= tempPict.getHitbox(INIT_RECT,getScreenDisp());
+						imageDrawer.addImage(new DrawImageItem(hitbox,getScreenDisp(),Color.RED,Color.BLACK,DrawImageHandler.MONDE));
+
+						imageDrawer.addImage(new DrawImageItem("("+tempPict.getXpos()/TAILLE_BLOC+","+tempPict.getYpos()/TAILLE_BLOC+")",
+								xDraw, yDraw+TAILLE_BLOC/2,Color.BLACK,Color.BLACK,20,DrawImageHandler.MONDE));
+
+						
 					}
 				}
 			}
@@ -929,8 +960,9 @@ public class ModelPartie extends AbstractModelPartie{
 			int yDraw= m.ypos()+yScreendisp;
 
 			ArrayList<Image> images = imMonstre.getImage(m);
-			for(Image im : images)
-				g.drawImage(im, xDraw ,yDraw ,null);
+			for(Image im : images){
+				imageDrawer.addImage(new DrawImageItem(im,xDraw,yDraw,null,DrawImageHandler.MONSTRE));
+			}
 
 			int xDraw_d= xDraw +m.deplacement.xtaille.get(m.anim);
 			//draw monster lifebar
@@ -939,7 +971,8 @@ public class ModelPartie extends AbstractModelPartie{
 			int[] width={(int) m.MAXLIFE,(int) m.getLife()};
 			int[] height={5,5};
 			Color[] colors = {Color.BLACK,Color.GREEN};
-			drawBar(g,2,x,y,width,height,colors);
+			imageDrawer.addImage(new DrawImageItem(x,y,width,height,colors,DrawImageHandler.MONSTRE));
+
 
 			ArrayList<Condition> allcondis = m.conditions.getAllConditions();
 			int xMiddle = (int) (Hitbox.getHitboxCenter(m.getHitbox(INIT_RECT,getScreenDisp())).x-m.xpos());
@@ -948,8 +981,10 @@ public class ModelPartie extends AbstractModelPartie{
 
 			for(int i =0; i<allcondis.size();++i){
 				Condition condi = allcondis.get(i); 
-				if(condi.blinkDisplay)
-					g.drawImage(imConditions.getImage(condi.name), xStartDrawCondi+25*i ,yStartDrawCondi ,null);
+				if(condi.blinkDisplay){
+					imageDrawer.addImage(new DrawImageItem(imConditions.getImage(condi.name), xStartDrawCondi+25*i ,yStartDrawCondi ,null
+							,DrawImageHandler.MONSTRE));
+				}
 			}
 
 
@@ -957,7 +992,7 @@ public class ModelPartie extends AbstractModelPartie{
 			if(drawHitbox)
 			{
 				Hitbox hitbox= m.getHitbox(INIT_RECT,getScreenDisp());
-				drawPolygon(g,hitbox);
+				imageDrawer.addImage(new DrawImageItem(hitbox,getScreenDisp(),Color.RED,Color.BLACK,DrawImageHandler.MONSTRE));
 			}
 		}
 
@@ -968,8 +1003,6 @@ public class ModelPartie extends AbstractModelPartie{
 		int anim = heros.anim;
 		Point anchor = new Point(heros.xpos()+heros.deplacement.x_rot_pos.get(anim), 
 				heros.ypos()+heros.deplacement.y_rot_pos.get(anim));
-		Graphics2D g2d = (Graphics2D)g;
-
 
 		AffineTransform tr = getRotatedTransform(new Point(heros.xpos(),heros.ypos()), 
 				new Point(heros.deplacement.x_rot_pos.get(anim),heros.deplacement.y_rot_pos.get(anim)),
@@ -981,11 +1014,13 @@ public class ModelPartie extends AbstractModelPartie{
 		for(int i=0; i<l_image.size(); ++i)
 		{
 			//im_body, im_back, im_head, im_front
-			if(i==0||i==2)
-				g.drawImage(l_image.get(i), heros.xpos(),heros.ypos(),null);
+			if(i==0||i==2){
+				imageDrawer.addImage(new DrawImageItem(l_image.get(i), heros.xpos(),heros.ypos(),null,DrawImageHandler.PERSO));
+			}
 
-			else
-				g2d.drawImage(l_image.get(i), tr,null);
+			else{
+				imageDrawer.addImage(new DrawImageItem(l_image.get(i), tr,null,DrawImageHandler.PERSO));
+			}
 
 		}
 		return anchor;
@@ -1000,8 +1035,9 @@ public class ModelPartie extends AbstractModelPartie{
 			else
 			{
 				ArrayList<Image> l_image = imHeros.getImages(heros);
-				for(int i=0; i<l_image.size(); ++i)
-					g.drawImage(l_image.get(i), heros.xpos(),heros.ypos(),null);
+				for(int i=0; i<l_image.size(); ++i){
+					imageDrawer.addImage(new DrawImageItem(l_image.get(i), heros.xpos(),heros.ypos(),null,DrawImageHandler.PERSO));
+				}
 			}
 			ArrayList<Condition> allcondis = heros.conditions.getAllConditions();
 			int xMiddle = (int) (Hitbox.getHitboxCenter(heros.getHitbox(INIT_RECT,getScreenDisp())).x-heros.xpos())+xScreendisp;
@@ -1009,19 +1045,20 @@ public class ModelPartie extends AbstractModelPartie{
 			int yStartDrawCondi = heros.conditions.getYStartDraw(heros.ypos()-25);
 			for(int i =0; i<allcondis.size();++i){
 				Condition condi = allcondis.get(i); 
-				if(condi.blinkDisplay)
-					g.drawImage(imConditions.getImage(condi.name), xStartDrawCondi+25*i ,yStartDrawCondi ,null);
+				if(condi.blinkDisplay){
+					imageDrawer.addImage(new DrawImageItem(imConditions.getImage(condi.name), xStartDrawCondi+25*i ,yStartDrawCondi ,null
+							,DrawImageHandler.PERSO));
+				}
 			}
 		}
 
 		if(drawHitbox)
 		{
 			Hitbox hitbox= heros.getHitbox(INIT_RECT,getScreenDisp());
-			drawPolygon(g,hitbox);
+			imageDrawer.addImage(new DrawImageItem(hitbox,getScreenDisp(),Color.RED,Color.BLACK,DrawImageHandler.PERSO));
 			if(anchor!=null){
-				g.setColor(Color.red);
-				g.drawString("o", anchor.x, anchor.y);
-				g.setColor(Color.black);
+				imageDrawer.addImage(new DrawImageItem("o", anchor.x, anchor.y,Color.RED,Color.BLACK,20,DrawImageHandler.PERSO));
+
 			}
 
 		}
@@ -1036,34 +1073,15 @@ public class ModelPartie extends AbstractModelPartie{
 			return ;	
 		}
 		try{
-			Graphics2D g2d = (Graphics2D)g;
-
 			for(int i=0;i<tabFleche.size();++i) 
 			{
 				Fleche fleche = (Fleche) tabFleche.get(i);
 				if(!fleche.isVisible)
 					continue;
-				int anim=fleche.anim;
-				int hanim = heros.anim;
-				Point pos = new Point();
-				Point anchor = new Point(0,0); //only arrows towards its center
-				Point taille = new Point(fleche.deplacement.xtaille.get(anim),fleche.deplacement.ytaille.get(anim));
-				AffineTransform tr;
+				AffineTransform tr = fleche.draw_tr;
 
-				if(fleche.encochee)
+				if(!fleche.encochee)
 				{
-					Point f_anchor = new Point(fleche.xanchor.get(hanim),fleche.yanchor.get(hanim));
-					pos=new Point(heros.xpos()+f_anchor.x,heros.ypos()+f_anchor.y);
-					//Anchor is relative to position: true_anchor = world anchor - mypos
-					//world anchor = heros pos + heros anchor, mypos = heros  pos + fleche anchor
-					anchor=new Point(heros.deplacement.x_rot_pos.get(hanim)-f_anchor.x,
-							heros.deplacement.y_rot_pos.get(hanim)-f_anchor.y);					
-					tr = getRotatedTransform(pos,anchor, taille, fleche.rotation);
-				}
-				else
-				{
-					//Point d_pos=new Point(pos.x-c_anchor.x,pos.y-c_anchor.y);
-					//trans.translate(d_pos.x, d_pos.y);
 					Point transl = new Point(fleche.xpos()+xScreendisp, fleche.ypos()+yScreendisp);
 					tr=new AffineTransform(fleche.draw_tr);
 					double[] flatmat = new double[6];
@@ -1071,17 +1089,16 @@ public class ModelPartie extends AbstractModelPartie{
 					tr.setTransform(flatmat[0], flatmat[1], flatmat[2], flatmat[3], transl.x, transl.y);
 
 				}
-				if(fleche.encochee){
-					fleche.draw_tr=tr;
-				}
+
 				ArrayList<Image> images = imFleches.getImage(fleche);
-				for(Image im : images)
-					g2d.drawImage(im,tr,null);
+				for(Image im : images){
+					imageDrawer.addImage(new DrawImageItem(im,tr,null,DrawImageHandler.FLECHE));
+				}
 
 				if(drawHitbox)
 				{
 					Hitbox hitbox= fleche.getHitbox(INIT_RECT,getScreenDisp());
-					drawPolygon(g,hitbox);
+					imageDrawer.addImage(new DrawImageItem(hitbox,getScreenDisp(),Color.RED,Color.BLACK,DrawImageHandler.FLECHE));
 				}
 			}
 		}
@@ -1089,9 +1106,6 @@ public class ModelPartie extends AbstractModelPartie{
 		{
 			e1.printStackTrace();
 		}
-
-
-
 	}
 
 	public void drawTirMonstres(Graphics g,boolean drawHitbox) {
@@ -1099,17 +1113,20 @@ public class ModelPartie extends AbstractModelPartie{
 		try{
 			for(Projectile tir : tabTirMonstre)
 			{
-				int xDraw=  tir.xpos() +xScreendisp;
-				int yDraw= tir.ypos() +yScreendisp;
-
+				Point transl = new Point(tir.xpos()+xScreendisp, tir.ypos()+yScreendisp);
+				AffineTransform tr=new AffineTransform(tir.draw_tr);
+				double[] flatmat = new double[6];
+				tr.getMatrix(flatmat);
+				tr.setTransform(flatmat[0], flatmat[1], flatmat[2], flatmat[3], transl.x, transl.y);
 				ArrayList<Image> images = imTirMonstre.getImage(tir);
-				for(Image im : images)
-					g.drawImage(im, xDraw ,yDraw ,null);
+				for(Image im : images){
+					imageDrawer.addImage(new DrawImageItem(im,tr,null,DrawImageHandler.TIRMONSTRE));
+				}
 
 				if(drawHitbox)
 				{
 					Hitbox hitbox= tir.getHitbox(INIT_RECT,getScreenDisp());
-					drawPolygon(g,hitbox);
+					imageDrawer.addImage(new DrawImageItem(hitbox,getScreenDisp(),Color.RED,Color.BLACK,DrawImageHandler.TIRMONSTRE));
 				}
 
 			}
@@ -1122,7 +1139,6 @@ public class ModelPartie extends AbstractModelPartie{
 	}
 
 	public void drawEffects(Graphics g,boolean drawHitbox) {
-		Graphics2D g2d = (Graphics2D)g;
 		//Draw arrow effect
 		for(int i =0; i< arrowsEffects.size(); ++i)
 		{
@@ -1135,14 +1151,13 @@ public class ModelPartie extends AbstractModelPartie{
 			ArrayList<Image> images = imEffect.getImage(eff);
 			for(Image im : images){
 				Image im2draw = eff.applyFilter(this, im);
-
-				g2d.drawImage(im2draw,tr,null);
-
+				int layer =  eff instanceof Trou_noir_effect ?DrawImageHandler.EFFECT_FRONT : DrawImageHandler.EFFECT;
+				imageDrawer.addImage(new DrawImageItem(im2draw,tr,null,layer));
 			}
 			if(drawHitbox)
 			{
 				Hitbox hitbox= eff.getHitbox(INIT_RECT,getScreenDisp());
-				drawPolygon(g,hitbox);
+				imageDrawer.addImage(new DrawImageItem(hitbox,getScreenDisp(),Color.RED,Color.BLACK,DrawImageHandler.EFFECT));
 			}
 		}
 		//Affichage du slow motion 
@@ -1150,7 +1165,9 @@ public class ModelPartie extends AbstractModelPartie{
 		{
 			//la taille de l'image fait 1500
 			Image im = imEffect.getImage(ImagesEffect.SLOWDOWN);
-			g.drawImage(im, (InterfaceConstantes.LARGEUR_FENETRE-im.getWidth(null))/2 ,(InterfaceConstantes.HAUTEUR_FENETRE-im.getHeight(null))/2,null);
+			imageDrawer.addImage(new DrawImageItem(im, (InterfaceConstantes.LARGEUR_FENETRE-im.getWidth(null))/2 ,
+					(InterfaceConstantes.HAUTEUR_FENETRE-im.getHeight(null))/2,null,DrawImageHandler.EFFECT));
+
 		}
 
 
@@ -1164,7 +1181,7 @@ public class ModelPartie extends AbstractModelPartie{
 		int[] width_l={(int) heros.MAXLIFE,(int) heros.getLife()};
 		int[] height_l={20,20};
 		Color[] colors_l = {Color.BLACK,Color.GREEN};
-		drawBar(g,2,x_l,y_l,width_l,height_l,colors_l);
+		imageDrawer.addImage(new DrawImageItem(x_l,y_l,width_l,height_l,colors_l,DrawImageHandler.INTERFACE));
 
 		//seyeri
 		int[] x_s= {10,10,10};
@@ -1172,103 +1189,44 @@ public class ModelPartie extends AbstractModelPartie{
 		int[] width_s={(int) InterfaceConstantes.MAXSEYERI,(int) heros.getNotEnoughSeyeri(),(int) heros.getSeyeri()};
 		int[] height_s={20,20,20};
 		Color[] colors_s = {Color.BLACK,Color.RED,Color.BLUE};
-		drawBar(g,3,x_s,y_s,width_s,height_s,colors_s);
+		imageDrawer.addImage(new DrawImageItem(x_s,y_s,width_s,height_s,colors_s,DrawImageHandler.INTERFACE));
 
 		heros.decreaseNotEnoughSeyeriCounter();
 	
 		//nombre de monstre restant
-		g.setColor(Color.BLACK);
-		g.setFont(new Font(g.getFont().getFontName(),g.getFont().getStyle(), 20 ));
-		g.drawString("Monstres restant: "+ nombreMonstreRestant, InterfaceConstantes.LARGEUR_FENETRE - 220, 20);
+		imageDrawer.addImage(new DrawImageItem("Monstres restant: "+ nombreMonstreRestant, InterfaceConstantes.LARGEUR_FENETRE - 220, 20,
+				Color.BLACK,Color.BLACK,20,DrawImageHandler.INTERFACE));
+
 		//jeu en pause 
 		if(inPause)
 		{
-			g.setColor(Color.BLACK);
-			g.setFont(new Font(g.getFont().getFontName(),g.getFont().getStyle(), 20 ));
-			g.drawString("Pause", 1250, 40);
-			g.setColor(new Color(0,0,0,125));
-			g.fillRect(0, 0, InterfaceConstantes.LARGEUR_FENETRE, InterfaceConstantes.HAUTEUR_FENETRE);
+			imageDrawer.addImage(new DrawImageItem("Pause",1250, 40,
+					Color.BLACK,new Color(0,0,0,125),20,DrawImageHandler.INTERFACE));
+			
+			int[] x_p= {0};
+			int[] y_p= {0};
+			int[] width_p={InterfaceConstantes.LARGEUR_FENETRE};
+			int[] height_p={InterfaceConstantes.HAUTEUR_FENETRE};
+			Color[] colors_p = {new Color(0,0,0,125)};
+			imageDrawer.addImage(new DrawImageItem(x_p,y_p,width_p,height_p,colors_p,DrawImageHandler.INTERFACE));
 		}
 
 		if(finPartie)
 		{
 			if(heros.getLife()==heros.MINLIFE)
 			{
-				g.setColor(Color.BLACK);
-				g.setFont(new Font(g.getFont().getFontName(),g.getFont().getStyle(), 40 ));
-				g.drawString("DEFAITE",InterfaceConstantes.LARGEUR_FENETRE/2-20, InterfaceConstantes.HAUTEUR_FENETRE/4);
-
+				imageDrawer.addImage(new DrawImageItem("DEFAITE",InterfaceConstantes.LARGEUR_FENETRE/2-20, InterfaceConstantes.HAUTEUR_FENETRE/4,
+						Color.BLACK,Color.BLACK,40,DrawImageHandler.INTERFACE));
 			}
 			else if(nombreMonstreRestant==0)
 			{
-				g.setColor(Color.BLACK);
-				g.setFont(new Font(g.getFont().getFontName(),g.getFont().getStyle(), 40 ));
-				g.drawString("VICTOIRE",InterfaceConstantes.LARGEUR_FENETRE/2-20, InterfaceConstantes.HAUTEUR_FENETRE/4);
-
+				imageDrawer.addImage(new DrawImageItem("VICTOIRE",InterfaceConstantes.LARGEUR_FENETRE/2-20, InterfaceConstantes.HAUTEUR_FENETRE/4,
+						Color.BLACK,Color.BLACK,40,DrawImageHandler.INTERFACE));
 			}
 		}
 
 	}
 
-	public void drawHitbox(Graphics g, int xdraw, int ydraw, int width, int height) {
-		drawHitbox(g,xdraw, ydraw, width, height,null,null);
-	}
-	public void drawHitbox(Graphics g, int xdraw, int ydraw, int width, int height,Integer angle) {
-		drawHitbox(g,xdraw, ydraw, width, height,angle,null);
-	}
-	public void drawHitbox(Graphics g, int xdraw, int ydraw, int width, int height, Integer angle, Point origine) {
-		g.setColor(Color.red);
-		Graphics2D g2d = (Graphics2D)g;
-		int xt=0;
-		int yt=0;
-
-		double radAngle=0 ;
-		if(angle != null)
-			radAngle= Math.toRadians(angle);
-
-		if(origine!=null)
-		{
-			int xCenter= 0;
-			int yCenter= 0;
-			xt = origine.x-xCenter;
-			yt = origine.y-yCenter;
-		}
-
-		g2d.translate(xt,yt);
-
-		if(angle != null)
-			g2d.rotate(radAngle);
-
-		g2d.translate(-xt, -yt);
-
-		g2d.drawRect(xdraw, ydraw, width, height);
-		//reset
-		g2d.translate(xt, yt);
-		g2d.rotate(-radAngle);
-		g2d.translate(-xt,-yt);
-	}
-
-	public void drawPolygon(Graphics g, Hitbox h)
-	{
-		drawPolygon(g,h,Color.red);
-	}
-	public void drawPolygon(Graphics g, Hitbox h,Color c)
-	{
-		g.setColor(c);
-		//make the hitbox relative to the screen
-		h=Hitbox.plusPoint(h,getScreenDisp(),true);
-		g.drawPolygon(h.polygon);
-		g.setColor(Color.BLACK);
-	}
-	public void drawBar(Graphics g,int number_rectangles, int[] x, int[] y, int[] width, int[] height,Color[] colors)
-	{
-		for(int i=0; i< number_rectangles; i++)
-		{
-			if(width[i]>0){
-				g.setColor(colors[i]);
-				g.fillRect(x[i], y[i], width[i], height[i]);}
-		}
-	}
 
 	/**
 	 * @param pos : position of hitbox

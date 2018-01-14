@@ -7,16 +7,12 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.Toolkit;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
-import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.DebugGraphics;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -62,7 +58,8 @@ public class AffichagePartie extends JFrame implements Observer{
 	protected JPanel panelSlot2 = new JPanel();
 	protected JPanel panelSlot3 = new JPanel();
 	protected JPanel panelSlot4 = new JPanel();
-
+	boolean initFlecheIcon = true;
+	
 	protected int SHIFT_VAL = 10; //value by which the slotPanel has to be lower to indicate that it was selected 
 	protected int last_shifted = -1; //index of the selected slot 
 
@@ -152,8 +149,17 @@ public class AffichagePartie extends JFrame implements Observer{
 		panelSlots.add(panelSlot2);
 		panelSlots.add(panelSlot3);
 		panelSlots.add(panelSlot4);
+		
+		//TODO: set opaque true solve the problem?
+		panelSlots.setOpaque(false);
+
+
 		panelSlots.setFocusable(false);
 		panelPartie.add(panelSlots);
+		//TODO: panel partie opaque true => plus de flash mais fleche icon position sometime flash to 0
+		//panelPartie.setBackground(Color.black);
+		panelPartie.setOpaque(true);
+		initFlecheIcon=true;
 
 		//on utilise le content pane principal pour dessiner 
 		panelPartie.setFocusable(true);
@@ -266,25 +272,25 @@ public class AffichagePartie extends JFrame implements Observer{
 		//if icon changed 
 		if(controlerPartie.partie.arrowSlotIconChanged)
 		{	
-			//retrieved all the image for the slots in correct order 
-			String[] arrowsType1 = new String[4];  // name of the arrows in the slot 1 
-			String[] arrowsType2 = new String[4];
-			String[] arrowsType3 = new String[4];
-			String[] arrowsType4 = new String[4];
-			bSlot1=ArrowSlotButton.setIcons(bSlot1, controlerPartie.partie.imFlecheIcon.getAllImagesOfSameClass(controlerPartie.partie.heros.getSlots()[0],arrowsType1));
-			bSlot2=ArrowSlotButton.setIcons(bSlot2, controlerPartie.partie.imFlecheIcon.getAllImagesOfSameClass(controlerPartie.partie.heros.getSlots()[1],arrowsType2));
-			bSlot3=ArrowSlotButton.setIcons(bSlot3, controlerPartie.partie.imFlecheIcon.getAllImagesOfSameClass(controlerPartie.partie.heros.getSlots()[2],arrowsType3));
-			bSlot4=ArrowSlotButton.setIcons(bSlot4, controlerPartie.partie.imFlecheIcon.getAllImagesOfSameClass(controlerPartie.partie.heros.getSlots()[3],arrowsType4));
+			if(initFlecheIcon){
+				//retrieved all the image for the slots in correct order 
+				String[] arrowsType1 = new String[4];  // name of the arrows in the slot 1 
+				String[] arrowsType2 = new String[4];
+				String[] arrowsType3 = new String[4];
+				String[] arrowsType4 = new String[4];
+				bSlot1=ArrowSlotButton.setIcons(bSlot1, controlerPartie.partie.imFlecheIcon.getAllImagesOfSameClass(controlerPartie.partie.heros.getSlots()[0],arrowsType1));
+				bSlot2=ArrowSlotButton.setIcons(bSlot2, controlerPartie.partie.imFlecheIcon.getAllImagesOfSameClass(controlerPartie.partie.heros.getSlots()[1],arrowsType2));
+				bSlot3=ArrowSlotButton.setIcons(bSlot3, controlerPartie.partie.imFlecheIcon.getAllImagesOfSameClass(controlerPartie.partie.heros.getSlots()[2],arrowsType3));
+				bSlot4=ArrowSlotButton.setIcons(bSlot4, controlerPartie.partie.imFlecheIcon.getAllImagesOfSameClass(controlerPartie.partie.heros.getSlots()[3],arrowsType4));
 
-			ArrowSlotButton.setArrowType(bSlot1, arrowsType1);
-			ArrowSlotButton.setArrowType(bSlot2, arrowsType2);
-			ArrowSlotButton.setArrowType(bSlot3, arrowsType3);
-			ArrowSlotButton.setArrowType(bSlot4, arrowsType4);
+				ArrowSlotButton.setArrowType(bSlot1, arrowsType1);
+				ArrowSlotButton.setArrowType(bSlot2, arrowsType2);
+				ArrowSlotButton.setArrowType(bSlot3, arrowsType3);
+				ArrowSlotButton.setArrowType(bSlot4, arrowsType4);
+				initFlecheIcon=false;
+			}
 
-			
-			ArrowSlotButton[][] allbSlots = {bSlot1,bSlot2,bSlot3,bSlot4};
 			JPanel[] allpanelSlot = {panelSlot1,panelSlot2,panelSlot3,panelSlot4};
-
 			int new_last_shited = -1;
 			for(int i=0;i<4;i++)
 			{
@@ -299,15 +305,15 @@ public class AffichagePartie extends JFrame implements Observer{
 					allpanelSlot[i].setBounds(bounds.x,bounds.y+SHIFT_VAL,bounds.width,bounds.height);
 					new_last_shited=i;
 				}
-
 			}
 			last_shifted = new_last_shited;
 			controlerPartie.partie.arrowSlotIconChanged=false;
 		}
 
 		panelPartie.requestFocus();
+		this.revalidate();
 		panelPartie.repaint();
-		//this.revalidate();
+
 
 	}
 	public void requestGameFocus()
@@ -523,7 +529,7 @@ public class AffichagePartie extends JFrame implements Observer{
 			ArrowSlotButton[][] allSlots = {bSlot1,bSlot2,bSlot3,bSlot4};
 			JPanel[] allpanelSlot = {panelSlot1,panelSlot2,panelSlot3,panelSlot4};
 			ArrowSlotButton source_but = (ArrowSlotButton)e.getSource();
-		
+
 			int clickedSlot = source_but.slot;
 			//If an arrow was clicked, switch it in the slot 
 			//if not cliked on arrow 0 
@@ -540,20 +546,20 @@ public class AffichagePartie extends JFrame implements Observer{
 
 				//switch buttons properties
 				ArrowSlotButton.switchButtonType(allSlots[clickedSlot][0],allSlots[clickedSlot][source_but_index]);
-				
+
 				//switch arrow for heros
 				controlerPartie.partie.heros.changeSlot(controlerPartie.partie, clickedSlot, allSlots[clickedSlot][0].arrowType);
 			}
 			//if arrow i, set arrow i in the slot and then switch 0 and i in bSlot
-			
-			
+
+
 			//Always consider the first arrow of the slot 
 			ArrowSlotButton but = allSlots[clickedSlot][0];
 
 			but.choosingArrow=!but.choosingArrow;
 			EnableSlotButton(but.choosingArrow,but);
 
-			
+
 			//close all the other opened ones 
 			if(but.choosingArrow)
 			{
@@ -628,7 +634,7 @@ public class AffichagePartie extends JFrame implements Observer{
 		DisableAllSlotButton(false);
 		//last_shifted=-1;
 	}
-	
+
 	public void update() {	
 		if(controlerPartie.partie.getDisableBoutonsFin()){
 			EnableBoutonsFin(false);

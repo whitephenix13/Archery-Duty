@@ -205,7 +205,6 @@ public class Hitbox {
 			{
 				Point2D temp = tr.transform(new Point(current_pol.xpoints[j],current_pol.ypoints[j]), null);
 				new_pol.addPoint((int)Math.round(temp.getX()-pos.x-screendisp.x),(int)Math.round(temp.getY()-pos.y-screendisp.y));
-
 			}
 			new_rotated_hit.add(new Hitbox(new_pol));
 		}
@@ -227,7 +226,7 @@ public class Hitbox {
 		}		
 		return(res);
 	}
-
+	
 	private static Vector2d rotatePoint(Vector2d point,Vector2d centre, int angle)
 	{
 		//
@@ -360,7 +359,24 @@ public class Hitbox {
 
 		return inRect;
 	}
-
+	
+	public static Vector2d projectOnHitbox(Hitbox hit, Vector2d A, Vector2d dir)
+	{
+		Polygon poly = hit.polygon;
+		int size = poly.npoints;
+		for(int i=0; i<size;i++)
+		{
+			int j = (i+1)%size;
+			//test if p is on the segment poly[i] poly[j]
+			Vector2d p1 = new Vector2d(poly.xpoints[i],poly.ypoints[i]);
+			Vector2d p2 = new Vector2d(poly.xpoints[j],poly.ypoints[j]);
+			Vector2d inter = GJK_EPA.projection(p1, p2, dir, A, false);
+			if(inter != null)
+				return inter;
+		}
+		return null;
+	}
+	
 	public static boolean contains(Polygon poly, Point p)
 	{
 		return (poly.contains(p) || onBorder(poly,p));

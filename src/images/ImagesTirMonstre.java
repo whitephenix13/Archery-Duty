@@ -25,7 +25,7 @@ public class ImagesTirMonstre extends LoadMediaThread{
 			return;
 		
 		for(int i=0; i<3; ++i)
-			im_SP_tir.add(getIm("resources/TirMonstre/monstre.TirSpirel/"+i+".gif",true));
+			im_SP_tir.add(getIm("resources/TirMonstre/monstre.TirSpirel/"+i+".png",true));
 		setPercentage(100);
 		mediaLoaded=true;
 	}

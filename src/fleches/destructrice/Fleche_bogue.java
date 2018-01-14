@@ -29,6 +29,7 @@ public class Fleche_bogue  extends Destructrice{
 		super(partie.tabFleche, partie.getFrame(),mainF.shooter,true,mainF.params.damageMult,mainF.speedFactor);
 		TEMPS_DESTRUCTION= (long) (2* Math.pow(10,8));//in nano sec = 0.2 sec 
 		damage=-10*mainF.params.damageMult;
+		seyeri_cost= -20;
 		shooter=mainF.shooter;
 		this.MAX_NUMBER_INSTANCE=1;
 		this.doitDeplace=false;
@@ -59,6 +60,8 @@ public class Fleche_bogue  extends Destructrice{
 		params.bogueArrows.add(this);
 		params.nbarrow+=1;
 	}
+	
+	
 	private int[] computeBoguePos(AbstractModelPartie partie,int xp, int yp, double rot)
 	{
 		// Hitbox hit, List<Hitbox> hitbox_rot
@@ -217,7 +220,7 @@ public class Fleche_bogue  extends Destructrice{
 		return (this.params.reached_max_distance&&this.params.shoot_arrows );
 	}
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
+	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace, boolean update_with_speed) {
 		boolean[] res = {false,false};
 		if(this.needDestroy || this.tempsDetruit>0)
 			return res;
@@ -228,7 +231,7 @@ public class Fleche_bogue  extends Destructrice{
 			this.doitDeplace=true;
 			deplacement.setSpeed(this, anim);
 			this.setCollideWithout(Arrays.asList(TypeObject.FLECHE,TypeObject.HEROS));
-			return super.deplace(partie, deplace);
+			return super.deplace(partie, deplace, update_with_speed);
 		}
 		boolean computeDist = !this.encochee; 
 		if(this.params.lastFrameUpdate != partie.getFrame())
@@ -237,7 +240,7 @@ public class Fleche_bogue  extends Destructrice{
 			if(computeDist)
 				dist = getDistanceToShooter(partie);
 			if(dist<params.MAX_DISTANCE && !params.reached_max_distance)
-				return super.deplace(partie, deplace);
+				return super.deplace(partie, deplace, update_with_speed);
 			else
 			{
 				if(!params.reached_max_distance){

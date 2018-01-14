@@ -21,9 +21,10 @@ public class Fleche_roche extends Materielle {
 		super(tabFleche, current_frame,_shooter,add_to_list,damageMult,speedFactor);
 		TEMPS_DESTRUCTION= (long) (2* Math.pow(10,8));//in nano sec = 0.2 sec 
 		this.MAX_NUMBER_INSTANCE=3;//3
-		damage=0*damageMult;//TODO:
+		damage=-17*damageMult;
+		seyeri_cost= -23;
 	}
-
+	
 	@Override
 	protected void onPlanted(List<Entitie> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
 	{
