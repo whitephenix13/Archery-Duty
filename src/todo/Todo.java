@@ -4,26 +4,8 @@ import types.TypeObject;
 
 public class Todo {
 	
-	//Version 0.2.3
+	//Version 0.2.4
 
-	//DONE corrected point collision
-	//DONE corrected TypeObject memberOf
-	//DONE fleche electrique
-	//DONE fleche glace
-	//DONE slowDown/Speed now change the delay between shots
-	//DONE corrected the accurate shot by actually rotating the hitbox and the animation
-	//DONE corrected error in IntersectP in the case dir.x=0
-	//DONE corrected the transparency problem 
-	//DONE: Shoot arrow right failed (due to change of current index)
-	//DONE: improve the reached distance condition in A_Star_Helper (prevent the arrow from spinning)
-	//DONE: prevent the arrow from going back and forth => when set current index to 0 and the new path is the exact same
-	//DONE: problem interface slot arrow when pause and end of partie (flash) 
-	//DONE: clean code using enum (for mouvement)
-	//DONE: ennemi left projectiles hit the ground (hitbox décallée)/// DONE: tir spirel top left anchor pb + 
-	//DONE: fleche explosive (error when hit projectile) + cleaned animation (reduced to 6 colors)
-	//DONE: rotation of arrow corrected
-	//DONE: getNextEstimatedHitbox in fleche and fleche.xpos() corrected after the change 
-	
 	//TODO: Correct arrow rotation (doesn't turn around its center) changed fleche *5 + rotatedTrasnform(modelpartie)
 	//TODO: correct roation + hitbox + ... when fleche encochee (to stay consistent)
 	//TODO: check that everything that uses rotateTransform still works (fleche, persoTir, tirSprirrel, effectgrappin)
