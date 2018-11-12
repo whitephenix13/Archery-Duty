@@ -36,19 +36,18 @@ public class Fleche_bogue  extends Destructrice{
 		this.encochee=false;
 		this.anim=mainF.anim;
 		this.params = mainF.params;
-		//TODO: set correctly with xpos, ypos, rotation
 		xpos_sync(xpos);
 		ypos_sync(ypos);
 		this.rotation=_rotation;
 
 		this.draw_tr=new AffineTransform();
 		draw_tr.setToIdentity();
-		draw_tr.translate(xpos()+partie.xScreendisp, ypos()+partie.yScreendisp);
+		draw_tr.translate(xpos(), ypos());
 		draw_tr.rotate(rotation);
-		this.deplacement.hitbox_rotated=Hitbox.convertHitbox(deplacement.hitbox,partie.INIT_RECT,draw_tr,new Point(xpos(),ypos()),new Point(partie.xScreendisp,partie.yScreendisp));
+		this.deplacement.hitbox_rotated=Hitbox.convertHitbox(deplacement.hitbox,draw_tr,new Point(xpos(),ypos()),new Point(0,0));
 
 		this.setCollideWithout(Arrays.asList(TypeObject.BLOC,TypeObject.FLECHE,TypeObject.HEROS));
-
+		
 	}
 	//Used to create the main arrow
 	public Fleche_bogue(List<Projectile> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor) {
@@ -59,29 +58,22 @@ public class Fleche_bogue  extends Destructrice{
 		this.MAX_NUMBER_INSTANCE=1;
 		params.bogueArrows.add(this);
 		params.nbarrow+=1;
+		
 	}
 	
 	
-	private int[] computeBoguePos(AbstractModelPartie partie,int xp, int yp, double rot)
-	{
-		// Hitbox hit, List<Hitbox> hitbox_rot
-		
+	private int[] computeBoguePos(AbstractModelPartie partie,double rot)
+	{		
 		//compute direction
 		Vector2d direction = Deplace.angleToVector(rot);
 		direction.normalize();
 		direction.x*= this.params.current_distance;
 		direction.y*= this.params.current_distance;
 
-		/*Vector2d middle = Hitbox.getHitboxCenter(hitbox_rot.get(anim)); // this.deplacement.hitbox_rotated.get(anim)
-		Vector2d tailTopLeft = getTailTopArrow(partie,rot,hit);
-		//compute the relative middle 
-		Vector2d rmiddle= new Vector2d(middle.x-tailTopLeft.x,middle.y-tailTopLeft.y);
-		rmiddle.x+=xp;
-		rmiddle.y+=yp;*/
 		Vector2d shooter_tl = getShooterTopLeft(partie);
 		int[] res = new int[2];
-		res[0] = (int) Math.round (shooter_tl.x+params.center.x+direction.x); //-rmiddle.x
-		res[1] = (int) Math.round(shooter_tl.y+params.center.y+direction.y); //-rmiddle.y
+		res[0] = (int) Math.round (shooter_tl.x+params.center.x+direction.x); 
+		res[1] = (int) Math.round(shooter_tl.y+params.center.y+direction.y); 
 		return res;
 	}
 	private void addNewArrows(AbstractModelPartie partie)
@@ -89,7 +81,6 @@ public class Fleche_bogue  extends Destructrice{
 		double time = PartieTimer.me.getElapsedNano();
 		if(params.nbarrow<params.NB_ARROW && (time-params.last_add_time)>params.ADD_ARROW_TIME*Math.pow(10, 9))
 		{
-			//computeCenter(partie);
 			for(int j=0; j<2;j++)
 			{
 				int i = params.nbarrow-1;
@@ -97,7 +88,7 @@ public class Fleche_bogue  extends Destructrice{
 				{
 					//position is heros center + maxdistance in correct direction 
 					double rot = params.creat_rot + ((i%2)==0? 2*Math.PI/params.NB_ARROW*(i+2)/2: -1 * 2*Math.PI/params.NB_ARROW*(i+1)/2);
-					int[] xypos = computeBoguePos(partie,xpos(),ypos(),rot);//,getHitbox(partie.INIT_RECT),deplacement.hitbox_rotated
+					int[] xypos = computeBoguePos(partie,rot);//,getHitbox(partie.INIT_RECT),deplacement.hitbox_rotated
 					params.bogueArrows.add(new Fleche_bogue(partie,this,xypos[0],xypos[1],rot));
 					params.nbarrow+=1;
 				}
@@ -202,10 +193,10 @@ public class Fleche_bogue  extends Destructrice{
 
 	}
 	@Override
-	public void flecheDecochee(AbstractModelPartie partie,Deplace deplace)
+	public void OnShoot(AbstractModelPartie partie,Deplace deplace)
 	{
 		computeCenter(partie);
-		super.flecheDecochee(partie, deplace);
+		super.OnShoot(partie, deplace);
 		params.creat_rot=this.rotation;
 	}
 
@@ -219,19 +210,19 @@ public class Fleche_bogue  extends Destructrice{
 	{
 		return (this.params.reached_max_distance&&this.params.shoot_arrows );
 	}
+	
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace, boolean update_with_speed) {
+	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
 		boolean[] res = {false,false};
 		if(this.needDestroy || this.tempsDetruit>0)
 			return res;
-		if(encochee){
-			deplacement.hitbox_rotated=Hitbox.convertHitbox(deplacement.hitbox,partie.INIT_RECT,draw_tr,new Point(xpos(),ypos()),new Point(partie.xScreendisp,partie.yScreendisp));
-		}
+		
+		//The arrows were shot, use regular deplace
 		if(params.shoot_arrows){
 			this.doitDeplace=true;
 			deplacement.setSpeed(this, anim);
 			this.setCollideWithout(Arrays.asList(TypeObject.FLECHE,TypeObject.HEROS));
-			return super.deplace(partie, deplace, update_with_speed);
+			return super.deplace(partie, deplace);
 		}
 		boolean computeDist = !this.encochee; 
 		if(this.params.lastFrameUpdate != partie.getFrame())
@@ -239,10 +230,12 @@ public class Fleche_bogue  extends Destructrice{
 			double dist=0;
 			if(computeDist)
 				dist = getDistanceToShooter(partie);
+			//The main arrow is shot (bogue still not created) but max distance is not reached yet: use regular deplace
 			if(dist<params.MAX_DISTANCE && !params.reached_max_distance)
-				return super.deplace(partie, deplace, update_with_speed);
+				return super.deplace(partie, deplace);
 			else
 			{
+				//Update the distance
 				if(!params.reached_max_distance){
 					this.setCollideWithout(Arrays.asList(TypeObject.BLOC,TypeObject.FLECHE,TypeObject.HEROS));
 					params.reached_max_distance=true;
@@ -251,16 +244,15 @@ public class Fleche_bogue  extends Destructrice{
 				}
 				else
 				{
-					/*int[] xypos = computeBoguePos(partie,xpos(),ypos(),rotation,getHitbox(partie.INIT_RECT),deplacement.hitbox_rotated);
-					xpos_sync(xypos[0]);
-					ypos_sync(xypos[1]);*/
+					//The bogue is built but is not shot yet: synchronzize the arrows's position with the hero (computeBoguePos), update the pos, the transform and the hitbox
 					int[] xypos = new int[2];
 					for(int i=0; i<params.bogueArrows.size();i++)
 					{
 						Fleche_bogue fb = params.bogueArrows.get(i);
-						xypos = computeBoguePos(partie,fb.xpos(),fb.ypos(),fb.rotation);//fb.getHitbox(partie.INIT_RECT),fb.deplacement.hitbox_rotated
+						xypos = computeBoguePos(partie,fb.rotation);
 						fb.xpos_sync(xypos[0]);
 						fb.ypos_sync(xypos[1]);
+						fb.updateTransformAndHitbox(partie);
 					}
 				}
 				addNewArrows(partie);
@@ -274,5 +266,19 @@ public class Fleche_bogue  extends Destructrice{
 			return res;
 		}
 
+	}
+	
+	public void updateTransformAndHitbox(AbstractModelPartie partie)
+	{
+		//Override this function since the rotation has to be done around (0,0). The correct position was already computed by computeBoguePos
+		if(!encochee && !params.shoot_arrows)
+		{
+			draw_tr = new AffineTransform();
+			draw_tr.translate(xpos(), ypos());
+			draw_tr.rotate(rotation);
+			deplacement.hitbox_rotated=Hitbox.convertHitbox(deplacement.hitbox,draw_tr,new Point(xpos(),ypos()),new Point());
+		}
+		else
+			super.updateTransformAndHitbox(partie);
 	}
 }

@@ -10,10 +10,9 @@ import javax.vecmath.Vector2d;
 
 import deplacement.Deplace;
 import deplacement.Mouvement;
-import deplacement.Mouvement_perso;
+import deplacement.Mouvement_perso.TypeMouvPerso;
 import effects.Effect;
 import partie.AbstractModelPartie;
-import personnage.Heros;
 import types.Destroyable;
 import types.Entitie;
 import types.Hitbox;
@@ -142,15 +141,15 @@ public abstract class Collidable extends Destroyable{
 	}
 	public boolean checkCollideWithWorld()
 	{
-		return !TypeObject.isMemberOf(Arrays.asList(TypeObject.BLOC), immuneType);
+		return !TypeObject.isMemberOf(TypeObject.BLOC, immuneType);
 	}
 	public boolean checkCollideWithEntitie()
 	{
-		return !TypeObject.isMemberOf(Arrays.asList(TypeObject.ENTITIE), immuneType);
+		return !TypeObject.isMemberOf(TypeObject.ENTITIE, immuneType);
 	}
 	public boolean checkCollideWithEffect()
 	{
-		return !TypeObject.isMemberOf(Arrays.asList(TypeObject.EFFECT), immuneType);
+		return !TypeObject.isMemberOf(TypeObject.EFFECT, immuneType);
 	}
 	public boolean checkCollideWithNone()
 	{
@@ -214,7 +213,7 @@ public abstract class Collidable extends Destroyable{
 	 * @return [shouldMove,changedAnimation] shouldMove: if the collision (hence movement) have to be applied to this object. 
 	 * changedAnimation : if the animation changed due to a change of movement or a change in droite_gauche
 	 */
-	public abstract boolean[] deplace(AbstractModelPartie partie, Deplace deplace, boolean update_with_speed);
+	public abstract boolean[] deplace(AbstractModelPartie partie, Deplace deplace);
 	//Use the function trick to memorize the reset values
 	protected class CurrentValue{public void res(){};}
 	public abstract void applyFriction(double minlocalSpeed, double minEnvirSpeed);
@@ -222,6 +221,11 @@ public abstract class Collidable extends Destroyable{
 	public abstract void handleDeplacementSuccess(AbstractModelPartie partie);
 	public abstract void resetVarDeplace(boolean speedUpdated);
 
+	public abstract Hitbox getNextEstimatedHitbox(AbstractModelPartie partie, double newRotation,int anim);
+	/*{
+		throw new java.lang.UnsupportedOperationException("Not supported yet.");
+	}*/
+	
 	/**
 	 * Call this method to properly destroy an object (ie: destroy arrow and remove effects)
 	 */
@@ -234,7 +238,6 @@ public abstract class Collidable extends Destroyable{
 			timer();
 	}
 
-	static boolean TEST = false;
 	/**
 	 * @param ref_object: the object that pushes "this" by motion
 	 * @param motion: value by which the collidable has to be moved for the test
@@ -298,7 +301,7 @@ public abstract class Collidable extends Destroyable{
 		boolean valid=alignTestValid(depSuiv, animSuiv, partie,deplace,obj,useTouchCollision);
 
 		s+= (valid && s=="") ? s_x+s_y : "";
-		boolean n_glisse = depSuiv.IsDeplacement(Mouvement_perso.glissade);
+		boolean n_glisse = depSuiv.IsDeplacement(TypeMouvPerso.Glissade);
 		//test the opposite y 
 		if(!valid)
 		{
@@ -468,20 +471,26 @@ public abstract class Collidable extends Destroyable{
 		return objects;
 	}
 
-	public static List<List<Projectile>> getAllProjectileCollidableSeparately(AbstractModelPartie partie)
+	public static List<List<Collidable>> getAllProjectileCollidableSeparately(AbstractModelPartie partie)
 	{
 		return getAllProjectileCollidableSeparately(partie,null);
 	}
-	
-	public static List<List<Projectile>> getAllProjectileCollidableSeparately(AbstractModelPartie partie,Collidable ref_object)
+	private static void addList(List<List<Collidable>> objects,List<Projectile> toAdd )
 	{
-		List<List<Projectile>> objects = new ArrayList<List<Projectile>>();
+		List<Collidable> l = new ArrayList<Collidable>();
+		for(Projectile p : toAdd)
+			l.add(p);
+		objects.add(l);
+	}
+	public static List<List<Collidable>> getAllProjectileCollidableSeparately(AbstractModelPartie partie,Collidable ref_object)
+	{
+		List<List<Collidable>> objects = new ArrayList<List<Collidable>>();
 		if(ref_object==null)
-			objects.add(partie.tabFleche);
+			addList(objects,partie.tabFleche);
 		else
 		{
-			List<Projectile> flecheList = new ArrayList<Projectile>();
-			for(Projectile f : partie.tabFleche){
+			List<Collidable> flecheList = new ArrayList<Collidable>();
+			for(Collidable f : partie.tabFleche){
 				if(objectInBoundingSquare(partie,f,ref_object))
 					flecheList.add(f);
 			}
@@ -489,17 +498,52 @@ public abstract class Collidable extends Destroyable{
 		}
 		
 		if(ref_object==null)
-			objects.add(partie.tabTirMonstre);
+			addList(objects,partie.tabTirMonstre);
 		else
 		{
-			List<Projectile> tirMList = new ArrayList<Projectile>();
-			for(Projectile tirM : partie.tabTirMonstre){
+			List<Collidable> tirMList = new ArrayList<Collidable>();
+			for(Collidable tirM : partie.tabTirMonstre){
 				if(objectInBoundingSquare(partie,tirM,ref_object))
 					tirMList.add(tirM);
 			}
 			objects.add(tirMList);
 		}
+		objects.add(getAllProjectileEffect(partie,ref_object));
+		
 		return objects;
+	}
+	/**Get all effects that are collidable (such as bloc)*/
+	public static List<Collidable> getAllProjectileEffect(AbstractModelPartie partie)
+	{
+		return getAllProjectileEffect(partie,null);
+	}
+	/**
+	 * 
+	 * @param partie
+	 * @param ref_object: for Screen test, use CustomBoundingSquare.getScreen()
+	 * @return
+	 */
+	public static List<Collidable> getAllProjectileEffect(AbstractModelPartie partie,Collidable ref_object)
+	{
+		List<Collidable> list = new ArrayList<Collidable>();
+		for(Collidable col : partie.arrowsEffects)
+		{
+			Effect eff = (Effect) col;
+			if(eff.isProjectile && !eff.checkCollideWithNone())
+			{
+				if(ref_object==null)
+					list.add(col);
+				else
+				{
+					if(objectInBoundingSquare(partie,col,ref_object))
+					{
+						list.add(col);
+					}
+				}
+			}
+
+		}
+		return list;
 	}
 	
 	/**Get all effects that are collidable (such as bloc)*/

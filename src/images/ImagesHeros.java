@@ -4,6 +4,7 @@ import java.awt.Image;
 import java.util.ArrayList;
 
 import deplacement.Mouvement_perso;
+import deplacement.Mouvement_perso.TypeMouvPerso;
 import loading.LoadMediaThread;
 import loading.OnLoadingCallback;
 import personnage.Heros;
@@ -72,25 +73,25 @@ public class ImagesHeros extends LoadMediaThread{
 	public ArrayList<Image> getImages(Heros heros)
 	{
 		ArrayList<Image> l = new ArrayList<Image>();
-		if(heros.deplacement.IsDeplacement(Mouvement_perso.attente))
+		if(heros.deplacement.IsDeplacement(TypeMouvPerso.Attente))
 			l.add(attente.get(heros.anim));
 		
-		else if(heros.deplacement.IsDeplacement(Mouvement_perso.glissade))
+		else if(heros.deplacement.IsDeplacement(TypeMouvPerso.Glissade))
 			l.add(glissade.get(heros.anim));
 		
-		else if(heros.deplacement.IsDeplacement(Mouvement_perso.accroche))
+		else if(heros.deplacement.IsDeplacement(TypeMouvPerso.Accroche))
 			l.add(accroche.get(heros.anim));
 		
-		else if(heros.deplacement.IsDeplacement(Mouvement_perso.saut))
+		else if(heros.deplacement.IsDeplacement(TypeMouvPerso.Saut))
 			l.add(saut.get(heros.anim));
 
-		else if(heros.deplacement.IsDeplacement(Mouvement_perso.marche))
+		else if(heros.deplacement.IsDeplacement(TypeMouvPerso.Marche))
 			l.add(marche.get(heros.anim));
 
-		else if(heros.deplacement.IsDeplacement(Mouvement_perso.course))
+		else if(heros.deplacement.IsDeplacement(TypeMouvPerso.Course))
 			l.add(course.get(heros.anim));
 
-		else if(heros.deplacement.IsDeplacement(Mouvement_perso.tir))
+		else if(heros.deplacement.IsDeplacement(TypeMouvPerso.Tir))
 		{
 			l.add(tir_body.get(heros.anim));
 			l.add(tir_back_arm.get(heros.anim));

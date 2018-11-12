@@ -36,8 +36,8 @@ public class ModelEditeur extends AbstractModelEditeur{
 		int _xViewPort=xViewPort;
 		int _yViewPort=yViewPort;
 
-		int toRightXViewPort = ((InterfaceConstantes.LARGEUR_FENETRE)*InterfaceConstantes.TAILLE_BLOC/tailleBloc);
-		int toDownYViewPort = (InterfaceConstantes.HAUTEUR_FENETRE*InterfaceConstantes.TAILLE_BLOC/tailleBloc);
+		int toRightXViewPort = ((InterfaceConstantes.WINDOW_WIDTH)*InterfaceConstantes.TAILLE_BLOC/tailleBloc);
+		int toDownYViewPort = (InterfaceConstantes.WINDOW_HEIGHT*InterfaceConstantes.TAILLE_BLOC/tailleBloc);
 		if(!drag){
 			drag=true;
 			xStartDrag=xpos;
@@ -160,11 +160,11 @@ public class ModelEditeur extends AbstractModelEditeur{
 
 		//l'indice de début d'affichage : viewPort/Taille_Bloc
 		int xStartAff = (( (xViewPort/InterfaceConstantes.TAILLE_BLOC-1)<=0)? 0: (xViewPort/InterfaceConstantes.TAILLE_BLOC -1) ); 
-		int xEndAff=((InterfaceConstantes.LARGEUR_FENETRE/tailleBloc+xViewPort/InterfaceConstantes.TAILLE_BLOC)+2);
+		int xEndAff=((InterfaceConstantes.WINDOW_WIDTH/tailleBloc+xViewPort/InterfaceConstantes.TAILLE_BLOC)+2);
 		xEndAff= ( xEndAff >= InterfaceConstantes.ABS_MAX )? InterfaceConstantes.ABS_MAX : xEndAff;
 
 		int yStartAff = (( (yViewPort/InterfaceConstantes.TAILLE_BLOC-1)<=0)? 0: (yViewPort/InterfaceConstantes.TAILLE_BLOC -1) ); 
-		int yEndAff=((InterfaceConstantes.HAUTEUR_FENETRE/tailleBloc+yViewPort/InterfaceConstantes.TAILLE_BLOC)+2);
+		int yEndAff=((InterfaceConstantes.WINDOW_HEIGHT/tailleBloc+yViewPort/InterfaceConstantes.TAILLE_BLOC)+2);
 		yEndAff= ( yEndAff >= InterfaceConstantes.ORD_MAX )? InterfaceConstantes.ORD_MAX : yEndAff;
 
 		if(monde.niveau==null){
@@ -187,17 +187,17 @@ public class ModelEditeur extends AbstractModelEditeur{
 				g2.setColor(Color.red);
 
 				if((abs==0))
-					g2.drawLine(0, 0, 0, InterfaceConstantes.HAUTEUR_FENETRE);
+					g2.drawLine(0, 0, 0, InterfaceConstantes.WINDOW_HEIGHT);
 
 				if(abs== (InterfaceConstantes.ABS_MAX-1))
-					g2.drawLine(InterfaceConstantes.LARGEUR_FENETRE-7, 0, InterfaceConstantes.LARGEUR_FENETRE-7, InterfaceConstantes.HAUTEUR_FENETRE);
+					g2.drawLine(InterfaceConstantes.WINDOW_WIDTH-7, 0, InterfaceConstantes.WINDOW_WIDTH-7, InterfaceConstantes.WINDOW_HEIGHT);
 
 				if( (ord==0))
-					g2.drawLine(0, 4, InterfaceConstantes.LARGEUR_FENETRE, 4);
+					g2.drawLine(0, 4, InterfaceConstantes.WINDOW_WIDTH, 4);
 
 				if((ord==(InterfaceConstantes.ORD_MAX-1)) )
 				{
-					g2.drawLine(0, InterfaceConstantes.HAUTEUR_FENETRE-tailleMenu-4, InterfaceConstantes.LARGEUR_FENETRE, InterfaceConstantes.HAUTEUR_FENETRE-tailleMenu-4);
+					g2.drawLine(0, InterfaceConstantes.WINDOW_HEIGHT-tailleMenu-4, InterfaceConstantes.WINDOW_WIDTH, InterfaceConstantes.WINDOW_HEIGHT-tailleMenu-4);
 				}
 				g2.setStroke(new BasicStroke(1));
 				g2.setColor(Color.black);
@@ -220,17 +220,17 @@ public class ModelEditeur extends AbstractModelEditeur{
 
 		}
 		//on affiche les lignes
-		for(int abs=0;abs<InterfaceConstantes.LARGEUR_FENETRE/tailleBloc+1;abs++)
+		for(int abs=0;abs<InterfaceConstantes.WINDOW_WIDTH/tailleBloc+1;abs++)
 		{
-			for(int ord=0;ord<InterfaceConstantes.HAUTEUR_FENETRE/tailleBloc+1;ord++)
+			for(int ord=0;ord<InterfaceConstantes.WINDOW_HEIGHT/tailleBloc+1;ord++)
 			{
 				//a la différence du bloc, la ligne n'est pas décallé de base, il faut donc la décaller pour la faire
 				//correspondre à la vue 
 
 				//ligne verticale 
-				g.drawLine(abs*tailleBloc+xdecalLine,ord*tailleBloc,abs*tailleBloc+xdecalLine,InterfaceConstantes.HAUTEUR_FENETRE+ord*tailleBloc+tailleBloc);
+				g.drawLine(abs*tailleBloc+xdecalLine,ord*tailleBloc,abs*tailleBloc+xdecalLine,InterfaceConstantes.WINDOW_HEIGHT+ord*tailleBloc+tailleBloc);
 				//ligne horizontale  
-				g.drawLine(abs*tailleBloc,ord*tailleBloc+ydecalLine,InterfaceConstantes.LARGEUR_FENETRE+abs*tailleBloc+tailleBloc ,ord*tailleBloc+ydecalLine);
+				g.drawLine(abs*tailleBloc,ord*tailleBloc+ydecalLine,InterfaceConstantes.WINDOW_WIDTH+abs*tailleBloc+tailleBloc ,ord*tailleBloc+ydecalLine);
 			}
 		}
 		//on affiche la zone de zoom 
@@ -425,15 +425,15 @@ public class ModelEditeur extends AbstractModelEditeur{
 
 	public void information() {
 		String info ="";
-		info+= "xViewPort= " + xViewPort +","+(xViewPort+InterfaceConstantes.LARGEUR_FENETRE );
-		info+= "\nyViewPort= "+ yViewPort+","+(yViewPort+InterfaceConstantes.HAUTEUR_FENETRE -tailleMenu);
+		info+= "xViewPort= " + xViewPort +","+(xViewPort+InterfaceConstantes.WINDOW_WIDTH );
+		info+= "\nyViewPort= "+ yViewPort+","+(yViewPort+InterfaceConstantes.WINDOW_HEIGHT -tailleMenu);
 		info+="\nAbscisse max= " +InterfaceConstantes.ABS_MAX*100;
 		info+= "\nOrdonnee max= "+ InterfaceConstantes.ORD_MAX*100;
 		info+="\nBloquant= "+bloquant;
 		info+="\nBackground= "+ background ;
 		info+="\nTexture= "+ texture;
-		info+="\nLargeur fenetre= "+InterfaceConstantes.LARGEUR_FENETRE ;
-		info+="\nHauteur fenetre= "+InterfaceConstantes.HAUTEUR_FENETRE;
+		info+="\nLargeur fenetre= "+InterfaceConstantes.WINDOW_WIDTH ;
+		info+="\nHauteur fenetre= "+InterfaceConstantes.WINDOW_HEIGHT;
 
 		showMessageDialog=true;
 		textMessageDialog[0]=info;
@@ -446,11 +446,11 @@ public class ModelEditeur extends AbstractModelEditeur{
 	public void dezoom() {
 
 		int futurTailleBloc=  (int)(tailleBloc  * (!loupe? dezoomFactor: (1.0f/dezoomFactor)));
-		int futurNombreBlocL= InterfaceConstantes.LARGEUR_FENETRE/futurTailleBloc;
-		int futurNombreBlocH= InterfaceConstantes.HAUTEUR_FENETRE/futurTailleBloc;
+		int futurNombreBlocL= InterfaceConstantes.WINDOW_WIDTH/futurTailleBloc;
+		int futurNombreBlocH= InterfaceConstantes.WINDOW_HEIGHT/futurTailleBloc;
 
-		int deltaXViewPort = (InterfaceConstantes.LARGEUR_FENETRE/tailleBloc - futurNombreBlocL ) /2 * InterfaceConstantes.TAILLE_BLOC;
-		int deltaYViewPort= (InterfaceConstantes.HAUTEUR_FENETRE/tailleBloc - futurNombreBlocH ) /2 * InterfaceConstantes.TAILLE_BLOC; 
+		int deltaXViewPort = (InterfaceConstantes.WINDOW_WIDTH/tailleBloc - futurNombreBlocL ) /2 * InterfaceConstantes.TAILLE_BLOC;
+		int deltaYViewPort= (InterfaceConstantes.WINDOW_HEIGHT/tailleBloc - futurNombreBlocH ) /2 * InterfaceConstantes.TAILLE_BLOC; 
 
 		boolean xMinLim= ((xViewPort+deltaXViewPort)<0) ;
 		boolean xMaxLim=( ((xViewPort+deltaXViewPort)/InterfaceConstantes.TAILLE_BLOC+futurNombreBlocL) > InterfaceConstantes.ABS_MAX );
@@ -461,8 +461,8 @@ public class ModelEditeur extends AbstractModelEditeur{
 		{
 			xZoomArea=-1*deltaXViewPort; 
 			yZoomArea=-1*deltaYViewPort; 
-			xLengthZoomArea=(int) (InterfaceConstantes.LARGEUR_FENETRE*dezoomFactor);
-			yLengthZoomArea=(int) (InterfaceConstantes.HAUTEUR_FENETRE*dezoomFactor);
+			xLengthZoomArea=(int) (InterfaceConstantes.WINDOW_WIDTH*dezoomFactor);
+			yLengthZoomArea=(int) (InterfaceConstantes.WINDOW_HEIGHT*dezoomFactor);
 		}
 
 		if( (InterfaceConstantes.ABS_MAX < futurNombreBlocL) || (InterfaceConstantes.ORD_MAX<futurNombreBlocH)  )

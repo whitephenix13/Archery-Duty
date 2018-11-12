@@ -1,6 +1,7 @@
 package collision;
 
 import java.awt.Point;
+import java.util.List;
 
 import javax.vecmath.Vector2d;
 
@@ -98,7 +99,7 @@ public class CustomBoundingSquare extends Collidable{
 	}
 
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace, boolean update_with_speed) {
+	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -131,6 +132,11 @@ public class CustomBoundingSquare extends Collidable{
 	public void onDestroy(AbstractModelPartie partie) {
 		// TODO Auto-generated method stub
 		
+	}
+	@Override
+	public Hitbox getNextEstimatedHitbox(AbstractModelPartie partie, double newRotation,int anim) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

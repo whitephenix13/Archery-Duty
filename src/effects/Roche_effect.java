@@ -398,7 +398,7 @@ public class Roche_effect extends Effect{
 
 	}
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace, boolean update_with_speed) {
+	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
 
 		//update the hitbox : 
 		if(type0){
@@ -480,7 +480,7 @@ public class Roche_effect extends Effect{
 		Point firstPos = new Point();
 		if(type0)
 		{
-			firstPos=super.setFirstPos(new Point(x_eff_center,y_eff_center));
+			firstPos=super.setFirstPos(partie,new Point(x_eff_center,y_eff_center));
 		} 
 		else
 		{

@@ -3,8 +3,11 @@ package partie;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.LayoutManager2;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
@@ -16,6 +19,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.border.EmptyBorder;
 
 import Affichage.Affichage;
 import observer.Observer;
@@ -24,6 +28,7 @@ import option.AbstractModelOption;
 import option.AffichageOption;
 import option.ControlerOption;
 import option.ModelOption;
+import principal.InterfaceConstantes;
 import serialize.Serialize;
 import types.Touches;
 
@@ -53,13 +58,93 @@ public class AffichagePartie extends JFrame implements Observer{
 	protected JPanel panelFinX = new JPanel();
 	protected JPanel panelFinY = new JPanel();
 
+	private final int BARS_HEIGHT = 70;
+
+	public class PositionPanel extends JPanel
+	{
+		int xsize; 
+		int ysize;
+		public PositionPanel(int x, int y, boolean visible)
+		{
+			xsize=x;
+			ysize=y;
+			this.setOpaque(false);
+			this.setVisible(visible);
+		}
+		public Dimension getPreferredSize() {
+			return new Dimension(xsize, ysize);
+		}
+	}
+
+	public class AbsoluateLayoutManager implements LayoutManager2 {
+
+		@Override
+		public void addLayoutComponent(Component comp, Object constraints) {
+		}
+
+		@Override
+		public Dimension maximumLayoutSize(Container target) {
+			return preferredLayoutSize(target);
+		}
+
+		@Override
+		public float getLayoutAlignmentX(Container target) {
+			return 0.5f;
+		}
+
+		@Override
+		public float getLayoutAlignmentY(Container target) {
+			return 0.5f;
+		}
+
+		@Override
+		public void invalidateLayout(Container target) {
+		}
+
+		@Override
+		public void addLayoutComponent(String name, Component comp) {
+		}
+
+		@Override
+		public void removeLayoutComponent(Component comp) {
+		}
+
+		@Override
+		public Dimension preferredLayoutSize(Container parent) {
+			int maxX = 0;
+			int maxY = 0;
+			for (Component comp : parent.getComponents()) {
+				Dimension size = comp.getPreferredSize();
+				maxX = Math.max(comp.getX() + size.width, maxX);
+				maxY = Math.max(comp.getY() + size.height, maxY);
+			}
+
+			return new Dimension(maxX, maxY);
+		}
+
+		@Override
+		public Dimension minimumLayoutSize(Container parent) {
+			return preferredLayoutSize(parent);
+		}
+
+		@Override
+		public void layoutContainer(Container parent) {
+			for (Component comp : parent.getComponents()) {
+				Dimension size = comp.getPreferredSize();
+				comp.setSize(size);
+			}
+		}
+
+	}
+
+
 	protected JPanel panelSlots = new JPanel();
 	protected JPanel panelSlot1 = new JPanel();
 	protected JPanel panelSlot2 = new JPanel();
 	protected JPanel panelSlot3 = new JPanel();
 	protected JPanel panelSlot4 = new JPanel();
 	boolean initFlecheIcon = true;
-	
+
 	protected int SHIFT_VAL = 10; //value by which the slotPanel has to be lower to indicate that it was selected 
 	protected int last_shifted = -1; //index of the selected slot 
 
@@ -74,26 +159,26 @@ public class AffichagePartie extends JFrame implements Observer{
 
 	public void initAffichage()
 	{
+
 		panelPauseY.setLayout(new BoxLayout(panelPauseY,BoxLayout.Y_AXIS));
 		panelPauseX.setLayout(new BoxLayout(panelPauseX,BoxLayout.X_AXIS));
 
 		panelFinX.setLayout(new BoxLayout(panelFinX,BoxLayout.X_AXIS));
 		panelFinY.setLayout(new BoxLayout(panelFinY,BoxLayout.Y_AXIS));
 
-		panelSlots.setLayout(null);
-		panelSlots.setOpaque(false);
-		int xPanelSlots = 10;
-		int yPanelSlots = 70; 
-
-		panelSlots.setBounds(xPanelSlots, yPanelSlots, 100, 100);
+		panelSlots.setLayout(new BoxLayout(panelSlots,BoxLayout.X_AXIS));
+		panelSlots.setOpaque(true);
 
 		JPanel[] allpanelSlot = {panelSlot1,panelSlot2,panelSlot3,panelSlot4};
+
+		int alignWithBar =10;
 
 		for(int i=0; i<4;++i)
 		{
 			allpanelSlot[i].setLayout(new BoxLayout(allpanelSlot[i],BoxLayout.Y_AXIS));
-			allpanelSlot[i].setOpaque(false);
-			allpanelSlot[i].setBounds(xPanelSlots+25*i,yPanelSlots, 20, 100);
+			allpanelSlot[i].setAlignmentY( Component.TOP_ALIGNMENT );
+			allpanelSlot[i].setOpaque(false); 
+			allpanelSlot[i].setBorder(new EmptyBorder(BARS_HEIGHT,i == 0 ? alignWithBar :0,0,0));
 		}
 
 		panelPauseY.setOpaque(false);
@@ -127,8 +212,7 @@ public class AffichagePartie extends JFrame implements Observer{
 		panelFinY.add(panelFinX);
 		panelFinY.add(Box.createVerticalGlue());
 
-		panelPartie.setLayout(new BorderLayout());		
-		this.getContentPane().add(panelPartie);
+		panelPartie.setLayout(new BoxLayout(panelPartie,BoxLayout.X_AXIS));
 
 		ArrowSlotButton[][] allbSlots = {bSlot1,bSlot2,bSlot3,bSlot4};
 		for(int num=0; num<4; ++num)
@@ -140,8 +224,6 @@ public class AffichagePartie extends JFrame implements Observer{
 					allbSlots[num][i].setEnabled(false);
 					allbSlots[num][i].setVisible(false);
 				}
-				if(i>0)
-					allpanelSlot[num].add(Box.createVerticalGlue());
 				allpanelSlot[num].add(allbSlots[num][i]);
 			}
 
@@ -149,16 +231,14 @@ public class AffichagePartie extends JFrame implements Observer{
 		panelSlots.add(panelSlot2);
 		panelSlots.add(panelSlot3);
 		panelSlots.add(panelSlot4);
-		
-		//TODO: set opaque true solve the problem?
-		panelSlots.setOpaque(false);
+		panelSlots.add(Box.createHorizontalGlue());
 
+		panelSlots.setOpaque(false);
 
 		panelSlots.setFocusable(false);
 		panelPartie.add(panelSlots);
-		//TODO: panel partie opaque true => plus de flash mais fleche icon position sometime flash to 0
-		//panelPartie.setBackground(Color.black);
-		panelPartie.setOpaque(true);
+
+		panelPartie.setOpaque(true); 
 		initFlecheIcon=true;
 
 		//on utilise le content pane principal pour dessiner 
@@ -167,6 +247,9 @@ public class AffichagePartie extends JFrame implements Observer{
 
 		//initialize input in order for them to be modifier by option
 		controlerPartie.partie.inputPartie.init(panelPartie);
+
+		this.getContentPane().add(panelPartie);
+		this.pack();
 
 	}
 	public class PanelPartie extends JPanel 
@@ -184,17 +267,20 @@ public class AffichagePartie extends JFrame implements Observer{
 				controlerPartie.partie.showLoading(g);
 				return;
 			}
-			if(!controlerPartie.partie.computationDone && !controlerPartie.partie.getFinPartie()){
+
+			if(!controlerPartie.partie.computationDone && !controlerPartie.partie.getFinPartie() && !controlerPartie.partie.getForceRepaint()){
 				return;
 			}
-			controlerPartie.partie.computationDone=false;
 
+			if(!controlerPartie.partie.getForceRepaint())
+				controlerPartie.partie.computationDone=false;
+			else
+				controlerPartie.partie.resetForceRepaint();
 			super.paintComponent(g);
 
-
 			//on dessine le niveau
-			controlerPartie.partie.drawPartie(g);
 
+			controlerPartie.partie.drawPartie(g);
 		}
 	}
 
@@ -220,9 +306,15 @@ public class AffichagePartie extends JFrame implements Observer{
 			EnableBoutonsFin(true);
 
 			panelPartie.removeAll();
-			panelPartie.add(panelSlots);
-			DisableAllSlotButton(true);
-			panelPartie.add(panelFinY);
+			
+			JPanel layerPan = new JPanel();
+			layerPan.setOpaque(false);
+			layerPan.setLayout(null);		
+			panelFinY.setSize(InterfaceConstantes.WINDOW_WIDTH,InterfaceConstantes.WINDOW_HEIGHT);
+			layerPan.add(panelFinY);
+			layerPan.add(panelSlots);
+			panelPartie.add(layerPan);
+
 		}
 		//Start pause
 		else if(!controlerPartie.partie.finPartie &&controlerPartie.partie.inPause && !firstTimeFin)
@@ -233,9 +325,16 @@ public class AffichagePartie extends JFrame implements Observer{
 			EnableBoutonsPause(true);
 
 			panelPartie.removeAll();
-			panelPartie.add(panelSlots);
+			
+			JPanel layerPan = new JPanel();
+			layerPan.setOpaque(false);
+			layerPan.setLayout(null);		
+			panelPauseX.setSize(InterfaceConstantes.WINDOW_WIDTH,InterfaceConstantes.WINDOW_HEIGHT);
+			layerPan.add(panelPauseX);//panelPauseX
+			layerPan.add(panelSlots);
+
 			DisableAllSlotButton(true);
-			panelPartie.add(panelPauseX);
+			panelPartie.add(layerPan);
 
 		}
 		//End pause
@@ -260,11 +359,10 @@ public class AffichagePartie extends JFrame implements Observer{
 		{
 			doitRevalidate=true;
 			firstTimeFin=false;
-			requestGameFocus();
-
 			EnableBoutonsPause(false);
 			panelPartie.removeAll();
 			panelPartie.add(panelSlots);
+
 			DisableAllSlotButton(false);
 		}
 
@@ -296,14 +394,21 @@ public class AffichagePartie extends JFrame implements Observer{
 			{
 				if(last_shifted >=0 && (i==last_shifted))
 				{
-					Rectangle bounds = allpanelSlot[i].getBounds();
-					allpanelSlot[i].setBounds(bounds.x,bounds.y-SHIFT_VAL,bounds.width,bounds.height);
+					if(allpanelSlot[i].getComponentCount()>0){
+						ArrowSlotButton firstButton = (ArrowSlotButton)allpanelSlot[i].getComponents()[0];
+						if(firstButton != null){
+							firstButton.AddBorderSize(-SHIFT_VAL,0,0,0);
+						}
+					}
 				}
 				if(controlerPartie.partie.heros.current_slot == i)
 				{
-					Rectangle bounds = allpanelSlot[i].getBounds();
-					allpanelSlot[i].setBounds(bounds.x,bounds.y+SHIFT_VAL,bounds.width,bounds.height);
-					new_last_shited=i;
+					if(allpanelSlot[i].getComponentCount()>0){
+						ArrowSlotButton firstButton = (ArrowSlotButton)allpanelSlot[i].getComponents()[0];
+						if(firstButton != null)
+							firstButton.AddBorderSize(SHIFT_VAL,0,0,0);
+						new_last_shited=i;
+					}
 				}
 			}
 			last_shifted = new_last_shited;
@@ -311,7 +416,6 @@ public class AffichagePartie extends JFrame implements Observer{
 		}
 
 		panelPartie.requestFocus();
-		this.revalidate();
 		panelPartie.repaint();
 
 
@@ -407,7 +511,6 @@ public class AffichagePartie extends JFrame implements Observer{
 
 	public void addListenerPartie()
 	{
-		//panelPartie.addKeyListener(new ClavierListener());
 		controlerPartie.partie.inputPartie.init(panelPartie);
 		panelPartie.addMouseListener(new SourisListener());
 		panelPartie.addMouseMotionListener(new SourisMotionListener());
@@ -420,12 +523,11 @@ public class AffichagePartie extends JFrame implements Observer{
 		for(int i = 0; i< addSlots.length;++i)
 			for(int j = 0; j<addSlots[0].length;++j)
 			{
-				addSlots[i][j].addMouseListener(new arrowSlotListener());
+				addSlots[i][j].addMouseListener(new ArrowSlotListener());
 			}
 	}
 	public void removeListenerPartie()
 	{
-		//panelPartie.removeKeyListener(panelPartie.getKeyListeners()[0]);
 		controlerPartie.partie.inputPartie.reset();
 		panelPartie.removeMouseListener(panelPartie.getMouseListeners()[0]);
 		panelPartie.removeMouseMotionListener(panelPartie.getMouseMotionListeners()[0]);
@@ -443,8 +545,6 @@ public class AffichagePartie extends JFrame implements Observer{
 				MouseListener[] listeners = addSlots[i][j].getMouseListeners();
 				addSlots[i][j].removeMouseListener(listeners[listeners.length-1]);
 			}
-		MouseListener[] listeners = panelSlots.getMouseListeners();
-
 	}
 
 	public class SourisListener implements MouseListener
@@ -506,7 +606,7 @@ public class AffichagePartie extends JFrame implements Observer{
 
 	}
 
-	public class arrowSlotListener implements MouseListener
+	public class ArrowSlotListener implements MouseListener
 	{
 
 		@Override
@@ -527,7 +627,6 @@ public class AffichagePartie extends JFrame implements Observer{
 				return;
 
 			ArrowSlotButton[][] allSlots = {bSlot1,bSlot2,bSlot3,bSlot4};
-			JPanel[] allpanelSlot = {panelSlot1,panelSlot2,panelSlot3,panelSlot4};
 			ArrowSlotButton source_but = (ArrowSlotButton)e.getSource();
 
 			int clickedSlot = source_but.slot;
@@ -550,6 +649,7 @@ public class AffichagePartie extends JFrame implements Observer{
 				//switch arrow for heros
 				controlerPartie.partie.heros.changeSlot(controlerPartie.partie, clickedSlot, allSlots[clickedSlot][0].arrowType);
 			}
+
 			//if arrow i, set arrow i in the slot and then switch 0 and i in bSlot
 
 
@@ -632,7 +732,7 @@ public class AffichagePartie extends JFrame implements Observer{
 		panelPartie.removeAll();
 		panelPartie.add(panelSlots);
 		DisableAllSlotButton(false);
-		//last_shifted=-1;
+		initFlecheIcon=true;
 	}
 
 	public void update() {	
@@ -646,9 +746,11 @@ public class AffichagePartie extends JFrame implements Observer{
 			createOption(controlerPartie.partie.touches);
 
 		}
+		if(controlerPartie.partie.getForceRepaint()){
+			panelPartie.repaint();
+		}
 		controlerPartie.partie.resetVariablesAffichage();
-		//this.repaint();
-
 	}
-
 }
+
+

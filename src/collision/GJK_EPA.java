@@ -565,10 +565,9 @@ public abstract class GJK_EPA {
 		{
 			double a= (p2.y-p1.y)/(p2.x-p1.x);
 			double b = p1.y-a*p1.x;
-			double Y= b; //a*dir.x = 0
-			intersectP=new Vector2d(dir.x,Y);
-
-			if(!containValue(p1.x,p2.x, dir.x) || !containValue(p1.y,p2.y, Y) || (!allDirection && intersectP.dot(dir)<0))// check if the point is in the opposite direction
+			double Y= a * A.x + b; 
+			intersectP=new Vector2d(A.x,Y);
+			if(!containValue(p1.x,p2.x, intersectP.x) || !containValue(p1.y,p2.y, intersectP.y) || (!allDirection && intersectP.dot(dir)<0))// check if the point is in the opposite direction
 				return null;
 
 		}

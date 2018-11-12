@@ -95,7 +95,7 @@ public class Fleche_vent extends Spirituelle{
 			flecheEffect=new Vent_effect(partie,this,0,partie.getFrame(),normal,null,null,true);
 			Vent_effect ventEffect = (Vent_effect) flecheEffect;
 
-			Vector2d objMid = ventEffect.getObjMid(partie, collider) ;
+			Vector2d objMid = Hitbox.getObjMid(partie, collider) ;
 			
 			//Compute the speed with respect to the intersection point and the middle of the collider hitbox
 			Vitesse projectionSpeed = ventEffect.computeProjectSpeed(partie,objMid,

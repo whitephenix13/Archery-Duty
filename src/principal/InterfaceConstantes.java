@@ -32,15 +32,15 @@ public interface InterfaceConstantes {
 	Dimension tailleEcran = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
 	
 	
-	static int LARGEUR_FENETRE =  (int)tailleEcran.getWidth();//1366
-	static int HAUTEUR_FENETRE =  (int)tailleEcran.getHeight();//768
+	static int WINDOW_WIDTH =  (int)tailleEcran.getWidth();//1366
+	static int WINDOW_HEIGHT =  (int)tailleEcran.getHeight();//768
 	
 	//limites à partir desquelles on ne s'interesse plus aux objets:
 	
-	static Point BD_FENETRE = new Point(LARGEUR_FENETRE + 200,HAUTEUR_FENETRE+200);
+	static Point BD_FENETRE = new Point(WINDOW_WIDTH + 200,WINDOW_HEIGHT+200);
 	static Point HG_FENETRE= new Point(-200,-200);
-	static Point BG_FENETRE= new Point(-200,HAUTEUR_FENETRE+200);
-	static Point HD_FENETRE= new Point(LARGEUR_FENETRE + 200,-200);
+	static Point BG_FENETRE= new Point(-200,WINDOW_HEIGHT+200);
+	static Point HD_FENETRE= new Point(WINDOW_WIDTH + 200,-200);
 	static Hitbox SCREEN =new Hitbox(InterfaceConstantes.HG_FENETRE,InterfaceConstantes.BG_FENETRE,
 									InterfaceConstantes.BD_FENETRE,InterfaceConstantes.HD_FENETRE);
 		

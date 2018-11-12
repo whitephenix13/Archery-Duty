@@ -1,10 +1,17 @@
 package partie;
 
+import java.awt.Graphics;
 import java.awt.Image;
+import java.awt.Insets;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.border.EmptyBorder;
+
+import partie.AffichagePartie.ArrowSlotListener;
 
 public class ArrowSlotButton extends JButton{
 
@@ -14,9 +21,16 @@ public class ArrowSlotButton extends JButton{
 	ArrowSlotButton(int _slot)
 	{
 		super();
+		this.removeMouseListener(this.getMouseListeners()[0]);
+
 		slot=_slot;
 		this.setContentAreaFilled(false);
-		this.setBorder(null);
+		this.setBorder(new EmptyBorder(0,5,5,0));
+	}
+	public void AddBorderSize(int top, int left, int bottom, int right)
+	{
+		Insets borderSize = this.getBorder().getBorderInsets(this);
+		this.setBorder(new EmptyBorder(borderSize.top + top,borderSize.left +left,borderSize.bottom+bottom,borderSize.right + right));
 	}
 	public void setIcons(Image im)
 	{
@@ -62,5 +76,5 @@ public class ArrowSlotButton extends JButton{
 		button2.setEnabled(temp_ena);
 
 	}
-
+	
 }

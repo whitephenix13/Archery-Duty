@@ -1,7 +1,6 @@
 package partie;
 
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -17,6 +16,7 @@ import java.util.List;
 
 import javax.swing.JButton;
 
+import AI.A_Star_Helper;
 import Affichage.Affichage;
 import Affichage.DrawImageHandler;
 import Affichage.DrawImageItem;
@@ -26,16 +26,25 @@ import collision.CustomBoundingSquare;
 import conditions.Condition;
 import debug.Debug_time;
 import deplacement.Accroche;
+import deplacement.Accroche.TypeAccroche;
 import deplacement.Attente;
+import deplacement.Attente.TypeAttente;
 import deplacement.Course;
+import deplacement.Course.TypeCourse;
 import deplacement.Marche;
+import deplacement.Marche.TypeMarche;
 import deplacement.Mouvement;
 import deplacement.Mouvement_perso;
+import deplacement.Mouvement_perso.TypeMouvPerso;
 import deplacement.Saut;
+import deplacement.Saut.TypeSaut;
 import deplacement.Tir;
+import deplacement.Tir.TypeTirPerso;
+import deplacement.TypeMouv;
 import effects.Effect;
 import effects.Trou_noir_effect;
 import fleches.Fleche;
+import fleches.rusee.Fleche_auto_teleguidee;
 import images.ImagesEffect;
 import menuPrincipal.AbstractModelPrincipal;
 import monstre.Spirel;
@@ -62,11 +71,11 @@ public class ModelPartie extends AbstractModelPartie{
 	public void startPartie(int typeDeSpawn)
 	{
 		//world has been loaded 
-		INIT_RECT.x= (monde.xStartPerso-InterfaceConstantes.LARGEUR_FENETRE/2)/100*100;//49 900
-		INIT_RECT.y= (monde.yStartPerso-InterfaceConstantes.HAUTEUR_FENETRE/2)/100*100;//49 700
+		INIT_RECT.x= (monde.xStartPerso-InterfaceConstantes.WINDOW_WIDTH/2)/100*100;//49 900
+		INIT_RECT.y= (monde.yStartPerso-InterfaceConstantes.WINDOW_HEIGHT/2)/100*100;//49 700
 
-		heros.xpos_sync((InterfaceConstantes.LARGEUR_FENETRE/2+(INIT_RECT.x==monde.xStartPerso-InterfaceConstantes.LARGEUR_FENETRE/2? 0:100 ))/100*100);
-		heros.ypos_sync((InterfaceConstantes.HAUTEUR_FENETRE/2+(INIT_RECT.y==monde.yStartPerso-InterfaceConstantes.HAUTEUR_FENETRE/2? 0:100 ))/100*100);
+		heros.xpos_sync((InterfaceConstantes.WINDOW_WIDTH/2+(INIT_RECT.x==monde.xStartPerso-InterfaceConstantes.WINDOW_WIDTH/2? 0:100 ))/100*100);
+		heros.ypos_sync((InterfaceConstantes.WINDOW_HEIGHT/2+(INIT_RECT.y==monde.yStartPerso-InterfaceConstantes.WINDOW_HEIGHT/2? 0:100 ))/100*100);
 		//on fait apparaitre les monstres 
 		nombreMonstreRestant=100;
 		spawnMonster(nombreMonstreRestant,typeDeSpawn);
@@ -145,7 +154,7 @@ public class ModelPartie extends AbstractModelPartie{
 					deplace.DeplaceObject(ent, mouv, this);
 				//Handle case where deplace set need destroy to true 
 				if(shouldBeDestroyed )
-					ent.setNeedDestroy();
+					ent.destroy(this, true);;
 			}
 			 
 			debugTime.elapsed("deplaceProjectiles", 2);
@@ -162,7 +171,7 @@ public class ModelPartie extends AbstractModelPartie{
 					deplace.DeplaceObject(proj, proj.deplacement, this);
 				//Handle case where deplace set need destroy to true 
 				if(shouldBeDestroyed )
-					proj.setNeedDestroy();
+					proj.destroy(this, true);
 			}
 
 			//UPDATE AND DEPLACEMENT OF EFFECTS
@@ -175,28 +184,26 @@ public class ModelPartie extends AbstractModelPartie{
 					deplace.DeplaceObject(eff, eff.deplacement, this);
 					eff.onUpdate(this, false);
 				}
-				else if(shouldBeDestroyed)
-					eff.setNeedDestroy();
 				else
 					eff.destroy(this, true);
 			}
 
-			//COLLISION ENTITIES/PROJECTILE 
+			//COLLISION ENTITIES/PROJECTILE/EFFECTS
 			List<List<Entitie>> allEntities = Collidable.getAllEntitiesCollidableSeparately(this);
-			List<List<Projectile>> allProjectiles = Collidable.getAllProjectileCollidableSeparately(this);
+			List<List<Collidable>> allProjectiles = Collidable.getAllProjectileCollidableSeparately(this);
 
 			//Compare groups of projectile between them (ie: fleche and tirMonstre)
 			for(int i=0; i<(allProjectiles.size()-1);i++)
 				for(int j=i+1; j<(allProjectiles.size());j++)
 				{
-					List<Projectile> groupI = allProjectiles.get(i);
-					List<Projectile> groupJ = allProjectiles.get(j);
+					List<Collidable> groupI = allProjectiles.get(i);
+					List<Collidable> groupJ = allProjectiles.get(j);
 
 
 					for(int i_index =0; i_index<groupI.size(); i_index++)
 						for(int j_index =0; j_index<groupJ.size(); j_index++){
-							Projectile proj_i = groupI.get(i_index);
-							Projectile proj_j = groupJ.get(j_index);
+							Collidable proj_i = groupI.get(i_index);
+							Collidable proj_j = groupJ.get(j_index);
 							
 							if(proj_i.getNeedDestroy() || proj_j.getNeedDestroy())
 								continue; 
@@ -212,12 +219,12 @@ public class ModelPartie extends AbstractModelPartie{
 				for(int j=0; j<(allProjectiles.size());j++)
 				{
 					List<Entitie> groupEntitie = allEntities.get(i);
-					List<Projectile> groupProjectile = allProjectiles.get(j);
+					List<Collidable> groupProjectile = allProjectiles.get(j);
 
 					for(int i_index =0; i_index<groupEntitie.size(); i_index++)
 						for(int j_index =0; j_index<groupProjectile.size(); j_index++){
 							Entitie ent = groupEntitie.get(i_index);
-							Projectile proj = groupProjectile.get(j_index);
+							Collidable proj = groupProjectile.get(j_index);
 							
 							if(ent.getNeedDestroy() || proj.getNeedDestroy())
 								continue; 
@@ -298,7 +305,7 @@ public class ModelPartie extends AbstractModelPartie{
 
 			if(!eff.isEnded() && tempsEffect>eff.TEMPS_DESTRUCTION && eff.tempsDetruit>0)
 			{
-				eff.setNeedDestroy();
+				eff.destroy(this, true);
 			}	
 			//increment anim
 			else if(!eff.isEnded() && !eff.getNeedDestroy() && (eff.tempsDetruit==0) )
@@ -429,7 +436,7 @@ public class ModelPartie extends AbstractModelPartie{
 						&& ((System.nanoTime()-heros.last_shoot_time)>InterfaceConstantes.FLECHE_TIR_COOLDOWN))
 				{
 					//if not just wall jump 
-					if(!(heros.deplacement.IsDeplacement(Mouvement_perso.saut) && ((PartieTimer.me.getElapsedNano()-heros.last_wall_jump_time)<=InterfaceConstantes.WALL_JUMP_DISABLE_TIME)))
+					if(!(heros.deplacement.IsDeplacement(TypeMouvPerso.Saut) && ((PartieTimer.me.getElapsedNano()-heros.last_wall_jump_time)<=InterfaceConstantes.WALL_JUMP_DISABLE_TIME)))
 					{
 						//Normal tir 
 						if(inputPartie.toucheTirDown)
@@ -448,27 +455,27 @@ public class ModelPartie extends AbstractModelPartie{
 							changeMouv=true;
 							//on ne tir qu'une fleche
 							heros.doitEncocherFleche=true;
-							heros.nouvMouv= new Tir(heros,Tir.tir,frame); 
+							heros.nouvMouv= new Tir(heros,TypeTirPerso.Tir,frame); 
 							heros.last_armed_time=System.nanoTime();
 						}
 					}
 				}
 
 				boolean heros_shoots = heros.flecheEncochee||heros.doitEncocherFleche;
-				boolean heros_accroche = heros.deplacement.IsDeplacement(Mouvement_perso.accroche);
-				boolean heros_glisse = heros.deplacement.IsDeplacement(Mouvement_perso.glissade);
+				boolean heros_accroche = heros.deplacement.IsDeplacement(TypeMouvPerso.Accroche);
+				boolean heros_glisse = heros.deplacement.IsDeplacement(TypeMouvPerso.Glissade);
 				//COURSE DROITE
 				if(courseDroiteDown && !heros_glisse && !heros_accroche && !heros_shoots && !isDragged)
 				{
 					//si on ne courrait pas vers la droite avant
-					if(! (heros.deplacement.IsDeplacement(Mouvement_perso.course) && heros.anim>=4))
+					if(! (heros.deplacement.IsDeplacement(TypeMouvPerso.Course) && heros.anim>=4))
 					{
 						//do not run if we just wall jump
-						if(! (heros.deplacement.IsDeplacement(Mouvement_perso.saut) && (PartieTimer.me.getElapsedNano()-heros.last_wall_jump_time)<= InterfaceConstantes.WALL_JUMP_DISABLE_TIME ))
+						if(! (heros.deplacement.IsDeplacement(TypeMouvPerso.Saut) && (PartieTimer.me.getElapsedNano()-heros.last_wall_jump_time)<= InterfaceConstantes.WALL_JUMP_DISABLE_TIME ))
 						{
 							changeMouv=true;
 							heros.nouvAnim= 4; 
-							heros.nouvMouv= new Course(heros,Course.course_droite,frame); 
+							heros.nouvMouv= new Course(heros,TypeCourse.CourseDroite,frame); 
 						}
 					}
 				}
@@ -483,7 +490,7 @@ public class ModelPartie extends AbstractModelPartie{
 							changeMouv=true;
 
 							heros.nouvAnim= (heros.getGlobalVit(this).y>=0 ? 4 : 3); 
-							heros.nouvMouv= new Saut(heros,heros.getGlobalVit(this).y>=0? Saut.fall_droite:Saut.jump_droite,frame); 
+							heros.nouvMouv= new Saut(heros,heros.getGlobalVit(this).y>=0? TypeSaut.FallDroite:TypeSaut.JumpDroite,frame); 
 						}
 					}
 					else if(heros_accroche)
@@ -495,7 +502,7 @@ public class ModelPartie extends AbstractModelPartie{
 							changeMouv=true;
 
 							heros.nouvAnim= (heros.getGlobalVit(this).y>=0 ? 4 : 3); 
-							heros.nouvMouv= new Saut(heros,heros.getGlobalVit(this).y>=0? Saut.fall_droite:Saut.jump_droite,frame); 
+							heros.nouvMouv= new Saut(heros,heros.getGlobalVit(this).y>=0? TypeSaut.FallDroite:TypeSaut.JumpDroite,frame); 
 						}
 						//climb the border
 						else if (heros.anim == 2 && heros.deplacement.animEndedOnce())
@@ -503,36 +510,36 @@ public class ModelPartie extends AbstractModelPartie{
 							changeMouv=true;
 
 							heros.nouvAnim= 3; 
-							heros.nouvMouv= new Accroche(heros,Accroche.grimpe_droite,frame); 						
+							heros.nouvMouv= new Accroche(heros,TypeAccroche.GrimpeDroite,frame); 						
 						}
 					}
 					//si on courrait vers la droite en l'air ou non 
-					else if((heros.deplacement.IsDeplacement(Mouvement_perso.course) && heros.anim>=4))
+					else if((heros.deplacement.IsDeplacement(TypeMouvPerso.Course) && heros.anim>=4))
 					{		
 						//no change mouv
 					}
 
 					//si on ne marchait pas vers la droite et qu'on est pas en l'air 
-					else if(! (heros.deplacement.IsDeplacement(Mouvement_perso.marche) && heros.anim>=4)&& heros.peutSauter)
+					else if(! (heros.deplacement.IsDeplacement(TypeMouvPerso.Marche) && heros.anim>=4)&& heros.peutSauter)
 					{
 						changeMouv=true;
 						heros.nouvAnim= 4; 
-						heros.nouvMouv=new Marche(heros,Marche.marche_droite,frame);
+						heros.nouvMouv=new Marche(heros,TypeMarche.MarcheDroite,frame);
 					}
 
 					//si on veut marcher en l'air (donc vers la droite) 
 					else if (!heros.peutSauter) 
 					{
 						//do not move if we just wall jump
-						if(heros.deplacement.IsDeplacement(Mouvement_perso.saut)&& 
-								(heros.deplacement.type_mouv != Saut.land_gauche ) && (heros.deplacement.type_mouv != Saut.land_droite ) && 
+						if(heros.deplacement.IsDeplacement(TypeMouvPerso.Saut)&& 
+								(heros.deplacement.type_mouv != TypeSaut.LandGauche ) && (heros.deplacement.type_mouv != TypeSaut.LandDroite ) && 
 								((PartieTimer.me.getElapsedNano()-heros.last_wall_jump_time)> InterfaceConstantes.WALL_JUMP_DISABLE_TIME))
 						{
 							changeMouv=true;
 							heros.deplaceSautDroit=true; // on fait bouger le heros
 							boolean fall = heros.getGlobalVit(this).y >=0 ;
 							heros.nouvAnim= fall? 4 : 3 ; 
-							heros.nouvMouv=new Saut(heros,fall?Saut.fall_droite:Saut.jump_droite,frame);
+							heros.nouvMouv=new Saut(heros,fall?TypeSaut.FallDroite:TypeSaut.JumpDroite,frame);
 						}
 					}
 					else if(heros.peutSauter)// si le heros est au sol et veux continuer à marcher vers la droite
@@ -548,15 +555,15 @@ public class ModelPartie extends AbstractModelPartie{
 				if(courseGaucheDown && !heros_glisse && !heros_accroche && !heros_shoots && !isDragged)
 				{
 					//si on ne courrait pas vers la gauche avant 
-					if(! (heros.deplacement.IsDeplacement(Mouvement_perso.course) && heros.anim<4))
+					if(! (heros.deplacement.IsDeplacement(TypeMouvPerso.Course) && heros.anim<4))
 					{
 						//do not run if we just wall jump
-						if(! (heros.deplacement.IsDeplacement(Mouvement_perso.saut) && 
+						if(! (heros.deplacement.IsDeplacement(TypeMouvPerso.Saut) && 
 								((PartieTimer.me.getElapsedNano()-heros.last_wall_jump_time)<= InterfaceConstantes.WALL_JUMP_DISABLE_TIME)))
 						{
 							changeMouv=true;
 							heros.nouvAnim=0;
-							heros.nouvMouv= new Course(heros,Course.course_gauche,frame);
+							heros.nouvMouv= new Course(heros,TypeCourse.CourseGauche,frame);
 						}
 					}
 				}
@@ -570,7 +577,7 @@ public class ModelPartie extends AbstractModelPartie{
 							changeMouv=true;
 
 							heros.nouvAnim= (heros.getGlobalVit(this).y>=0 ? 1 : 0); 
-							heros.nouvMouv= new Saut(heros,heros.getGlobalVit(this).y>=0? Saut.fall_gauche:Saut.jump_gauche,frame); 
+							heros.nouvMouv= new Saut(heros,heros.getGlobalVit(this).y>=0? TypeSaut.FallGauche:TypeSaut.JumpGauche,frame); 
 						}
 					}
 					else if (heros_accroche)
@@ -582,7 +589,7 @@ public class ModelPartie extends AbstractModelPartie{
 							changeMouv=true;
 
 							heros.nouvAnim= (heros.getGlobalVit(this).y>=0 ? 4 : 3); 
-							heros.nouvMouv= new Saut(heros,heros.getGlobalVit(this).y>=0? Saut.fall_gauche:Saut.jump_gauche,frame); 
+							heros.nouvMouv= new Saut(heros,heros.getGlobalVit(this).y>=0? TypeSaut.FallGauche:TypeSaut.JumpGauche,frame); 
 						}
 						//climb the border
 						else if (heros.anim == 0 && heros.deplacement.animEndedOnce())
@@ -590,32 +597,32 @@ public class ModelPartie extends AbstractModelPartie{
 							changeMouv=true;
 
 							heros.nouvAnim= 1; 
-							heros.nouvMouv= new Accroche(heros,Accroche.grimpe_gauche,frame); 						
+							heros.nouvMouv= new Accroche(heros,TypeAccroche.GrimpeGauche,frame); 						
 						}
 					}
 
 					//si on courrait vers la gauche en l'air ou non 
-					else if((heros.deplacement.IsDeplacement(Mouvement_perso.course) && heros.anim<4))
+					else if((heros.deplacement.IsDeplacement(TypeMouvPerso.Course) && heros.anim<4))
 					{
 						//no change
 					}
 
 					//si on ne marchait pas vers la gauche et qu'on est pas en l'air 
-					else if(! (heros.deplacement.IsDeplacement(Mouvement_perso.marche) && heros.anim<4)&& heros.peutSauter)
+					else if(! (heros.deplacement.IsDeplacement(TypeMouvPerso.Marche) && heros.anim<4)&& heros.peutSauter)
 					{
 
 						changeMouv=true;
 
 						heros.nouvAnim=0;
-						heros.nouvMouv= new Marche(heros,Marche.marche_gauche,frame);
+						heros.nouvMouv= new Marche(heros,TypeMarche.MarcheGauche,frame);
 					}
 
 					//si on veut marcher en l'air (donc vers la gauche) 
 					else if (!heros.peutSauter)
 					{
 						//do not move if we just wall jump
-						if(heros.deplacement.IsDeplacement(Mouvement_perso.saut)&& 
-								(heros.deplacement.type_mouv != Saut.land_gauche ) && (heros.deplacement.type_mouv != Saut.land_droite ) && 
+						if(heros.deplacement.IsDeplacement(TypeMouvPerso.Saut)&& 
+								(heros.deplacement.type_mouv != TypeSaut.LandGauche ) && (heros.deplacement.type_mouv != TypeSaut.LandDroite ) && 
 								((PartieTimer.me.getElapsedNano()-heros.last_wall_jump_time)> InterfaceConstantes.WALL_JUMP_DISABLE_TIME))
 						{
 							changeMouv=true;
@@ -623,7 +630,7 @@ public class ModelPartie extends AbstractModelPartie{
 							heros.deplaceSautGauche=true; // on fait bouger le heros
 							boolean fall = heros.getGlobalVit(this).y >=0 ;
 							heros.nouvAnim=fall? 1 : 0 ; 
-							heros.nouvMouv=new Saut(heros,fall? Saut.fall_gauche:Saut.jump_gauche,frame); 
+							heros.nouvMouv=new Saut(heros,fall? TypeSaut.FallGauche:TypeSaut.JumpGauche,frame); 
 						}
 					}
 					else if(heros.peutSauter) // si le heros est au sol et veux continuer à marcher vers la gauche
@@ -663,7 +670,7 @@ public class ModelPartie extends AbstractModelPartie{
 						heros.sautGlisse=true;
 
 						heros.nouvAnim= (heros.droite_gauche(heros.anim).equals(Mouvement.GAUCHE)? 0 : 3);
-						heros.nouvMouv=new Saut(heros,heros.nouvAnim==0?Saut.jump_gauche:Saut.jump_droite,frame );
+						heros.nouvMouv=new Saut(heros,heros.nouvAnim==0?TypeSaut.JumpGauche:TypeSaut.JumpDroite,frame );
 						heros.last_wall_jump_time=PartieTimer.me.getElapsedNano();
 					}
 					else if(heros_accroche && ( (heros.anim==0) || (heros.anim==2)))
@@ -672,7 +679,7 @@ public class ModelPartie extends AbstractModelPartie{
 						heros.sautAccroche=true;
 						heros.useGravity=true;
 						heros.nouvAnim= ((heros.anim == 0)? 0 : 3);
-						heros.nouvMouv=new Saut(heros,heros.nouvAnim==0?Saut.jump_gauche:Saut.jump_droite,frame );
+						heros.nouvMouv=new Saut(heros,heros.nouvAnim==0?TypeSaut.JumpGauche:TypeSaut.JumpDroite,frame );
 					}
 					else if(heros.peutSauter){
 						inputPartie.courseDroiteDown=false;
@@ -688,7 +695,7 @@ public class ModelPartie extends AbstractModelPartie{
 						heros.finSaut=false;
 
 						heros.nouvAnim=heros.droite_gauche(heros.anim).equals(Mouvement.GAUCHE) ? 0 : 3 ;
-						heros.nouvMouv= new Saut(heros,heros.nouvAnim==0?Saut.jump_gauche:Saut.jump_droite,frame );
+						heros.nouvMouv= new Saut(heros,heros.nouvAnim==0?TypeSaut.JumpGauche:TypeSaut.JumpDroite,frame );
 					}
 				}
 				nextDirectionRightInBothCase = bothDirection?nextDirectionRightInBothCase : ((inputPartie.marcheDroiteDown || inputPartie.courseDroiteDown)? false : true );
@@ -729,12 +736,12 @@ public class ModelPartie extends AbstractModelPartie{
 				{
 					Fleche f = (Fleche)tabFleche.get(i);
 					if(f.encochee)
-						f.flecheDecochee(this,deplace);
+						f.OnShoot(this,deplace);
 				}
 
 
 				heros.nouvAnim= (heros.droite_gauche(heros.anim).equals(Mouvement.GAUCHE) ? 0 : 2) ;
-				heros.nouvMouv= new Attente(heros,heros.nouvAnim==0? Attente.attente_gauche:Attente.attente_droite,frame);
+				heros.nouvMouv= new Attente(heros,heros.nouvAnim==0? TypeAttente.AttenteGauche:TypeAttente.AttenteDroite,frame);
 				if(normal_2tir_R)
 				{}
 				heros.last_shoot_time= System.nanoTime();
@@ -743,7 +750,7 @@ public class ModelPartie extends AbstractModelPartie{
 
 		}
 
-		boolean just_wall_jump= heros.deplacement.IsDeplacement(Mouvement_perso.saut) && (((PartieTimer.me.getElapsedNano()-heros.last_wall_jump_time)<=InterfaceConstantes.WALL_JUMP_DISABLE_TIME));
+		boolean just_wall_jump= heros.deplacement.IsDeplacement(TypeMouvPerso.Saut) && (((PartieTimer.me.getElapsedNano()-heros.last_wall_jump_time)<=InterfaceConstantes.WALL_JUMP_DISABLE_TIME));
 		//MARCHE
 		if ((inputPartie.marcheDroiteReleased||inputPartie.marcheGaucheReleased
 				||inputPartie.courseDroiteReleased||inputPartie.courseGaucheReleased) && !just_wall_jump)
@@ -765,8 +772,8 @@ public class ModelPartie extends AbstractModelPartie{
 				inputPartie.courseGaucheDown=false;inputPartie.courseGaucheReleased=false;heros.runBeforeJump=false;
 			}
 
-			boolean heros_glisse = heros.deplacement.IsDeplacement(Mouvement_perso.glissade);
-			boolean heros_accroche = heros.deplacement.IsDeplacement(Mouvement_perso.accroche);
+			boolean heros_glisse = heros.deplacement.IsDeplacement(TypeMouvPerso.Glissade);
+			boolean heros_accroche = heros.deplacement.IsDeplacement(TypeMouvPerso.Accroche);
 
 			if( !heros_glisse && !heros_accroche && !heros.flecheEncochee )
 			{
@@ -775,27 +782,27 @@ public class ModelPartie extends AbstractModelPartie{
 				//pas de decallage de sprite 
 
 				//au sol
-				if((heros.deplacement.IsDeplacement(Mouvement_perso.marche)|| heros.deplacement.IsDeplacement(Mouvement_perso.course)) && heros.peutSauter)
+				if((heros.deplacement.IsDeplacement(TypeMouvPerso.Marche)|| heros.deplacement.IsDeplacement(TypeMouvPerso.Course)) && heros.peutSauter)
 				{
 					changeMouv=true;
 					//on variablesPartieRapide.affiche l'animation d'attente
 
 					heros.nouvAnim= (heros.droite_gauche(heros.anim).equals(Mouvement.DROITE) ? 2: 0 );
-					heros.nouvMouv= new Attente(heros,heros.nouvAnim==0? Attente.attente_gauche:Attente.attente_droite,frame);
+					heros.nouvMouv= new Attente(heros,heros.nouvAnim==0? TypeAttente.AttenteGauche:TypeAttente.AttenteDroite,frame);
 
 					//on met sa vitesse à 0:  
 					heros.localVit.x=0;
 
 				}
 
-				else if (heros.deplacement.IsDeplacement(Mouvement_perso.attente))
+				else if (heros.deplacement.IsDeplacement(TypeMouvPerso.Attente))
 				{
 					//on arrete quand meme le heros (exemple si il relache la touche de deplacement sur laquelle il avait appuyé en l'air)
 					changeMouv=true;
 					//on variablesPartieRapide.affiche l'animation d'attente
 
 					heros.nouvAnim= heros.droite_gauche(heros.anim).equals(Mouvement.DROITE) ? 2: 0 ;
-					heros.nouvMouv= new Attente(heros,heros.nouvAnim==0? Attente.attente_gauche:Attente.attente_droite,frame);
+					heros.nouvMouv= new Attente(heros,heros.nouvAnim==0? TypeAttente.AttenteGauche:TypeAttente.AttenteDroite,frame);
 
 					//on met sa vitesse à 0:  
 					heros.localVit.x=0;
@@ -814,7 +821,7 @@ public class ModelPartie extends AbstractModelPartie{
 					else // le heros tombe 
 						heros.nouvAnim=heros.droite_gauche(heros.anim).equals(Mouvement.GAUCHE) ? 1: 4 ;
 
-					int type_mouv=heros.nouvAnim==0? Saut.jump_gauche: (heros.nouvAnim==3?Saut.jump_droite:  (heros.nouvAnim==1?Saut.fall_gauche:Saut.fall_droite));
+					TypeMouv type_mouv=heros.nouvAnim==0? TypeSaut.JumpGauche: (heros.nouvAnim==3?TypeSaut.JumpDroite:  (heros.nouvAnim==1?TypeSaut.FallGauche:TypeSaut.FallDroite));
 					heros.nouvMouv=new Saut(heros,type_mouv,frame);
 
 				}
@@ -911,7 +918,6 @@ public class ModelPartie extends AbstractModelPartie{
 		drawInterface(g);
 		
 		imageDrawer.drawAll(g);
-		
 		if(debugDraw != null)
 			debugDraw.draw(g);
 	}
@@ -923,10 +929,10 @@ public class ModelPartie extends AbstractModelPartie{
 		int yviewport = getXYViewport(false);
 
 		int xStartAff = xviewport/TAILLE_BLOC-2;
-		int xEndAff = (InterfaceConstantes.LARGEUR_FENETRE/TAILLE_BLOC+xviewport/TAILLE_BLOC)+2;
+		int xEndAff = (InterfaceConstantes.WINDOW_WIDTH/TAILLE_BLOC+xviewport/TAILLE_BLOC)+2;
 
 		int yStartAff = yviewport/TAILLE_BLOC-2;
-		int yEndAff = (InterfaceConstantes.HAUTEUR_FENETRE/TAILLE_BLOC+yviewport/TAILLE_BLOC)+2;
+		int yEndAff = (InterfaceConstantes.WINDOW_HEIGHT/TAILLE_BLOC+yviewport/TAILLE_BLOC)+2;
 
 		for(int abs=xStartAff;abs<xEndAff;abs++)
 			for(int ord=yStartAff;ord<yEndAff;ord++)
@@ -1001,14 +1007,10 @@ public class ModelPartie extends AbstractModelPartie{
 	public Point drawPersoTir(Graphics g)
 	{
 		int anim = heros.anim;
-		Point anchor = new Point(heros.xpos()+heros.deplacement.x_rot_pos.get(anim), 
-				heros.ypos()+heros.deplacement.y_rot_pos.get(anim));
-
-		AffineTransform tr = getRotatedTransform(new Point(heros.xpos(),heros.ypos()), 
-				new Point(heros.deplacement.x_rot_pos.get(anim),heros.deplacement.y_rot_pos.get(anim)),
-				new Point(heros.deplacement.xtaille.get(anim),heros.deplacement.ytaille.get(anim)),
-				heros.rotation_tir);
-
+		Point anchor = new Point(heros.deplacement.x_rot_pos.get(anim),heros.deplacement.y_rot_pos.get(anim));
+		Point returnedAnchor = new Point(heros.xpos()+anchor.x,heros.ypos()+anchor.y);
+		
+		AffineTransform tr = getRotatedTransform(new Point(heros.xpos(),heros.ypos()),anchor,heros.rotation_tir);//TODO: changed
 
 		ArrayList<Image> l_image = imHeros.getImages(heros);
 		for(int i=0; i<l_image.size(); ++i)
@@ -1023,14 +1025,14 @@ public class ModelPartie extends AbstractModelPartie{
 			}
 
 		}
-		return anchor;
+		return returnedAnchor;
 	}
 	public void drawPerso(Graphics g,boolean drawHitbox) {
 
 		Point anchor = null;
 		if(heros.afficheTouche)
 		{
-			if(heros.deplacement.IsDeplacement(Mouvement_perso.tir))
+			if(heros.deplacement.IsDeplacement(TypeMouvPerso.Tir))
 				anchor=drawPersoTir(g);
 			else
 			{
@@ -1080,21 +1082,46 @@ public class ModelPartie extends AbstractModelPartie{
 					continue;
 				AffineTransform tr = fleche.draw_tr;
 
-				if(!fleche.encochee)
-				{
-					Point transl = new Point(fleche.xpos()+xScreendisp, fleche.ypos()+yScreendisp);
-					tr=new AffineTransform(fleche.draw_tr);
-					double[] flatmat = new double[6];
-					tr.getMatrix(flatmat);
-					tr.setTransform(flatmat[0], flatmat[1], flatmat[2], flatmat[3], transl.x, transl.y);
-
-				}
+				tr=new AffineTransform();
+				tr.translate(xScreendisp, yScreendisp);
+				tr.concatenate(fleche.draw_tr);
 
 				ArrayList<Image> images = imFleches.getImage(fleche);
 				for(Image im : images){
 					imageDrawer.addImage(new DrawImageItem(im,tr,null,DrawImageHandler.FLECHE));
 				}
 
+				//Draw trail if the fleche is auto_teleguidee
+				if(fleche instanceof Fleche_auto_teleguidee)
+				{
+					Fleche_auto_teleguidee f_auto = (Fleche_auto_teleguidee) fleche;
+					f_auto.setDebug(drawHitbox);
+					
+					for(int f_index = 0; f_index< f_auto.trails.size();++f_index)
+						imageDrawer.addImage(new DrawImageItem(f_auto.trails.get(f_index),f_auto.trailsColor.get(f_index),
+								Color.BLACK,true,DrawImageHandler.FLECHE));
+					if(drawHitbox)
+					{
+						A_Star_Helper algo = f_auto.pathAlgo;
+						if(algo != null)
+						{
+							ArrayList<Point> path = algo.getPath();
+							if(path != null)
+							{
+								for(int k=0; k<path.size()-1; ++k)
+								{
+									Point p1 = path.get(k);
+									Point p2 = path.get(k+1);
+									imageDrawer.addImage(new DrawImageItem(
+											new Point(p1.x+xScreendisp,p1.y+yScreendisp), new Point(p2.x+xScreendisp,p2.y+yScreendisp),
+											Color.RED,Color.BLACK,DrawImageHandler.INTERFACE));
+								}
+							}
+						}
+					}
+
+				}
+				
 				if(drawHitbox)
 				{
 					Hitbox hitbox= fleche.getHitbox(INIT_RECT,getScreenDisp());
@@ -1144,10 +1171,12 @@ public class ModelPartie extends AbstractModelPartie{
 		{
 			Effect eff = (Effect)arrowsEffects.get(i);
 
+
 			if(eff.getNeedDestroy() || eff.isEnded())
 				continue;
-			AffineTransform tr = eff.draw_tr;
 
+			AffineTransform tr = eff.draw_tr;
+			
 			ArrayList<Image> images = imEffect.getImage(eff);
 			for(Image im : images){
 				Image im2draw = eff.applyFilter(this, im);
@@ -1165,8 +1194,8 @@ public class ModelPartie extends AbstractModelPartie{
 		{
 			//la taille de l'image fait 1500
 			Image im = imEffect.getImage(ImagesEffect.SLOWDOWN);
-			imageDrawer.addImage(new DrawImageItem(im, (InterfaceConstantes.LARGEUR_FENETRE-im.getWidth(null))/2 ,
-					(InterfaceConstantes.HAUTEUR_FENETRE-im.getHeight(null))/2,null,DrawImageHandler.EFFECT));
+			imageDrawer.addImage(new DrawImageItem(im, (InterfaceConstantes.WINDOW_WIDTH-im.getWidth(null))/2 ,
+					(InterfaceConstantes.WINDOW_HEIGHT-im.getHeight(null))/2,null,DrawImageHandler.EFFECT));
 
 		}
 
@@ -1194,7 +1223,7 @@ public class ModelPartie extends AbstractModelPartie{
 		heros.decreaseNotEnoughSeyeriCounter();
 	
 		//nombre de monstre restant
-		imageDrawer.addImage(new DrawImageItem("Monstres restant: "+ nombreMonstreRestant, InterfaceConstantes.LARGEUR_FENETRE - 220, 20,
+		imageDrawer.addImage(new DrawImageItem("Monstres restant: "+ nombreMonstreRestant, InterfaceConstantes.WINDOW_WIDTH - 220, 20,
 				Color.BLACK,Color.BLACK,20,DrawImageHandler.INTERFACE));
 
 		//jeu en pause 
@@ -1205,8 +1234,8 @@ public class ModelPartie extends AbstractModelPartie{
 			
 			int[] x_p= {0};
 			int[] y_p= {0};
-			int[] width_p={InterfaceConstantes.LARGEUR_FENETRE};
-			int[] height_p={InterfaceConstantes.HAUTEUR_FENETRE};
+			int[] width_p={InterfaceConstantes.WINDOW_WIDTH};
+			int[] height_p={InterfaceConstantes.WINDOW_HEIGHT};
 			Color[] colors_p = {new Color(0,0,0,125)};
 			imageDrawer.addImage(new DrawImageItem(x_p,y_p,width_p,height_p,colors_p,DrawImageHandler.INTERFACE));
 		}
@@ -1215,12 +1244,12 @@ public class ModelPartie extends AbstractModelPartie{
 		{
 			if(heros.getLife()==heros.MINLIFE)
 			{
-				imageDrawer.addImage(new DrawImageItem("DEFAITE",InterfaceConstantes.LARGEUR_FENETRE/2-20, InterfaceConstantes.HAUTEUR_FENETRE/4,
+				imageDrawer.addImage(new DrawImageItem("DEFAITE",InterfaceConstantes.WINDOW_WIDTH/2-20, InterfaceConstantes.WINDOW_HEIGHT/4,
 						Color.BLACK,Color.BLACK,40,DrawImageHandler.INTERFACE));
 			}
 			else if(nombreMonstreRestant==0)
 			{
-				imageDrawer.addImage(new DrawImageItem("VICTOIRE",InterfaceConstantes.LARGEUR_FENETRE/2-20, InterfaceConstantes.HAUTEUR_FENETRE/4,
+				imageDrawer.addImage(new DrawImageItem("VICTOIRE",InterfaceConstantes.WINDOW_WIDTH/2-20, InterfaceConstantes.WINDOW_HEIGHT/4,
 						Color.BLACK,Color.BLACK,40,DrawImageHandler.INTERFACE));
 			}
 		}
@@ -1229,13 +1258,25 @@ public class ModelPartie extends AbstractModelPartie{
 
 
 	/**
-	 * @param pos : position of hitbox
+	 * Translate an object to the position and rotate it around its center
+	 * @param pos : position of hitbox (global coordinates)
 	 * @param anchor: position of center of rotation relative to top left of hitbox
 	 * @param taille: size of hitbox
 	 * @param rotation
 	 * @return
 	 */
-	public AffineTransform getRotatedTransform(Point pos, Point anchor, Point taille, double rotation)
+	@Override
+	public AffineTransform getRotatedTransform(Point pos,Point topLeftAnchor,double rotation)
+	{
+		AffineTransform trans = new AffineTransform();
+		//Translate the object to its position
+		trans.translate(pos.x, pos.y);
+		//rotate it around its center
+		trans.rotate(rotation, topLeftAnchor.x, topLeftAnchor.y);
+
+		return trans;
+	}
+	/*public AffineTransform getRotatedTransform(Point pos, Point anchor, Point taille, double rotation)
 	{
 		AffineTransform trans = new AffineTransform();
 		//set to anchor point 
@@ -1249,7 +1290,7 @@ public class ModelPartie extends AbstractModelPartie{
 		Point d_pos=new Point(pos.x-c_anchor.x,pos.y-c_anchor.y);
 		trans.translate(d_pos.x, d_pos.y);
 		return trans;
-	}
+	}*/
 
 
 	//used for grappin effect 

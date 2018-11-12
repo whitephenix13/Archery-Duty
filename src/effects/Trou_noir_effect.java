@@ -59,7 +59,7 @@ public class Trou_noir_effect extends Effect{
 
 		Point firstPos = new Point();
 		if(pointCollision!=null)
-			firstPos = super.setFirstPos(new Point(x_eff_center,y_eff_center));
+			firstPos = super.setFirstPos(partie,new Point(x_eff_center,y_eff_center));
 		else{
 			//get the tip of the arrow
 			Point arrowTip = super.getArrowTip(partie);

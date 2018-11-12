@@ -35,7 +35,8 @@ public class Fleche_grappin extends Spirituelle {
 
 	//only move arrow if the grappin length is long enough
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace, boolean update_with_speed) {
+	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
+		
 		if(collider!=null)
 			if(collider.getNeedDestroy()){
 				collider=null;
@@ -43,7 +44,7 @@ public class Fleche_grappin extends Spirituelle {
 			}
 		//doitDeplace, animationChanged
 		max_speed_norm = -1;
-		boolean[] res = super.deplace(partie, deplace, update_with_speed);
+		boolean[] res = super.deplace(partie, deplace);
 		double speedNorm = this.getGlobalVit(partie).norm();
 		if(generatedEffect && (this.tempsDetruit==0) && (!this.getNeedDestroy()) )
 		{
@@ -148,9 +149,9 @@ public class Fleche_grappin extends Spirituelle {
 
 
 	@Override
-	public void flecheDecochee(AbstractModelPartie partie,Deplace deplace)
+	public void OnShoot(AbstractModelPartie partie,Deplace deplace)
 	{
-		super.flecheDecochee(partie, deplace);
+		super.OnShoot(partie, deplace);
 		if(!generatedEffect){
 			generatedEffect=true;
 			flecheEffect=new Grappin_effect(partie,this,0,partie.getFrame(),shooter);
@@ -170,14 +171,15 @@ public class Fleche_grappin extends Spirituelle {
 	public void beforeFlecheDestroyed(AbstractModelPartie partie)
 	{
 		Grappin_effect grap = ((Grappin_effect)flecheEffect);
-		grap.isDragging=false;
+		if(grap != null){
+			grap.isDragging=false;
 
-		//unregister shooter and collider 
-		if(shooter!=null)
-			shooter.unregisterEffect(partie, grap);
-		if(collider!=null)
-			collider.unregisterEffect(partie, grap);
-
+			//unregister shooter and collider 
+			if(shooter!=null)
+				shooter.unregisterEffect(partie, grap);
+			if(collider!=null)
+				collider.unregisterEffect(partie, grap);
+		}
 
 
 	}

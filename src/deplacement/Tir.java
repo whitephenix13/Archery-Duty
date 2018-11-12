@@ -8,12 +8,13 @@ import java.util.List;
 import collision.Collidable;
 import types.Hitbox;
 import types.TypeObject;
+import types.Vitesse;
 
 public class Tir extends Mouvement_perso
 {
-	public static int tir = 0;
+	public enum TypeTirPerso implements TypeMouv {Tir};
 
-	public Tir(Object obj, int _type_mouv,int current_frame) 
+	public Tir(Object obj, TypeMouv _type_mouv,int current_frame) 
     {
 		super();
 		type_mouv=_type_mouv;
@@ -32,9 +33,11 @@ public class Tir extends Mouvement_perso
 			List<Integer> yh = Arrays.asList(19,11,0 ,0 ,11,19,27,15,15,27);
 			List<Integer> yb = Arrays.asList(102,94,83,83,94,102,110,98,98,110);
 
-			x_rot_pos =  Arrays.asList(23,12,38,40,43,27,40,32,45,19);
-			y_rot_pos =  Arrays.asList(47,44,30,30,44,47,58,45,45,58);
+			//Used to set the position of the anchor for drawing the heros when he is in Tir animation
+			x_rot_pos =  Arrays.asList(23,12,38,40,43,27,40,32,45,19); //23,12,38,40,43,27,40,32,45,19
+			y_rot_pos =  Arrays.asList(47,44,30,30,44,47,58,45,45,58); //47,44,30,30,44,47,58,45,45,58
 
+			//Used to determined animation 
 			for(int i=0;i<xg.size();++i)
 			{
 				// ASSUME THAT ALL TIR HITBOXES ARE THE SAME
@@ -54,7 +57,7 @@ public class Tir extends Mouvement_perso
 		}
 	
 	}
-	public Tir(Object obj,int _type_mouv, int current_frame,Animation _animation){
+	public Tir(Object obj,TypeMouv _type_mouv, int current_frame,Animation _animation){
 		this(obj,_type_mouv,current_frame);
 		animation = _animation;
 	}
@@ -72,11 +75,12 @@ public class Tir extends Mouvement_perso
 		return new Tir(obj,type_mouv,animation.getStartFrame(),animation);
 	}
 	@Override
-	public void setSpeed(Collidable object, int anim) {
+	public Vitesse getSpeed(Collidable object, int anim) {
 		if(TypeObject.isTypeOf(object, TypeObject.HEROS))
 		{
-			//nothing
+			return null;//nothing
 		}
+		return null;
 	}
 	@Override
 	public String droite_gauche(Object obj,int anim) {

@@ -147,11 +147,14 @@ public abstract class AbstractModelPartie extends DisplayLoader implements Obser
 	protected boolean disableBoutonsFin=false;
 	protected boolean setAffichageOption=false; 
 	protected boolean arrowSlotIconChanged =true;
-
+	private boolean forceRepaint = false;
+	
 	private ArrayList<Observer> listObserver = new ArrayList<Observer>();
 	//}}
 	public boolean getDisableBoutonsFin(){return disableBoutonsFin ;}
 	public boolean getFinPartie(){return finPartie;}
+	public boolean getForceRepaint(){return forceRepaint;}
+	public void resetForceRepaint(){forceRepaint=false;}
 
 	public void init()
 	{
@@ -171,7 +174,7 @@ public abstract class AbstractModelPartie extends DisplayLoader implements Obser
 		if(monde==null)
 			monde = new Monde();
 		frame= 0;
-		heros= new Heros(InterfaceConstantes.LARGEUR_FENETRE/2,InterfaceConstantes.HAUTEUR_FENETRE/2,1,frame);
+		heros= new Heros(InterfaceConstantes.WINDOW_WIDTH/2,InterfaceConstantes.WINDOW_HEIGHT/2,1,frame);
 
 		//Action speciale pour ralentir le temps 
 		slowDown=false;
@@ -236,7 +239,7 @@ public abstract class AbstractModelPartie extends DisplayLoader implements Obser
 	 * @return
 	 */
 	
-	public abstract AffineTransform getRotatedTransform(Point pos, Point anchor, Point taille, double rotation);
+	public abstract AffineTransform getRotatedTransform(Point pos, Point topLeftAnchor, double rotation);
 	public abstract void drawPerso(Graphics g,boolean drawHitbox);
 	public abstract void drawFleches(Graphics g,boolean drawHitbox);
 	public abstract void drawTirMonstres(Graphics g,boolean drawHitbox);
@@ -255,6 +258,10 @@ public abstract class AbstractModelPartie extends DisplayLoader implements Obser
 	public void notifyObserver() {
 		for(Observer obs : listObserver)
 			obs.update();
+	}
+	public void forceRepaint() {
+		forceRepaint=true;
+		notifyObserver();
 	}
 	public void removeObserver() {
 		listObserver = new ArrayList<Observer>();

@@ -26,8 +26,11 @@ public class DrawImageItem {
 	Color[] color_bar ; 
 	AffineTransform tr=null;
 	ImageObserver observer=null;
+	//line
+	Point p1;
+	Point p2;
 	int layerIndex ;
-	public enum Type_Item{Image,Transform_Image,String,Polygon,Bar};
+	public enum Type_Item{Image,Transform_Image,String,Polygon,Bar,FillPoly,Line};
 	Type_Item item = Type_Item.Image;
 	Color originalColor =null; 
 	Color newColor=null;
@@ -64,14 +67,15 @@ public class DrawImageItem {
 		item = Type_Item.Polygon;
 	}
 	
-	//g.drawPolygon(poly)
-	public DrawImageItem(Polygon _poly,Color _newColor, Color _originalColor, int _layerIndex)
+	
+	//g.drawPolygon(poly)/g.fillPolygon(poly)
+	public DrawImageItem(Polygon _poly,Color _newColor, Color _originalColor,boolean filled, int _layerIndex)
 	{
 		poly=_poly;
 		newColor=_newColor;
 		originalColor =_originalColor;
 		layerIndex=_layerIndex;
-		item = Type_Item.Polygon;
+		item = filled? Type_Item.FillPoly : Type_Item.Polygon;
 	}
 	
 	//g.drawString (s,x,y)
@@ -100,6 +104,19 @@ public class DrawImageItem {
 		item = Type_Item.Bar;
 
 	}
+	
+	//g.drawline 
+	public DrawImageItem(Point _p1, Point _p2, Color _newColor, Color _originalColor, int _layerIndex)
+	{
+		p1=_p1;
+		p2=_p2;
+		newColor=_newColor;
+		originalColor =_originalColor;
+		layerIndex=_layerIndex;
+
+		item = Type_Item.Line;
+
+	}
 	public void draw(Graphics g)
 	{
 		if (Type_Item.Image.equals(item))
@@ -121,12 +138,15 @@ public class DrawImageItem {
 			if(originalColor != null)
 				g.setColor(originalColor);
 		}
-		else if (Type_Item.Polygon.equals(item))
+		else if (Type_Item.Polygon.equals(item) || Type_Item.FillPoly.equals(item))
 		{
 			if(newColor != null)
 				g.setColor(newColor);
 			//make the hitbox relative to the screen
-			g.drawPolygon(poly);
+			if(Type_Item.FillPoly.equals(item))
+				g.fillPolygon(poly);
+			else
+				g.drawPolygon(poly);
 			if(originalColor != null)
 				g.setColor(originalColor);		
 		}
@@ -139,6 +159,14 @@ public class DrawImageItem {
 						g.setColor(color_bar[i]);
 					g.fillRect(x_bar[i], y_bar[i], width_bar[i], height_bar[i]);}
 			}
+		}
+		else if (Type_Item.Line.equals(item))
+		{
+			if(newColor != null)
+				g.setColor(newColor);
+			g.drawLine(p1.x, p1.y,p2.x,p2.y);
+			if(originalColor != null)
+				g.setColor(originalColor);
 		}
 		
 	}

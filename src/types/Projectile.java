@@ -14,5 +14,8 @@ public abstract class Projectile extends Collidable{
 		Vitesse vit = localVit.Copy();
 		return vit.times(speedFactor);
 	}
+	public Vitesse getGlobalVit(AbstractModelPartie partie,Vitesse _localVit){
+		return _localVit.times(speedFactor);
+	}
 	
 }

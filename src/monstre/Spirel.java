@@ -1,29 +1,28 @@
 package monstre;
 
 import java.awt.Point;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.vecmath.Vector2d;
 
-import collision.Collidable;
 import collision.Collision;
-import collision.GJK_EPA;
 import deplacement.Attente;
+import deplacement.Attente.TypeAttente;
 import deplacement.Deplace;
 import deplacement.Marche;
+import deplacement.Marche.TypeMarche;
 import deplacement.Mouvement;
 import deplacement.Mouvement_perso;
+import deplacement.Mouvement_perso.TypeMouvPerso;
 import deplacement.Saut;
+import deplacement.Saut.TypeSaut;
 import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import partie.PartieTimer;
 import personnage.Heros;
 import principal.InterfaceConstantes;
-import types.Bloc;
 import types.Hitbox;
 import types.Projectile;
-import types.TypeObject;
 import types.Vitesse;
 
 @SuppressWarnings("serial")
@@ -35,8 +34,10 @@ public class Spirel extends Monstre{
 	
 	private double tempsAncienMouv=0;
 	private static double delaiMouv= 400;
-	private double tempsAncienTir=0;
-	private static double delaiTir= 2000;
+	private double last_shoot_time=-1;
+	private double last_update_shoot_time=-1;
+
+	private static double delaiTir= 2000;//ms
 	private double distanceAttaque= 160000; // 400^2
 	private boolean cooldown=true;
 
@@ -61,7 +62,7 @@ public class Spirel extends Monstre{
 		xpos_sync(xPo);
 		ypos_sync(yPo); 
 		localVit= new Vitesse(0,0);
-		deplacement=new Attente(this,Attente.attente_gauche,current_frame) ;
+		deplacement=new Attente(this,TypeAttente.AttenteGauche,current_frame) ;
 		anim=1;
 		tempsAncienMouv= PartieTimer.me.getElapsedNano();
 		actionReussite=false;
@@ -89,9 +90,19 @@ public class Spirel extends Monstre{
 	 * 
 	 * @return String , Mouvement.DROITE ou Mouvement.GAUCHE, direction dans laquelle le monstre est tourné
 	 */
+	
+	private void updateShootTime()
+	{
+		double mult = conditions.getSpeedFactor();
+		double deltaShoot = (System.nanoTime() - last_update_shoot_time) * (mult-1);		
+		last_shoot_time -= deltaShoot;
+		
+		last_update_shoot_time=System.nanoTime();
+;
+	}
 	public String droite_gauche (int anim)
 	{
-		if(deplacement.IsDeplacement(Mouvement_perso.marche))
+		if(deplacement.IsDeplacement(TypeMouvPerso.Marche))
 		{
 			if(anim <2)
 			{
@@ -99,7 +110,7 @@ public class Spirel extends Monstre{
 			}
 			else return(Mouvement.DROITE);
 		}
-		else if(deplacement.IsDeplacement(Mouvement_perso.attente))
+		else if(deplacement.IsDeplacement(TypeMouvPerso.Attente))
 		{
 			if(anim <1)
 			{
@@ -107,7 +118,7 @@ public class Spirel extends Monstre{
 			}
 			else return(Mouvement.DROITE);
 		}
-		else if(deplacement.IsDeplacement(Mouvement_perso.saut))
+		else if(deplacement.IsDeplacement(TypeMouvPerso.Saut))
 		{
 			if(anim <1)
 			{
@@ -136,8 +147,9 @@ public class Spirel extends Monstre{
 	 * @param Monde, le niveau en cours 
 	 */		
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie,Deplace deplace, boolean update_with_speed)
+	public boolean[] deplace(AbstractModelPartie partie,Deplace deplace)
 	{
+		updateShootTime();
 		//compute the next desired movement 
 		IA(partie.tabTirMonstre,partie.heros,partie);
 		//compute the true next movement depending on landing, gravity, ...
@@ -160,12 +172,12 @@ public class Spirel extends Monstre{
 		boolean herosAGauche;
 		boolean monsterOnScreen= InterfaceConstantes.SCREEN.polygon.contains(new Point (xpos()+partie.xScreendisp,ypos()+partie.yScreendisp));
 		boolean canAction= (PartieTimer.me.getElapsedNano()-tempsAncienMouv)*Math.pow(10, -6)>delaiMouv && monsterOnScreen;
-		boolean canShoot = (PartieTimer.me.getElapsedNano()-tempsAncienTir)*Math.pow(10, -6)>delaiTir ;
+		boolean canShoot = (PartieTimer.me.getElapsedNano()-last_shoot_time)*Math.pow(10, -6)>delaiTir ;
 		//On test le cooldown de tir
 		if(canShoot)
 		{
 			cooldown=false;
-			tempsAncienTir=PartieTimer.me.getElapsedNano();
+			last_shoot_time=PartieTimer.me.getElapsedNano();
 		}
 		//on test le cooldown de mouvement
 		if(canAction)
@@ -193,41 +205,24 @@ public class Spirel extends Monstre{
 				return;
 			//Shoot towards heros
 			if(shootAllowed)
-			{
+			{				
 				//animation d'attente
-				doitChangMouv= !((deplacement.IsDeplacement(Mouvement_perso.attente)) 
+				doitChangMouv= !((deplacement.IsDeplacement(TypeMouvPerso.Attente)) 
 						&& (herosAGauche? anim==0 : anim==1));
 				nouvAnim=herosAGauche? 0 : 1;
-				nouvMouv= new Attente(this,herosAGauche?Attente.attente_gauche:Attente.attente_droite,partie.getFrame());
+				nouvMouv= new Attente(this,herosAGauche?TypeAttente.AttenteGauche:TypeAttente.AttenteDroite,partie.getFrame());
 
-				//changeMouv (monstre,partie);
-				//envoie du projectile
+				//shoot projectile
 				double tir1_rotation = droite_gauche(anim).equals(Mouvement.GAUCHE)?Math.PI : 0;
 				double tir2_rotation = 3*Math.PI/2;
 				
-				int xdecal1 =  (int)(deplacement.xtaille.get(anim)/2 * Math.cos(tir1_rotation)) ;
-				int ydecal1 =  (int)(deplacement.xtaille.get(anim)/2 * Math.sin(tir1_rotation)) ;
-				
-				int xdecal2 =  (int)(deplacement.xtaille.get(anim)/2 * Math.cos(tir2_rotation));
-				int ydecal2 =  (int)(deplacement.xtaille.get(anim)/2 * Math.sin(tir2_rotation));
-				
-				//to get the middle of the tir 
-				int x_decall_tir1 = (int) (36* 0.5 * Math.cos(tir1_rotation));
-				int y_decall_tir1 = (int) ( (25*0.5f) * Math.cos(tir1_rotation));
-				
-				int x_decall_tir2 = (int) ((-25*0.5f) * Math.sin(tir2_rotation));
-				int y_decall_tir2 = (int) (36* 0.5 * Math.sin(tir2_rotation));
-		
-				
-				int xmid = xpos()+deplacement.xtaille.get(anim)/2;
-				int ymid = ypos()+deplacement.ytaille.get(anim)/2;
-				//int x_current_mid = (int) (deplacement.xtaille.get(anim)* 1 * Math.cos(rotation) - (deplacement.ytaille.get(anim)*0.5f) * Math.sin(rotation));
-				//int y_current_mid = (int) (deplacement.xtaille.get(anim)* 1 * Math.sin(rotation) + (deplacement.ytaille.get(anim)*0.5f) * Math.cos(rotation));
-				
-				
-				tabTirMonstre.add(new TirSpirel(partie,xmid -x_decall_tir1+xdecal1  , ymid - y_decall_tir1+ydecal1 ,
+				//middle of the spirel hitbox
+				int xmid = xpos() + deplacement.xtaille.get(anim)/2;
+				int ymid = ypos() + deplacement.ytaille.get(anim)/2;
+
+				tabTirMonstre.add(new TirSpirel(partie,xmid , ymid,
 						0,tir1_rotation,partie.getFrame(),conditions.getDamageFactor(),conditions.getShotSpeedFactor()));	
-				tabTirMonstre.add(new TirSpirel(partie, xmid-x_decall_tir2+xdecal2 , ymid-y_decall_tir2+ydecal2  ,
+				tabTirMonstre.add(new TirSpirel(partie, xmid , ymid ,
 						0,tir2_rotation,partie.getFrame(),conditions.getDamageFactor(),conditions.getShotSpeedFactor()));	
 
 				cooldown=true;
@@ -248,15 +243,15 @@ public class Spirel extends Monstre{
 				boolean blocLeftUp= nearObstacle(partie,-1,jumpHeight);
 				
 				boolean jumpAbove= (droite_gauche(anim).equals(Mouvement.GAUCHE)? (blocLeft && !blocLeftUp) : (blocRight && !blocRightUp) ) && peutSauter;
-				boolean inAir= deplacement.IsDeplacement(Mouvement_perso.saut);
+				boolean inAir= deplacement.IsDeplacement(TypeMouvPerso.Saut);
 				boolean moveInAir=droite_gauche(anim).equals(Mouvement.GAUCHE)?(!blocLeft) :(!blocRight); 
 				boolean holeClose= (droite_gauche(anim).equals(Mouvement.GAUCHE)? (!blocGaucheBas) : (!blocDroitBas) );
 				//on saute au dessus d'un obstacle si possible
 				if( jumpAbove)
 				{
-					doitChangMouv=!deplacement.IsDeplacement(Mouvement_perso.saut);
+					doitChangMouv=!deplacement.IsDeplacement(TypeMouvPerso.Saut);
 					nouvAnim=(herosAGauche? 0 : 1);
-					nouvMouv= new Saut(this,herosAGauche?Saut.jump_gauche:Saut.jump_droite,partie.getFrame());
+					nouvMouv= new Saut(this,herosAGauche?TypeSaut.JumpGauche:TypeSaut.JumpDroite,partie.getFrame());
 				}
 				//si on est en l'air, on se deplace
 				else if (inAir)
@@ -276,7 +271,7 @@ public class Spirel extends Monstre{
 						}
 						doitChangMouv=!(herosAGauche? anim==0 : anim==1);
 						nouvAnim=(herosAGauche? 0 : 1);
-						nouvMouv= new Saut(this,herosAGauche?Saut.jump_gauche:Saut.jump_droite,partie.getFrame());
+						nouvMouv= new Saut(this,herosAGauche?TypeSaut.JumpGauche:TypeSaut.JumpDroite,partie.getFrame());
 					}
 					else
 					{
@@ -293,10 +288,10 @@ public class Spirel extends Monstre{
 					if(decision <= 70)
 					{
 						//animation d'attente
-						doitChangMouv= !((deplacement.IsDeplacement(Mouvement_perso.attente)) 
+						doitChangMouv= !((deplacement.IsDeplacement(TypeMouvPerso.Attente)) 
 								&& (herosAGauche? anim==0 : anim==1));
 						nouvAnim=herosAGauche? 0 : 1;
-						nouvMouv= new Attente(this,herosAGauche?Attente.attente_gauche:Attente.attente_droite,partie.getFrame());
+						nouvMouv= new Attente(this,herosAGauche?TypeAttente.AttenteGauche:TypeAttente.AttenteDroite,partie.getFrame());
 
 					}
 					//on se deplace dans l'autre direction
@@ -305,15 +300,15 @@ public class Spirel extends Monstre{
 						doitChangMouv=true;
 						//on change de direction
 						nouvAnim=(herosAGauche? 2 : 0);
-						nouvMouv= new Marche(this,herosAGauche?Marche.marche_droite:Marche.marche_gauche,partie.getFrame());
+						nouvMouv= new Marche(this,herosAGauche?TypeMarche.MarcheDroite:TypeMarche.MarcheGauche,partie.getFrame());
 					}
 					//le monstre tombe en marchant
 					else 
 					{
-						doitChangMouv=!((deplacement.IsDeplacement(Mouvement_perso.marche)) 
+						doitChangMouv=!((deplacement.IsDeplacement(TypeMouvPerso.Marche)) 
 								&& (herosAGauche? anim<2 : anim>=2));
 						nouvAnim=(herosAGauche? 0 : 2);
-						nouvMouv= new Marche(this,herosAGauche?Marche.marche_gauche:Marche.marche_droite,partie.getFrame());
+						nouvMouv= new Marche(this,herosAGauche?TypeMarche.MarcheGauche:TypeMarche.MarcheDroite,partie.getFrame());
 					}
 				}
 				//sinon on se deplace
@@ -323,19 +318,19 @@ public class Spirel extends Monstre{
 					//deplacement
 					if(decision <= 90)
 					{
-						doitChangMouv=!((deplacement.IsDeplacement(Mouvement_perso.marche)) 
+						doitChangMouv=!((deplacement.IsDeplacement(TypeMouvPerso.Marche)) 
 								&& (herosAGauche? anim<2 : anim>=2));
 						nouvAnim=(herosAGauche? 0 : 2);
-						nouvMouv= new Marche(this,herosAGauche?Marche.marche_gauche:Marche.marche_droite,partie.getFrame());
+						nouvMouv= new Marche(this,herosAGauche?TypeMarche.MarcheGauche:TypeMarche.MarcheDroite,partie.getFrame());
 					}
 					//attente
 					else
 					{
 						//animation d'attente
-						doitChangMouv= !((deplacement.IsDeplacement(Mouvement_perso.attente)) 
+						doitChangMouv= !((deplacement.IsDeplacement(TypeMouvPerso.Attente)) 
 								&& (herosAGauche? anim==0 : anim==1));
 						nouvAnim=herosAGauche? 0 : 1;
-						nouvMouv= new Attente(this,herosAGauche?Attente.attente_gauche:Attente.attente_droite,partie.getFrame());
+						nouvMouv= new Attente(this,herosAGauche?TypeAttente.AttenteGauche:TypeAttente.AttenteDroite,partie.getFrame());
 					}
 				}
 
@@ -343,10 +338,10 @@ public class Spirel extends Monstre{
 			else //spirel is static
 			{
 				//animation d'attente
-				doitChangMouv= !((deplacement.IsDeplacement(Mouvement_perso.attente)) 
+				doitChangMouv= !((deplacement.IsDeplacement(TypeMouvPerso.Attente)) 
 						&& (herosAGauche? anim==0 : anim==1));
 				nouvAnim=herosAGauche? 0 : 1;
-				nouvMouv= new Attente(this,herosAGauche?Attente.attente_gauche:Attente.attente_droite,partie.getFrame());
+				nouvMouv= new Attente(this,herosAGauche?TypeAttente.AttenteGauche:TypeAttente.AttenteDroite,partie.getFrame());
 			}	
 
 			tempsAncienMouv=PartieTimer.me.getElapsedNano();
@@ -370,7 +365,7 @@ public class Spirel extends Monstre{
 		boolean herosAGauche= xpos()-(partie.heros.xpos()-partie.xScreendisp)>=0;
 		boolean falling= !isGrounded(partie);
 		wasGrounded = !falling;
-		boolean landing= (finSaut||!falling) && deplacement.IsDeplacement(Mouvement_perso.saut);
+		boolean landing= (finSaut||!falling) && deplacement.IsDeplacement(TypeMouvPerso.Saut);
 		if(falling)
 			useGravity=falling;
 		//update variable since the spirel can be ejected 
@@ -383,7 +378,7 @@ public class Spirel extends Monstre{
 			peutSauter=false;
 			int animSuiv = herosAGauche? 0 : 1;
 			//no fall animation, put the jump instead
-			Mouvement_perso depSuiv=new Saut(this,herosAGauche?Saut.jump_gauche:Saut.jump_droite, partie.getFrame());
+			Mouvement_perso depSuiv=new Saut(this,herosAGauche?TypeSaut.JumpGauche:TypeSaut.JumpDroite, partie.getFrame());
 			alignHitbox(anim,depSuiv,animSuiv,partie,deplace);
 
 			//le monstre tombe, on met donc son animation de saut
@@ -397,7 +392,7 @@ public class Spirel extends Monstre{
 		if(landing)
 		{
 			int animSuiv = herosAGauche? 0 : 1;
-			Mouvement_perso depSuiv=new Attente(this,herosAGauche?Attente.attente_gauche:Attente.attente_droite,partie.getFrame());
+			Mouvement_perso depSuiv=new Attente(this,herosAGauche?TypeAttente.AttenteGauche:TypeAttente.AttenteDroite,partie.getFrame());
 			alignHitbox(anim,depSuiv,animSuiv,partie,deplace);
 			anim=animSuiv;
 			deplacement= depSuiv;

@@ -17,11 +17,14 @@ import types.Projectile;
 
 public class Fleche_electrique extends Materielle {
 
+	int nb_effect = 5;
+	int numberExplosion = 3;
+
 	public Fleche_electrique(List<Projectile> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor) {
 		super(tabFleche, current_frame,_shooter,add_to_list,damageMult,speedFactor);
 		TEMPS_DESTRUCTION= (long) (2* Math.pow(10,8));//in nano sec = 0.2 sec 
 		damage=-5*damageMult;
-		seyeri_cost=-10;
+		seyeri_cost=-15;
 	}
 	
 
@@ -37,7 +40,7 @@ public class Fleche_electrique extends Materielle {
 		if(!generatedEffect){
 			generatedEffect=true;
 
-			flecheEffect=new Electrique_effect(partie,this,0,partie.getFrame(),this.normCollision,this.pointCollision,this.correctedPointCollision,0);
+			flecheEffect=new Electrique_effect(partie,this,0,partie.getFrame(),this.normCollision,this.pointCollision,this.correctedPointCollision,0,numberExplosion);
 			MusicBruitage.startBruitage("arc");
 			for(Entitie obj : objects)
 			{
@@ -65,7 +68,10 @@ public class Fleche_electrique extends Materielle {
 		if(!generatedEffect){
 			generatedEffect=true;
 
-			flecheEffect=new Electrique_effect(partie,this,0,partie.getFrame(),normal,null,null,1);
+			for(int i =0; i< nb_effect; i++){
+				new Electrique_effect(partie,this,0,partie.getFrame(),normal,null,null,1,numberExplosion,collider);
+			}
+
 			MusicBruitage.startBruitage("arc");
 
 		}

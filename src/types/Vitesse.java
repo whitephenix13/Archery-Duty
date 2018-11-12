@@ -1,5 +1,6 @@
 package types;
 
+import java.awt.Point;
 import java.io.Serializable;
 
 import javax.vecmath.Vector2d;
@@ -26,6 +27,10 @@ public class Vitesse  implements Serializable{
 	public Vector2d vect2d()
 	{
 		return new Vector2d(x,y);
+	}
+	public Point point()
+	{
+		return new Point((int)x,(int)y);
 	}
 	public double norm2()
 	{

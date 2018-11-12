@@ -14,13 +14,15 @@ import types.Vitesse;
 
 public class Accroche extends Mouvement_perso{
 
+	public enum TypeAccroche implements TypeMouv {AccrocheGauche,AccrocheDroite,GrimpeGauche, GrimpeDroite };
+
 	public static int accroche_gauche = 0;
 	public static int grimpe_gauche = 1;
 	public static int accroche_droite = 2;
 	public static int grimpe_droite = 3;
 
 	//constructeur des monstres 
-	public Accroche(Object obj,int _type_mouv, int current_frame){
+	public Accroche(Object obj,TypeMouv _type_mouv, int current_frame){
 		super();
 		type_mouv=_type_mouv;
 		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
@@ -43,18 +45,18 @@ public class Accroche extends Mouvement_perso{
 			hitbox = Hitbox.createHitbox(hitboxCreation);
 			//animation frame, current_frame, start_index, end_index
 			int start_index=0;int end_index=0;
-			if(type_mouv==accroche_gauche){
+			if(type_mouv.equals(TypeAccroche.AccrocheGauche)){
 				start_index=0;end_index=1;}
-			else if(type_mouv==grimpe_gauche){
+			else if(type_mouv.equals(TypeAccroche.GrimpeGauche)){
 				start_index=1;end_index=2;}
-			else if(type_mouv==accroche_droite){
+			else if(type_mouv.equals(TypeAccroche.AccrocheDroite)){
 				start_index=2;end_index=3;}
-			else if(type_mouv==grimpe_droite){
+			else if(type_mouv.equals(TypeAccroche.GrimpeDroite)){
 				start_index=3;end_index=4;}
 			animation.start(Arrays.asList(10,4,10,4), current_frame, start_index, end_index);
 		}
 	}
-	public Accroche(Object obj,int _type_mouv, int current_frame,Animation _animation){
+	public Accroche(Object obj,TypeMouv _type_mouv, int current_frame,Animation _animation){
 		this(obj,_type_mouv,current_frame);
 		animation = _animation;
 	}
@@ -70,10 +72,10 @@ public class Accroche extends Mouvement_perso{
 	}
 	
 	@Override
-	public void setSpeed(Collidable object, int anim) {
+	public Vitesse getSpeed(Collidable object, int anim) {
 		if(TypeObject.isTypeOf(object, TypeObject.HEROS))
-			object.localVit= new Vitesse(0,0);
-		
+			return new Vitesse(0,0);
+		return null;
 		}
 
 	@Override

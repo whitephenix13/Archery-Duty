@@ -120,7 +120,7 @@ public class ImagesFlecheIcon extends LoadMediaThread{
 	public Image[]  getAllImagesOfSameClass(String name,String[] outArrowType)
 	{
 		Image[] res = new Image[4];
-		String[][] allArrowType = {TypeObject.DESTRUCTRICE_CLASS,TypeObject.MATERIELLE_CLASS,TypeObject.MATERIELLE_CLASS,TypeObject.SPRIRITUELLE_CLASS};
+		String[][] allArrowType = {TypeObject.DESTRUCTRICE_CLASS,TypeObject.MATERIELLE_CLASS,TypeObject.RUSEE_CLASS,TypeObject.SPRIRITUELLE_CLASS};
 		for(int i = 0; i<4; ++i){
 			if(Arrays.asList(allArrowType[i]).contains(name))
 			{

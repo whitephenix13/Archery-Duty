@@ -39,6 +39,21 @@ public class Animation {
 		start_index =_start_index;
 		end_index =_end_index;
 	}
+	private void init()
+	{
+		start_frame=0;
+		start_index=0;//this index is used 
+		end_index=0;//this is the strict limit, anim (= [start_index,end_index-1]
+		animation_ended =false;
+		loop = true;
+		animationFrame = new ArrayList<Integer>();//pos i indicates max frame of animation i
+		num_anim=0;
+	}
+	public void restart(List<Integer> anim,int current_frame,int _start_index,int _end_index)
+	{
+		init();
+		start(anim,current_frame,_start_index,_end_index);
+	}
 	public double getTime(int current_frame)//return time in s
 	{
 		return ((current_frame-start_frame)*Config.getDeltaFrame(false));

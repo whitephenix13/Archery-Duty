@@ -93,7 +93,7 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		affich.getContentPane().setFocusable(true);
 		affich.getContentPane().requestFocus();
 
-		affich.setSize(new Dimension(InterfaceConstantes.LARGEUR_FENETRE,InterfaceConstantes.HAUTEUR_FENETRE));
+		affich.setSize(new Dimension(InterfaceConstantes.WINDOW_WIDTH,InterfaceConstantes.WINDOW_HEIGHT));
 		affich.setLocationRelativeTo(null);
 		affich.setTitle("Menu principal");
 		affich.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -327,7 +327,6 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 
 							last_update=System.nanoTime();
 							partie.play(affich);
-
 							debugTime.elapsed("repaint", 1);
 
 
@@ -395,8 +394,7 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		}
 	}
 	public static void main(String[] args) throws InterruptedException, UnsupportedAudioFileException, IOException, LineUnavailableException, URISyntaxException 
-	{
-		
+	{		
 		TypeApplication.isJar= new TypeApplication().isJar();
 		ModelPrincipal principal = new ModelPrincipal();
 		principal.Init();

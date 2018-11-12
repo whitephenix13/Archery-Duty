@@ -42,7 +42,7 @@ public class DisplayLoader {
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setFont(new Font("TimesRoman", Font.PLAIN, 50)); 
 		g2.setColor(Color.WHITE);
-		g2.drawString(s, InterfaceConstantes.LARGEUR_FENETRE/2-120, InterfaceConstantes.HAUTEUR_FENETRE/2-25);
-		g2.drawString(loadPercentage+"%", InterfaceConstantes.LARGEUR_FENETRE/2-50, InterfaceConstantes.HAUTEUR_FENETRE/2+40);
+		g2.drawString(s, InterfaceConstantes.WINDOW_WIDTH/2-120, InterfaceConstantes.WINDOW_HEIGHT/2-25);
+		g2.drawString(loadPercentage+"%", InterfaceConstantes.WINDOW_WIDTH/2-50, InterfaceConstantes.WINDOW_HEIGHT/2+40);
 	}
 }

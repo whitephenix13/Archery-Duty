@@ -1,6 +1,7 @@
 package deplacement;
 
 import collision.Collidable;
+import deplacement.Mouvement_perso.TypeMouvPerso;
 import option.Config;
 import personnage.Heros;
 import principal.InterfaceConstantes;
@@ -16,7 +17,7 @@ public class Gravite implements InterfaceConstantes
 	public void gravite(Collidable object) {
 		float varVitesseGlissade = varVitesse;
 		float limVitesseGlissade = limVitesse/2;
-		if (object.deplacement.IsDeplacement(Mouvement_perso.glissade))
+		if (object.deplacement.IsDeplacement(TypeMouvPerso.Glissade))
 		{
 			if(object.localVit.y<(limVitesseGlissade - varVitesseGlissade))
 				object.localVit.y += varVitesseGlissade;

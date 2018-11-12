@@ -7,6 +7,7 @@ import javax.vecmath.Vector2d;
 import collision.Collidable;
 import collision.Collision;
 import debug.Debug_time;
+import deplacement.Mouvement_perso.TypeMouvPerso;
 import effects.Effect;
 import fleches.materielle.Fleche_roche;
 import partie.AbstractModelPartie;
@@ -40,9 +41,12 @@ public class Deplace implements InterfaceConstantes{
 		debugTime.elapsed("object.deplace", 3);
 		
 		boolean update_with_speed = ( !partie.slowDown || (partie.slowDown && partie.slowCount==0));
-		boolean[] shouldMov_changedAnim=object.deplace(partie, this, update_with_speed);
+		if(!update_with_speed)
+			return;
+		boolean[] shouldMov_changedAnim=object.deplace(partie, this);
 		boolean shouldMove= shouldMov_changedAnim[0];
 		boolean changedAnim= shouldMov_changedAnim[1];
+
 		if(!shouldMove)
 			return;
 
@@ -71,6 +75,7 @@ public class Deplace implements InterfaceConstantes{
 			if(checkColli){
 				stuck = !Collision.ejectWorldCollision(partie, object);
 			}
+
 			if(stuck)
 			{
 				object.handleStuck(partie);
@@ -144,26 +149,26 @@ public class Deplace implements InterfaceConstantes{
 		int ypos_hit=0;
 		//les conditions limites sont aux 3/7
 		//trop à gauche de l'ecran
-		if(left_xpos_hit<2*InterfaceConstantes.LARGEUR_FENETRE/7){
+		if(left_xpos_hit<2*InterfaceConstantes.WINDOW_WIDTH/7){
 			xpos_hit=left_xpos_hit;
-			largeur_fenetre=(object.getGlobalVit(partie).x<0|| force)? 2*InterfaceConstantes.LARGEUR_FENETRE/7 :0;
+			largeur_fenetre=(object.getGlobalVit(partie).x<0|| force)? 2*InterfaceConstantes.WINDOW_WIDTH/7 :0;
 		}
 		//trop à droite 
-		else if(right_xpos_hit>5*InterfaceConstantes.LARGEUR_FENETRE/7){
+		else if(right_xpos_hit>5*InterfaceConstantes.WINDOW_WIDTH/7){
 			xpos_hit=right_xpos_hit;
-			largeur_fenetre=(object.getGlobalVit(partie).x>0||force) ? 5*InterfaceConstantes.LARGEUR_FENETRE/7:0;
+			largeur_fenetre=(object.getGlobalVit(partie).x>0||force) ? 5*InterfaceConstantes.WINDOW_WIDTH/7:0;
 		}
 
 		//trop en haut
-		if(up_ypos_hit<2*InterfaceConstantes.HAUTEUR_FENETRE/5){
+		if(up_ypos_hit<2*InterfaceConstantes.WINDOW_HEIGHT/5){
 			ypos_hit= up_ypos_hit;
-			hauteur_fenetre=(object.getGlobalVit(partie).y<=0||force)? 2*InterfaceConstantes.HAUTEUR_FENETRE/5:0;
+			hauteur_fenetre=(object.getGlobalVit(partie).y<=0||force)? 2*InterfaceConstantes.WINDOW_HEIGHT/5:0;
 		}
 
 		//trop bas
-		else if(down_ypos_hit>3*InterfaceConstantes.HAUTEUR_FENETRE/5){
+		else if(down_ypos_hit>3*InterfaceConstantes.WINDOW_HEIGHT/5){
 			ypos_hit =down_ypos_hit;
-			hauteur_fenetre=(object.getGlobalVit(partie).y>=0||force)? 3*InterfaceConstantes.HAUTEUR_FENETRE/5:0;
+			hauteur_fenetre=(object.getGlobalVit(partie).y>=0||force)? 3*InterfaceConstantes.WINDOW_HEIGHT/5:0;
 		}
 
 		if(largeur_fenetre != 0 ){
@@ -243,7 +248,7 @@ public class Deplace implements InterfaceConstantes{
 		 * */
 		double tolerance =0;
 		Heros heros = partie.heros;
-		boolean isFiring = heros.deplacement.IsDeplacement(Mouvement_perso.tir);
+		boolean isFiring = heros.deplacement.IsDeplacement(TypeMouvPerso.Tir);
 		double xcenter= heros.xpos()+ (isFiring? heros.deplacement.x_center_tir.get(heros.anim) : 
 			(heros.deplacement.xtaille.get(heros.anim)/2));
 

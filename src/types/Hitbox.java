@@ -9,7 +9,9 @@ import java.util.List;
 
 import javax.vecmath.Vector2d;
 
+import collision.Collidable;
 import collision.GJK_EPA;
+import partie.AbstractModelPartie;
 
 public class Hitbox {
 
@@ -27,7 +29,8 @@ public class Hitbox {
 		polygon.addPoint(p1.x, p1.y);
 		polygon.addPoint(p2.x, p2.y);
 		polygon.addPoint(p3.x, p3.y);
-		polygon.addPoint(p4.x, p4.y);
+		if(p4 != null)
+			polygon.addPoint(p4.x, p4.y);
 
 	}
 	public Hitbox(Polygon _p )
@@ -45,6 +48,14 @@ public class Hitbox {
 		return copy;
 	}
 
+	/**Create square hitboxes based on the list*/
+	public static List<Hitbox> createQuadriHitboxes(List<Point> p1, List<Point> p2, List<Point> p3, List<Point> p4)
+	{
+		List<Hitbox> hitboxes = new ArrayList<Hitbox>();
+		for(int i=0;i<p1.size(); ++i)
+			hitboxes.add(new Hitbox(p1.get(i),p2.get(i),p3.get(i),p4.get(i)));
+		return hitboxes;
+	}
 	/** Create a square hitbox whose bounds are xmin,xmax,ymin,ymax*/
 	public static Hitbox createSquareHitbox(int xmin, int ymin, int xmax, int ymax)
 	{
@@ -193,8 +204,15 @@ public class Hitbox {
 
 		return new_rotated_hit;
 	}
-	//TODO: clean ? 
-	public static List<Hitbox> convertHitbox(List<Hitbox> current, Point INIT_RECT,AffineTransform tr,Point pos,Point screendisp) {
+	/**
+	 * Apply transform to the polygons and untranslate it with respect to position and screendisp (to get a coordinates in local scale)
+	 * @param current: the hitboxes to tranform
+	 * @param tr: the transform to apply
+	 * @param pos: the position to remove to have local coordinates (if current were in global coordinates)
+	 * @param screendisp: the screen displacement to remove to have local coordinates (if current were in global coordinates with screen displacement)
+	 * @return
+	 */
+	public static List<Hitbox> convertHitbox(List<Hitbox> current, AffineTransform tr,Point pos,Point screendisp) {
 		List<Hitbox> new_rotated_hit = new ArrayList<Hitbox>();
 
 		for (int i = 0; i<current.size(); ++i)
@@ -204,7 +222,7 @@ public class Hitbox {
 			for(int j = 0; j<current_pol.npoints; ++j)
 			{
 				Point2D temp = tr.transform(new Point(current_pol.xpoints[j],current_pol.ypoints[j]), null);
-				new_pol.addPoint((int)Math.round(temp.getX()-pos.x-screendisp.x),(int)Math.round(temp.getY()-pos.y-screendisp.y));
+				new_pol.addPoint((int)Math.round(temp.getX())-pos.x-screendisp.x,(int)Math.round(temp.getY())-pos.y-screendisp.y);
 			}
 			new_rotated_hit.add(new Hitbox(new_pol));
 		}
@@ -252,7 +270,25 @@ public class Hitbox {
 		res.y= (int) (centre.y + l * Math.sin (alpha));
 		return(res);
 	}
+	/**
+	 * Get the middle of an object in world coordinate
+	 * @param partie
+	 * @param obj
+	 * @return
+	 */
+	public static Vector2d getObjMid(AbstractModelPartie partie, Collidable obj)
+	{
+		Point _pos = new Point(obj.xpos(),obj.ypos());
+		if(obj.fixedWhenScreenMoves)
+		{
+			_pos.x-=partie.xScreendisp;_pos.y-=partie.yScreendisp;
+		}
 
+		//find where object is precisely using the middle of the hitbox
+		return Hitbox.getHitboxCenter(obj.getHitbox(partie.INIT_RECT,partie.getScreenDisp()));
+	}
+	/**
+	 * Get the middle of the Hitbox*/
 	public static Vector2d getHitboxCenter(Hitbox hitbox )
 	{
 		assert (hitbox.polygon.npoints==4);
@@ -263,16 +299,9 @@ public class Hitbox {
 		Vector2d p1 = new Vector2d(poly.xpoints[1],poly.ypoints[1]);
 		Vector2d p2 = new Vector2d(poly.xpoints[2],poly.ypoints[2]);
 		Vector2d p3 = new Vector2d(poly.xpoints[3],poly.ypoints[3]);
-
+		
 		Vector2d dir = new Vector2d(p1.x-p3.x,p1.y-p3.y);
-		Vector2d middle = GJK_EPA.projection(p0, p2, dir, p3, true);
-		/*float a1= (float) ((float)(p0.y-p2.y)/(p0.x-p2.x));
-		float a2= (float) ((float)(p1.y-p3.y)/(p1.x-p3.x));
-		Vector2d res = new Vector2d();
-		res.x= ((float)(a1*p0.x-a2*p1.x+p1.y-p0.y)/(a1-a2));
-		res.y=(a1*(res.x-p0.x)+p0.y);
-		return res;*/
-
+		Vector2d middle = GJK_EPA.projection(p0, p2, dir, p3, true); // [751-762, 414-384] [0,-32] [756,415]
 		return(middle);
 	}
 

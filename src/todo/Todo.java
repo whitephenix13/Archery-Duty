@@ -1,20 +1,45 @@
 package todo;
 
+import types.TypeObject;
+
 public class Todo {
 	
 	//Version 0.2.3
-	//DONE: corrected aim accuracy
-	//DONE: better feel for fleche vent + corrected bugs 
-	//DONE: correct super slide and heavy gravity when jump on corner of a block
-	//DONE: corrected problem condition display 
-	//DONE: created a custom image display system that allows for different layers 
-	//DONE: maximum arrow distance 
-	
-	//TODO: Optimization: optimize game when spam arrow (lag) + optimize allocated memory for the program (currently -Xms3000m)
 
+	//DONE corrected point collision
+	//DONE corrected TypeObject memberOf
+	//DONE fleche electrique
+	//DONE fleche glace
+	//DONE slowDown/Speed now change the delay between shots
+	//DONE corrected the accurate shot by actually rotating the hitbox and the animation
+	//DONE corrected error in IntersectP in the case dir.x=0
+	//DONE corrected the transparency problem 
+	//DONE: Shoot arrow right failed (due to change of current index)
+	//DONE: improve the reached distance condition in A_Star_Helper (prevent the arrow from spinning)
+	//DONE: prevent the arrow from going back and forth => when set current index to 0 and the new path is the exact same
+	//DONE: problem interface slot arrow when pause and end of partie (flash) 
+	//DONE: clean code using enum (for mouvement)
+	//DONE: ennemi left projectiles hit the ground (hitbox décallée)/// DONE: tir spirel top left anchor pb + 
+	//DONE: fleche explosive (error when hit projectile) + cleaned animation (reduced to 6 colors)
+	//DONE: rotation of arrow corrected
+	//DONE: getNextEstimatedHitbox in fleche and fleche.xpos() corrected after the change 
+	
+	//TODO: Correct arrow rotation (doesn't turn around its center) changed fleche *5 + rotatedTrasnform(modelpartie)
+	//TODO: correct roation + hitbox + ... when fleche encochee (to stay consistent)
+	//TODO: check that everything that uses rotateTransform still works (fleche, persoTir, tirSprirrel, effectgrappin)
+	//TODO: sometime the arrow just missed the point and then the algo got f** up
+	//TODO: get more accurate hitbox by getting the exact one depending on the rotation of the object ? 
+	//TODO: A_Star: Try with the update path function 
+	//TODO: A_Star: Try with target changing position 
+	//TODO: A_Star: Try with the enemy 
+	//TODO: run the algorithm in a thread and start moving the arrow when the algorithm ended the run. Make sure that the update only change the path when it
+	//finished recomputing it 
+	//TODO: remove all TODO
+	//TODO: trail strange when screenmove 
+	
 	//MATERIEL
-	//TODO: Electrique: Object: create area that paralyse ennemy: can't shoot for a while.
-	//TODO: Glace : Object: create a stalactite submitted to gravity                      
+	// Electrique: Object: create 5 projectiles that give seyeri if they collide with heros, explode x3 if collide with enemy
+	// Glace : Object: create a stalactite submitted to gravity                      
 	// Roche: Object : create a pillar                                              
 	// Feu: Object: create a wave of fire pillar                                 
 	
@@ -25,22 +50,26 @@ public class Todo {
 	// Grappin
 	
 	//DESTRUCTREUR
-	//TODO: Foudre : lightning going through enemies  
-	//TODO: Explosif : huge damage (+ projection? ): need time out so that combo with ombre: tp ennemy in explosion?
-	//TODO: Trou noir: suck ennemis + damage 
+	//TODO: Foudre : lightning going through enemies  (effect OK) 
+	//TODO: Explosif : huge damage (+ projection? ): need time out so that combo with ombre: tp ennemy in explosion? (effect OK) 
+	//TODO: Trou noir: suck ennemis + damage  (effect OK) 
 	// Bogue: arrows all around player 
 	
 	//RUSE
-	//TODO: auto-teleguidée: goes to nearest ennemi
-	//TODO: retard: stay where shot then move fast + push ennemis 
-	//TODO: v-fleche lente //bounce shots // make no gravity area 
-	//TODO: cac: tire 3 flèches à portée réduite 
+	//TODO: auto-teleguidée: goes to nearest enemy
+																							//effect : white trail behind arrrow
+	//TODO: retard: stay where shot then move fast + push enemies// go through enemies 
+																							//effect : purple trail + effect at impact 
+	//TODO: v-fleche=> ninja: 5/10 :  become invisible + regeneration  
+																							//effect : dark blue lines shifting left and right 
+	//TODO: cac=> sangsue : 20/20 : each projectile hit is absorb, multiplying the arrow damage + releasing seyeri at the end 
+																							//effect : red/orange balls floating around 
 	
+	//TODO: add more sounds for arrows 
 	//TODO: load only relevant part of the world 
 	//TODO: more optimization: use sprite sheet 
 	//TODO: warning, arrow speed slow down is broken: can gather arrows 
 	//TODO: optimiser la taille du monde chargé dans partie rapide 
-	//TODO: add more sounds for arrows 
 	//TODO: JAR: solve the 2 icons opening ? 
 	//TODO: JAR: delete previous jar in installation, check the manifest version , https://stackoverflow.com/questions/3493416/how-to-run-a-file-before-setup-with-inno-setup
 	//TODO: ajout d'objets comme invicible quand le heros slide 

@@ -10,14 +10,14 @@ import collision.Collidable;
 import option.Config;
 import types.Hitbox;
 import types.TypeObject;
+import types.Vitesse;
 
 public class Marche extends Mouvement_perso{
 	
-	public static int marche_gauche = 0;
-	public static int marche_droite = 1;
+	public enum TypeMarche implements TypeMouv {MarcheGauche,MarcheDroite };
 
 	//constructeur 
-	public Marche(Object obj,int _type_mouv,int current_frame){
+	public Marche(Object obj,TypeMouv _type_mouv,int current_frame){
 		super();
 		type_mouv=_type_mouv;
 		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
@@ -40,8 +40,8 @@ public class Marche extends Mouvement_perso{
 
 			hitbox = Hitbox.createHitbox(hitboxCreation);
 			//animation frame, current_frame, start_index, end_index
-			int start_index =type_mouv==marche_gauche ? 0 : 4;
-			int end_index =type_mouv==marche_gauche ? 4 : 8;
+			int start_index =type_mouv.equals(TypeMarche.MarcheGauche) ? 0 : 4;
+			int end_index =type_mouv.equals(TypeMarche.MarcheGauche)? 4 : 8;
 			animation.start(Arrays.asList(10,20,30,40,10,20,30,40), current_frame, start_index, end_index);
 
 		}
@@ -65,13 +65,13 @@ public class Marche extends Mouvement_perso{
 			hitbox = Hitbox.createHitbox(hitboxCreation);
 			
 			//animation frame, current_frame, start_index, end_index
-			int start_index =type_mouv==marche_gauche ? 0 : 2;
-			int end_index =type_mouv==marche_gauche? 2 : 4;
+			int start_index =type_mouv.equals(TypeMarche.MarcheGauche) ? 0 : 2;
+			int end_index =type_mouv.equals(TypeMarche.MarcheGauche)? 2 : 4;
 			animation.start(Arrays.asList(5,10,5,10), current_frame, start_index, end_index);
 		}
 	}
 
-	public Marche(Object obj,int _type_mouv, int current_frame,Animation _animation){
+	public Marche(Object obj,TypeMouv _type_mouv, int current_frame,Animation _animation){
 		this(obj,_type_mouv,current_frame);
 		animation = _animation;
 	}
@@ -89,23 +89,24 @@ public class Marche extends Mouvement_perso{
 		return new Marche(obj,type_mouv,animation.getStartFrame(),animation);
 	}
 	@Override
-	public void setSpeed(Collidable object, int anim) {
+	public Vitesse getSpeed(Collidable object, int anim) {
 		if(TypeObject.isTypeOf(object, TypeObject.HEROS))
 		{
 			int speed_norm = (int)(3.0 / Config.ratio_fps());
 
 			assert (anim>=0 && anim <8);
-			object.localVit.x=(speed_norm * ((anim<4)? -1 : 1 ));//20 for old deplace
+			return new Vitesse((speed_norm * ((anim<4)? -1 : 1 )),object.localVit.y);
 		}
 		else if(TypeObject.isTypeOf(object, TypeObject.SPIREL))
 		{
 			int speed_norm = (int)(3.0 / Config.ratio_fps());
 			if(anim<2)
-				object.localVit.x=(-1*speed_norm);
+				return new Vitesse(-1*speed_norm,object.localVit.y);
 			
 			else
-				object.localVit.x=( speed_norm);
+				return new Vitesse(speed_norm,object.localVit.y);
 		}
+		return null;
 	}
 	@Override
 	public String droite_gauche(Object obj,int anim) {

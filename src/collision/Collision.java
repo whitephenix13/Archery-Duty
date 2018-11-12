@@ -50,10 +50,15 @@ public abstract class Collision implements InterfaceConstantes{
 		for(int x = min.x; x<(max.x+TAILLE_BLOC) ; x+=TAILLE_BLOC)
 			for(int y = min.y; y<(max.y+TAILLE_BLOC); y+=TAILLE_BLOC)
 			{
-				Bloc bloc = monde.niveau[(x + INIT_RECT.x)/TAILLE_BLOC][(y + INIT_RECT.y)/TAILLE_BLOC];
-				if(bloc.getHitbox(INIT_RECT,screenDisp)!=null)
+				int xIndex = (x + INIT_RECT.x)/TAILLE_BLOC;
+				int yIndex = (y + INIT_RECT.y)/TAILLE_BLOC;
+				if(xIndex>=0 && (yIndex>=0) && (xIndex<monde.niveau.length) && (yIndex<monde.niveau[0].length) )
 				{
-					mondeBlocs.add(bloc);
+					Bloc bloc = monde.niveau[xIndex][yIndex];
+					if(bloc.getHitbox(INIT_RECT,screenDisp)!=null)
+					{
+						mondeBlocs.add(bloc);
+					}
 				}
 
 			}
@@ -87,7 +92,19 @@ public abstract class Collision implements InterfaceConstantes{
 		//RES: vectOut= new Vector2d(Math.floor(outVector.x)+x+xequ,Math.floor(outVector.y)+y+yequ);
 		return new Point(xneg+xpos,yneg+ypos);
 	}
-
+	private static Point ejectFromIntTouch( Vector2d outVector)
+	{
+		//floor: the largest (closest to positive infinity) floating-point value that less than or equal to the argument 
+		//expected : x>0, out = -2.5 ,int: -2  ,value expected = -3  
+		//expected : x>0, out = -3 ,int: -3 ,value expected = -4  
+		//expected : x<0, out = 2.5 ,int: 2 ,value expected = 3  
+		//expected : x<0, out = 3 ,int: 3 ,value expected = 4  
+		return new Point((int)Math.signum(outVector.x),(int)Math.signum(outVector.y));
+	}
+	public static Point[] computeCollisionPoint(Vector2d dir, double dInter, Hitbox hit_eject, Hitbox hit2)
+	{
+		return computeCollisionPoint(dir, dInter, hit_eject, hit2,false);
+	}
 	/**
 	 * 
 	 * @param dir = speed
@@ -96,7 +113,106 @@ public abstract class Collision implements InterfaceConstantes{
 	 * @param hit2= world
 	 * @return {collisionPoint, minimumEjectPoint to apply to make sure that an object is out of collision}
 	 */
-	public static Point[] computeCollisionPoint(Vector2d dir, double dInter, Hitbox hit_eject, Hitbox hit2)
+	public static Point[] computeCollisionPoint(Vector2d dir, double dInter, Hitbox hit_eject, Hitbox hit2,boolean log)
+	{
+
+		//The two hitboxes are currently colliding. The goal is to find the points which are currently in the other hitbox
+		//and that after one step are not longer inside
+		Vector2d deltaStep =new Vector2d(-dir.x,-dir.y); //move in the direction of ejection
+		deltaStep.normalize();
+		Polygon[] pols = {hit_eject.polygon,hit2.polygon};
+		Point[] collisionPoints = new Point[2];
+		Point[] minEject = new Point[2]; // by how much eject in order to separate hitboxes 
+		if(log)
+			System.out.println(hit_eject +" "+ hit2+" "+ dInter +" "+ dir);
+		int index = 0; //keep track of the size of collisionPoints
+		int end_factor = (int) Math.ceil(dInter+2);
+		int number_restart = 0; // sometime hitboxes are intersecting but no corner is inside the other box. The hope is that small displacement solve the problem
+		for(int j = 0; j<2; j++){
+			//j=0 : iterate over hit_eject and check if one of the point is in hit2
+			//j = 1 the opposite
+			int j2 = (j+1)%2;
+			int sign = (j==0)?1:-1;//depending of which polygon is considered, we either add or remove delta step
+			Polygon p1 = pols[j];
+			Polygon p2 = pols[j2];
+			for(int i=0;i<p1.npoints;i++)
+			{
+				Point ori_p = new Point(p1.xpoints[i],p1.ypoints[i]); 
+				//Correct the vector by tranforming (-0.5,1.2) => (0,1), (-1.2,0.5) => (-1,0) otherwise negative switch to next int too fast
+
+				int factor=number_restart;
+
+				Vector2d exactPush = new Vector2d(sign*(factor*deltaStep.x),sign*(factor*deltaStep.y));
+				//Correct the push outside to make sure that the rectangle (0,100),(200,200) and (200,100) + (0.5,0.5) are no longer colliding.
+				//otherwise taking the int give: (200,100) which is still a problem
+				Point correct = ejectFromIntTouch(exactPush);
+				Point pushOutside = new Point((int)exactPush.x + correct.x,(int)exactPush.y + correct.y);
+
+				Point p =  new Point((int)(ori_p.x+pushOutside.x ),(int)(ori_p.y+pushOutside.y));
+				if(log)
+					System.out.println(Hitbox.polyToString(p2)+ " contains " + p +" "+ Hitbox.contains(p2,p));
+				if(Hitbox.contains(p2,p)){//push the point inside 
+					//Test if the push was necessary. It might not be because of floor function also ejecting the object 
+					Point p_smaller = p;
+					Point prev_p_smaller = p;
+					boolean contain = true;
+					do
+					{
+						prev_p_smaller = p_smaller;
+						//Correct the vector by tranforming (-0.5,1.2) => (0,1), (-1.2,0.5) => (-1,0) otherwise negative switch to next int too fast
+						Vector2d exact_shift = new Vector2d(sign*(factor*deltaStep.x),sign*(factor*deltaStep.y));
+						Point correct_shift = ejectFromIntTouch(exact_shift);
+						Point point_shift = new Point((int)exact_shift.x+correct_shift.x,(int)exact_shift.y+correct_shift.y);
+						p_smaller = new Point(ori_p.x +point_shift.x,ori_p.y+ point_shift.y);
+						factor++;
+						contain=Hitbox.contains(p2, p_smaller);
+						if(log)
+							System.out.println("\t"+Hitbox.polyToString(p2)+ " contains " + p_smaller +" "+ contain);
+					}
+					while(contain && factor<=end_factor);
+					if(contain)
+						continue;
+					collisionPoints[index]= (j==0)? prev_p_smaller : ori_p;//if j==1 the current hitbox is the when that should not moveqqqq
+					minEject[index]= new Point(sign*(p_smaller.x-prev_p_smaller.x),sign*(p_smaller.y-prev_p_smaller.y));
+
+					index+=1;
+					//Special case: can happen with flat hitbox that is totally included in the other 
+					if(index>=2)
+						break;
+				}
+			}
+			//if we found 1 or 2 points for iteration j=0, break, else look the reverse way (if points from hit2 are in hit 1 )
+			if(index==1 || index==2)
+				break;
+			//Restart by ejecting a bit the object to get closer to the collision point 
+			if(index==0 && j==1 && number_restart<=end_factor)
+			{
+				number_restart+=1;
+				j=-1;
+			}
+		}
+		//at most two points are inside, otherwise it means that the object was already stucked
+		if(index==0 || index>2)
+			return null;
+		Point colliP_res = new Point();
+		Point minEject_res = new Point();
+		for(int k=0;k<index;k++)
+		{
+			colliP_res.x+=collisionPoints[k].x;
+			colliP_res.y+=collisionPoints[k].y;
+			minEject_res.x = Math.abs(minEject[k].x)>Math.abs(minEject_res.x) ? minEject[k].x : minEject_res.x ;
+			minEject_res.y = Math.abs(minEject[k].y)>Math.abs(minEject_res.y) ? minEject[k].y : minEject_res.y ;
+		}
+		colliP_res.x/=index;
+		colliP_res.y/=index;
+		Point[] res = new Point[2];
+		res[0]=colliP_res;
+		res[1]=minEject_res;
+		return res;
+
+	}
+
+	/*public static Point[] computeCollisionPoint(Vector2d dir, double dInter, Hitbox hit_eject, Hitbox hit2,boolean log)
 	{
 
 		Vector2d ejectVect = new Vector2d();
@@ -127,12 +243,14 @@ public abstract class Collision implements InterfaceConstantes{
 			{
 				Point ori_p = new Point(p1.xpoints[i],p1.ypoints[i]); 
 				//Correct the vector by tranforming (-0.5,1.2) => (0,1), (-1.2,0.5) => (-1,0) otherwise negative switch to next int too fast
-				
+
 				int factor=2-numb_restart;
-				
+
+
 				Point pushInside = new Point((int)(sign*(factor*deltaStep.x)),(int)(sign*(factor*deltaStep.y)));
 				Point p =  new Point((int)(ori_p.x+pushInside.x ),(int)(ori_p.y+pushInside.y));
-
+				if(log)
+					System.out.println("\t Hit "+ Hitbox.polyToString(p2) + " contain " + p + " "+ Hitbox.contains(p2,p));
 				if(Hitbox.contains(p2,p)){//push the point inside 
 					//Test if the push was necessary. It might not be because of floor function also ejecting the object 
 						Point p_smaller = p;
@@ -165,13 +283,13 @@ public abstract class Collision implements InterfaceConstantes{
 			//if we found 1 or 2 points for iteration j=0, break, else look the reverse way (if points from hit2 are in hit 1 )
 			if(index==1 || index==2)
 				break;
-			
+
 			//restart if index = 0 and j= 1 => try with a smaller push inside 
 			if(index==0 && j == 1 && (numb_restart<2)){
 				numb_restart+=1;
 				j=-1; //force restart
 			}
-				
+
 		}
 		//at most two points are inside, otherwise it means that the object was already stucked
 		if(index==0 || index>2)
@@ -192,7 +310,7 @@ public abstract class Collision implements InterfaceConstantes{
 		res[1]=minEject_res;
 		return res;
 
-	}
+	}*/
 	//////////////////////////////////////////////////////WORLD COLLISION///////////////////////////////////////////////////////////////////
 	/**
 	 * 
@@ -291,6 +409,7 @@ public abstract class Collision implements InterfaceConstantes{
 			collision_type =  GJK_EPA.isIntersect(dInter,dNull);
 
 			if( (collision_type == GJK_EPA.INTER && !considerTouch) || (considerTouch && collision_type != GJK_EPA.NOT_INTER) ){
+				//System.out.println("\tCollide with " + col +" "+ box);
 				return true;
 			}
 		}
@@ -500,8 +619,11 @@ public abstract class Collision implements InterfaceConstantes{
 			}
 			if(computeWorld)
 			{
-				mondeBlocs = getMondeBlocs(partie.monde,object1Hitbox, partie.INIT_RECT,partie.getScreenDisp(),
-						partie.TAILLE_BLOC);
+				if(object1.checkCollideWithWorld()){
+					mondeBlocs = getMondeBlocs(partie.monde,object1Hitbox, partie.INIT_RECT,partie.getScreenDisp(),
+							partie.TAILLE_BLOC);
+					allCollidables.addAll(mondeBlocs);
+				}
 
 				if(collidableEffects!=null && object1.checkCollideWithEffect())
 				{
@@ -509,13 +631,13 @@ public abstract class Collision implements InterfaceConstantes{
 					allCollidables.remove(object1);
 				}
 
-				allCollidables.addAll(mondeBlocs);}
+			}
 
 			for(Collidable col : allCollidables)
 			{
 				if(computeWorld)
 					object2Hitbox = col.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).copy();
-				
+
 				Vector2d supp1 = GJK_EPA.support(object2Hitbox.polygon,minEjectDeplacement );//fixed one
 				Vector2d supp2 = GJK_EPA.support(object1Hitbox.polygon, ejectDeplacement);//mobile one
 				Vector2d firstDir = new Vector2d(supp1.x-supp2.x, supp1.y-supp2.y);
@@ -566,7 +688,9 @@ public abstract class Collision implements InterfaceConstantes{
 							intersectedCol=col;
 							intersectedHit=object2Hitbox.copy();
 							Point[] res = computeCollisionPoint(new Vector2d(ejectDeplacement.x,ejectDeplacement.y),dInter,object1Hitbox,object2Hitbox);
-							intersectedCollision= res[0];
+							try{intersectedCollision= res[0];}
+							catch(Exception e){e.printStackTrace(); 
+							computeCollisionPoint(new Vector2d(ejectDeplacement.x,ejectDeplacement.y),dInter,object1Hitbox,object2Hitbox,true);}
 							Vector2d projectedEPA = GJK_EPA.projectVectorTo90(EPA_normal,false,0);
 							ejectFromCollisionPoint=new Point((int) (projectedEPA.x),(int)(projectedEPA.y));
 						}
@@ -618,7 +742,7 @@ public abstract class Collision implements InterfaceConstantes{
 					object1.setCollisionInformation(null, null, null);
 				}
 		}
-		
+
 		if(shouldApplyMotion && isWorldCollision(partie, object1,true)){
 			object1.pxpos_sync(-final_x_dep);
 			object1.pypos_sync(-final_y_dep);
@@ -626,7 +750,7 @@ public abstract class Collision implements InterfaceConstantes{
 		}
 		if(computeWorld && (intersectedCol!=null) && warnCollision)
 			object1.handleWorldCollision(EPA_normal,partie,intersectedCol,false);
-		
+
 		return true; //not stuck
 	}
 
@@ -667,7 +791,7 @@ public abstract class Collision implements InterfaceConstantes{
 	{
 		return collisionObjects(partie, object1,object2,null,null,true,computeDirWithSpeed);
 	}
-	
+
 	/**
 	 * 
 	 * @param partie

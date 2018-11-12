@@ -4,11 +4,9 @@ import java.util.ArrayList;
 
 import collision.Collidable;
 import conditions.ConditionHandler;
-import deplacement.Mouvement_perso;
+import deplacement.Mouvement_perso.TypeMouvPerso;
 import effects.Effect;
 import effects.Grappin_effect;
-import effects.Vent_effect;
-import monstre.Spirel;
 import partie.AbstractModelPartie;
 import personnage.Heros;
 
@@ -65,7 +63,7 @@ public abstract class Entitie extends Collidable{
 		boolean applyEffects = true;
 		if(this instanceof Heros)
 		{
-			applyEffects = !((Heros)this).deplacement.IsDeplacement(Mouvement_perso.accroche);
+			applyEffects = !((Heros)this).deplacement.IsDeplacement(TypeMouvPerso.Accroche);
 		}
 		if(applyEffects){
 			for(Effect eff: currentEffects)

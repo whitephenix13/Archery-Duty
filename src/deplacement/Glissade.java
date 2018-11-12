@@ -8,15 +8,14 @@ import java.util.List;
 import collision.Collidable;
 import types.Hitbox;
 import types.TypeObject;
+import types.Vitesse;
 
 public class Glissade extends Mouvement_perso
 {
-	public static int glissade_gauche = 0;
-	public static int glissade_droite = 1;
-
+	public enum TypeGlissade implements TypeMouv {GlissadeGauche,GlissadeDroite};
 
 	//constructeur monstre
-	public Glissade(Object obj,int _type_mouv,int current_frame) 
+	public Glissade(Object obj,TypeMouv _type_mouv,int current_frame) 
 	{
 		super();
 		type_mouv=_type_mouv;
@@ -41,13 +40,13 @@ public class Glissade extends Mouvement_perso
 
 
 			//animation frame, current_frame, start_index, end_index
-			int start_index =type_mouv==glissade_gauche ? 0 : 1;
-			int end_index =type_mouv==glissade_gauche ? 1 : 2;
+			int start_index =type_mouv.equals(TypeGlissade.GlissadeGauche) ? 0 : 1;
+			int end_index =type_mouv.equals(TypeGlissade.GlissadeGauche) ? 1 : 2;
 			animation.start(Arrays.asList(2,2), current_frame, start_index, end_index);
 
 		}
 	}
-	public Glissade(Object obj,int _type_mouv, int current_frame,Animation _animation){
+	public Glissade(Object obj,TypeMouv _type_mouv, int current_frame,Animation _animation){
 		this(obj,_type_mouv,current_frame);
 		animation = _animation;
 	}
@@ -60,12 +59,12 @@ public class Glissade extends Mouvement_perso
 		return new Glissade(obj,type_mouv,animation.getStartFrame(),animation);
 	}
 	@Override
-	public void setSpeed(Collidable object, int anim) {
+	public Vitesse getSpeed(Collidable object, int anim) {
 		if(TypeObject.isTypeOf(object, TypeObject.HEROS))
 		{
-			//nothing
+			return null; //nothing to set
 		}
-
+		return null;
 	}
 	@Override
 	public String droite_gauche(Object obj,int anim) {

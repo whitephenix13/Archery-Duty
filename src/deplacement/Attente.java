@@ -14,11 +14,10 @@ import types.Vitesse;
 
 public class Attente extends Mouvement_perso{
 
-	public static int attente_gauche = 0;
-	public static int attente_droite = 1;
+	public enum TypeAttente implements TypeMouv {AttenteGauche,AttenteDroite };
 
 	//constructeur des monstres 
-	public Attente(Object obj,int _type_mouv, int current_frame){
+	public Attente(Object obj,TypeMouv _type_mouv, int current_frame){
 		super();
 		type_mouv=_type_mouv;
 		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
@@ -40,8 +39,8 @@ public class Attente extends Mouvement_perso{
 
 			hitbox = Hitbox.createHitbox(hitboxCreation);
 			//animation frame, current_frame, start_index, end_index
-			int start_index =type_mouv==attente_gauche ? 0 : 2;
-			int end_index =type_mouv==attente_gauche ? 2 : 4;
+			int start_index =type_mouv.equals(TypeAttente.AttenteGauche) ? 0 : 2;
+			int end_index =type_mouv.equals(TypeAttente.AttenteGauche) ? 2 : 4;
 			animation.start(Arrays.asList(80,160,80,160), current_frame, start_index, end_index);
 		}
 		else if(TypeObject.isTypeOf(obj, TypeObject.SPIREL))
@@ -62,15 +61,15 @@ public class Attente extends Mouvement_perso{
 			hitboxCreation.add(Hitbox.asListPoint(xg,yb));
 
 			hitbox = Hitbox.createHitbox(hitboxCreation);
-			int start_index =type_mouv==attente_gauche ? 0 : 1;
-			int end_index =type_mouv==attente_gauche ? 1 : 2;
+			int start_index =type_mouv.equals(TypeAttente.AttenteGauche) ? 0 : 1;
+			int end_index =type_mouv.equals(TypeAttente.AttenteGauche) ? 1 : 2;
 			//animation frame, current_frame, start_index, end_index
 			animation.start(Arrays.asList(20,20), current_frame, start_index, end_index);
 
 		}
 	}
 
-	public Attente(Object obj,int _type_mouv, int current_frame,Animation _animation){
+	public Attente(Object obj,TypeMouv _type_mouv, int current_frame,Animation _animation){
 		this(obj,_type_mouv,current_frame);
 		animation = _animation;
 	}
@@ -90,12 +89,13 @@ public class Attente extends Mouvement_perso{
 	}
 	
 	@Override
-	public void setSpeed(Collidable object, int anim) {
+	public Vitesse getSpeed(Collidable object, int anim) {
 		if(TypeObject.isTypeOf(object, TypeObject.HEROS))
-			object.localVit= new Vitesse(0,0);
+			return new Vitesse(0,0);
 		
 		else if(TypeObject.isTypeOf(object, TypeObject.SPIREL))
-			object.localVit= new Vitesse(0,0);
+			return new Vitesse(0,0);
+		return null;
 	}
 
 	@Override

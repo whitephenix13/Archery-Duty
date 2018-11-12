@@ -58,7 +58,7 @@ public class Affichage extends JFrame implements InterfaceConstantes, Observer
 		icons.add(getImage("32x32.gif"));
 		icons.add(getImage("64x64.gif"));
 		this.setIconImages(icons);
-		
+
 		affichagePrincipal.addListenerPrincipal();
 		AbstractModelPrincipal.changeFrame=true;
 		actuAffichage();

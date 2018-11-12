@@ -1,11 +1,11 @@
 package deplacement;
 
-import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 
 import collision.Collidable;
 import types.Hitbox;
+import types.Vitesse;
 
 public abstract class Mouvement{
 	public static String DROITE = "DROITE";
@@ -24,7 +24,7 @@ public abstract class Mouvement{
 	
 	protected Animation animation = new Animation();
 	public boolean animEndedOnce(){return animation.isEndedOnce();}
-	public int type_mouv;
+	public TypeMouv type_mouv;
 	
 	public abstract Mouvement Copy(Object obj);
 	/**
@@ -32,8 +32,16 @@ public abstract class Mouvement{
 	 * */
 	public abstract int getMaxBoundingSquare(Object obj);
 	public abstract boolean IsDeplacement(Mouvement m);
-	public abstract boolean IsDeplacement(String s);
-	public abstract void setSpeed(Collidable object, int anim);
+	public abstract boolean IsDeplacement(TypeMouv s);
+	public abstract Vitesse getSpeed(Collidable object, int anim);
+	public void setSpeed(Collidable object, int anim)
+	{
+		Vitesse vit = getSpeed(object,anim);
+		if(vit==null)
+			return;
+		object.localVit.x=(vit.x);
+		object.localVit.y=(vit.y);
+	};
 	public abstract String droite_gauche(Object obj,int anim);
 	public int updateAnimation(Object obj,int anim,int current_frame,double speedFactor) {
 		return updateAnimation(obj,anim,current_frame,speedFactor,false);

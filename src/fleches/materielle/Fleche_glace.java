@@ -16,11 +16,11 @@ import types.Entitie;
 import types.Projectile;
 
 public class Fleche_glace extends Materielle {
-
+	int damage_init = -10;
 	public Fleche_glace(List<Projectile> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor) {
 		super(tabFleche, current_frame,_shooter,add_to_list,damageMult,speedFactor);
 		TEMPS_DESTRUCTION= (long) (2* Math.pow(10,8));//in nano sec = 0.2 sec 
-		damage=-10*damageMult;
+		damage=damage_init*damageMult;
 		seyeri_cost = -8;
 	}
 	
@@ -36,7 +36,7 @@ public class Fleche_glace extends Materielle {
 		if(!generatedEffect){
 			generatedEffect=true;
 
-			flecheEffect=new Glace_effect(partie,this,0,partie.getFrame(),normCollision,pointCollision,correctedPointCollision,0);
+			flecheEffect=new Glace_effect(partie,this,0,partie.getFrame(),normCollision,pointCollision,correctedPointCollision,0,damage_init);
 			MusicBruitage.startBruitage("arc");
 			if(collidedObject instanceof Roche_effect)
 			{
@@ -59,7 +59,7 @@ public class Fleche_glace extends Materielle {
 		if(!generatedEffect){
 			generatedEffect=true;
 
-			flecheEffect=new Glace_effect(partie,this,0,partie.getFrame(),normal,null,null,1);
+			flecheEffect=new Glace_effect(partie,this,0,partie.getFrame(),normal,null,null,1,damage_init);
 			MusicBruitage.startBruitage("arc");
 			for(Entitie obj : objects)
 			{

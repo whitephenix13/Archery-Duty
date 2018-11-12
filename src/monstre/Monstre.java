@@ -181,6 +181,11 @@ public abstract class Monstre extends Entitie implements InterfaceConstantes, Se
 		{};
 	}
 	
+	@Override
+	public Hitbox getNextEstimatedHitbox(AbstractModelPartie partie,double newRotation,int anim)
+	{
+		throw new java.lang.UnsupportedOperationException("Not supported yet.");
+	}
 }
 
 

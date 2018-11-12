@@ -108,7 +108,7 @@ public abstract class TypeObject {
 		if(exactMatch)
 			return obj.getClass().getName().equals(obj2.getClass().getName());
 		try {
-			return Class.forName(obj2.getClass().getName()).isInstance(obj);
+			return Class.forName(obj2.getClass().getName()).isAssignableFrom(obj.getClass());
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -118,7 +118,16 @@ public abstract class TypeObject {
 	public static boolean isTypeOf(Object obj, String s)
 	{
 		try {
-			return Class.forName(s).isInstance(obj);
+			return Class.forName(s).isAssignableFrom(obj.getClass());
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+	public static boolean isTypeOf(Class<?> cl, String s)
+	{
+		try {
+			return Class.forName(s).isAssignableFrom(cl);
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}

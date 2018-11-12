@@ -51,7 +51,7 @@ public class Explosive_effect extends Effect{
 		int x_eff_center = (int) (xtaille.get(anim)/2 * Math.cos(rotation) - (ytaille.get(anim)/2) * Math.sin(rotation));
 		int y_eff_center = (int) (xtaille.get(anim)/2 * Math.sin(rotation) + (ytaille.get(anim)/2) * Math.cos(rotation));
 
-		Point firstPos = super.setFirstPos(new Point(x_eff_center,y_eff_center));
+		Point firstPos = super.setFirstPos(partie,new Point(x_eff_center,y_eff_center));
 	
 		xpos_sync(firstPos.x);
 		ypos_sync(firstPos.y);

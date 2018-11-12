@@ -4,6 +4,7 @@ import java.awt.Image;
 import java.util.ArrayList;
 
 import deplacement.Mouvement_perso;
+import deplacement.Mouvement_perso.TypeMouvPerso;
 import loading.LoadMediaThread;
 import monstre.Monstre;
 import types.Entitie;
@@ -53,11 +54,11 @@ public class ImagesMonstre extends LoadMediaThread{
 
 		if (TypeObject.isTypeOf(monstre, TypeObject.SPIREL))
 		{
-			if(monstre.deplacement.IsDeplacement(Mouvement_perso.attente))
+			if(monstre.deplacement.IsDeplacement(TypeMouvPerso.Attente))
 				im.add(im_SP_attente.get(monstre.anim));
-			else if (monstre.deplacement.IsDeplacement(Mouvement_perso.marche))
+			else if (monstre.deplacement.IsDeplacement(TypeMouvPerso.Marche))
 				im.add(im_SP_marche.get(monstre.anim));
-			else if(monstre.deplacement.IsDeplacement(Mouvement_perso.saut))
+			else if(monstre.deplacement.IsDeplacement(TypeMouvPerso.Saut))
 				im.add(im_SP_saut.get(monstre.anim));
 		}
 		return im;

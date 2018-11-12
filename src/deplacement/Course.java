@@ -10,14 +10,14 @@ import collision.Collidable;
 import option.Config;
 import types.Hitbox;
 import types.TypeObject;
+import types.Vitesse;
 
 public class Course extends Mouvement_perso{
 
-	public static int course_gauche = 0;
-	public static int course_droite = 1;
+	public enum TypeCourse implements TypeMouv {CourseGauche,CourseDroite };
 
 	//constructeur monstre
-	public Course(Object obj,int _type_mouv,int current_frame){
+	public Course(Object obj,TypeMouv _type_mouv,int current_frame){
 		super();
 		type_mouv=_type_mouv;
 		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
@@ -40,15 +40,15 @@ public class Course extends Mouvement_perso{
 			hitboxCreation.add(Hitbox.asListPoint(xg,yb));
 
 			hitbox = Hitbox.createHitbox(hitboxCreation);
-			int start_index =type_mouv==course_gauche ? 0 : 4;
-			int end_index =type_mouv==course_gauche ? 4 : 8;
+			int start_index =type_mouv.equals(TypeCourse.CourseGauche) ? 0 : 4;
+			int end_index =type_mouv.equals(TypeCourse.CourseGauche) ? 4 : 8;
 			//animation frame, current_frame, start_index, end_index
 			animation.start(Arrays.asList(6,12,18,24,6,12,18,24), current_frame, start_index, end_index);
 
 		}
 	}
 
-	public Course(Object obj,int _type_mouv, int current_frame,Animation _animation){
+	public Course(Object obj,TypeMouv _type_mouv, int current_frame,Animation _animation){
 		this(obj,_type_mouv,current_frame);
 		animation = _animation;
 	}
@@ -64,7 +64,7 @@ public class Course extends Mouvement_perso{
 	}
 
 	@Override
-	public void setSpeed(Collidable object, int anim) {
+	public Vitesse getSpeed(Collidable object, int anim) {
 		if(TypeObject.isTypeOf(object, TypeObject.HEROS))
 		{
 			assert (anim>=0 && anim <8);
@@ -74,9 +74,9 @@ public class Course extends Mouvement_perso{
 			{if(object.last_colli_left){speed_norm = 0;}}
 			else
 			{if(object.last_colli_right){speed_norm = 0;}}
-			object.localVit.x = (speed_norm * ((anim<4)? -1 : 1 ));//40 for old deplace
+			return new Vitesse((speed_norm * ((anim<4)? -1 : 1 )),object.localVit.y);
 		}
-
+		return null;
 	}
 	@Override
 	public String droite_gauche(Object obj,int anim) {

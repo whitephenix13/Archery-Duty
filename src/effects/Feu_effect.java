@@ -102,7 +102,7 @@ public class Feu_effect extends Effect{
 		
 		Point firstPos = new Point();
 		if(type0){
-			firstPos = super.setFirstPos(new Point(x_eff_center,y_eff_center));
+			firstPos = super.setFirstPos(partie,new Point(x_eff_center,y_eff_center));
 			firstPos = new Point(firstPos.x+(int) (shift * Math.cos(rotation)),firstPos.y +(int) (shift * Math.sin(rotation)) );
 		}
 		else

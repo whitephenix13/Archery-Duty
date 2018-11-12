@@ -8,6 +8,7 @@ import java.util.List;
 import collision.Collidable;
 import deplacement.Animation;
 import deplacement.Mouvement;
+import deplacement.TypeMouv;
 import fleches.Fleche;
 import option.Config;
 import types.Hitbox;
@@ -16,10 +17,10 @@ import types.Vitesse;
 
 public class T_normal extends Mouvement_tir{
 
-	public static int tir = 0;
+	public enum TypeTirNormal implements TypeMouv {Tir};
 
 	//constructeur des monstres 
-	public T_normal(Object obj,int _type_mouv,int current_frame){
+	public T_normal(Object obj,TypeMouv _type_mouv,int current_frame){
 		super();
 		type_mouv=_type_mouv;
 		if(TypeObject.isTypeOf(obj, TypeObject.FLECHE))
@@ -72,7 +73,7 @@ public class T_normal extends Mouvement_tir{
 		else
 			System.err.println("Unkown type "+ obj.getClass().getName());
 	}
-	public T_normal(Object obj,int _type_mouv, int current_frame,Animation _animation){
+	public T_normal(Object obj,TypeMouv _type_mouv, int current_frame,Animation _animation){
 		this(obj,_type_mouv,current_frame);
 		animation = _animation;
 	}
@@ -91,26 +92,23 @@ public class T_normal extends Mouvement_tir{
 		return new T_normal(obj,type_mouv,animation.getStartFrame(),animation);
 	}
 	@Override
-	public void setSpeed(Collidable object, int anim) {
+	public Vitesse getSpeed(Collidable object, int anim) {
 		if(TypeObject.isTypeOf(object, TypeObject.FLECHE))
 		{
 			Fleche f = (Fleche)object;
 			int speed_norm = (int)(30.0 / Config.ratio_fps());
 			if(TypeObject.isTypeOf(object, TypeObject.GRAPPIN))
 				speed_norm = (int)(60.0 / Config.ratio_fps());//60
-			Vitesse vit = object.convertSpeed(speed_norm,object.rotation);
-			object.localVit.x=(vit.x);
-			object.localVit.y=(vit.y);
+			return object.convertSpeed(speed_norm,object.rotation);
 		}
 		else if(TypeObject.isTypeOf(object, TypeObject.TIR_SPIREL))
 		{
 			int speed_norm = (int)(10.0 / Config.ratio_fps());
-			Vitesse vit = object.convertSpeed(speed_norm,object.rotation);
-			object.localVit.x=(vit.x);
-			object.localVit.y=(vit.y);
+			return object.convertSpeed(speed_norm,object.rotation);
 		}
-		else
+		else{
 			System.err.println("Unkown type "+ object.getClass().getName());
+			return null;}
 	}
 	@Override
 	public String droite_gauche(Object obj,int anim) {

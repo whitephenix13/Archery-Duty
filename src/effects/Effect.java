@@ -53,7 +53,7 @@ public abstract class Effect extends Collidable{
 	public List<Hitbox> hitbox_rotated = new ArrayList<Hitbox>();//used to transform the initial hitbox into a rotated one
 
 	public boolean isWorldCollider =false; //set to true if this object should be consider as a bloc for collision. Used in roche_effect
-	
+	public boolean isProjectile = false; //set to true if this object should be consider as a projectile for projectile/projectile and projectile/heros collision
 	/**
 	 * 
 	 * @param _normalCollision
@@ -103,7 +103,7 @@ public abstract class Effect extends Collidable{
 	}*/
 	public void onUpdate(AbstractModelPartie partie, boolean last) {
 		draw_tr=computeTransformDraw(partie);
-		hitbox_rotated = Hitbox.convertHitbox(hitbox, partie.INIT_RECT, draw_tr,new Point(xpos(),ypos()), partie.getScreenDisp());
+		hitbox_rotated = Hitbox.convertHitbox(hitbox, draw_tr,new Point(xpos(),ypos()), partie.getScreenDisp());
 	}
 	/** call in deplace, apply relative effects to collidable to which the effect is attached to. For speed modifiers, use getModifiedSpeed*/
 	public abstract void updateOnCollidable(AbstractModelPartie partie,Entitie attacher);
@@ -140,9 +140,16 @@ public abstract class Effect extends Collidable{
 	protected void updatePos(AbstractModelPartie partie)
 	{
 	}
-	protected Point setFirstPos(Point effCenter)
+	protected Point setFirstPos(AbstractModelPartie partie,Point effCenter)
 	{
-		return new Point((int)pointCollision.x+correctedPointCollision.x-effCenter.x, (int)pointCollision.y+correctedPointCollision.y-effCenter.y);
+		if(pointCollision!=null)
+			return new Point((int)pointCollision.x+correctedPointCollision.x-effCenter.x, (int)pointCollision.y+correctedPointCollision.y-effCenter.y);
+		else
+		{
+			//get the tip of the arrow
+			Point arrowTip = getArrowTip(partie);
+			return new Point(arrowTip.x-effCenter.x,arrowTip.y-effCenter.y);
+		}
 
 	}
 	protected Point getArrowTip(AbstractModelPartie partie)
@@ -181,11 +188,11 @@ public abstract class Effect extends Collidable{
 
 
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace, boolean update_with_speed) {
+	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
 		updatePos(partie);
 		anim=animation.update(anim,partie.getFrame(),1);
 		//doit deplace, change anim
-		boolean[] res = {true,false};
+		boolean[] res = {!getNeedDestroy(),false};
 		return res;
 	}
 	
@@ -240,5 +247,12 @@ public abstract class Effect extends Collidable{
 	@Override
 	public void resetVarDeplace(boolean speedUpdated) {		
 	}
+	
+	@Override
+	public Hitbox getNextEstimatedHitbox(AbstractModelPartie partie,double newRotation,int anim)
+	{
+		throw new java.lang.UnsupportedOperationException("Not supported yet.");
+	}
+
 
 }

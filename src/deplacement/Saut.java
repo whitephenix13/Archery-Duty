@@ -12,18 +12,15 @@ import option.Config;
 import personnage.Heros;
 import types.Hitbox;
 import types.TypeObject;
+import types.Vitesse;
 
 public class Saut extends Mouvement_perso{
 
-	public static int jump_gauche = 0;
-	public static int fall_gauche = 1;
-	public static int land_gauche = 2;
-	public static int jump_droite = 3;
-	public static int fall_droite = 4;
-	public static int land_droite = 5;
+	public enum TypeSaut implements TypeMouv {JumpGauche,FallGauche,LandGauche,JumpDroite,FallDroite,LandDroite };
+
 
 	//constructeur
-	public Saut(Object obj,int _type_mouv,int current_frame) {
+	public Saut(Object obj,TypeMouv _type_mouv,int current_frame) {
 		super();
 		type_mouv=_type_mouv;
 		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
@@ -46,17 +43,17 @@ public class Saut extends Mouvement_perso{
 			hitbox = Hitbox.createHitbox(hitboxCreation);
 			//animation frame, current_frame, start_index, end_index
 			int start_index=0;int end_index=0;
-			if(type_mouv==jump_gauche){
+			if(type_mouv.equals(TypeSaut.JumpGauche)){
 				start_index=0;end_index=1;}
-			else if(type_mouv==fall_gauche){
+			else if(type_mouv.equals(TypeSaut.FallGauche)){
 				start_index=1;end_index=2;}
-			else if(type_mouv==land_gauche){
+			else if(type_mouv.equals(TypeSaut.LandGauche)){
 				start_index=2;end_index=3;}
-			else if(type_mouv==jump_droite){
+			else if(type_mouv.equals(TypeSaut.JumpDroite)){
 				start_index=3;end_index=4;}
-			else if(type_mouv==fall_droite){
+			else if(type_mouv.equals(TypeSaut.FallDroite)){
 				start_index=4;end_index=5;}
-			else if(type_mouv==land_droite){
+			else if(type_mouv.equals(TypeSaut.LandDroite)){
 				start_index=5;end_index=6;}
 			animation.start(Arrays.asList(1,1,2,1,1,2), current_frame, start_index, end_index);
 
@@ -81,22 +78,22 @@ public class Saut extends Mouvement_perso{
 			hitbox = Hitbox.createHitbox(hitboxCreation);
 			//animation frame, current_frame, start_index, end_index
 			int start_index=0;int end_index=0;
-			if(type_mouv==jump_gauche){
+			if(type_mouv.equals(TypeSaut.JumpGauche)){
 				start_index=0;end_index=1;}
-			else if(type_mouv==fall_gauche){
+			else if(type_mouv.equals(TypeSaut.FallGauche)){
 				start_index=1;end_index=2;}
-			else if(type_mouv==land_gauche){
+			else if(type_mouv.equals(TypeSaut.LandGauche)){
 				start_index=2;end_index=3;}
-			else if(type_mouv==jump_droite){
+			else if(type_mouv.equals(TypeSaut.JumpDroite)){
 				start_index=3;end_index=4;}
-			else if(type_mouv==fall_droite){
+			else if(type_mouv.equals(TypeSaut.FallDroite)){
 				start_index=4;end_index=5;}
-			else if(type_mouv==land_droite){
+			else if(type_mouv.equals(TypeSaut.LandDroite)){
 				start_index=5;end_index=6;}
 			animation.start(Arrays.asList(5,5), current_frame, start_index, end_index);
 		}
 	}
-	public Saut(Object obj,int _type_mouv, int current_frame,Animation _animation){
+	public Saut(Object obj,TypeMouv _type_mouv, int current_frame,Animation _animation){
 		this(obj,_type_mouv,current_frame);
 		animation = _animation;
 	}
@@ -113,8 +110,55 @@ public class Saut extends Mouvement_perso{
 	public Mouvement Copy(Object obj) {
 		return new Saut(obj,type_mouv,animation.getStartFrame(),animation);
 	}
+	
 	@Override
 	public void setSpeed(Collidable object, int anim) {
+		
+		Heros heros = null; 
+		Vitesse vit = getSpeed(object,anim);
+		
+		//reset variables saut to ensure coherency
+		if(TypeObject.isTypeOf(object, TypeObject.HEROS))
+		{
+			if (object instanceof Heros) 
+				heros = (Heros) object;
+			
+			if(heros.debutSaut)
+				heros.debutSaut=false;
+			
+			if(heros.sautGlisse)
+				heros.sautGlisse=false;
+			
+			else if(heros.sautAccroche)
+				heros.sautAccroche=false;
+			
+			else
+			{
+
+				if (heros.deplaceSautDroit  && !heros.last_colli_right && !heros.sautGlisse)
+				{
+					if(object.localVit.x<0)//change direction in air
+						heros.runBeforeJump=false;
+					//on attend que le joueur réappui sur la touche de direction pour redeplacer
+					heros.deplaceSautDroit= false;
+				}
+				else if (heros.deplaceSautGauche && ! heros.last_colli_left  && !heros.sautGlisse)
+				{
+					if(object.localVit.x>0)//change direction in air
+						heros.runBeforeJump=false;
+					//on attend que le joueur réappui sur la touche de direction pour redeplacer
+					heros.deplaceSautGauche= false;
+				}
+			}
+		}
+
+		if(vit==null)
+			return;
+		object.localVit.x=(vit.x);
+		object.localVit.y=(vit.y);
+	}
+	@Override
+	public Vitesse getSpeed(Collidable object, int anim) {
 
 		if(TypeObject.isTypeOf(object, TypeObject.HEROS))
 		{
@@ -130,54 +174,31 @@ public class Saut extends Mouvement_perso{
 			final double vitSaut = (Config.i_ratio_fps()*(-11) + Config.i_ratio_fps()*(Config.i_ratio_fps()+1)/2 * Gravite.gravity_norm ); //-16 normalement 
 			
 			if(heros.sautGlisse)
-			{
-				object.localVit.x=(varVit * (heros.droite_gauche(anim).equals(Mouvement.GAUCHE) ? -1 : 1));
-				heros.sautGlisse=false;
-				object.localVit.y=(vitSaut);
-			}
+				return new Vitesse((varVit * (heros.droite_gauche(anim).equals(Mouvement.GAUCHE) ? -1 : 1)),vitSaut);
+			
 			else if(heros.sautAccroche)
-			{
-				heros.sautAccroche=false;
-				object.localVit.y=(vitSaut);
-			}
+				return new Vitesse(object.localVit.x,vitSaut);
+			
 			else
 			{
 				if(heros.debutSaut) 
-				{
-					object.localVit.y=(vitSaut);
-					heros.debutSaut =false;
-				}
+					return new Vitesse(object.localVit.x,vitSaut);
 				else if(heros.finSaut || (anim == 2 || anim == 5))
-				{
-					object.localVit.y=(0);
-				}
+					return new Vitesse(object.localVit.x,0);
+				
 				if (heros.deplaceSautDroit  && !heros.last_colli_right && !heros.sautGlisse)
 				{
-					if(object.localVit.x<0)//change direction in air
-						heros.runBeforeJump=false;
-
 					if(object.localVit.x<(vitMax- varVit))
-						object.localVit.x+=(varVit);
+						return new Vitesse(object.localVit.x+varVit,object.localVit.y);
 					else 
-						object.localVit.x=(vitMax);
-
-					//on attend que le joueur réappui sur la touche de direction pour redeplacer
-					heros.deplaceSautDroit= false;
-					return;
+						return new Vitesse(vitMax,object.localVit.y);
 				}
-				if (heros.deplaceSautGauche && ! heros.last_colli_left  && !heros.sautGlisse)
+				else if (heros.deplaceSautGauche && ! heros.last_colli_left  && !heros.sautGlisse)
 				{
-					if(object.localVit.x>0)//change direction in air
-						heros.runBeforeJump=false;
-
 					if(object.localVit.x>(-1*vitMax+ varVit))
-						object.localVit.x-=(varVit);
+						return new Vitesse(object.localVit.x-varVit,object.localVit.y);
 					else 
-						object.localVit.x=(-1*vitMax);
-
-					//on attend que le joueur réappui sur la touche de direction pour redeplacer
-					heros.deplaceSautGauche= false;
-					return;
+						return new Vitesse(-1*vitMax,object.localVit.y);
 				}
 			}
 		}
@@ -191,18 +212,16 @@ public class Saut extends Mouvement_perso{
 			int yspeed=(int)(15.0 / Config.ratio_fps());//15000
 
 			if(spirel.peutSauter)
-			{
-				object.localVit.y=(-1*yspeed);
-			}
+				return new Vitesse(object.localVit.x,-1*yspeed);
+			
 			if(spirel.sautGauche && ! spirel.sautDroit)
-			{
-				object.localVit.x=(-1*xspeed);
-			}
+				return new Vitesse(-1*xspeed,object.localVit.y);
+			
 			if(spirel.sautDroit && ! spirel.sautGauche)
-			{
-				object.localVit.x=(xspeed);
-			}
+				return new Vitesse(xspeed,object.localVit.y);
+			
 		}
+		return null;
 	}
 	@Override
 	public String droite_gauche(Object obj,int anim) {

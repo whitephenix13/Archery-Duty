@@ -2,6 +2,7 @@ package types;
 
 import java.awt.Point;
 import java.awt.Polygon;
+import java.util.List;
 
 import javax.vecmath.Vector2d;
 
@@ -165,7 +166,7 @@ public class Bloc extends Collidable{
 		//do nothing
 	}
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace, boolean update_with_speed) {
+	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
 		//Do nothing
 		boolean[] res = {false,false};
 		return res;
@@ -199,5 +200,9 @@ public class Bloc extends Collidable{
 	public Vitesse getGlobalVit(AbstractModelPartie partie) {
 		return null;
 	}
-
+	@Override
+	public Hitbox getNextEstimatedHitbox(AbstractModelPartie partie,double newRotation,int anim)
+	{
+		throw new java.lang.UnsupportedOperationException("Not supported yet.");
+	}
 }

@@ -193,15 +193,16 @@ public class Grappin_effect extends Effect{
 	
 	@Override 
 	public AffineTransform computeTransformDraw(AbstractModelPartie partie) {
-		Point taille = new Point(xtaille.get(anim),ytaille.get(anim));
+		Point middle = new Point(xtaille.get(anim)/2,ytaille.get(anim)/2);
+		
+		//shift value to get to the middle right of the effect
+		int xshift =(int) ( middle.x * xplace * Math.cos(0) - middle.y * yplace * Math.sin(0));
+		int yshift =(int) ( middle.x * xplace * Math.sin(0) + middle.y * yplace * Math.cos(0));
 
-		int xshift =(int) ( taille.x /2 * xplace * Math.cos(0) - taille.y /2 * yplace * Math.sin(0));
-		int yshift =(int) ( taille.x /2 * xplace * Math.sin(0) + taille.y /2 * yplace * Math.cos(0));
-
-
+		//position is top left 
 		Point pos = new Point(middleTailArrow.x-xshift+partie.xScreendisp,middleTailArrow.y-yshift+partie.yScreendisp);
-		Point anchor = new Point(xshift,yshift);
-		AffineTransform tr = partie.getRotatedTransform(pos,anchor, taille, rotation);
+		Point anchor = new Point(xshift,yshift);//rotate around middle right 
+		AffineTransform tr = partie.getRotatedTransform(pos,anchor, rotation);
 		return tr;
 
 	}

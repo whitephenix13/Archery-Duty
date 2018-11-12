@@ -95,17 +95,7 @@ public class Vent_effect extends Effect{
 		return new Vitesse(x_vit,y_vit);
 	}
 	
-	public Vector2d getObjMid(AbstractModelPartie partie, Collidable obj)
-	{
-		Point _pos = new Point(obj.xpos(),obj.ypos());
-		if(obj.fixedWhenScreenMoves)
-		{
-			_pos.x-=partie.xScreendisp;_pos.y-=partie.yScreendisp;
-		}
 
-		//find where object is precisely using the middle of the hitbox
-		return Hitbox.getHitboxCenter(obj.getHitbox(partie.INIT_RECT,partie.getScreenDisp()));
-	}
 	Vitesse computeProjectSpeed(AbstractModelPartie partie,Collidable obj)
 	{
 		boolean isAffected = Collision.testcollisionObjects(partie, this, obj,false);
@@ -119,7 +109,7 @@ public class Vent_effect extends Effect{
 		//else compute vitesse for the first time 
 	
 		//find where object is precisely using the middle of the hitbox
-		Vector2d obj_mid = getObjMid(partie,obj);
+		Vector2d obj_mid = Hitbox.getObjMid(partie,obj);
 
 		return computeProjectSpeed(partie,obj_mid,super.getArrowTip(partie),getEJECT_DISTANCE(),anim);
 	}
@@ -134,7 +124,7 @@ public class Vent_effect extends Effect{
 	}
 
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace, boolean update_with_speed) {
+	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
 		updatePos(partie);
 		int prev_anim =anim;
 		anim=animation.update(anim,partie.getFrame(),1);
@@ -173,7 +163,7 @@ public class Vent_effect extends Effect{
 
 		Point firstPos = new Point();
 		if(worldCollision)
-			firstPos = super.setFirstPos(new Point(x_eff_center,y_eff_center));
+			firstPos = super.setFirstPos(partie,new Point(x_eff_center,y_eff_center));
 		else{
 			//get the tip of the arrow
 			Point arrowTip = super.getArrowTip(partie);

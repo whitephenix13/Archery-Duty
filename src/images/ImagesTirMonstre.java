@@ -4,6 +4,7 @@ import java.awt.Image;
 import java.util.ArrayList;
 
 import deplacement_tir.Mouvement_tir;
+import deplacement_tir.Mouvement_tir.TypeTir;
 import loading.LoadMediaThread;
 import loading.OnLoadingCallback;
 import monstre.TirMonstre;
@@ -34,7 +35,7 @@ public class ImagesTirMonstre extends LoadMediaThread{
 		ArrayList<Image> im = new ArrayList<Image>();
 		if(TypeObject.isTypeOf(tir, TypeObject.TIR_SPIREL))
 		{
-			if(tir.deplacement.IsDeplacement(Mouvement_tir.tir_normal))
+			if(tir.deplacement.IsDeplacement(TypeTir.T_normal))
 				im.add(im_SP_tir.get(tir.anim));
 		}
 

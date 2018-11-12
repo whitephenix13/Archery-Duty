@@ -1,11 +1,11 @@
 package deplacement_tir;
 
 import deplacement.Mouvement;
+import deplacement.TypeMouv;
 
 public abstract class Mouvement_tir extends Mouvement{
 
-	
-	 public static String tir_normal= "T_normal";
+	public enum TypeTir implements TypeMouv {T_normal};
 	 
 	 /*public static String tir_explosif= "T_explosif";
 	 *public static String tir_vent= "T_vent"; 
@@ -20,9 +20,9 @@ public abstract class Mouvement_tir extends Mouvement{
 	}
 	
 	@Override
-	public boolean IsDeplacement(String s)
+	public boolean IsDeplacement(TypeMouv type)
 	{
-		return this.getClass().getName().equals("deplacement_tir." + s);
+		return this.getClass().getName().equals("deplacement_tir." + type.toString());
 	}
 	
 

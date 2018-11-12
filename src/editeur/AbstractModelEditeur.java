@@ -120,8 +120,8 @@ public abstract class AbstractModelEditeur extends DisplayLoader implements Obse
 	{
 		tailleBloc=100;
 		dezoomFactor=0.2f;
-		xViewPort = (InterfaceConstantes.ABS_MAX-InterfaceConstantes.LARGEUR_FENETRE/tailleBloc)*100/2;
-		yViewPort = (InterfaceConstantes.ORD_MAX-InterfaceConstantes.HAUTEUR_FENETRE/tailleBloc)*100/2;
+		xViewPort = (InterfaceConstantes.ABS_MAX-InterfaceConstantes.WINDOW_WIDTH/tailleBloc)*100/2;
+		yViewPort = (InterfaceConstantes.ORD_MAX-InterfaceConstantes.WINDOW_HEIGHT/tailleBloc)*100/2;
 
 		monde=new Monde();
 		tabEditeurMonstre= new ArrayList <StockageMonstre> ();

@@ -57,13 +57,13 @@ public class AffichageChoixNiveau extends JFrame implements Observer{
 		panelInterraction.setLayout(null);
 		//panelInterraction.setLayout(new GridLayout(1,2));
 		controlerChoix.choix.resetBouton(boutonJouer,"Jouer");
-		boutonJouer.setBounds(50,InterfaceConstantes.HAUTEUR_FENETRE/4,300,50);
+		boutonJouer.setBounds(50,InterfaceConstantes.WINDOW_HEIGHT/4,300,50);
 		boutonJouer.setVisible(true);
 		boutonJouer.setEnabled(true);
 		
 		
 		controlerChoix.choix.resetBouton(boutonRetour,"Retour");
-		boutonRetour.setBounds(InterfaceConstantes.LARGEUR_FENETRE -350 ,InterfaceConstantes.HAUTEUR_FENETRE/4,300,50);
+		boutonRetour.setBounds(InterfaceConstantes.WINDOW_WIDTH -350 ,InterfaceConstantes.WINDOW_HEIGHT/4,300,50);
 		boutonRetour.setVisible(true);
 		boutonRetour.setEnabled(true);
 		

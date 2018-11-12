@@ -11,6 +11,7 @@ import deplacement.Deplace;
 import deplacement.Mouvement;
 import deplacement_tir.Mouvement_tir;
 import deplacement_tir.T_normal;
+import deplacement_tir.T_normal.TypeTirNormal;
 import music.MusicBruitage;
 import partie.AbstractModelPartie;
 import principal.InterfaceConstantes;
@@ -28,13 +29,20 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	 * 
 	 * @return le nombre de tour de boucle a attendre avant de redeplacer le monstre
 	 */	
-	public TirSpirel(AbstractModelPartie partie,int _xpos, int _ypos,int _anim, double _rotation,int current_frame,float damageMultiplier,float _speedFactor)
+	public TirSpirel(AbstractModelPartie partie,int _x_mid_pos, int _y_mid_pos,int _anim, double _rotation,int current_frame,float damageMultiplier,float _speedFactor)
 	{
 		super.init();
-		xpos_sync(_xpos);
-		ypos_sync(_ypos);
+		
+		deplacement= new T_normal(this,TypeTirNormal.Tir,current_frame);
+	
+		//Desired location for the projectile: spirel pos + middle of spirel = projectile pos + middle back of projectile
+		//projectile pos = (xpos,ypos) + (xtaille/2,ytaille/2) - (-ytailleproj/2 * sin(angle), ytailleproj/2 * cos(angle)) 
+		int x_tir_pos =  (int) (_x_mid_pos + deplacement.ytaille.get(0) * 0.5f  * Math.sin(_rotation));
+		int y_tir_pos =  (int) (_y_mid_pos - deplacement.ytaille.get(0) * 0.5f  * Math.cos(_rotation));
+		
+		xpos_sync(x_tir_pos);
+		ypos_sync(y_tir_pos);
 		anim=_anim;
-		deplacement= new T_normal(this,Attente.attente_gauche,current_frame);
 		rotation = _rotation;
 		needDestroy=false;
 		localVit=new Vitesse(0,0);
@@ -50,11 +58,11 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 		//on active la musique car le tir part directement 
 		MusicBruitage.startBruitage("laser");
 		//set transform 
-		draw_tr = partie.getRotatedTransform(new Point(xpos(),ypos()),new Point(0,0), 
-				new Point(deplacement.xtaille.get(anim),deplacement.ytaille.get(anim)), rotation);
+		draw_tr = partie.getRotatedTransform(new Point(xpos(),ypos()),
+				new Point(0,0), rotation); //top left anchor is set to 0 since the computation for the position is such that the top left corner is at the correct location
 
 		//rotate hitbox
-		deplacement.hitbox_rotated=Hitbox.convertHitbox(deplacement.hitbox,partie.INIT_RECT,draw_tr,new Point(xpos(),ypos()),new Point(0,0));
+		deplacement.hitbox_rotated=Hitbox.convertHitbox(deplacement.hitbox,draw_tr,new Point(xpos(),ypos()),new Point(0,0));
 
 		//If collide, destroy it 
 		if(Collision.isWorldCollision(partie, this, true))
@@ -68,7 +76,7 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 		return null;
 	}
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie,Deplace deplace, boolean update_with_speed){
+	public boolean[] deplace(AbstractModelPartie partie,Deplace deplace){
 		boolean animationChanged = false;
 		//update rotation : not needed 
 		//switch anim 
