@@ -9,7 +9,7 @@ import javax.swing.JComponent;
 import javax.swing.KeyStroke;
 import javax.swing.plaf.basic.BasicInternalFrameTitlePane.MoveAction;
 
-import partie.InputPartie;
+import partie.modelPartie.InputPartie;
 
 public class InputOption {
 	private AbstractControlerOption controlerOption;

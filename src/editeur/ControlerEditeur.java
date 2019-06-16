@@ -2,6 +2,7 @@ package editeur;
 
 import javax.swing.JOptionPane;
 
+import partie.bloc.Bloc.TypeBloc;
 import serialize.Serialize;
 
 public class ControlerEditeur extends AbstractControlerEditeur{
@@ -21,12 +22,12 @@ public class ControlerEditeur extends AbstractControlerEditeur{
 		else if(edit.texture.equals("Delete"))
 			edit.deleteMonster(xpos, ypos);
 		
-		else if (!edit.texture.isEmpty())
+		else if (edit.texture != null && !edit.texture.equals(TypeBloc.NONE))
 			edit.drawTerrain(xpos, ypos);
 			
 	}
 
-	public void setTexture(String texture)
+	public void setTexture(TypeBloc texture)
 	{
 		edit.texture=texture;
 	}

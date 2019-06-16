@@ -3,16 +3,14 @@ package images;
 import java.awt.Image;
 import java.util.ArrayList;
 
-import deplacement_tir.Mouvement_tir;
-import deplacement_tir.Mouvement_tir.TypeTir;
-import loading.LoadMediaThread;
-import loading.OnLoadingCallback;
-import monstre.TirMonstre;
-import types.Projectile;
-import types.TypeObject;
+import gameConfig.TypeObject;
+import loading.LoaderItem;
+import partie.deplacement.projectile.Mouvement_projectile.TypeTir;
+import partie.projectile.Projectile;
 
-public class ImagesTirMonstre extends LoadMediaThread{
-
+public class ImagesTirMonstre extends LoaderItem{
+	
+	private static String path ="resources/projectile/tirMonstre/";
 	ArrayList<Image> im_SP_tir= new ArrayList<Image>();
 	
 	public ImagesTirMonstre()
@@ -20,32 +18,27 @@ public class ImagesTirMonstre extends LoadMediaThread{
 	}
 	
 	@Override
-	public void loadMedia()
+	public void run()
 	{
-		if(mediaLoaded)
+		if(alreadyLoaded)
 			return;
 		
 		for(int i=0; i<3; ++i)
-			im_SP_tir.add(getIm("resources/TirMonstre/monstre.TirSpirel/"+i+".png",true));
-		setPercentage(100);
-		mediaLoaded=true;
+			im_SP_tir.add(getIm(path+"spirel/"+i+".png",true));
+		percentage = 100;;
+		alreadyLoaded=true;
 	}
 	public ArrayList<Image> getImage(Projectile tir)
 	{
 		ArrayList<Image> im = new ArrayList<Image>();
 		if(TypeObject.isTypeOf(tir, TypeObject.TIR_SPIREL))
 		{
-			if(tir.deplacement.IsDeplacement(TypeTir.T_normal))
-				im.add(im_SP_tir.get(tir.anim));
+			if(tir.getDeplacement().IsDeplacement(TypeTir.T_normal))
+				im.add(im_SP_tir.get(tir.getAnim()));
 		}
 
 		return im;
 	}
 
-	@Override
-	public void loadMedia(String media_categorie, String filename) {
-		// TODO Auto-generated method stub
-		
-	}
 
 }

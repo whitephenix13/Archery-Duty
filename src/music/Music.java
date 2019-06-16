@@ -1,29 +1,23 @@
 package music;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.HashMap;
 import java.util.Map;
 
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
 
-import loading.LoadMediaThread;
+import gameConfig.InterfaceConstantes;
 import option.Config;
-import principal.InterfaceConstantes;
 
-public class Music extends LoadMediaThread implements InterfaceConstantes{
+public class Music implements InterfaceConstantes{
 
 	public static Music me =null; 
+	public LoaderMusic loaderMusic = null;
+	
 	static double gain = Config.bruitageVolume;
 	public static String musiqueEnCours ="";
-	static Map<String,Clip> mapClips = new HashMap<String,Clip>();
+	//static Map<String,Clip> mapClips = new HashMap<String,Clip>();
 	boolean isSlowed = false;
-	boolean soundFound=true;
+	//boolean soundFound=true;
 
 	public static void init()
 	{
@@ -31,68 +25,14 @@ public class Music extends LoadMediaThread implements InterfaceConstantes{
 			me=new Music();
 	}
 	private Music()
-	{}
-	@Override
-	public void loadMedia() {
-		//fill the hash map
-		if(mediaLoaded)
-			return;
-		
-		addToMap(musiqueOption);
-		setPercentage((int)100.0/5);
-		addToMap(musiquePrincipal);
-		setPercentage((int)200.0/5);
-		addToMap(musiquePartie);
-		setPercentage((int)300.0/5);
-		addToMap(musiqueEditeur);
-		setPercentage((int)400.0/5);
-		addToMap(musiqueSlow);
-		
-		setPercentage(100);
-		mediaLoaded=true;
-	}
-
-	@Override
-	public void loadMedia(String media_categorie, String filename) {
-		URL url = getClass().getClassLoader().getResource("resources/musique/"+filename+".wav");
-		if(url!=null) { 
-			addToMap(filename);
-		}
-		setPercentage(100);
-	}
-	public void addToMap(String nom)
 	{
-		Clip c;
-		AudioInputStream audio; 
-		try {
-			if(me==null || me.mapClips.containsKey(nom))
-				return;
-			audio= AudioSystem.getAudioInputStream(
-					getClass().getClassLoader().getResource("resources/musique/"+nom+".wav"));
-			c=AudioSystem.getClip();
-			c.open(audio);
-			mapClips.put(nom,c);
-
-		} catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
-			e.printStackTrace();
-		}
-		catch(java.lang.IllegalArgumentException e)
-		{
-			soundFound=false;
-		}
-
+		loaderMusic = new LoaderMusic();
 	}
-	public void addToMap(String[] noms)
-	{
-		for(String s : noms)
-		{
-			addToMap(s);
-		}
-	}
+
 
 	public void startMusic()
 	{
-		if(!soundFound)
+		if(!loaderMusic.isSoundFound())
 			return;
 
 		getClip(false).setFramePosition(0);
@@ -107,7 +47,7 @@ public class Music extends LoadMediaThread implements InterfaceConstantes{
 	}
 	public void stopMusic()
 	{
-		if(!soundFound)
+		if(!loaderMusic.isSoundFound())
 			return;
 
 		if(getClip(false).isActive())
@@ -124,11 +64,13 @@ public class Music extends LoadMediaThread implements InterfaceConstantes{
 	
 	Clip getClip(boolean slowedMusic)
 	{
+		Map<String,Clip> mapClips = loaderMusic.getMapClips();
 		return(slowedMusic? mapClips.get(musiqueEnCours+"_s") :mapClips.get(musiqueEnCours) );
 	}
 
-	static boolean slowVersionExist()
+	boolean slowVersionExist()
 	{
+		Map<String,Clip> mapClips = loaderMusic.getMapClips();
 		return(mapClips.containsKey(musiqueEnCours+"_s"));
 	}
 	/**
@@ -137,12 +79,13 @@ public class Music extends LoadMediaThread implements InterfaceConstantes{
 	 * @param nouvGain, nouvelle valeur du gain entre 0 et 1 
 	 * 
 	 */
-	public static void volumeControl(Double nouvGain)
+	public void volumeControl(Double nouvGain)
 	{
 		gain=nouvGain;
 		Config.musicVolume=gain;
 		float dB = (float) (Math.log(gain) / Math.log(10.0) * 30.0);
-
+		Map<String,Clip> mapClips = loaderMusic.getMapClips();
+		
 		FloatControl gainControl = (FloatControl) mapClips.get(musiqueEnCours).getControl(FloatControl.Type.MASTER_GAIN);
 		gainControl.setValue(dB);
 
@@ -156,7 +99,7 @@ public class Music extends LoadMediaThread implements InterfaceConstantes{
 	
 	public void slowDownMusic()
 	{
-		if(!soundFound)
+		if(!loaderMusic.isSoundFound())
 			return;
 		if(isSlowed)
 			return;

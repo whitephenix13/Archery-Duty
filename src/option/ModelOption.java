@@ -7,11 +7,10 @@ import java.util.TimerTask;
 import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 
-import menuPrincipal.AbstractModelPrincipal;
+import menu.menuPrincipal.AbstractModelPrincipal;
 import music.Music;
 import music.MusicBruitage;
-import partie.InputPartie;
-import types.Touches;
+import partie.modelPartie.InputPartie;
 
 
 public class ModelOption extends AbstractModelOption{
@@ -29,11 +28,11 @@ public class ModelOption extends AbstractModelOption{
 
 
 	public void setVolumeMusique(ChangeEvent event) {
-		Music.volumeControl((double)((JSlider)event.getSource()).getValue()/100);
+		Music.me.volumeControl((double)((JSlider)event.getSource()).getValue()/100);
 	}
 
 	public void setVolumeBruitage(ChangeEvent event) {
-		MusicBruitage.volumeControl((double)((JSlider)event.getSource()).getValue()/100);
+		MusicBruitage.me.volumeControl((double)((JSlider)event.getSource()).getValue()/100);
 	}
 
 

@@ -14,15 +14,15 @@ import java.util.List;
  */
 import javax.swing.JFrame;
 
-import choixNiveau.AffichageChoixNiveau;
-import credit.AffichageCredit;
 import editeur.AffichageEditeur;
-import menuPrincipal.AbstractModelPrincipal;
-import menuPrincipal.AffichagePrincipal;
-import observer.Observer;
+import gameConfig.InterfaceConstantes;
+import menu.choixNiveau.AffichageChoixNiveau;
+import menu.credit.AffichageCredit;
+import menu.menuPrincipal.AbstractModelPrincipal;
+import menu.menuPrincipal.AffichagePrincipal;
 import option.AffichageOption;
-import partie.AffichagePartie;
-import principal.InterfaceConstantes;
+import partie.modelPartie.AffichagePartie;
+import utils.observer.Observer;
 
 @SuppressWarnings("serial")
 public class Affichage extends JFrame implements InterfaceConstantes, Observer
@@ -40,15 +40,10 @@ public class Affichage extends JFrame implements InterfaceConstantes, Observer
 	/**
 	 * Initialise Affichage
 	 */  
-	public Affichage(AffichagePrincipal _affichagePrincipal,AffichageOption _affichageOption, 
-			AffichageEditeur _affichageEditeur,AffichageCredit _affichageCredit,AffichageChoixNiveau _affichageChoix,AffichagePartie _affichagePartie)
+	public Affichage(AffichagePrincipal _affichagePrincipal)
 	{		
 		affichagePrincipal=_affichagePrincipal;
-		affichageOption = _affichageOption;
-		affichageEditeur=_affichageEditeur;
-		affichageCredit=_affichageCredit;
-		affichageChoix = _affichageChoix;
-		affichagePartie=_affichagePartie;
+
 
 		this.setFocusable(true);
 		this.setJMenuBar(null);
@@ -64,7 +59,26 @@ public class Affichage extends JFrame implements InterfaceConstantes, Observer
 		actuAffichage();
 
 	}
-
+	
+	/***
+	 * Normally those references are set in the constructor. However in order to allow a loading screen (because model partie might take some time to load), we
+	 * first create Affichage without those and then add them when they are loaded 
+	 * @param _affichageOption
+	 * @param _affichageEditeur
+	 * @param _affichageCredit
+	 * @param _affichageChoix
+	 * @param _affichagePartie
+	 */
+	public void setOtherAffichageReferences(AffichageOption _affichageOption, 
+			AffichageEditeur _affichageEditeur,AffichageCredit _affichageCredit,AffichageChoixNiveau _affichageChoix,AffichagePartie _affichagePartie)
+	{
+		affichageOption = _affichageOption;
+		affichageEditeur=_affichageEditeur;
+		affichageCredit=_affichageCredit;
+		affichageChoix = _affichageChoix;
+		affichagePartie=_affichagePartie;
+	}
+	
 	protected Image getImage(String name)
 	{
 		return Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/icons/"+name));
@@ -77,7 +91,8 @@ public class Affichage extends JFrame implements InterfaceConstantes, Observer
 	{
 		if(AbstractModelPrincipal.changeFrame)
 		{
-			affichageOption.retour.setContentAreaFilled(false);
+			if(affichageOption != null)
+				affichageOption.retour.setContentAreaFilled(false);
 
 			if(this.getJMenuBar()!= null){this.setJMenuBar(null);}
 			if(AbstractModelPrincipal.modeActuel=="Principal")
@@ -145,7 +160,6 @@ public class Affichage extends JFrame implements InterfaceConstantes, Observer
 		else if (mode=="Partie")
 		{
 			affichagePartie.addListenerPartie();
-			//addListenerPartie(partieRap);
 		}
 		else if (mode=="Principal")
 		{
@@ -176,7 +190,6 @@ public class Affichage extends JFrame implements InterfaceConstantes, Observer
 		else if (mode=="Partie")
 		{
 			affichagePartie.removeListenerPartie();
-			//removeListenerPartie(partieRap);
 		}
 		else if (mode=="ChoixNiveau")
 		{

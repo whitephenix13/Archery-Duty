@@ -1,23 +1,37 @@
 package todo;
 
-import types.TypeObject;
-
 public class Todo {
 	
-	//Version 0.2.4
+	//Version 0.2.4	
+	
+	//TODO: check that the hitbox is not recomputed if the heros does not move (also watch out when setAnim is called just for testing a collision and then reset)
+	//TODO: check that the draw_tr is not recomputed if the projectile does not move 
+	//TODO: avoid creating a lot of bloc vide when deserializing a world => handle null in bloc[][] to save some space
+	//TODO: Split bloc class used for editeur and bloc used for partie 
+	
+	//TODO: Improve DebugObjectCreation: narrow the try catch from sampleAllocation to only take into account the object (which seems to be the problem)
+	//TODO: Improve DebugObjectCreation: Create efficient filter system
 
-	//TODO: Correct arrow rotation (doesn't turn around its center) changed fleche *5 + rotatedTrasnform(modelpartie)
-	//TODO: correct roation + hitbox + ... when fleche encochee (to stay consistent)
+	//TODO: lag on start of game 
+	
+	//TODO: Optimize garbage collector (when called takes 200ms)=> first call is when world is created (doesn't impact that much the game);
+	//TODO: wait 3 sec on the world without doing anything and there will be a call of garbage collector taking 70ms  
+	//TODO: check for references that are not released 
+	
+	//TODO: A_Star optimize so that the game doesn't lag => garbage collector make the game lags when too much arrow teleguide are shot 
+	
+	//TODO: remove getMaxBoundingSquare in movement (instead the function was moved to Mouvement Perso and Mouvement Tir in a more generic method
 	//TODO: check that everything that uses rotateTransform still works (fleche, persoTir, tirSprirrel, effectgrappin)
-	//TODO: sometime the arrow just missed the point and then the algo got f** up
-	//TODO: get more accurate hitbox by getting the exact one depending on the rotation of the object ? 
 	//TODO: A_Star: Try with the update path function 
 	//TODO: A_Star: Try with target changing position 
+	//TODO: A_Star: Update the FindTarget function from Fleche_auto_tel to anticipate the location of the enemy
 	//TODO: A_Star: Try with the enemy 
 	//TODO: run the algorithm in a thread and start moving the arrow when the algorithm ended the run. Make sure that the update only change the path when it
 	//finished recomputing it 
+	//TODO: Improve where electrique effect for projectiles are instantiated (they crash to the ground too often)
 	//TODO: remove all TODO
-	//TODO: trail strange when screenmove 
+	
+	//OPTIMIZE: pre create projectiles + animations (ie: arrow) to avoid massive instantiation in game. Ie: recycle existing arrows (less pressure on garbage collector)
 	
 	//MATERIEL
 	// Electrique: Object: create 5 projectiles that give seyeri if they collide with heros, explode x3 if collide with enemy
@@ -65,6 +79,7 @@ public class Todo {
 	//TODO: creer des "blocs" event
 	//TODO: creer un tutoriel
 	//TODO: permettre de replay le niveau: mémoriser les temps et valeurs des "touches down" et "touches released"
+	//TODO: editeur: refactor the code + use correct image loader + add option to convert all world to new version 
 	//TODO: editeur afficher tous les niveaux a charger
 	//TODO: editeur: dans le menu objet, mettre des catégories de niveux
 	//TODO: editeur: mettre un rectangle rouge autour de la zone de spawn de monstre, améliorer en bloc spawnable ?? 

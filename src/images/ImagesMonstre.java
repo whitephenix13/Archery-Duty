@@ -3,15 +3,14 @@ package images;
 import java.awt.Image;
 import java.util.ArrayList;
 
-import deplacement.Mouvement_perso;
-import deplacement.Mouvement_perso.TypeMouvPerso;
-import loading.LoadMediaThread;
-import monstre.Monstre;
-import types.Entitie;
-import types.TypeObject;
+import gameConfig.TypeObject;
+import loading.LoaderItem;
+import partie.deplacement.entity.Mouvement_entity.TypeMouvEntitie;
+import partie.entitie.Entity;
 
-public class ImagesMonstre extends LoadMediaThread{
+public class ImagesMonstre extends LoaderItem{
 
+	public static String path ="resources/entitie/monstre/";
 	ArrayList<Image> im_SP_attente= new ArrayList<Image>();
 	ArrayList<Image> im_SP_marche= new ArrayList<Image>();
 	ArrayList<Image> im_SP_saut= new ArrayList<Image>();
@@ -21,23 +20,23 @@ public class ImagesMonstre extends LoadMediaThread{
 	}
 	
 	@Override
-	public void loadMedia()
+	public void run()
 	{
-		if(mediaLoaded)
+		if(alreadyLoaded)
 			return;
 		
 		for(int i=0; i<2; ++i)
-			im_SP_attente.add(getIm("resources/monstres/spirel/deplacement.Attente/"+i+".gif",true));
-		setPercentage((int) 200.0/8);
+			im_SP_attente.add(getIm(path+"spirel/attente/"+i+".gif",true));
+		percentage =(int)(2*100.0/8);
 
 		for(int i=0; i<4; ++i)
-			im_SP_marche.add(getIm("resources/monstres/spirel/deplacement.Marche/"+i+".gif",true));
-		setPercentage((int) 600.0/8);
+			im_SP_marche.add(getIm(path+"spirel/marche/"+i+".gif",true));
+		percentage =(int)(6*100.0/8);
 				
 		for(int i=0; i<2; ++i)
-			im_SP_saut.add(getIm("resources/monstres/spirel/deplacement.Attente/"+i+".gif",true));
-		setPercentage(100);
-		mediaLoaded=true;
+			im_SP_saut.add(getIm(path+"spirel/attente/"+i+".gif",true));
+		percentage =100;
+		alreadyLoaded=true;
 		
 	}
 	/**
@@ -47,27 +46,21 @@ public class ImagesMonstre extends LoadMediaThread{
 	 * 
 	 * @return l'image a afficher
 	 */
-	public ArrayList<Image> getImage(Entitie monstre)
+	public ArrayList<Image> getImage(Entity monstre)
 	{
 		ArrayList<Image> im = new ArrayList<Image>();
 //				im.add(this.im_electrique_aura.get(fleche.anim));
 
 		if (TypeObject.isTypeOf(monstre, TypeObject.SPIREL))
 		{
-			if(monstre.deplacement.IsDeplacement(TypeMouvPerso.Attente))
-				im.add(im_SP_attente.get(monstre.anim));
-			else if (monstre.deplacement.IsDeplacement(TypeMouvPerso.Marche))
-				im.add(im_SP_marche.get(monstre.anim));
-			else if(monstre.deplacement.IsDeplacement(TypeMouvPerso.Saut))
-				im.add(im_SP_saut.get(monstre.anim));
+			if(monstre.getDeplacement().IsDeplacement(TypeMouvEntitie.Attente))
+				im.add(im_SP_attente.get(monstre.getAnim()));
+			else if (monstre.getDeplacement().IsDeplacement(TypeMouvEntitie.Marche))
+				im.add(im_SP_marche.get(monstre.getAnim()));
+			else if(monstre.getDeplacement().IsDeplacement(TypeMouvEntitie.Saut))
+				im.add(im_SP_saut.get(monstre.getAnim()));
 		}
 		return im;
-	}
-
-	@Override
-	public void loadMedia(String media_categorie, String filename) {
-		// TODO Auto-generated method stub
-		
 	}
 
 

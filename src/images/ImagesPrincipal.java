@@ -1,33 +1,22 @@
 package images;
 
 import java.awt.Image;
-import java.util.ArrayList;
 
-import fleches.Fleche;
-import loading.LoadMediaThread;
+import loading.LoaderItem;
 
-public class ImagesPrincipal extends LoadMediaThread{
+public class ImagesPrincipal extends LoaderItem{
 	public static String BACKGROUND = "background";
 	
 	private Image background = null;
 	@Override
-	public void loadMedia() {
-		if(mediaLoaded)
+	public void run() {
+		if(alreadyLoaded)
 			return;
-		loadMedia("", BACKGROUND);
-		setPercentage(100);
-		mediaLoaded=true;
-		
+		background=getIm("resources/principal.png",true);
+		percentage = 100;		
+		alreadyLoaded=true;
 	}
-	@Override
-	public void loadMedia(String media_categorie, String filename) {
-		if(filename.equals(BACKGROUND))
-		{
-			if(background==null)
-				background=getIm("resources/Principal.png",true);
-		}
-	} 
-	
+
 	public Image getImage(String name)
 	{
 		if(name.equals(BACKGROUND))

@@ -6,7 +6,6 @@ import java.awt.event.MouseEvent;
 import javax.swing.SwingUtilities;
 
 import option.AffichageOption.CustomClickableLabel;
-import types.Touches;
 
 public class ControlerOption extends AbstractControlerOption{
 

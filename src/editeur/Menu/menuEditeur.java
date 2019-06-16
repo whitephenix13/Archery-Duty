@@ -17,9 +17,10 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JTextField;
 
-import menuPrincipal.AbstractModelPrincipal;
 import Affichage.MenuScroller;
 import editeur.AffichageEditeur;
+import menu.menuPrincipal.AbstractModelPrincipal;
+import partie.bloc.Bloc.TypeBloc;
 
 
 public class menuEditeur {
@@ -156,35 +157,35 @@ public class menuEditeur {
 	
 	public void controlTexture(Object source) {
 	if (source == m_souris ){
-		affichageEditeur.controlerEditeur.edit.setTexture("");
+		affichageEditeur.controlerEditeur.edit.setTexture(TypeBloc.VIDE);
 	}
 	else if (source == m_deleteItem ){
-		affichageEditeur.controlerEditeur.edit.setTexture("Delete");
+		affichageEditeur.controlerEditeur.edit.setTexture(TypeBloc.DELETE);
 	}
 	else if (source == m_vide ){
-		affichageEditeur.controlerEditeur.edit.setTexture("vide");
+		affichageEditeur.controlerEditeur.edit.setTexture(TypeBloc.VIDE);
 
 	}
 	else if(source == m_sol) {
-		affichageEditeur.controlerEditeur.edit.setTexture("sol");
+		affichageEditeur.controlerEditeur.edit.setTexture(TypeBloc.SOL);
 	}
 	else if(source == m_terre) {
-		affichageEditeur.controlerEditeur.edit.setTexture("terre");
+		affichageEditeur.controlerEditeur.edit.setTexture(TypeBloc.TERRE);
 	}
 	else if(source == m_ciel) {
-		affichageEditeur.controlerEditeur.edit.setTexture("ciel");
+		affichageEditeur.controlerEditeur.edit.setTexture(TypeBloc.CIEL);
 	}
 	else if(source == m_perso) {
-		affichageEditeur.controlerEditeur.edit.setTexture("perso");
+		affichageEditeur.controlerEditeur.edit.setTexture(TypeBloc.PERSO);
 	}
 	else if(source == m_start) {
-		affichageEditeur.controlerEditeur.edit.setTexture("start");
+		affichageEditeur.controlerEditeur.edit.setTexture(TypeBloc.START);
 	}
 	else if(source == m_end) {
-		affichageEditeur.controlerEditeur.edit.setTexture("end");
+		affichageEditeur.controlerEditeur.edit.setTexture(TypeBloc.END);
 	}
 	else if(source == m_spirel) {
-		affichageEditeur.controlerEditeur.edit.setTexture("spirel");
+		affichageEditeur.controlerEditeur.edit.setTexture(TypeBloc.SPIREL);
 	}
 	
 }

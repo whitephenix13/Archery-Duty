@@ -9,13 +9,13 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import choixNiveau.ModelChoixNiveau;
-import loading.LoadMediaThread;
-import principal.InterfaceConstantes;
-import principal.TypeApplication;
-import types.Bloc;
-import types.Monde;
-import types.StockageMonstre;
+import editeur.StockageMonstre;
+import gameConfig.InterfaceConstantes;
+import menu.choixNiveau.ModelChoixNiveau;
+import partie.bloc.Bloc;
+import partie.bloc.Monde;
+import partie.bloc.Bloc.TypeBloc;
+import utils.TypeApplication;
 
 public class Serialize implements InterfaceConstantes{
 
@@ -26,12 +26,16 @@ public class Serialize implements InterfaceConstantes{
 
 	public static String erreurMsgChargement="";
 
+	private static boolean isVersionOlderThan(String myVersion, String versionToCompare)
+	{
+		return myVersion.compareTo(versionToCompare)<=0;
+	}
+	
 	public static String serializeStockageMonstre(FileOutputStream fos,StockageMonstre monstre ) 
 	{
-		//string, x,y , bool
+		//int corresponding to enum value , x,y , bool
 		try {
-			fos.write(intToBytes(monstre.nom.length()));
-			fos.write(monstre.nom.getBytes());
+			fos.write(intToBytes(monstre.type.ordinal()));
 			fos.write(intToBytes(monstre.pos.x));
 			fos.write(intToBytes(monstre.pos.y));
 			fos.write(boolToByte(monstre.immobile));
@@ -44,23 +48,20 @@ public class Serialize implements InterfaceConstantes{
 
 	}
 
-	public static StockageMonstre deserializeStockageMonstre(InputStream is) 
+	public static StockageMonstre deserializeStockageMonstre(InputStream is,String version) 
 	{
-		StockageMonstre stock = new StockageMonstre("", new Point(),false);
+		StockageMonstre stock = new StockageMonstre(TypeBloc.VIDE, new Point(),false);
 		Point p = new Point();
 
 		try
 		{
-			//int, 4 , taille de la string
 			byte[] bytes = new byte[4];
-			is.read(bytes);
-			int nb = bytesToInt(bytes); 
-
-			//String, nb, nom du monstre
-			bytes = new byte[nb];
+			
+			//int,4, type of the monster 
+			bytes = new byte[4];
 			is.read(bytes); 
-			stock.nom = new String(bytes);
-
+			stock.type = TypeBloc.values()[bytesToInt(bytes)];
+			
 			//int, 4 , pos en x du monstre
 			bytes = new byte[4];
 			is.read(bytes); 
@@ -109,7 +110,7 @@ public class Serialize implements InterfaceConstantes{
 
 	}
 
-	public static List<StockageMonstre> deserializeListStockageMonstre(InputStream is) 
+	public static List<StockageMonstre> deserializeListStockageMonstre(InputStream is,String version) 
 	{
 		List<StockageMonstre> l = new ArrayList<StockageMonstre>();
 
@@ -122,7 +123,7 @@ public class Serialize implements InterfaceConstantes{
 
 			for(int i =0; i<nb; i++)
 			{
-				l.add(deserializeStockageMonstre(is));
+				l.add(deserializeStockageMonstre(is,version));
 				loadPercentage = (int) (80 + 25.0/nb * i);
 
 			}
@@ -139,11 +140,10 @@ public class Serialize implements InterfaceConstantes{
 
 	}
 
-	public static String serializeBloc (FileOutputStream fos, Bloc b) 
+	public static String serializeBloc (FileOutputStream fos, Bloc b,String version) 
 	{
 		try {
-			fos.write(intToBytes(b.getImg().length()));
-			fos.write(b.getImg().getBytes());
+			fos.write(intToBytes(b.getType().ordinal()));
 			fos.write(intToBytes(b.getXpos()));
 			fos.write(intToBytes(b.getYpos()));
 			fos.write(boolToByte(b.getBloquer()));
@@ -156,7 +156,7 @@ public class Serialize implements InterfaceConstantes{
 
 	}
 
-	public static Bloc deserializeBloc(InputStream is) 
+	public static Bloc deserializeBloc(InputStream is,String version) 
 	{
 		Bloc bloc = new Bloc();
 		int nb;
@@ -164,16 +164,10 @@ public class Serialize implements InterfaceConstantes{
 
 		try 
 		{
-			//int,4,taille du nom de l'image
 			bytes = new byte[4];
 			is.read(bytes);
-			nb=bytesToInt(bytes);
-
-			//string nb nom de l'image
-			bytes = new byte[nb];
-			is.read(bytes);
-			bloc.setImg(new String(bytes));
-
+			bloc.setType(TypeBloc.values()[bytesToInt(bytes)]);
+			
 			//int,4,position en x du bloc
 			bytes = new byte[4];
 			is.read(bytes);
@@ -206,7 +200,7 @@ public class Serialize implements InterfaceConstantes{
 		}
 	}
 
-	public static String serializeMatrixBloc (FileOutputStream fos, Bloc[][] b) 
+	public static String serializeMatrixBloc (FileOutputStream fos, Bloc[][] b,String version) 
 	{
 		try {
 
@@ -224,7 +218,7 @@ public class Serialize implements InterfaceConstantes{
 			{
 				for(int j=0; j<ylength; j++)
 				{
-					if(!(b[i][j].getImg().equals("vide")))
+					if(!(b[i][j].getType().equals(TypeBloc.VIDE)))
 					{
 						if(nb==0)//premier bloc non nul
 						{
@@ -261,7 +255,7 @@ public class Serialize implements InterfaceConstantes{
 					int y = li.get(2*i+1);
 					fos.write(intToBytes(x));
 					fos.write(intToBytes(y));
-					serializeBloc(fos,b[x][y]);
+					serializeBloc(fos,b[x][y],version);
 				}
 				return ""; 
 			}
@@ -275,7 +269,7 @@ public class Serialize implements InterfaceConstantes{
 			return "Erreur serialize matrix bloc\n";
 		}
 	}
-	public static Bloc[][] deserializeMatrixBloc(InputStream is,Bloc[][] oldWorld)
+	public static Bloc[][] deserializeMatrixBloc(InputStream is,Bloc[][] oldWorld,String version)
 	{
 		byte[] bytes;
 		Bloc[][] monde ;
@@ -334,7 +328,8 @@ public class Serialize implements InterfaceConstantes{
 				{
 					for(int ord=0;ord<ylength;ord++)
 					{
-						Bloc blocVide =new Bloc("vide",abs*100,abs,false,false);
+						//TODO: avoid doing that 
+						Bloc blocVide =new Bloc(TypeBloc.VIDE,abs*100,abs,false,false);
 						monde[abs][ord]=blocVide;
 						loadPercentage=(int) (5+ 50.0/(xlength*ylength)*(ord + abs*ylength));
 					}
@@ -353,8 +348,8 @@ public class Serialize implements InterfaceConstantes{
 				//y=bytesToInt(bytes)-yoffset;
 				y=bytesToInt(bytes);
 
-
-				monde[x][y]=deserializeBloc(is);
+				
+				monde[x][y]=deserializeBloc(is,version);
 				loadPercentage=(int) (55+20.0/nbBloc * i);
 
 			}
@@ -372,9 +367,9 @@ public class Serialize implements InterfaceConstantes{
 			return null;
 		}
 	}
-	public static String serializeMonde(FileOutputStream fos, Monde monde) 
+	public static String serializeMonde(FileOutputStream fos, Monde monde,String version) 
 	{
-		String err=serializeMatrixBloc(fos,monde.niveau);
+		String err=serializeMatrixBloc(fos,monde.niveau,version);
 		if(!err.isEmpty())
 		{
 			return err;
@@ -401,7 +396,7 @@ public class Serialize implements InterfaceConstantes{
 		}
 	}
 
-	public static Monde deserializeMonde(InputStream is,Bloc[][] oldWorld) 
+	public static Monde deserializeMonde(InputStream is,Bloc[][] oldWorld,String version) 
 	{
 		Monde m = new Monde();
 		byte[] bytes;
@@ -409,7 +404,7 @@ public class Serialize implements InterfaceConstantes{
 		try
 		{
 			//Bloc[][], ..., la matrice des blocs du monde
-			m.niveau=deserializeMatrixBloc(is,oldWorld);
+			m.niveau=deserializeMatrixBloc(is,oldWorld,version);
 			if(!erreurMsgChargement.equals(""))
 				return null;
 			//int, 4, l'indice de début en x où faire spawner des monstres 
@@ -444,7 +439,7 @@ public class Serialize implements InterfaceConstantes{
 
 			loadPercentage =(int) (80);
 
-			m.listMonstreOriginal=deserializeListStockageMonstre(is);
+			m.listMonstreOriginal=deserializeListStockageMonstre(is,version);
 
 			return(m);
 		}
@@ -464,10 +459,10 @@ public class Serialize implements InterfaceConstantes{
 		FileOutputStream fos;
 		String err="";
 		try {
-			fos=new FileOutputStream("src/resources/Levels/"+name);
+			fos=new FileOutputStream("src/resources/levels/"+name);
 			String version = VERSION;
 			fos.write(version.getBytes());
-			err+=serializeMonde(fos,monde);
+			err+=serializeMonde(fos,monde,version);
 			fos.close();
 
 		} catch (IOException e1) {
@@ -498,7 +493,7 @@ public class Serialize implements InterfaceConstantes{
 
 			is.read(bytes);
 			version= new String(bytes);
-			m=deserializeMonde(is,oldWorld);
+			m=deserializeMonde(is,oldWorld,version);
 			is.close();
 
 			m.name=name;

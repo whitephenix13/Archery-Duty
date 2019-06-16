@@ -22,8 +22,7 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import observer.Observer;
-import types.Touches;
+import utils.observer.Observer;
 
 @SuppressWarnings("serial")
 public class AffichageOption extends JFrame implements Observer{

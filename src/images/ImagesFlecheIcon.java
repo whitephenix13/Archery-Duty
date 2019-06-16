@@ -1,14 +1,15 @@
 package images;
 
 import java.awt.Image;
-import java.util.ArrayList;
 import java.util.Arrays;
 
-import fleches.Fleche;
-import loading.LoadMediaThread;
-import types.TypeObject;
+import gameConfig.TypeObject;
+import loading.LoaderItem;
 
-public class ImagesFlecheIcon extends LoadMediaThread{	
+public class ImagesFlecheIcon extends LoaderItem{	
+	
+	private static String path ="resources/projectile/fleches/icons/";
+	
 	Image im_feu= null;
 	Image im_electrique= null;
 	Image im_glace= null;
@@ -32,39 +33,39 @@ public class ImagesFlecheIcon extends LoadMediaThread{
 	public ImagesFlecheIcon(){}
 
 	@Override
-	public void loadMedia() {
-		if(mediaLoaded)
+	public void run() {
+		if(alreadyLoaded)
 			return;
 
 		int nb = 16;
-		im_electrique=(getIm("resources/fleches/icons/electrique.png",true));
-		im_feu=(getIm("resources/fleches/icons/feu.png",true));
-		im_glace=(getIm("resources/fleches/icons/glace.png",true));
-		im_roche=(getIm("resources/fleches/icons/roche.png",true));
+		im_electrique=(getIm(path+"electrique.png",true));
+		im_feu=(getIm(path+"feu.png",true));
+		im_glace=(getIm(path+"glace.png",true));
+		im_roche=(getIm(path+"roche.png",true));
+		
+		percentage = (int)(400.0/nb);
 
-		setPercentage((int)(400.0/nb));
+		im_lumiere=(getIm(path+"lumiere.png",true));
+		im_ombre=(getIm(path+"ombre.png",true));
+		im_vent=(getIm(path+"vent.png",true));
+		im_grappin=(getIm(path+"grappin.png",true));
 
-		im_lumiere=(getIm("resources/fleches/icons/lumiere.png",true));
-		im_ombre=(getIm("resources/fleches/icons/ombre.png",true));
-		im_vent=(getIm("resources/fleches/icons/vent.png",true));
-		im_grappin=(getIm("resources/fleches/icons/grappin.png",true));
+		percentage = (int)(800.0/nb);
 
-		setPercentage((int)(800.0/nb));
+		im_foudre =(getIm(path+"foudre.png",true));
+		im_explosive=(getIm(path+"explosive.png",true));
+		im_trou_noir=(getIm(path+"trou_noir.png",true));
+		im_bogue=(getIm(path+"bogue.png",true));	
 
-		im_foudre =(getIm("resources/fleches/icons/foudre.png",true));
-		im_explosive=(getIm("resources/fleches/icons/explosive.png",true));
-		im_trou_noir=(getIm("resources/fleches/icons/trou_noir.png",true));
-		im_bogue=(getIm("resources/fleches/icons/bogue.png",true));	
+		percentage = (int)(1200.0/nb);
 
-		setPercentage((int)(1200.0/nb));
+		im_auto_teleguidee=(getIm(path+"auto_teleguidee.png",true));
+		im_retard=(getIm(path+"retard.png",true));
+		im_v_fleche=(getIm(path+"v_fleche.png",true));
+		im_cac=(getIm(path+"corps_a_corps.png",true));
 
-		im_auto_teleguidee=(getIm("resources/fleches/icons/auto_teleguidee.png",true));
-		im_retard=(getIm("resources/fleches/icons/retard.png",true));
-		im_v_fleche=(getIm("resources/fleches/icons/v_fleche.png",true));
-		im_cac=(getIm("resources/fleches/icons/corps_a_corps.png",true));
-
-		setPercentage(100);
-		mediaLoaded=true;
+		percentage=100;
+		alreadyLoaded=true;
 
 	}
 
@@ -140,12 +141,6 @@ public class ImagesFlecheIcon extends LoadMediaThread{
 			}
 		}
 		return res;
-	}
-
-	@Override
-	public void loadMedia(String media_categorie, String filename) {
-		// TODO Auto-generated method stub
-
 	}
 
 }

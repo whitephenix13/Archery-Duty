@@ -1,6 +1,7 @@
 package editeur;
 
 import java.awt.Graphics;
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,15 +9,14 @@ import javax.swing.JPanel;
 
 import editeur.BarreOutil.BarreOutil;
 import editeur.Menu.menuEditeur;
+import gameConfig.InterfaceConstantes;
 import images.ImagesMonde;
-import loading.DisplayLoader;
-import observer.Observable;
-import observer.Observer;
-import principal.InterfaceConstantes;
-import types.Monde;
-import types.StockageMonstre;
+import partie.bloc.Bloc.TypeBloc;
+import partie.bloc.Monde;
+import utils.observer.Observable;
+import utils.observer.Observer;
 
-public abstract class AbstractModelEditeur extends DisplayLoader implements Observable{
+public abstract class AbstractModelEditeur implements Observable{
 
 	protected BarreOutil barreOut;
 	protected menuEditeur menuEdit;
@@ -31,7 +31,7 @@ public abstract class AbstractModelEditeur extends DisplayLoader implements Obse
 	
 	//Utilisé pour charger les images 
 	public ImagesMonde imMonde;
-	protected String texture;
+	protected TypeBloc texture;
 	
 	//monstres
 	protected boolean monstreActive;
@@ -129,7 +129,7 @@ public abstract class AbstractModelEditeur extends DisplayLoader implements Obse
 		if(imMonde==null)
 			imMonde= new ImagesMonde();
 		
-		texture="";
+		texture=TypeBloc.VIDE;
 				
 		monstreActive=false;
 		staticMonstre=false;
@@ -210,9 +210,9 @@ public abstract class AbstractModelEditeur extends DisplayLoader implements Obse
 	public abstract void drawMonster(int xpos, int ypos);
 	public abstract void drawSpecial(int xpos, int ypos);
 	public abstract void draw(Graphics g,JPanel pan);
-	public abstract void setTexture(String texture);
+	public abstract void setTexture(TypeBloc texture);
 	
-	public abstract List<StockageMonstre> FindMonstre(int[] positionVoulue, List<StockageMonstre> listAChercher );
+	public abstract List<StockageMonstre> FindMonstre(Point targetPos, List<StockageMonstre> listToSearch );
 	public abstract void deleteMonster(int x, int y);
 
 	//fonctions pour le menu 

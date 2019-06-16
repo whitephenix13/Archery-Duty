@@ -11,11 +11,13 @@ import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import principal.InterfaceConstantes;
+import gameConfig.InterfaceConstantes;
+import images.ImagesHeros;
+import images.ImagesMonstre;
+import partie.bloc.Bloc;
+import partie.bloc.Bloc.TypeBloc;
+import partie.bloc.Monde;
 import serialize.Serialize;
-import types.Bloc;
-import types.Monde;
-import types.StockageMonstre;
 
 public class ModelEditeur extends AbstractModelEditeur{
 
@@ -113,9 +115,9 @@ public class ModelEditeur extends AbstractModelEditeur{
 		int xMonstrePos = calculateDrawPos(xpos,xViewPort);
 		int yMonstrePos= calculateDrawPos(ypos,yViewPort);
 
-		if(texture==Bloc.SPIREL)
+		if(texture==TypeBloc.SPIREL)
 		{
-			tabEditeurMonstre.add(new StockageMonstre(Bloc.SPIREL,new Point(xMonstrePos,yMonstrePos),staticMonstre));
+			tabEditeurMonstre.add(new StockageMonstre(TypeBloc.SPIREL,new Point(xMonstrePos,yMonstrePos),staticMonstre));
 		}
 
 		repaint=true;
@@ -145,7 +147,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 			end=false;
 		}
 
-		texture="";//on remet la souris
+		texture=TypeBloc.NONE;//on remet la souris
 
 		repaint=true;
 		notifyObserver();
@@ -180,7 +182,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 				//xViewPort= xViewPortNonDécallé - x decallage 
 				int xdraw = (int) ((tempPict.getXpos() -xViewPort)*((loupe) ? dezoomFactor : 1 ));
 				int ydraw=(int) ((tempPict.getYpos()-yViewPort)*((loupe) ? dezoomFactor : 1 ));
-				g.drawImage(imMonde.getImages(tempPict,loupe),xdraw,ydraw, null);
+				g.drawImage(imMonde.getImages(tempPict.getType(),loupe),xdraw,ydraw, null);
 
 				//on dessine les limites de la carte 
 				g2.setStroke(new BasicStroke(2));
@@ -206,10 +208,10 @@ public class ModelEditeur extends AbstractModelEditeur{
 		}
 
 		//on dessine l'image du bloc choisi si il existe une texture 
-		if(texture != "")
+		if(!texture.equals(TypeBloc.VIDE))
 		{
 			image = pan.getToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/"+texture +((loupe) ? "_p" : "" )+".png"));
-			if(texture.equals(Bloc.DELETE))
+			if(texture.equals(TypeBloc.DELETE))
 			{
 				g.drawImage(image, xMousePos-10, yMousePos-7, null);
 			}
@@ -267,34 +269,36 @@ public class ModelEditeur extends AbstractModelEditeur{
 			g2.setColor(Color.black);
 			g2.setStroke(new BasicStroke(1));
 		}
+		String monsterName = "";
 		for(int i=0; i<tabEditeurMonstre.size(); i++)
 		{
-			image = pan.getToolkit().getImage(getClass().getClassLoader().getResource("resources/monstres/"+tabEditeurMonstre.get(i).nom + ""+((loupe) ? "_p" : "" )+".png"));
+			monsterName = tabEditeurMonstre.get(i).type.toString().toLowerCase();
+			image = pan.getToolkit().getImage(getClass().getClassLoader().getResource(ImagesMonstre.path+ monsterName+ "/"+monsterName+((loupe) ? "_p" : "" )+".png"));
 			g.drawImage(image, (int)((tabEditeurMonstre.get(i).pos.x -xViewPort)*((loupe) ? dezoomFactor : 1 )),(int)((tabEditeurMonstre.get(i).pos.y -yViewPort)*((loupe) ? dezoomFactor : 1 )), null);
 		}
 
 		//on dessine le personnage 
 		if(persoPos[0]!=-1)
 		{
-			image = pan.getToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/perso"+((loupe) ? "_p" : "" )+".png"));
+			image = pan.getToolkit().getImage(getClass().getClassLoader().getResource("resources/editeur/heros"+((loupe) ? "_p" : "" )+".png"));
 			g.drawImage(image, (int)((persoPos[0] -xViewPort)*((loupe) ? dezoomFactor : 1 )),(int)((persoPos[1] -yViewPort)*((loupe) ? dezoomFactor : 1 )), null);
 		}
 		//on dessine le début
 		if(startPos[0]!=-1)
 		{
-			image = pan.getToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/start"+((loupe) ? "_p" : "" )+".png"));
+			image = pan.getToolkit().getImage(getClass().getClassLoader().getResource("resources/editeur/start"+((loupe) ? "_p" : "" )+".png"));
 			g.drawImage(image,(int)( (startPos[0] -xViewPort)*((loupe) ? dezoomFactor : 1 )),(int)((startPos[1] -yViewPort)*((loupe) ? dezoomFactor : 1) ), null);
 		}
 		//on dessine la fin
 		if(endPos[0]!=-1)
 		{
-			image = pan.getToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/end"+((loupe) ? "_p" : "" )+".png"));
+			image = pan.getToolkit().getImage(getClass().getClassLoader().getResource("resources/editeur/end"+((loupe) ? "_p" : "" )+".png"));
 			g.drawImage(image, (int)((endPos[0] -xViewPort)*((loupe) ? dezoomFactor : 1 )),(int)((endPos[1] -yViewPort)*((loupe) ? dezoomFactor : 1 )), null);
 		}
 
 	}
 
-	public void setTexture(String _texture)
+	public void setTexture(TypeBloc _texture)
 	{
 		perso=false;
 		start=false;
@@ -307,39 +311,39 @@ public class ModelEditeur extends AbstractModelEditeur{
 			menuEdit.setBloquant(false);
 			setBackground(false);
 		}
-		else if (_texture.equals(Bloc.DELETE))
+		else if (_texture.equals(TypeBloc.DELETE))
 		{
 			menuEdit.setBloquant(false);
 		}
-		else if (_texture.equals(Bloc.VIDE))
+		else if (_texture.equals(TypeBloc.VIDE))
 		{
 			menuEdit.setBloquant(false);
 		}
-		else if (_texture.equals(Bloc.SOL))
+		else if (_texture.equals(TypeBloc.SOL))
 		{
 			menuEdit.setBloquant(true);
 		}
-		else if (_texture.equals(Bloc.TERRE))
+		else if (_texture.equals(TypeBloc.TERRE))
 		{
 			menuEdit.setBloquant(true);
 		}
-		else if (_texture.equals(Bloc.CIEL))
+		else if (_texture.equals(TypeBloc.CIEL))
 		{
 			menuEdit.setBloquant(false);
 		}
-		else if (_texture.equals(Bloc.PERSO))
+		else if (_texture.equals(TypeBloc.PERSO))
 		{
 			perso=true;
 		}
-		else if (_texture.equals(Bloc.START))
+		else if (_texture.equals(TypeBloc.START))
 		{
 			start=true;
 		}
-		else if (_texture.equals(Bloc.END))
+		else if (_texture.equals(TypeBloc.END))
 		{
 			end=true;
 		}
-		else if (_texture.equals(Bloc.SPIREL))
+		else if (_texture.equals(TypeBloc.SPIREL))
 		{
 			monstreActive=true;
 			showStaticMonsters=true;
@@ -349,18 +353,18 @@ public class ModelEditeur extends AbstractModelEditeur{
 		notifyObserver();
 	}
 
-	public List<StockageMonstre> FindMonstre(int[] positionVoulue, List<StockageMonstre> listAChercher )
+	public List<StockageMonstre> FindMonstre(Point targetPos, List<StockageMonstre> listToSearch )
 	{
-		List<StockageMonstre> resultat = new ArrayList<StockageMonstre>();
-		resultat.clear();
-		for(int i=0; i< listAChercher.size(); i++)
+		List<StockageMonstre> res = new ArrayList<StockageMonstre>();
+		res.clear();
+		for(int i=0; i< listToSearch.size(); i++)
 		{
-			if(listAChercher.get(i).pos.x == positionVoulue[0] && listAChercher.get(i).pos.y == positionVoulue[1] )
+			if(listToSearch.get(i).pos.equals(targetPos))
 			{
-				resultat.add(listAChercher.get(i));
+				res.add(listToSearch.get(i));
 			}
 		}
-		return(resultat);
+		return(res);
 	}
 
 
@@ -371,12 +375,8 @@ public class ModelEditeur extends AbstractModelEditeur{
 		int xPos=calculateDrawPos(x,xViewPort);
 		int yPos=calculateDrawPos(y,yViewPort);
 
-		int[] infoCase= new int[2];
-		//on memorise la case
-		infoCase[0]= xPos;
-		infoCase[1]= yPos;
 		//on chercher tout les monstres dedans et on stock leur nom dans la liste
-		monstreDansCase=FindMonstre(infoCase,tabEditeurMonstre)	;
+		monstreDansCase=FindMonstre(new Point(xPos,yPos),tabEditeurMonstre)	;
 		//on lance le popup
 		showMonsters=true;
 		notifyObserver();

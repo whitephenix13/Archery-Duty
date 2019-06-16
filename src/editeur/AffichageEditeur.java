@@ -22,8 +22,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import observer.Observer;
-import types.StockageMonstre;
+import utils.observer.Observer;
 import editeur.BarreOutil.BarreOutil;
 import editeur.Menu.menuEditeur;
 
@@ -82,7 +81,7 @@ public class AffichageEditeur extends JFrame implements Observer{
 		   
 		    for(int i=0; i<controlerEditeur.edit.monstreDansCase.size();i++)
 		    {
-			    listLabels.add(new JLabel((i+1)+ " "+controlerEditeur.edit.monstreDansCase.get(i).nom));
+			    listLabels.add(new JLabel((i+1)+ " "+controlerEditeur.edit.monstreDansCase.get(i).type.toString()));
 		    }	    
 		    final List<JCheckBox> listChecks= new ArrayList<JCheckBox> (); 
 		    for(int i=0; i<listLabels.size()-1;i++)

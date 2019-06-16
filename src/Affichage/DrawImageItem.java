@@ -10,7 +10,7 @@ import java.awt.Polygon;
 import java.awt.geom.AffineTransform;
 import java.awt.image.ImageObserver;
 
-import types.Hitbox;
+import partie.collision.Hitbox;
 
 public class DrawImageItem {
 	

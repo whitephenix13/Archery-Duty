@@ -6,11 +6,10 @@ import java.util.Timer;
 
 import javax.swing.event.ChangeEvent;
 
-import observer.Observable;
-import observer.Observer;
 import option.AffichageOption.CustomClickableLabel;
-import partie.InputPartie;
-import types.Touches;
+import partie.modelPartie.InputPartie;
+import utils.observer.Observable;
+import utils.observer.Observer;
 
 public abstract class AbstractModelOption implements Observable{
 

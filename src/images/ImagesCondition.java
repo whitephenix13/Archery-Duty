@@ -2,11 +2,12 @@ package images;
 
 import java.awt.Image;
 
-import conditions.Condition;
-import loading.LoadMediaThread;
+import loading.LoaderItem;
+import partie.conditions.Condition;
 
-public class ImagesCondition extends LoadMediaThread{
+public class ImagesCondition extends LoaderItem{
 
+	private static String path ="resources/conditions/";
 	Image im_brulure =null;
 	Image im_regeneration =null;
 	Image im_lenteur =null;
@@ -21,87 +22,86 @@ public class ImagesCondition extends LoadMediaThread{
 	public ImagesCondition (){}
 
 	@Override
-	public void loadMedia() {
-		if(mediaLoaded)
+	public void run() {
+		if(alreadyLoaded)
 			return;
 
 		int nb_condi = 10;
-		loadMedia("",Condition.BRULURE);
-		setPercentage(100/nb_condi);
-		loadMedia("",Condition.LENTEUR);
-		setPercentage(200/nb_condi);
-		loadMedia("",Condition.VITESSE);
-		setPercentage(300/nb_condi);
-		loadMedia("",Condition.PARALYSIE);
-		setPercentage(400/nb_condi);
-		loadMedia("",Condition.DEFAILLANCE);
-		setPercentage(500/nb_condi);
-		loadMedia("",Condition.RESISTANCE);
-		setPercentage(600/nb_condi);
-		loadMedia("",Condition.FORCE);
-		setPercentage(700/nb_condi);
-		loadMedia("",Condition.FAIBLESSE);
-		setPercentage(800/nb_condi);
-		loadMedia("",Condition.REGENERATION);
-		setPercentage(900/nb_condi);
-		loadMedia("",Condition.PRECISION);
-		setPercentage(100);
-		mediaLoaded=true;
+		run("",Condition.BRULURE);
+		percentage = (int)(1*100.0/nb_condi);
+		run("",Condition.LENTEUR);
+		percentage = (int)(2*100.0/nb_condi);
+		run("",Condition.VITESSE);
+		percentage = (int)(3*100.0/nb_condi);
+		run("",Condition.PARALYSIE);
+		percentage = (int)(4*100.0/nb_condi);
+		run("",Condition.DEFAILLANCE);
+		percentage = (int)(5*100.0/nb_condi);
+		run("",Condition.RESISTANCE);
+		percentage = (int)(6*100.0/nb_condi);
+		run("",Condition.FORCE);
+		percentage = (int)(7*100.0/nb_condi);
+		run("",Condition.FAIBLESSE);
+		percentage = (int)(8*100.0/nb_condi);
+		run("",Condition.REGENERATION);
+		percentage = (int)(9*100.0/nb_condi);
+		run("",Condition.PRECISION);
+		percentage=100;
+		alreadyLoaded=true;
 
 
 	}
 
-	@Override
-	public void loadMedia(String media_categorie, String filename) {
+	public void run(String media_categorie, String filename) {
 		if(filename.equals(Condition.BRULURE))
 		{
 			if(im_brulure==null)
-				im_brulure= getIm("resources/conditions/brulure.png",true);		
+				im_brulure= getIm(path+"brulure.png",true);		
 		}
 		else if(filename.equals(Condition.LENTEUR))
 		{
 			if(im_lenteur==null)
-				im_lenteur= getIm("resources/conditions/lenteur.png",true);		
+				im_lenteur= getIm(path+"lenteur.png",true);		
 		}
 		else if(filename.equals(Condition.VITESSE))
 		{
 			if(im_vitesse==null)
-				im_vitesse= getIm("resources/conditions/vitesse.png",true);		
+				im_vitesse= getIm(path+"vitesse.png",true);		
 		}
 		else if(filename.equals(Condition.PARALYSIE))
 		{
 			if(im_paralysie==null)
-				im_paralysie= getIm("resources/conditions/paralysie.png",true);		
+				im_paralysie= getIm(path+"paralysie.png",true);		
 		}
 		else if(filename.equals(Condition.DEFAILLANCE))
 		{
 			if(im_defaillance==null)
-				im_defaillance= getIm("resources/conditions/defaillance.png",true);		
+				im_defaillance= getIm(path+"defaillance.png",true);		
 		}
 		else if(filename.equals(Condition.FORCE))
 		{
 			if(im_force==null)
-				im_force= getIm("resources/conditions/force.png",true);		
+				im_force= getIm(path+"force.png",true);		
 		}
 		else if(filename.equals(Condition.RESISTANCE))
 		{
 			if(im_resistance==null)
-				im_resistance= getIm("resources/conditions/resistance.png",true);		
+				im_resistance= getIm(path+"resistance.png",true);		
 		}
 		else if(filename.equals(Condition.FAIBLESSE))
 		{
 			if(im_faiblesse==null)
-				im_faiblesse= getIm("resources/conditions/faiblesse.png",true);		
+				im_faiblesse= getIm(path+"faiblesse.png",true);		
 		}	
 		else if(filename.equals(Condition.REGENERATION))
 		{
 			if(im_regeneration==null)
-				im_regeneration= getIm("resources/conditions/regeneration.png",true);		
+				im_regeneration= getIm(path+"regeneration.png",true);		
 		}	
 		else if(filename.equals(Condition.PRECISION))
 		{
 			if(im_precision==null)
-				im_precision= getIm("resources/conditions/precision.png",true);		
+				im_precision= getIm(path+"precision.png",true);		
 		}	
 		else{
 			try {

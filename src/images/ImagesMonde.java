@@ -2,18 +2,19 @@ package images;
 
 import java.awt.Image;
 import java.awt.Toolkit;
-import java.util.ArrayList;
 
-import loading.LoadMediaThread;
-import loading.OnLoadingCallback;
-import types.Bloc;
+import loading.LoaderItem;
+import partie.bloc.Bloc;
+import partie.bloc.Bloc.TypeBloc;
 
-public class ImagesMonde extends LoadMediaThread implements OnLoadingCallback{
+public class ImagesMonde extends LoaderItem{
+	public static String path ="resources/editeur/";
+	
 	Image ciel;
 	Image terre;
 	Image sol;
 	Image vide;
-	Image perso;
+	Image mainHeros;
 	Image start;
 	Image end;
 
@@ -21,7 +22,7 @@ public class ImagesMonde extends LoadMediaThread implements OnLoadingCallback{
 	Image pterre;
 	Image psol;
 	Image pvide;
-	Image pperso;
+	Image pmainHeros;
 	Image pstart;
 	Image pend;
 	public ImagesMonde()
@@ -29,40 +30,40 @@ public class ImagesMonde extends LoadMediaThread implements OnLoadingCallback{
 	}
 	
 	@Override
-	public void loadMedia()
+	public void run()
 	{
-		if(mediaLoaded)
+		if(alreadyLoaded)
 			return;
 		
-		 ciel=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/ciel.png"));		 
-		 terre=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/terre.png"));
-		 setPercentage((int)(200.0/14));
+		 ciel=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"ciel.png"));		 
+		 terre=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"terre.png"));
+		 percentage = (int)(2.0*100/14);
 		 
-		 sol=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/sol.png"));
-		 vide=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/vide.png"));
-		 setPercentage((int)(400.0/14));
+		 sol=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"sol.png"));
+		 vide=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"vide.png"));
+		 percentage = (int)(4.0*100/14);
 
-		 perso=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/perso.png"));
-		 start=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/start.png"));
-		 setPercentage((int)(600.0/14));
+		 mainHeros=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"heros.png"));
+		 start=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"start.png"));
+		 percentage = (int)(6.0*100/14);
 
-		 end=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/end.png"));
+		 end=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"end.png"));
 		 
-		 pciel=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/ciel_p.png"));
-		 setPercentage((int)(800.0/14));
+		 pciel=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"ciel_p.png"));
+		 percentage = (int)(8.0*100/14);
 
-		 pterre=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/terre_p.png"));
-		 psol=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/sol_p.png"));
-		 setPercentage((int)(1000.0/14));
+		 pterre=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"terre_p.png"));
+		 psol=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"sol_p.png"));
+		 percentage = (int)(10.0*100/14);
 
-		 pvide=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/vide_p.png"));
-		 pperso=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/perso_p.png"));
-		 setPercentage((int)(1200.0/14));
+		 pvide=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"vide_p.png"));
+		 pmainHeros=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"heros_p.png"));
+		 percentage = (int)(12.0*100/14);
 
-		 pstart=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/start_p.png"));
-		 pend=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/end_p.png"));
-		 setPercentage(100);
-		 mediaLoaded=true;
+		 pstart=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"start_p.png"));
+		 pend=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"end_p.png"));
+		 percentage = 100;
+		 alreadyLoaded=true;
 	}
 
 	/**
@@ -73,39 +74,39 @@ public class ImagesMonde extends LoadMediaThread implements OnLoadingCallback{
 	 * 
 	 * @return l'image a afficher
 	 */	
-	public Image getImages(Bloc bloc, boolean loupe)
+	public Image getImages(TypeBloc type, boolean loupe)
 	{
-		if(bloc.getImg().equals("vide"))
+		if(type.equals(TypeBloc.VIDE))
 		{
 			if(loupe)return(pvide);
 			return(vide);
 		}
-		else if (bloc.getImg().equals("ciel"))
+		else if (type.equals(TypeBloc.CIEL))
 		{
 			if(loupe)return(pciel);
 			return(ciel);
 		}
-		else if (bloc.getImg().equals("sol"))
+		else if (type.equals(TypeBloc.SOL))
 		{
 			if(loupe)return(psol);
 			return(sol);
 		}
-		else if (bloc.getImg().equals("terre"))
+		else if (type.equals(TypeBloc.TERRE))
 		{
 			if(loupe)return(pterre);
 			return(terre);
 		}
-		else if (bloc.getImg().equals("perso"))
+		else if (type.equals(TypeBloc.PERSO))
 		{
-			if(loupe)return(pperso);
-			return(perso);
+			if(loupe)return(pmainHeros);
+			return(mainHeros);
 		}
-		else if (bloc.getImg().equals("start"))
+		else if (type.equals(TypeBloc.START))
 		{
 			if(loupe)return(pstart);
 			return(start);
 		}
-		else if (bloc.getImg().equals("end"))
+		else if (type.equals(TypeBloc.END))
 		{
 			if(loupe)return(pend);
 			return(end);
@@ -115,17 +116,5 @@ public class ImagesMonde extends LoadMediaThread implements OnLoadingCallback{
 			if(loupe)return(pvide);
 			return(vide);
 		}
-	}
-
-	@Override
-	public void execute() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void loadMedia(String media_categorie, String filename) {
-		// TODO Auto-generated method stub
-		
 	}
 }

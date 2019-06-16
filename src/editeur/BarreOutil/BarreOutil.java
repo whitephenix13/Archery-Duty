@@ -11,6 +11,7 @@ import javax.swing.JToolBar;
 
 import editeur.AbstractModelEditeur;
 import editeur.AffichageEditeur;
+import partie.bloc.Bloc.TypeBloc;
 
 
 public class BarreOutil{
@@ -26,7 +27,7 @@ public class BarreOutil{
 	 private JButton sol_p = new JButton(new ImageIcon(getClass().getClassLoader().getResource("resources/Editeur/sol_p.png")));
 	 private JButton terre_p = new JButton(new ImageIcon(getClass().getClassLoader().getResource("resources/Editeur/terre_p.png")));
 	 private JButton ciel_p = new JButton(new ImageIcon(getClass().getClassLoader().getResource("resources/Editeur/ciel_p.png")));
-	 private JButton perso_p = new JButton(new ImageIcon(getClass().getClassLoader().getResource("resources/Editeur/perso_p.png")));
+	 private JButton perso_p = new JButton(new ImageIcon(getClass().getClassLoader().getResource("resources/Editeur/heros_p.png")));
 	 private JButton start_p = new JButton(new ImageIcon(getClass().getClassLoader().getResource("resources/Editeur/start_p.png")));
 	 private JButton end_p = new JButton(new ImageIcon(getClass().getClassLoader().getResource("resources/Editeur/end_p.png")));
 	 private JButton spirel_p = new JButton(new ImageIcon(getClass().getClassLoader().getResource("resources/Editeur/spirel_p.png")));
@@ -75,34 +76,34 @@ public class BarreOutil{
 				edit.dezoom();
 			}
 			else if (e.getSource()==souris_p){
-				edit.setTexture("");
+				edit.setTexture(TypeBloc.VIDE);
 			}
 			else if(e.getSource()==sol_p){
-				edit.setTexture("sol");
+				edit.setTexture(TypeBloc.SOL);
 			}
 			else if(e.getSource()==vide_p){
-				edit.setTexture("vide");
+				edit.setTexture(TypeBloc.VIDE);
 			}
 			else if(e.getSource()==terre_p){
-				edit.setTexture("terre");
+				edit.setTexture(TypeBloc.TERRE);
 			}
 			else if(e.getSource()==ciel_p){
-				edit.setTexture("ciel");
+				edit.setTexture(TypeBloc.CIEL);
 			}
 			else if(e.getSource()==perso_p){
-				edit.setTexture("perso");
+				edit.setTexture(TypeBloc.PERSO);
 			}
 			else if(e.getSource()==start_p){
-				edit.setTexture("start");
+				edit.setTexture(TypeBloc.START);
 			}
 			else if(e.getSource()==end_p){
-				edit.setTexture("end");
+				edit.setTexture(TypeBloc.END);
 			}
 			else if(e.getSource()==spirel_p){
-				edit.setTexture("spirel");
+				edit.setTexture(TypeBloc.SPIREL);
 			}
 			else if(e.getSource()==delete_p){
-				edit.setTexture("Delete");
+				edit.setTexture(TypeBloc.DELETE);
 			}
 		}
 		
