@@ -4,19 +4,45 @@ public class Todo {
 	
 	//Version 0.2.4	
 	
-	//TODO: check that the hitbox is not recomputed if the heros does not move (also watch out when setAnim is called just for testing a collision and then reset)
-	//TODO: check that the draw_tr is not recomputed if the projectile does not move 
-	//TODO: avoid creating a lot of bloc vide when deserializing a world => handle null in bloc[][] to save some space
-	//TODO: Split bloc class used for editeur and bloc used for partie 
 	
-	//TODO: Improve DebugObjectCreation: narrow the try catch from sampleAllocation to only take into account the object (which seems to be the problem)
-	//TODO: Improve DebugObjectCreation: Create efficient filter system
+	//TODO: try active rendering https://www.gamedev.net/articles/programming/general-and-gameplay-programming/java-games-active-rendering-r2418
+	
+	//TODO: The screen still flashes in black sometimes => improve draw ! 
+	//TODO: option retour -> game fails 
+	
+	//TODO: Now that ScheduledExecutorService is used, iscomputationdone is not needed as the timer will do its best to honor the contract if executing the runnable
+	//TODO: every 17ms or execute it as fast as possible
+	//TODO: can still move when the game ends => make it spawn in the ground sometimes
+	//TODO: chec that it works : debug time 
+	
+	
+	//TODO: debug affichage partie that does not display option=> change all reference to getContentPane to get the frame content pane ? 
+	//TODO; dont set main panel in begin transition? 
+	//TODO: test fade out with roche+effect (growing) + go back from option + others
+	
+	//TODO: refactor main loop for the game. Especially create an easy way to wait for affichage when loading is there. Also see if static variables can be removed 
+	//TODO: avoid while true in the modelPrincipal. Instead wake up thread when change mode? 
+	//TODO: clean todo/remove
+	
+	//TODO: create interface with draw method; draw everything in affichage. handle transition between screen but making the old one draw last with increasing transparence
+	//TODO: Transition takes 100 ms => if a third transition starts when the first two did not end => ignore 1->2 transition and execute 2->3
+	
+	//TODO: Spirel chang mouv: falling: 3.5339229999999997ms / 24.015653ms
+	//TODO: 5: Time: get all collidable effect: 7.418347ms / 12.601457ms (for heros in deplace)
+	//TODO: 5: Time: got all collidable effects: 0.860737ms / 18.309613ms (for heros in collision)
+	
+	//TODO: Huge lag is due to No Gc: "used for CMS to indicate concurrent phases"
+	//TODO: when huge lags occur, code cache and eden space increase. => mark the frame of the lag to understand what happens before (is it due to projectiles?)
+	//TODO: => it looks like that the first major gc calls slow down the first seconds of the game (since it lasts for 1 second)
+	
+	//TODO: when shooting roche arrow for the first time => laf og 100 ms in collision of deplace projectile (handle world collision)
+	//TODO: => on planted or create roche_effect might be slow the first time 
+	
+	//TODO: solve lag at start of the game (first few seconds) 
+	// => monde bloc(Heros): 11.704056ms / 15.593418ms => because bloc.getHitbox is computed here for the first time 
+	// => First changeMouv for spirel -> 0.5ms
+	
 
-	//TODO: lag on start of game 
-	
-	//TODO: Optimize garbage collector (when called takes 200ms)=> first call is when world is created (doesn't impact that much the game);
-	//TODO: wait 3 sec on the world without doing anything and there will be a call of garbage collector taking 70ms  
-	//TODO: check for references that are not released 
 	
 	//TODO: A_Star optimize so that the game doesn't lag => garbage collector make the game lags when too much arrow teleguide are shot 
 	
@@ -61,41 +87,63 @@ public class Todo {
 	//TODO: cac=> sangsue : 20/20 : each projectile hit is absorb, multiplying the arrow damage + releasing seyeri at the end 
 																							//effect : red/orange balls floating around 
 	
-	//TODO: add more sounds for arrows 
-	//TODO: load only relevant part of the world 
-	//TODO: more optimization: use sprite sheet 
-	//TODO: warning, arrow speed slow down is broken: can gather arrows 
-	//TODO: optimiser la taille du monde chargé dans partie rapide 
-	//TODO: JAR: solve the 2 icons opening ? 
-	//TODO: JAR: delete previous jar in installation, check the manifest version , https://stackoverflow.com/questions/3493416/how-to-run-a-file-before-setup-with-inno-setup
-	//TODO: ajout d'objets comme invicible quand le heros slide 
+	//TODO: BUGS:
 	//TODO: Problème si le jeu est ralenti (t=8), spam touche marche => mouvement rapide
-	//TODO mettre à jour deplaceEcran editeur par rapport a celui de AbstractModelPartie
-	//TODO: score quand tue un ennemi + combo + temps de fin de niveau // temps 
+	//TODO: warning, arrow speed slow down is broken: can gather arrows 
+
+	//TODO: INTERFACE:
+	//TODO: affichage des niveaux avec preview et difficulté? 
+	//TODO: laisser l'ecran de chargement jusqu'a ce que l'affichage soit pret lors d'un changement de fenetre (permet d'éviter les flash)
+
+	
+	//TODO: GRAPHISME:
 	//TODO: effet ralentissement: taille en fonction de la fenetre
-	//TODO: effet slow motion (garder en mémoire les images des mouvements précédants et les afficher avec transparance)
+	//TODO: effet slow motion/ bullet time (garder en mémoire les images des mouvements précédants et les afficher avec transparance)
 	//TODO: permttre le resize fenetre: utiliser plugin graphique pour interface: windowBuilder ou 
-	//TODO: ajouter des plugins angel chore, ou celesta
+	//TODO: animation de mort 
+	//TODO: faire ses propres boutons jolis
+
+	//TODO: GAMEPLAY:
+	//TODO: shoot special arrow with hotkey (1 per slot) instead of right click
+	//TODO: finish implementing all arrows
+	//TODO: add specialization (ie: invisible when sliding)
 	//TODO: creer des "blocs" event
 	//TODO: creer un tutoriel
 	//TODO: permettre de replay le niveau: mémoriser les temps et valeurs des "touches down" et "touches released"
+
+	
+	//TODO: SOUND 
+	//TODO: add more sounds for arrows/effects
+	//TODO: ajouter des plugins angel chore, ou celesta
+
+	//TODO: EDITEUR
+	//TODO mettre à jour deplaceEcran editeur par rapport a celui de AbstractModelPartie
+	//TODO: editeur: Split bloc class used for editeur and bloc used for partie and split TypeBloc (type monstre,...) or rename it (type Object)
 	//TODO: editeur: refactor the code + use correct image loader + add option to convert all world to new version 
 	//TODO: editeur afficher tous les niveaux a charger
 	//TODO: editeur: dans le menu objet, mettre des catégories de niveux
 	//TODO: editeur: mettre un rectangle rouge autour de la zone de spawn de monstre, améliorer en bloc spawnable ?? 
+	//TODO: create own image loader
 	//TODO: dans la scrollbar, mettre des catégories
 	//TODO: editeur fonction deplacer ensemble bloc 
-	//TODO: affichage des niveaux avec preview et difficulté? 
 	//TODO: ameliorer editeur notamment la gestion des monstes: le nombre, effacer intelligement, obtenir des infos sur une case, select all pour delete les monstres ....
-	//TODO: musiques, effets speciaux, decor 
-	//TODO: animation de deces
+
+	//TODO: OPTIMIZATION 
+	//TODO: load only relevant part of the world 
+	//TODO: more optimization: use sprite sheet 
+	
+	//TODO: PRODUCTION
+	//TODO: JAR: solve the 2 icons opening ? 
+	//TODO: JAR: delete previous jar in installation, check the manifest version , https://stackoverflow.com/questions/3493416/how-to-run-a-file-before-setup-with-inno-setup
 	//TODO: créer un fichier user pref/ fichier de config utilisateur (+lecture/ecriture) 
+	
+	//TODO: ONLINE
 	//TODO: version multijoueur: gérer les manettes, compatibilité multijoueur des variables, classe joueur 
-	//TODO: faire ses propres boutons jolis
-	//TODO: bullet time ? 
+	
 	
 	//USEFULL INFOS: 
 	//09/07/2017: all Thread : Main, ThreadAffichage, ThreadMusique
 	//All loading needed MusicBruitage, Music, ImagesHeros, ImagesEffect, ImagesFleche, ImagesMonstre, ImagesTirMonstre, world
-	
+	//Parameters for garabage collector: -XX:+PrintGCDetails -XX:+PrintGCTimeStamps
+	//Currently the application starts with 2048mb of memory allocation pool for the JVM 
 }

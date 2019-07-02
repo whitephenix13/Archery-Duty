@@ -3,6 +3,7 @@ package option;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -14,7 +15,6 @@ import java.util.LinkedHashMap;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -22,10 +22,12 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import Affichage.Drawable;
+import gameConfig.InterfaceConstantes;
 import utils.observer.Observer;
 
 @SuppressWarnings("serial")
-public class AffichageOption extends JFrame implements Observer{
+public class AffichageOption extends Drawable implements Observer{
 
 	public CustomLabel lSon = new CustomLabel("SON");   
 
@@ -95,6 +97,7 @@ public class AffichageOption extends JFrame implements Observer{
 
 	public AffichageOption(AbstractControlerOption _controler)
 	{
+		super();
 		controler=_controler;
 		initComposant();
 	}
@@ -252,6 +255,8 @@ public class AffichageOption extends JFrame implements Observer{
 		mapPanel.get("retour").add(retour);
 
 		this.getContentPane().setLayout(new GridLayout(11,1));
+		this.getContentPane().setBackground(InterfaceConstantes.BACKGROUND_COLOR);
+		this.getContentPane().setOpaque(false);
 		for(JPanel pan : mapPanel.values())
 		{
 			this.getContentPane().add(pan);
@@ -267,6 +272,7 @@ public class AffichageOption extends JFrame implements Observer{
 		public void mousePressed(MouseEvent e) {}
 		public void mouseReleased(MouseEvent e) 
 		{
+			controler.opt.computationDone=false;
 			JButton button = (JButton)e.getSource();
 			Rectangle r = button.getBounds();
 			//Apply pressed only if the release is on the pressed button
@@ -274,6 +280,7 @@ public class AffichageOption extends JFrame implements Observer{
 				controler.opt.resetVariables();
 				controler.controlRetourMenuPrincipal();
 			}
+			controler.opt.computationDone=true;
 		}
 	}
 
@@ -283,7 +290,9 @@ public class AffichageOption extends JFrame implements Observer{
 	{
 		public void stateChanged(ChangeEvent event) 
 		{
+			controler.opt.computationDone=false;
 			controler.opt.setVolumeMusique(event);
+			controler.opt.computationDone=true;
 		}
 	}
 
@@ -292,8 +301,9 @@ public class AffichageOption extends JFrame implements Observer{
 	{
 		public void stateChanged(ChangeEvent event) 
 		{
+			controler.opt.computationDone=false;
 			controler.opt.setVolumeBruitage(event);
-
+			controler.opt.computationDone=true;
 		}
 	}
 
@@ -309,6 +319,7 @@ public class AffichageOption extends JFrame implements Observer{
 		public void mouseExited(MouseEvent e) {	
 		}
 		public void mousePressed(MouseEvent e) {
+			controler.opt.computationDone=false;
 			//Aucune case selectionnee
 			if(!controler.opt.getCaseFocus())
 			{
@@ -322,6 +333,7 @@ public class AffichageOption extends JFrame implements Observer{
 			}
 			//CHOIX: si l'utilisateur reclic sur la case en question, deux événements sont lancés: 
 			// inputListener et optionCliqueListener (dans cet ordre) ce qui fait que la case est reselectionnée.
+			controler.opt.computationDone=true;
 		}
 		public void mouseReleased(MouseEvent e) {	
 		}
@@ -338,6 +350,7 @@ public class AffichageOption extends JFrame implements Observer{
 		public void mouseExited(MouseEvent e) {}
 		public void mousePressed(MouseEvent e) 
 		{
+			controler.opt.computationDone=false;
 			//on vérifie que le clic de la souris est valide et qu'il y a une case selectionne
 			controler.controlMouseInput(e);
 			//Comme la touche a ete modifiée, plus aucune case n'est selectionne
@@ -346,7 +359,7 @@ public class AffichageOption extends JFrame implements Observer{
 			controler.opt.blinkCustomClickableLabel();
 			//on retire la case memorise
 			controler.controlCustomClickableLabel(null);
-
+			controler.opt.computationDone=true;
 		}
 		public void mouseReleased(MouseEvent e) {}
 
@@ -366,14 +379,20 @@ public class AffichageOption extends JFrame implements Observer{
 		public void keyTyped(KeyEvent e) {}
 
 	}
-
+	
+	@Override
+	public void draw(Graphics g)
+	{
+		//Nothing to draw
+		mainFrame.warnFadeOutCanStart();
+	}
 
 	@Override
 	public void update() {		
 
 		//message d'erreur lors d'un input invalide
 		if(controler.opt.getShowInputError())
-			JOptionPane.showMessageDialog(this, "Touches autorisées: A-Z, 0-9, F1-F12, ESPACE, CTRL, SHIFT, BACKSPACE, ENTER, FLECHES, SOURIS" , "Erreur Saisie", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this.getContentPane(), "Touches autorisées: A-Z, 0-9, F1-F12, ESPACE, CTRL, SHIFT, BACKSPACE, ENTER, FLECHES, SOURIS" , "Erreur Saisie", JOptionPane.ERROR_MESSAGE);
 
 		//Met à jour les touches
 		if(controler.opt.getUpdateInputText())
@@ -381,7 +400,7 @@ public class AffichageOption extends JFrame implements Observer{
 
 		//Remet à 0 les variables demandant d'updater un composant
 		controler.opt.resetVariablesAffichage();
-		this.repaint();
+		this.getContentPane().repaint();
 	}
 
 

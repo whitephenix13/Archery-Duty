@@ -23,7 +23,7 @@ public class BarreOutil{
 	//JScrollPane jsp = new JScrollPane(tbar);
 	 private JButton souris_p = new JButton(new ImageIcon(getClass().getClassLoader().getResource("resources/Editeur/souris_p.png")));
 	 private JButton loupe_p = new JButton(new ImageIcon(getClass().getClassLoader().getResource("resources/Editeur/loupe_p.png")));
-	 private JButton vide_p = new JButton(new ImageIcon(getClass().getClassLoader().getResource("resources/Editeur/vide_p.png")));
+	 //private JButton vide_p = new JButton(new ImageIcon(getClass().getClassLoader().getResource("resources/Editeur/vide_p.png")));
 	 private JButton sol_p = new JButton(new ImageIcon(getClass().getClassLoader().getResource("resources/Editeur/sol_p.png")));
 	 private JButton terre_p = new JButton(new ImageIcon(getClass().getClassLoader().getResource("resources/Editeur/terre_p.png")));
 	 private JButton ciel_p = new JButton(new ImageIcon(getClass().getClassLoader().getResource("resources/Editeur/ciel_p.png")));
@@ -46,8 +46,8 @@ public class BarreOutil{
 			loupe_p.addActionListener(new TextureListener());
 			tbar.add(loupe_p);
 			
-			vide_p.addActionListener(new TextureListener());
-			tbar.add(vide_p);
+			//vide_p.addActionListener(new TextureListener());
+			//tbar.add(vide_p);
 			sol_p.addActionListener(new TextureListener());
 			tbar.add(sol_p);
 			terre_p.addActionListener(new TextureListener());
@@ -76,14 +76,14 @@ public class BarreOutil{
 				edit.dezoom();
 			}
 			else if (e.getSource()==souris_p){
-				edit.setTexture(TypeBloc.VIDE);
+				edit.setTexture(TypeBloc.NONE);
 			}
 			else if(e.getSource()==sol_p){
 				edit.setTexture(TypeBloc.SOL);
 			}
-			else if(e.getSource()==vide_p){
-				edit.setTexture(TypeBloc.VIDE);
-			}
+			/*else if(e.getSource()==vide_p){
+				edit.setTexture(TypeBloc.NONE);
+			}*/
 			else if(e.getSource()==terre_p){
 				edit.setTexture(TypeBloc.TERRE);
 			}

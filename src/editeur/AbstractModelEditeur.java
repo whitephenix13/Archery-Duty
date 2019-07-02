@@ -11,13 +11,17 @@ import editeur.BarreOutil.BarreOutil;
 import editeur.Menu.menuEditeur;
 import gameConfig.InterfaceConstantes;
 import images.ImagesMonde;
+import menu.menuPrincipal.GameHandler;
+import menu.menuPrincipal.GameMode;
 import partie.bloc.Bloc.TypeBloc;
 import partie.bloc.Monde;
 import utils.observer.Observable;
 import utils.observer.Observer;
 
-public abstract class AbstractModelEditeur implements Observable{
+public abstract class AbstractModelEditeur implements Observable,GameMode{
 
+	public GameHandler gameHandler;
+	
 	protected BarreOutil barreOut;
 	protected menuEditeur menuEdit;
 	
@@ -56,7 +60,7 @@ public abstract class AbstractModelEditeur implements Observable{
 	protected int xMousePos;
 	protected int yMousePos;
 
-	/*//creation des J Menu
+	/*//REMOVE creation des J Menu
 	protected JMenuBar menuBar = new JMenuBar();
 	protected JMenu m_fichier = new JMenu(" Fichier   ");
 	protected JMenu m_objet = new JMenu(" Objet   ");
@@ -103,6 +107,8 @@ public abstract class AbstractModelEditeur implements Observable{
 	protected String[] textMessageDialog ={"",""};
 	protected int typeMessageDialog=-1;
 	
+	protected boolean computationDone;
+	
 	private ArrayList<Observer> listObserver = new ArrayList<Observer>();
 		
 	public boolean getRepaint(){return repaint;}
@@ -115,6 +121,11 @@ public abstract class AbstractModelEditeur implements Observable{
 	public void setBackground(boolean _background){	
 		background=_background;
 		}
+	
+	public AbstractModelEditeur()
+	{
+		computationDone=true;
+	}
 	
 	public void init ()
 	{
@@ -129,7 +140,7 @@ public abstract class AbstractModelEditeur implements Observable{
 		if(imMonde==null)
 			imMonde= new ImagesMonde();
 		
-		texture=TypeBloc.VIDE;
+		texture=TypeBloc.NONE;
 				
 		monstreActive=false;
 		staticMonstre=false;

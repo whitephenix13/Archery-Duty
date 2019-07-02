@@ -23,14 +23,11 @@ import partie.modelPartie.AffichagePartie;
 import utils.observer.Observable;
 import utils.observer.Observer;
 
-public abstract class AbstractModelPrincipal implements Observable{
+public abstract class AbstractModelPrincipal implements Observable,GameHandler,GameMode{
 	
 	//Time in order in order to display only every 1/fps seconds
 	protected long last_update = 0;
 	
-	//booleen permettant de s'assurer qu'un tour de boucle complet a été fait lorsqu'on change de mode 
-	protected boolean debutBoucle;
-
 	//touches de deplacement
 	protected Touches touches ;
 	
@@ -39,12 +36,15 @@ public abstract class AbstractModelPrincipal implements Observable{
 	
 	public ImagesPrincipal imPrincipal= new ImagesPrincipal();
 
-	public static String modeActuel="Principal";
-	public static String modeSuivant="";
-	public static boolean changeMode=false;
-	public static boolean changeFrame =false;
+	public GameModeType currentGameModeType;
+	//public static String modeSuivant=""; //REMOVE
+	//public static boolean changeMode=false;//REMOVE
+	//public static boolean changeFrame =false;//REMOVE
 	public static boolean test =false;
 	public static DebugTime debugTime;
+	public static DebugTime debugTimeAffichage;
+
+	protected boolean forceActuAffichage; 
 	
 	protected AbstractModelPrincipal principal ;
 	protected AbstractControlerPrincipal controlerPrincipal ;
@@ -70,11 +70,24 @@ public abstract class AbstractModelPrincipal implements Observable{
 	
 	protected Affichage affich; 
 	
+	protected GameMode currentGameMode; 
+	protected GameModeType nextGameMode;
+	protected boolean computationDone;
+	
+	protected boolean gameInit;
 	private ArrayList<Observer> listObserver = new ArrayList<Observer>();
-
+	public AbstractModelPrincipal()
+	{
+		currentGameModeType = GameModeType.MAIN_MENU;
+		nextGameMode=GameModeType.MAIN_MENU;
+		currentGameMode = this;
+		computationDone=true;//set to false via listeners 
+	}
+	
+	
 	protected abstract void Init();
-	protected abstract void ChangementMode();
-	protected abstract void StartBoucleJeu();
+	//REMOVE protected abstract void ChangementMode();
+	//REMOVE protected abstract void StartBoucleJeu();
 	//Implémentation du pattern observer
 
 	  public void addObserver(Observer obs) {

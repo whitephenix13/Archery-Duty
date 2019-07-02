@@ -1,18 +1,20 @@
 package partie.modelPartie;
 
-import java.awt.BorderLayout;
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.LayoutManager2;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.util.Arrays;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -22,10 +24,13 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
 import Affichage.Affichage;
+import Affichage.Drawable;
 import gameConfig.InterfaceConstantes;
+import menu.menuPrincipal.ModelPrincipal;
 import option.AbstractControlerOption;
 import option.AbstractModelOption;
 import option.AffichageOption;
+import option.Config;
 import option.ControlerOption;
 import option.ModelOption;
 import option.Touches;
@@ -33,7 +38,7 @@ import serialize.Serialize;
 import utils.observer.Observer;
 
 @SuppressWarnings("serial")
-public class AffichagePartie extends JFrame implements Observer{
+public class AffichagePartie extends Drawable implements Observer{
 
 	protected MenuJButton bRejouer=new MenuJButton("Rejouer");
 	protected MenuJButton bMenuPrincipal=new MenuJButton("Menu Principal");
@@ -49,7 +54,6 @@ public class AffichagePartie extends JFrame implements Observer{
 	protected ArrowSlotButton[] bSlot3 = new ArrowSlotButton[4];
 	protected ArrowSlotButton[] bSlot4 = new ArrowSlotButton[4];
 
-	protected PanelPartie panelPartie=new PanelPartie();
 	protected JPanel panelPauseY = new JPanel();
 	protected JPanel panelPauseX = new JPanel();
 	protected boolean firstTimePause=false;
@@ -59,7 +63,10 @@ public class AffichagePartie extends JFrame implements Observer{
 	protected JPanel panelFinY = new JPanel();
 
 	private final int BARS_HEIGHT = 70;
+	private boolean transitionToLoading = false;
+	private boolean transitionToPartie = false;
 
+	
 	public class PositionPanel extends JPanel
 	{
 		int xsize; 
@@ -137,7 +144,6 @@ public class AffichagePartie extends JFrame implements Observer{
 
 	}
 
-
 	protected JPanel panelSlots = new JPanel();
 	protected JPanel panelSlot1 = new JPanel();
 	protected JPanel panelSlot2 = new JPanel();
@@ -153,6 +159,7 @@ public class AffichagePartie extends JFrame implements Observer{
 
 	public AffichagePartie(AbstractControlerPartie _controlerPartie)
 	{
+		super();
 		controlerPartie=_controlerPartie;
 		initAffichage();
 	}
@@ -212,7 +219,7 @@ public class AffichagePartie extends JFrame implements Observer{
 		panelFinY.add(panelFinX);
 		panelFinY.add(Box.createVerticalGlue());
 
-		panelPartie.setLayout(new BoxLayout(panelPartie,BoxLayout.X_AXIS));
+		mainPanel.setLayout(new BoxLayout(mainPanel,BoxLayout.X_AXIS));
 
 		ArrowSlotButton[][] allbSlots = {bSlot1,bSlot2,bSlot3,bSlot4};
 		for(int num=0; num<4; ++num)
@@ -236,53 +243,58 @@ public class AffichagePartie extends JFrame implements Observer{
 		panelSlots.setOpaque(false);
 
 		panelSlots.setFocusable(false);
-		panelPartie.add(panelSlots);
+		mainPanel.add(panelSlots);
 
-		panelPartie.setOpaque(true); 
+		mainPanel.setOpaque(true); 
 		initFlecheIcon=true;
 
 		//on utilise le content pane principal pour dessiner 
-		panelPartie.setFocusable(true);
-		panelPartie.requestFocusInWindow();
-
+		mainPanel.setFocusable(true);
+		mainPanel.requestFocusInWindow();
+		mainPanel.setOpaque(false);
+		
 		//initialize input in order for them to be modifier by option
-		controlerPartie.partie.inputPartie.init(panelPartie);
-
-		this.getContentPane().add(panelPartie);
-		this.pack();
+		controlerPartie.partie.inputPartie.init(mainPanel);
 
 	}
-	public class PanelPartie extends JPanel 
-	{
+	
 
-		public PanelPartie ()
+	@Override
+	public void draw(Graphics g){
+		/*REMOVE System.out.println(Serialize.niveauLoaded +" "+ controlerPartie.partie.loaderPartie.isLoadingDone()+ " "+controlerPartie.partie.isFirstFrameReady);
+		if(!Serialize.niveauLoaded || !controlerPartie.partie.loaderPartie.isLoadingDone()||!controlerPartie.partie.isFirstFrameReady)
 		{
-			this.setOpaque(false);
-		}
-		public void paintComponent(Graphics g)
-		{
-			if(!Serialize.niveauLoaded || !controlerPartie.partie.loaderPartie.isLoadingDone())
-			{
-				this.getRootPane().setBackground(Color.BLACK);
-
-				controlerPartie.partie.loaderPartie.showLoading(g);
-				return;
+			mainPanel.getRootPane().setBackground(Color.BLACK);
+			if(!transitionToLoading){
+				System.out.println("======== Transition to loader ======");
+				mainFrame.beginTransition(controlerPartie.partie.loaderPartie.getAffichageLoader());
+				transitionToLoading=true;
 			}
-
-			if(!controlerPartie.partie.computationDone && !controlerPartie.partie.getFinPartie() && !controlerPartie.partie.getForceRepaint()){
-				return;
-			}
-
-			if(controlerPartie.partie.getForceRepaint())
-				controlerPartie.partie.resetForceRepaint();
-
-			super.paintComponent(g);
-
-			//on dessine le niveau
-
-			controlerPartie.partie.drawPartie(g);
+			mainPanel.superPaintComponent(g);
+			//REMOVE controlerPartie.partie.loaderPartie.showLoading(g);
+			return;
+		}*/
+		
+		if(!controlerPartie.partie.isComputationDone()  && !controlerPartie.partie.getFinPartie() && !controlerPartie.partie.getForceRepaint()){
+			return;
 		}
+
+		/*REMOVE transitionToLoading=false;
+		if(!transitionToPartie){
+			System.out.println("======== Transition to partie ======");
+			mainFrame.beginTransition(this);
+			transitionToPartie=true;
+		}
+		if(!mainFrame.isInTransition())
+			transitionToPartie=false;*/
+		mainFrame.warnFadeOutCanStart();//Ask for the fade out of the previous screen
+		if(controlerPartie.partie.getForceRepaint())
+			controlerPartie.partie.resetForceRepaint();
+		
+		//draw main game
+		controlerPartie.partie.drawPartie(g);
 	}
+
 
 	public class MenuJButton extends JButton
 	{
@@ -305,7 +317,7 @@ public class AffichagePartie extends JFrame implements Observer{
 
 			EnableBoutonsFin(true);
 
-			panelPartie.removeAll();
+			mainPanel.removeAll();
 			
 			JPanel layerPan = new JPanel();
 			layerPan.setOpaque(false);
@@ -313,7 +325,7 @@ public class AffichagePartie extends JFrame implements Observer{
 			panelFinY.setSize(InterfaceConstantes.WINDOW_WIDTH,InterfaceConstantes.WINDOW_HEIGHT);
 			layerPan.add(panelFinY);
 			layerPan.add(panelSlots);
-			panelPartie.add(layerPan);
+			mainPanel.add(layerPan);
 
 		}
 		//Start pause
@@ -324,7 +336,7 @@ public class AffichagePartie extends JFrame implements Observer{
 
 			EnableBoutonsPause(true);
 
-			panelPartie.removeAll();
+			mainPanel.removeAll();
 			
 			JPanel layerPan = new JPanel();
 			layerPan.setOpaque(false);
@@ -334,7 +346,7 @@ public class AffichagePartie extends JFrame implements Observer{
 			layerPan.add(panelSlots);
 
 			DisableAllSlotButton(true);
-			panelPartie.add(layerPan);
+			mainPanel.add(layerPan);
 
 		}
 		//End pause
@@ -360,8 +372,8 @@ public class AffichagePartie extends JFrame implements Observer{
 			doitRevalidate=true;
 			firstTimeFin=false;
 			EnableBoutonsPause(false);
-			panelPartie.removeAll();
-			panelPartie.add(panelSlots);
+			mainPanel.removeAll();
+			mainPanel.add(panelSlots);
 
 			DisableAllSlotButton(false);
 		}
@@ -415,14 +427,24 @@ public class AffichagePartie extends JFrame implements Observer{
 			controlerPartie.partie.arrowSlotIconChanged=false;
 		}
 
-		panelPartie.requestFocus();
-		panelPartie.repaint();
+		mainPanel.requestFocus();
+		mainFrame.repaint();
 
 
 	}
+	
+	public boolean isLoadingDone()
+	{
+		return controlerPartie.partie.loaderPartie.isGameModeLoaded();
+	}
+	public Drawable getAffichageLoader()
+	{
+		return controlerPartie.partie.loaderPartie.getAffichageLoader();
+	}
+	
 	public void requestGameFocus()
 	{
-		panelPartie.requestFocusInWindow();
+		mainPanel.requestFocusInWindow();
 
 	}
 	public void validateAffichagePartie(Affichage affich)
@@ -511,9 +533,9 @@ public class AffichagePartie extends JFrame implements Observer{
 
 	public void addListenerPartie()
 	{
-		controlerPartie.partie.inputPartie.init(panelPartie);
-		panelPartie.addMouseListener(new SourisListener());
-		panelPartie.addMouseMotionListener(new SourisMotionListener());
+		controlerPartie.partie.inputPartie.init(mainPanel);
+		mainPanel.addMouseListener(new SourisListener());
+		mainPanel.addMouseMotionListener(new SourisMotionListener());
 
 		MenuJButton[] addMouse = {bRejouer,bOption,bReprendre,bQuitter,bMenuPrincipal,bMenuPrincipal2};
 		for(MenuJButton mjb : addMouse)
@@ -529,8 +551,8 @@ public class AffichagePartie extends JFrame implements Observer{
 	public void removeListenerPartie()
 	{
 		controlerPartie.partie.inputPartie.reset();
-		panelPartie.removeMouseListener(panelPartie.getMouseListeners()[0]);
-		panelPartie.removeMouseMotionListener(panelPartie.getMouseMotionListeners()[0]);
+		mainPanel.removeMouseListener(mainPanel.getMouseListeners()[0]);
+		mainPanel.removeMouseMotionListener(mainPanel.getMouseMotionListeners()[0]);
 
 		MenuJButton[] removeMouse = {bRejouer,bOption,bReprendre,bQuitter,bMenuPrincipal,bMenuPrincipal2};
 		for(MenuJButton mjb : removeMouse){
@@ -556,11 +578,15 @@ public class AffichagePartie extends JFrame implements Observer{
 		public void mouseExited(MouseEvent e) {	
 		}
 		public void mousePressed(MouseEvent e) {
+			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=false;
 			CloseAllSlots();
 			controlerPartie.controlMousePressed(e);
+			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=true;
 		}
 		public void mouseReleased(MouseEvent e) {
+			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=false;
 			controlerPartie.controlMouseReleased(e);
+			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=true;
 		}
 
 	}
@@ -569,13 +595,17 @@ public class AffichagePartie extends JFrame implements Observer{
 	{
 		public void mouseDragged(MouseEvent e) 
 		{
+			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=false;
 			controlerPartie.partie.xPositionSouris=e.getX();
 			controlerPartie.partie.yPositionSouris=e.getY();
+			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=true;
 		}
 		public void mouseMoved(MouseEvent e) 
 		{
+			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=false;
 			controlerPartie.partie.xPositionSouris=e.getX();
 			controlerPartie.partie.yPositionSouris=e.getY();
+			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=true;
 
 		}
 	}
@@ -596,12 +626,14 @@ public class AffichagePartie extends JFrame implements Observer{
 
 		public void mouseReleased(MouseEvent e) 
 		{
+			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=false;
 			JButton button = (JButton)e.getSource();
 			Rectangle r = button.getBounds();
 			//Apply pressed only if the release is on the pressed button
 			if(r.contains(new Point(r.x+e.getX(),r.y+e.getY()))){
 				controlerPartie.controlBoutonsPressed(((JButton)e.getSource()));
 			}
+			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=true;
 		}
 
 	}
@@ -625,7 +657,8 @@ public class AffichagePartie extends JFrame implements Observer{
 		public void mousePressed(MouseEvent e) {
 			if( (controlerPartie.partie.finPartie) || (!controlerPartie.partie.finPartie &&controlerPartie.partie.inPause))
 				return;
-
+			
+			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=false;
 			ArrowSlotButton[][] allSlots = {bSlot1,bSlot2,bSlot3,bSlot4};
 			ArrowSlotButton source_but = (ArrowSlotButton)e.getSource();
 
@@ -675,6 +708,7 @@ public class AffichagePartie extends JFrame implements Observer{
 					}
 				}
 			}
+			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=true;
 		}
 
 		@Override
@@ -685,18 +719,19 @@ public class AffichagePartie extends JFrame implements Observer{
 
 	public void createOption(Touches _touches)
 	{
-		AbstractModelOption option = new ModelOption(_touches,controlerPartie.partie.inputPartie);
+		AbstractModelOption option = new ModelOption(_touches,controlerPartie.partie.inputPartie,controlerPartie.partie.gameHandler);
 		AbstractControlerOption controlerOption = new ControlerOption(option);
 		final AffichageOption affichageOption = new AffichageOption(controlerOption);
 		affichageOption.addListenerOption();
 		affichageOption.retour.setContentAreaFilled(false);
 		affichageOption.retour.removeMouseListener( affichageOption.retour.getMouseListeners()[1]);
+		affichageOption.setFrameReference(mainFrame);
 		option.addObserver(affichageOption);
 		final Component[] components =this.getContentPane().getComponents();
 
-		this.getContentPane().removeAll();
-		this.getContentPane().add(affichageOption.getContentPane());
-
+		//this.getContentPane().removeAll();
+		//REMOVEthis.getContentPane().add(affichageOption.getContentPane());
+		mainFrame.beginTransition(affichageOption);//manually force the begin transition as we don't want to unload the active game 
 		affichageOption.retour.addMouseListener(new MouseListener()
 		{
 			public void mouseClicked(MouseEvent arg0) {}			
@@ -706,6 +741,7 @@ public class AffichagePartie extends JFrame implements Observer{
 			{
 			}
 			public void mouseReleased(MouseEvent e) {
+				//REMOVE AffichagePartie.this.controlerPartie.partie.listenersComputationDone=false;
 				JButton button = (JButton)e.getSource();
 				Rectangle r = button.getBounds();
 				//Apply pressed only if the release is on the pressed button
@@ -715,41 +751,66 @@ public class AffichagePartie extends JFrame implements Observer{
 					{
 						(AffichagePartie.this).getContentPane().add(c);
 					}
-					(AffichagePartie.this).repaint();
-					(AffichagePartie.this).revalidate();
+					mainFrame.beginTransition(AffichagePartie.this);
+					//REMOVE(AffichagePartie.this).mainFrame.repaint();
+					//REMOVE(AffichagePartie.this).mainFrame.revalidate();
 					//doitRevalidate=true;
 				}
+				//REMOVE AffichagePartie.this.controlerPartie.partie.listenersComputationDone=true;
 			}
 		});
 
-		this.repaint();
-		this.revalidate();
+		this.mainFrame.repaint();
+		this.mainFrame.revalidate();
 		doitRevalidate=true;
 	}
 
 	private void onGameRestart()
 	{
-		panelPartie.removeAll();
-		panelPartie.add(panelSlots);
+		mainPanel.removeAll();
+		mainPanel.add(panelSlots);
 		DisableAllSlotButton(false);
 		initFlecheIcon=true;
 	}
 
 	public void update() {	
+		
+		if(!Serialize.niveauLoaded || !controlerPartie.partie.loaderPartie.isGameModeLoaded())
+		{
+			mainFrame.repaint();
+			return;
+		}
+			
+		
+		boolean specialCase =false;
 		if(controlerPartie.partie.getDisableBoutonsFin()){
+			specialCase=true;
 			EnableBoutonsFin(false);
 			onGameRestart();
 		}
 
 		if(controlerPartie.partie.setAffichageOption)
 		{
+			specialCase=true;
 			createOption(controlerPartie.partie.touches);
 
 		}
 		if(controlerPartie.partie.getForceRepaint()){
-			panelPartie.repaint();
+			specialCase =true;
+			mainPanel.repaint();
 		}
-		controlerPartie.partie.resetVariablesAffichage();
+		if(specialCase)
+			controlerPartie.partie.resetVariablesAffichage();
+		else
+		{
+			//Main update 
+			repaintPartie();
+			ModelPrincipal.debugTime.elapsed("repaint");
+
+
+			validateAffichagePartie(mainFrame);
+			
+		}
 	}
 }
 

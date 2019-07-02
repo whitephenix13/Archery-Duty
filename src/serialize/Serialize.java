@@ -26,9 +26,13 @@ public class Serialize implements InterfaceConstantes{
 
 	public static String erreurMsgChargement="";
 
+	private static byte[] byte4;
+	private static byte[] byte1;
+
+	
 	private static boolean isVersionOlderThan(String myVersion, String versionToCompare)
 	{
-		return myVersion.compareTo(versionToCompare)<=0;
+		return myVersion.compareTo(versionToCompare)<0;
 	}
 	
 	public static String serializeStockageMonstre(FileOutputStream fos,StockageMonstre monstre ) 
@@ -50,34 +54,30 @@ public class Serialize implements InterfaceConstantes{
 
 	public static StockageMonstre deserializeStockageMonstre(InputStream is,String version) 
 	{
-		StockageMonstre stock = new StockageMonstre(TypeBloc.VIDE, new Point(),false);
+		StockageMonstre stock = new StockageMonstre(TypeBloc.NONE, new Point(),false);
 		Point p = new Point();
 
 		try
 		{
-			byte[] bytes = new byte[4];
+			//REMOVEbyte[] bytes = new byte[4];
 			
 			//int,4, type of the monster 
-			bytes = new byte[4];
-			is.read(bytes); 
-			stock.type = TypeBloc.values()[bytesToInt(bytes)];
+			is.read(byte4); 
+			stock.type = TypeBloc.values()[bytesToInt(byte4)];
 			
 			//int, 4 , pos en x du monstre
-			bytes = new byte[4];
-			is.read(bytes); 
-			p.x = bytesToInt(bytes);
+			is.read(byte4); 
+			p.x = bytesToInt(byte4);
 
 			//int, 4 , pos en y du monstre
-			bytes = new byte[4];
-			is.read(bytes); 
-			p.y = bytesToInt(bytes);
+			is.read(byte4); 
+			p.y = bytesToInt(byte4);
 
 			stock.pos =p ;
 
 			//bool, 1 , monstre immobile?
-			bytes = new byte[1];
-			is.read(bytes); 
-			stock.immobile = byteToBool(bytes);
+			is.read(byte1); 
+			stock.immobile = byteToBool(byte1);
 
 			return(stock);
 		}
@@ -117,9 +117,8 @@ public class Serialize implements InterfaceConstantes{
 		try 
 		{
 			//int, 4, taille de la liste
-			byte[] bytes = new byte[4];
-			is.read(bytes);
-			int nb = bytesToInt(bytes);
+			is.read(byte4);
+			int nb = bytesToInt(byte4);
 
 			for(int i =0; i<nb; i++)
 			{
@@ -164,29 +163,25 @@ public class Serialize implements InterfaceConstantes{
 
 		try 
 		{
-			bytes = new byte[4];
-			is.read(bytes);
-			bloc.setType(TypeBloc.values()[bytesToInt(bytes)]);
-			
+			is.read(byte4);
+			int temp = bytesToInt(byte4);
+			bloc.setType(TypeBloc.values()[temp]);
+
 			//int,4,position en x du bloc
-			bytes = new byte[4];
-			is.read(bytes);
-			bloc.setPos(bytesToInt(bytes), bloc.getYpos());
+			is.read(byte4);
+			bloc.setPos(bytesToInt(byte4), bloc.getYpos());
 
 			//int,4,position en y du bloc
-			bytes = new byte[4];
-			is.read(bytes);
-			bloc.setPos( bloc.getXpos(),bytesToInt(bytes));
+			is.read(byte4);
+			bloc.setPos( bloc.getXpos(),bytesToInt(byte4));
 
 			//bool,1,peut-on passer au travers du bloc?
-			bytes = new byte[1];
-			is.read(bytes);
-			bloc.setBloquer(byteToBool(bytes));
+			is.read(byte1);
+			bloc.setBloquer(byteToBool(byte1));
 
 			//bool,1,le bloc fait-il partie du décors?
-			bytes = new byte[1];
-			is.read(bytes);
-			bloc.setBackground(byteToBool(bytes));
+			is.read(byte1);
+			bloc.setBackground(byteToBool(byte1));
 
 			return(bloc);
 		}
@@ -218,7 +213,7 @@ public class Serialize implements InterfaceConstantes{
 			{
 				for(int j=0; j<ylength; j++)
 				{
-					if(!(b[i][j].getType().equals(TypeBloc.VIDE)))
+					if(b[i][j] != null && !b[i][j].getType().equals(TypeBloc.NONE))
 					{
 						if(nb==0)//premier bloc non nul
 						{
@@ -284,32 +279,27 @@ public class Serialize implements InterfaceConstantes{
 		try
 		{
 			//int,4,nombre de bloc non nuls
-			bytes=new byte[4];
-			is.read(bytes);
-			nbBloc=bytesToInt(bytes);
+			is.read(byte4);
+			nbBloc=bytesToInt(byte4);
 			loadPercentage=1;
 
 			//int,4, indice x minimal du début du monde 
-			bytes=new byte[4];
-			is.read(bytes);
-			xoffset=bytesToInt(bytes);
+			is.read(byte4);
+			xoffset=bytesToInt(byte4);
 			loadPercentage=2;
 
 			//int,4,indice y minimal du début du monde 
-			bytes=new byte[4];
-			is.read(bytes);
-			yoffset=bytesToInt(bytes);
+			is.read(byte4);
+			yoffset=bytesToInt(byte4);
 			loadPercentage=3;
 
 			//int,4, longueur en x du monde
-			bytes=new byte[4];
-			is.read(bytes);
-			xlength=bytesToInt(bytes);
+			is.read(byte4);
+			xlength=bytesToInt(byte4);
 
 			//int,4,longueur en y du monde 
-			bytes=new byte[4];
-			is.read(bytes);
-			ylength=bytesToInt(bytes);
+			is.read(byte4);
+			ylength=bytesToInt(byte4);
 
 			//Bloc[][], nbBloc, matrice de bloc
 
@@ -324,29 +314,17 @@ public class Serialize implements InterfaceConstantes{
 			else
 			{
 				monde = new Bloc[xlength][ylength];
-				for(int abs=0;abs<xlength;abs++)
-				{
-					for(int ord=0;ord<ylength;ord++)
-					{
-						//TODO: avoid doing that 
-						Bloc blocVide =new Bloc(TypeBloc.VIDE,abs*100,abs,false,false);
-						monde[abs][ord]=blocVide;
-						loadPercentage=(int) (5+ 50.0/(xlength*ylength)*(ord + abs*ylength));
-					}
-				}
 			}
 			loadPercentage=55;
 			for(int i=0; i<nbBloc; i++)
 			{
-				bytes=new byte[4];
-				is.read(bytes);
+				is.read(byte4);
 				//x=bytesToInt(bytes)-xoffset;
-				x=bytesToInt(bytes);
+				x=bytesToInt(byte4);
 
-				bytes=new byte[4];
-				is.read(bytes);
+				is.read(byte4);
 				//y=bytesToInt(bytes)-yoffset;
-				y=bytesToInt(bytes);
+				y=bytesToInt(byte4);
 
 				
 				monde[x][y]=deserializeBloc(is,version);
@@ -408,34 +386,28 @@ public class Serialize implements InterfaceConstantes{
 			if(!erreurMsgChargement.equals(""))
 				return null;
 			//int, 4, l'indice de début en x où faire spawner des monstres 
-			bytes=new byte[4];
-			is.read(bytes);
-			m.xStartMap=bytesToInt(bytes);
+			is.read(byte4);
+			m.xStartMap=bytesToInt(byte4);
 
 			//int, 4, l'indice de début en y où faire spawner des monstres 
-			bytes=new byte[4];
-			is.read(bytes);
-			m.yStartMap=bytesToInt(bytes);
+			is.read(byte4);
+			m.yStartMap=bytesToInt(byte4);
 
 			//int, 4, l'indice de fin en x où faire spawner des monstres 
-			bytes=new byte[4];
-			is.read(bytes);
-			m.xEndMap=bytesToInt(bytes);
+			is.read(byte4);
+			m.xEndMap=bytesToInt(byte4);
 
 			//int, 4, l'indice de fin en x où faire spawner des monstres 
-			bytes=new byte[4];
-			is.read(bytes);
-			m.yEndMap=bytesToInt(bytes);
+			is.read(byte4);
+			m.yEndMap=bytesToInt(byte4);
 
 			//int, 4, l'indice de début en x du perso
-			bytes=new byte[4];
-			is.read(bytes);
-			m.xStartPerso=bytesToInt(bytes);
+			is.read(byte4);
+			m.xStartPerso=bytesToInt(byte4);
 
 			//int, 4, l'indice de début en y du perso
-			bytes=new byte[4];
-			is.read(bytes);
-			m.yStartPerso=bytesToInt(bytes);
+			is.read(byte4);
+			m.yStartPerso=bytesToInt(byte4);
 
 			loadPercentage =(int) (80);
 
@@ -481,6 +453,8 @@ public class Serialize implements InterfaceConstantes{
 		InputStream is;
 		String path = ModelChoixNiveau.getPath()+ name;
 		byte[] bytes= new byte[5];
+		byte4 =new byte[4];
+		byte1 = new byte[1];
 		String version;
 		erreurMsgChargement="";
 

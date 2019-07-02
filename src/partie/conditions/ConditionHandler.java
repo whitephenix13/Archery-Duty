@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
+import menu.menuPrincipal.ModelPrincipal;
 import partie.modelPartie.PartieTimer;
 import utils.Vitesse;
 
@@ -131,10 +132,8 @@ public class ConditionHandler {
 
 		if(lenteur != null)
 			factor*=lenteur.FACTOR;
-
 		if(vitesse != null)
 			factor*=vitesse.FACTOR;
-
 		return factor;
 	} 
 

@@ -1,92 +1,143 @@
 package debug;
 
-import gameConfig.InterfaceConstantes;
+import java.util.Arrays;
 
 public class DebugTime {
-	private double MAX_TIME = 17;//ms
-	
+	public enum PrintMode{NONE,PRINT_DIRECTLY, PRINT_ONLY_SLOW_ACTIONS, PRINT_ONLY_SLOW_LOOP, PRINT_SLOW_ACTION_OR_SLOW_LOOP,PRINT_SLOW_ACTION_AND_SLOW_LOOP, PRINT_ALL}
+		
 	private double starttime;
 	private double[] times;
+	private int currentStackLength =0;
+	private PrintMode printMode;
+	
+	private boolean shouldPrintLog = false;
+	private String log = "";
+	
+	private int loopToSlowTime;
+	private int actionToSlowTime;
+	private int max_verbose;
+	
+	public DebugTime(int _loopToSlowTime, int _actionToSlowTime, int _verbose){
+		loopToSlowTime=_loopToSlowTime;
+		actionToSlowTime=_actionToSlowTime;
+		max_verbose=_verbose;
+	};
 
-	public DebugTime(){};
-	public void init()
+	public void init(PrintMode _printMode,int frame)
 	{
+		//System.out.println("RESET DEBUG TIME");
 		starttime = System.nanoTime();
-
-		times = new double[10];
-		startElapsedForVerbose(1);
+		currentStackLength=0;
+		currentStackLength= computeVerbose(-1); //so that verbose index starts at 1 
+		times = new double[100];
+		times[0]= System.nanoTime();
+		shouldPrintLog=false;
+		printMode = _printMode;
+		
+		log = "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"+(frame>=0?"frame "+frame :"" )+"~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
 	}
 	
 	
 	public String tab(int verbose, boolean isActionTooSlow,boolean isLoopTooSlow )
 	{
-		
 		String tabs = "";
 		for(int i=0; i<verbose; i++)
 			if(isActionTooSlow)
-				tabs+="..";
+				tabs+="**";
 			else if(isLoopTooSlow)
-				tabs+="--";
+				tabs+="..";
 			else
 				tabs+="  ";
 		return tabs;
 	}
 	
-	public void startElapsedForVerbose(int verbose)
+	public void startElapsedForVerbose()
 	{
-		times[verbose-1]= System.nanoTime();
+		if(printMode.equals(PrintMode.NONE))
+			return;
+		times[computeVerbose(-1)]= System.nanoTime();
 	}
 	
 	/***
 	 * Use this to avoid concanating string and ease the garbage collector
 	 */
-	public void elapsed(String mess1,String mess2,String mess3,String mess4, int verbose)
+	public void elapsed(String mess1,String mess2,String mess3,String mess4)
 	{
-		if(verbose<=InterfaceConstantes.DEBUG_TIME_VERBOSE)
-		{
-			elapsed(mess1+mess2+mess3+mess4, verbose);
-		}
+		elapsed(mess1+mess2+mess3+mess4,-1);//add -1 to verbose since this function calls elapsed
 	}
 	/***
 	 * Use this to avoid concanating string and ease the garbage collector
 	 */
-	public void elapsed(String mess1,String mess2,String mess3, int verbose)
+	public void elapsed(String mess1,String mess2,String mess3)
 	{
-		if(verbose<=InterfaceConstantes.DEBUG_TIME_VERBOSE)
-		{
-			elapsed(mess1+mess2+mess3, verbose);
-		}
+		elapsed(mess1+mess2+mess3,-1);//add -1 to verbose since this function calls elapsed
 	}
 	/***
 	 * Use this to avoid concanating string and ease the garbage collector
 	 */
-	public void elapsed(String mess1,String mess2, int verbose)
+	public void elapsed(String mess1,String mess2)
 	{
-		if(verbose<=InterfaceConstantes.DEBUG_TIME_VERBOSE)
-		{
-			elapsed(mess1+mess2, verbose);
-		}
+		elapsed(mess1+mess2,-1);//add -1 to verbose since this function calls elapsed
 	}
-	public void elapsed(String mess, int verbose)
+	
+	public void elapsed(String mess)
 	{
-		if(verbose<=InterfaceConstantes.DEBUG_TIME_VERBOSE)
+		elapsed(mess,-1);
+	}
+	private void elapsed(String mess,int plusVerbose)
+	{
+		if(printMode.equals(PrintMode.NONE))
+			return;
+		int verbose = computeVerbose(plusVerbose);
+		if(verbose<=max_verbose)
 		{
-			boolean printIffSlow =InterfaceConstantes.DEBUG_TIME_ONLY_LOG_SLOW_STEPS;
-			double deltaAction = System.nanoTime()-times[verbose-1];
-			double deltaLoop = System.nanoTime()-starttime;
+			//PRINT_DIRECTLY, PRINT_ONLY_SLOW_ACTIONS, PRINT_ONLY_SLOW_LOOP, PRINT_SLOW_ACTION_AND_SLOW_LOOP, PRINT_ALL
+			boolean printSlowAction =printMode.equals(PrintMode.PRINT_ONLY_SLOW_ACTIONS) || printMode.equals(PrintMode.PRINT_SLOW_ACTION_OR_SLOW_LOOP) 
+					|| printMode.equals(PrintMode.PRINT_ALL);
+			boolean printSlowLoop = printMode.equals(PrintMode.PRINT_ONLY_SLOW_LOOP) || printMode.equals(PrintMode.PRINT_SLOW_ACTION_OR_SLOW_LOOP) 
+					|| printMode.equals(PrintMode.PRINT_ALL);
+			boolean printDirectly = printMode.equals(PrintMode.PRINT_DIRECTLY);
 			
-			boolean isActionTooSlow = (deltaLoop)*Math.pow(10, -6)>MAX_TIME ;
-			boolean isLoopTooSlow = ((deltaAction)*Math.pow(10, -6))>=10;
+			boolean printSlowActionAndSlowLoop =printMode.equals(PrintMode.PRINT_SLOW_ACTION_AND_SLOW_LOOP);
+			
+			long nanoTime = System.nanoTime();
+			double deltaAction = nanoTime-times[verbose-1];
+			double deltaLoop = nanoTime-starttime;
+			
+			boolean isLoopTooSlow = (deltaLoop)*Math.pow(10, -6)> loopToSlowTime;
+			boolean isActionTooSlow = ((deltaAction)*Math.pow(10, -6))>=actionToSlowTime;
 
 			String tabs = tab(verbose,isActionTooSlow,isLoopTooSlow);
 			
 			String s = verbose+": "+"Time: "+mess+ ": "+ ((deltaAction)*Math.pow(10, -6)) + "ms / "+ (deltaLoop)*Math.pow(10, -6)+"ms";
 			
-			if(!printIffSlow || (printIffSlow &&(isActionTooSlow||isLoopTooSlow) ))
+			if(printDirectly)
 				System.out.println(tabs+s);
-						
-			times[verbose-1]= System.nanoTime();
+			else
+			{
+				log+=tabs+s+"\n";
+				if((printSlowAction && isActionTooSlow) || (printSlowLoop && isLoopTooSlow) || (printSlowActionAndSlowLoop &&isActionTooSlow &&isLoopTooSlow) ){
+					shouldPrintLog = true;
+				}
+			}
+			times[verbose-1]= nanoTime;
 		}
+	}
+	
+	public void print()
+	{
+		if(printMode==null || printMode.equals(PrintMode.NONE))
+			return;
+		if(shouldPrintLog){
+			System.out.print(log);
+		}
+		log="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+		shouldPrintLog=false;
+	}
+	
+	private int computeVerbose(int plusVerbose)
+	{
+		return Thread.currentThread().getStackTrace().length - currentStackLength+plusVerbose;
 	}
 
 }

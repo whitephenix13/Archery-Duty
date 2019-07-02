@@ -21,13 +21,7 @@ public class DebugObjectCreation implements Sampler{
 			stack_trace = debug.getLastTraceFromKnowSource(logWithTheseWords,logWithoutTheseWords);
 			if(stack_trace!="")
 			{
-				try{
-					System.out.println(stack_trace+" "+ (newObj != null? newObj.toString() : "null") + " ||| " + desc + " ||| size= " + size +(count != -1 ? " ||| array_size= " + count: "") );
-				}
-				catch(Exception e){}
+				System.out.println(stack_trace+" "+ (newObj != null? newObj.toString() : "null") + " ||| " + desc + " ||| size= " + size +(count != -1 ? " ||| array_size= " + count: "") );
 			}
-		   /*System.out.println("I just allocated the object " + newObj +
-				      " of type " + desc + " whose size is " + size);
-				    if (count != -1) { System.out.println("It's an array of size " + count); }*/
 	}
 }

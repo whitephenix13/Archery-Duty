@@ -19,10 +19,10 @@ public class ControlerEditeur extends AbstractControlerEditeur{
 		else if(edit.perso || edit.start || edit.end)
 			edit.drawSpecial(xpos, ypos);
 		
-		else if(edit.texture.equals("Delete"))
+		else if(edit.texture.equals(TypeBloc.DELETE))
 			edit.deleteMonster(xpos, ypos);
 		
-		else if (edit.texture != null && !edit.texture.equals(TypeBloc.NONE))
+		else if (edit.texture != null)
 			edit.drawTerrain(xpos, ypos);
 			
 	}

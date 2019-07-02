@@ -14,7 +14,7 @@ import utils.Vitesse;
 
 public class Bloc extends Collidable{
 
-	public static enum TypeBloc {NONE,VIDE,CIEL,DELETE,END,LOUPE,PERSO,SOL,SOURIS,SPIREL,START,TERRE };
+	public static enum TypeBloc {NONE,CIEL,DELETE,END,LOUPE,PERSO,SOL,SOURIS,SPIREL,START,TERRE };
 
 	private TypeBloc type;
 	private boolean bloquer = false;
@@ -37,13 +37,13 @@ public class Bloc extends Collidable{
 		this.setCollideWithAll();
 		
 	}
-	public boolean isVide()
+	/*REMOVE public boolean isVide()
 	{
 		if(type.equals(TypeBloc.VIDE))
 			return true;
 		else
 			return false;
-	}
+	}*/
 	
 	//mutateur
 	public void setType(TypeBloc type){

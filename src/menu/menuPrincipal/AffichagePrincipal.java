@@ -9,20 +9,22 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
 
+import Affichage.Drawable;
 import images.ImagesPrincipal;
+import loading.Loader;
+import menu.credit.AffichageCredit;
+import menu.menuPrincipal.GameHandler.GameModeType;
 import utils.TypeApplication;
 import utils.observer.Observer;
 
 @SuppressWarnings("serial")
-public class AffichagePrincipal extends JFrame implements Observer{
+public class AffichagePrincipal extends Drawable implements Observer{
 
 	@SuppressWarnings("unused")
 	private AbstractControlerPrincipal controlerPrincipal;
 	
-	private	PanelPrincipal panelBoutons = new PanelPrincipal();
+	//private	PanelPrincipal panelBoutons = new PanelPrincipal();
 	private BoutonPrincipal bPartieRapide=new BoutonPrincipal("Partie Rapide");
 	private BoutonPrincipal bCredit=new BoutonPrincipal("Credit");
 	private BoutonPrincipal bEditeur=new BoutonPrincipal("Editeur");
@@ -44,57 +46,28 @@ public class AffichagePrincipal extends JFrame implements Observer{
 			this.setVisible(true);
 		}
 	}
-	public class PanelPrincipal extends JPanel
-	{
-		public PanelPrincipal()
-		{
-			super();
-		}
-		//change paint to paintcomponent 27/05/17
-		public void paintComponent(Graphics g)
-		{
-			super.paintComponent(g);
-			if(controlerPrincipal.principal.loaderMenuPrincipal ==null)
-			{
-				return;
-			}
-			if(controlerPrincipal.principal.loaderMenuPrincipal.isLoadingDone())
-			{
-				g.drawImage(controlerPrincipal.principal.imPrincipal.getImage(ImagesPrincipal.BACKGROUND),0,0,this);		
-	
-				//methode pour faire apparaitre les boutons au dessus de l'image 
-				setOpaque(false);
-				//change paint to paintcomponent 27/05/17
-				super.paintComponent(g);
-				setOpaque(true);
-			}
-			else
-			{
-				controlerPrincipal.principal.loaderMenuPrincipal.showLoading(g);
-			}
-		}
-	}
 
 	public AffichagePrincipal(AbstractControlerPrincipal _controlerPrincipal)
 	{
+		super();
 		controlerPrincipal=_controlerPrincipal;
 		Init();
 	}
 	
 	public void setButtons()
 	{
-		panelBoutons.setLayout(null);
-		panelBoutons.add(bPartieRapide);
+		mainPanel.setLayout(null);
+		mainPanel.add(bPartieRapide);
 		if(TypeApplication.isJar)
-			panelBoutons.add(bCredit);
+			mainPanel.add(bCredit);
 		else
-			panelBoutons.add(bEditeur);
-		panelBoutons.add(bOption);
-		panelBoutons.add(bQuitter);
+			mainPanel.add(bEditeur);
+		mainPanel.add(bOption);
+		mainPanel.add(bQuitter);
 	}
 	public void removeButtons()
 	{
-		panelBoutons.removeAll();
+		mainPanel.removeAll();
 	}
 	public void Init()
 	{
@@ -104,8 +77,9 @@ public class AffichagePrincipal extends JFrame implements Observer{
 		bOption.setBounds(990, 260, 290, 50);
 		bQuitter.setBounds(990, 560, 290, 50);
 		
-		panelBoutons.setBackground(Color.black);
-		this.setContentPane(panelBoutons);
+		mainPanel.setBackground(Color.black);
+		mainPanel.setOpaque(false);
+		//REMOVEthis.setContentPane(panelBoutons);
 		
 		controlerPrincipal.principal.imPrincipal.run();;
 	}
@@ -113,58 +87,55 @@ public class AffichagePrincipal extends JFrame implements Observer{
 	public class boutonsPrincipalListener implements MouseListener 
 	{
 
-		public void mouseClicked(MouseEvent e) {
-		}
-
-		public void mouseEntered(MouseEvent arg0) {
-		}
-
-		public void mouseExited(MouseEvent arg0) {
-		}
-
-		public void mousePressed(MouseEvent e) 
-		{
-
-		}
+		public void mouseClicked(MouseEvent e) {}
+		public void mouseEntered(MouseEvent arg0) {}
+		public void mouseExited(MouseEvent arg0) {}
+		public void mousePressed(MouseEvent e) {}
 
 		public void mouseReleased(MouseEvent e) {
+			AffichagePrincipal.this.controlerPrincipal.principal.computationDone=false; 
 			JButton button = (JButton)e.getSource();
 			Rectangle r = button.getBounds();
 			//Apply pressed only if the release is on the pressed button
 			if(r.contains(new Point(r.x+e.getX(),r.y+e.getY()))){
 				if(button.getText().equals("Partie Rapide"))
 				{
-					AbstractModelPrincipal.changeFrame=true; 
-					AbstractModelPrincipal.modeSuivant="ChoixNiveau"; //modeSuivant="Partie";
-					AbstractModelPrincipal.changeMode=true; 
-
+					//REMOVE AbstractModelPrincipal.changeFrame=true; //Remove
+					//Remove AbstractModelPrincipal.modeSuivant="ChoixNiveau"; //modeSuivant="Partie";
+					//Remove AbstractModelPrincipal.changeMode=true; 
+					controlerPrincipal.principal.setGameMode(GameModeType.LEVEL_SELECTION);
 				}
 				else if(button.getText().equals("Editeur"))
 				{
-					AbstractModelPrincipal.changeFrame=true;
-					AbstractModelPrincipal.modeSuivant="Editeur";
-					AbstractModelPrincipal.changeMode=true; 
+					//REMOVE AbstractModelPrincipal.changeFrame=true;//Remove
+					//RemoveAbstractModelPrincipal.modeSuivant="Editeur";
+					//RemoveAbstractModelPrincipal.changeMode=true; 
+					controlerPrincipal.principal.setGameMode(GameModeType.EDITOR);
 				}
 				else if(button.getText().equals("Credit"))
 				{
-					AbstractModelPrincipal.changeFrame=true;
-					AbstractModelPrincipal.modeSuivant="Credit";
-					AbstractModelPrincipal.changeMode=true; 
+					//REMOVE AbstractModelPrincipal.changeFrame=true;//Remove
+					//RemoveAbstractModelPrincipal.modeSuivant="Credit";
+					//RemoveAbstractModelPrincipal.changeMode=true; 
+					controlerPrincipal.principal.setGameMode(GameModeType.CREDIT);
 				}
 				else if(button.getText().equals("Option"))
 				{
-					AbstractModelPrincipal.changeFrame=true;
-					AbstractModelPrincipal.modeSuivant="Option";
-					AbstractModelPrincipal.changeMode=true; 
+					//REMOVE AbstractModelPrincipal.changeFrame=true;//Remove
+					//RemoveAbstractModelPrincipal.modeSuivant="Option";
+					//RemoveAbstractModelPrincipal.changeMode=true; 
+					controlerPrincipal.principal.setGameMode(GameModeType.OPTION);
 				}
 				else if(button.getText().equals("Quitter"))
 				{
-					AbstractModelPrincipal.changeFrame=true; 
-					AbstractModelPrincipal.modeSuivant="Quitter";
+					//REMOVE AbstractModelPrincipal.changeFrame=true;//Remove 
+					//RemoveAbstractModelPrincipal.modeSuivant="Quitter";
 
-					AbstractModelPrincipal.changeMode=true; 
+					//RemoveAbstractModelPrincipal.changeMode=true; 
+					controlerPrincipal.principal.setGameMode(GameModeType.QUIT);
 				}
 			}
+			AffichagePrincipal.this.controlerPrincipal.principal.computationDone=true; 
 		}
 
 	}
@@ -189,9 +160,34 @@ public class AffichagePrincipal extends JFrame implements Observer{
 		bOption.removeMouseListener(bOption.getMouseListeners()[bOption.getMouseListeners().length-1]);
 		bQuitter.removeMouseListener(bQuitter.getMouseListeners()[bQuitter.getMouseListeners().length-1]);
 	}
-
+	
+	
+	@Override
+	public void draw(Graphics g)
+	{
+		if(controlerPrincipal.principal.loaderMenuPrincipal ==null)
+		{
+			return;
+		}
+		if(controlerPrincipal.principal.loaderMenuPrincipal.isGameModeLoaded())
+		{
+			mainFrame.warnFadeOutCanStart();
+			
+			g.drawImage(controlerPrincipal.principal.imPrincipal.getImage(ImagesPrincipal.BACKGROUND),0,0,mainPanel);		
+							
+		}
+		else
+		{
+			controlerPrincipal.principal.loaderMenuPrincipal.showLoading(g);
+		}
+	}
+	
+	public Loader getLoader()
+	{
+		return controlerPrincipal.principal.loaderMenuPrincipal;
+	}
 	public void update() {
-		this.repaint();
+		mainFrame.repaint();
 	}
 
 }

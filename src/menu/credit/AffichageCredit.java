@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -12,15 +13,19 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
 import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
-import menu.menuPrincipal.AbstractModelPrincipal;
+import Affichage.Affichage;
+import Affichage.Drawable;
+import editeur.AffichageEditeur;
+import menu.menuPrincipal.GameHandler;
+import menu.menuPrincipal.GameHandler.GameModeType;
+import menu.menuPrincipal.GameMode;
 
 @SuppressWarnings("serial")
-public class AffichageCredit extends JFrame{
+public class AffichageCredit extends Drawable implements GameMode{
 
 	public CustomLabel lTitle = new CustomLabel("CREDITS",SwingConstants.CENTER);  
 	public CustomLabel lCredit1 = new CustomLabel("Game creator:                                               Alexandre Lasbleis");  
@@ -33,9 +38,14 @@ public class AffichageCredit extends JFrame{
 			+ "If you want to do so, contact me at: ArcheryDuty@protonmail.com");  
 
 	public JButton retour = new JButton("Retour");
-
-	public AffichageCredit()
+	
+	private GameHandler gameHandler;
+	private boolean computationDone;
+	public AffichageCredit(GameHandler gameHandler)
 	{
+		super();
+		computationDone=true;
+		this.gameHandler = gameHandler;
 		initComposant();
 	}
 	//Utilisé pour les textes du menu option
@@ -64,14 +74,17 @@ public class AffichageCredit extends JFrame{
 		public void mousePressed(MouseEvent e) {}
 		public void mouseReleased(MouseEvent e) 
 		{
+			AffichageCredit.this.computationDone=false; 
 			JButton button = (JButton)e.getSource();
 			Rectangle r = button.getBounds();
 			//Apply pressed only if the release is on the pressed button
 			if(r.contains(new Point(r.x+e.getX(),r.y+e.getY()))){
-				AbstractModelPrincipal.changeFrame=true;
-				AbstractModelPrincipal.modeSuivant="Principal";
-				AbstractModelPrincipal.changeMode=true;
+				//REMOVE AbstractModelPrincipal.changeFrame=true;//REMOVE 
+				//REMOVE AbstractModelPrincipal.modeSuivant="Principal";
+				//REMOVE AbstractModelPrincipal.changeMode=true;
+				gameHandler.setGameMode(GameModeType.MAIN_MENU);
 			}
+			AffichageCredit.this.computationDone=true; 
 		}
 	}
 	public void removeListenerCredit()
@@ -81,8 +94,6 @@ public class AffichageCredit extends JFrame{
 	}
 	public void initComposant()
 	{
-		JPanel panel = new JPanel();
-
 		JPanel panelNorth = new JPanel();
 		JPanel panelCenter= new JPanel(new FlowLayout(FlowLayout.LEFT));
 		JPanel panelSouth= new JPanel();
@@ -92,7 +103,7 @@ public class AffichageCredit extends JFrame{
 	    JPanel panelRetour = new JPanel();
 	    JPanel panelLicense= new JPanel();
 	    
-	    panel.setBackground(Color.BLACK);
+	    mainPanel.setBackground(Color.BLACK);
 
 	    panelNorth.setBackground(Color.BLACK);
 	    panelCenter.setBackground(Color.BLACK);
@@ -133,16 +144,45 @@ public class AffichageCredit extends JFrame{
 	    panelSouth.add(panelLicense);
 	    panelSouth.setLayout(new GridLayout(2,1));
 
-	    panel.setLayout(new BorderLayout());
-	    panel.setLayout(new BorderLayout());
-	    panel.add(panelNorth,BorderLayout.NORTH);
-	    panel.add(panelCenter,BorderLayout.CENTER);
-	    panel.add(panelSouth,BorderLayout.SOUTH);
-	    this.getContentPane().add(panel);
+	    mainPanel.setLayout(new BorderLayout());
+	    mainPanel.setLayout(new BorderLayout());
+	    mainPanel.add(panelNorth,BorderLayout.NORTH);
+	    mainPanel.add(panelCenter,BorderLayout.CENTER);
+	    mainPanel.add(panelSouth,BorderLayout.SOUTH);
+	    //REMOVEthis.getContentPane().add(panel);
 
 	}
+	
+	public void doComputations(Affichage affich){
+		//As this mode is controlled by listeners, the computationDone is set to false when a listener is triggered. This function is then left empty
+	}
+	public void updateGraphics(){
+		mainFrame.repaint();
+	}
+	public boolean isComputationDone(){
+		return computationDone;
+	}
+	@Override
+	public boolean isGameModeLoaded()
+	{
+		//loading not required 
+		return true;
+	}
+	@Override
+	public GameMode getLoaderGameMode(){
+		//loading not required 
+		return null;
+	}
+	
+	@Override
+	public void draw(Graphics g)
+	{
+		//Nothing to draw
+		mainFrame.warnFadeOutCanStart();
+	}
+	
 	public void update() {
-		this.repaint();
+		mainFrame.repaint();
 	
 	}
 }

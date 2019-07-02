@@ -11,6 +11,7 @@ import javax.vecmath.Vector2d;
 
 import gameConfig.InterfaceConstantes;
 import gameConfig.TypeObject;
+import menu.menuPrincipal.ModelPrincipal;
 import music.MusicBruitage;
 import partie.collision.Collidable;
 import partie.collision.Collision;
@@ -302,7 +303,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 
 	@Override
 	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,Collidable collidedObject,boolean stuck) {
-
+		ModelPrincipal.debugTime.startElapsedForVerbose();
 		boolean collision_gauche = normal.x>0;
 		boolean collision_droite = normal.x<0;
 		//boolean collision_haut = normal.y>0;
@@ -316,7 +317,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 		ArrayList<Entity> objects = Collidable.getAllEntitiesCollidable(partie);
 
 		onPlanted(objects,partie,collidedObject,prevLocalVit,stuck);
-
+		ModelPrincipal.debugTime.elapsed("End of fleche handle world collision ");
 
 	}
 	@Override

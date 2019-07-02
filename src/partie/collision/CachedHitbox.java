@@ -21,7 +21,8 @@ public class CachedHitbox extends CachedObject<Hitbox>{
 	public CachedHitbox(CachedHitbox obj)
 	{
 		super(obj);
-		this.cachedObject = obj.cachedObject.copy();
+		if(obj.cachedObject!=null)
+			this.cachedObject = obj.cachedObject.copy();
 	}
 	
 	

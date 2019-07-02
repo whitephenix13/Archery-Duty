@@ -1,7 +1,9 @@
 package editeur;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -10,6 +12,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,22 +25,25 @@ import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import utils.observer.Observer;
+import Affichage.Drawable;
 import editeur.BarreOutil.BarreOutil;
 import editeur.Menu.menuEditeur;
+import gameConfig.InterfaceConstantes;
+import menu.menuPrincipal.GameHandler;
+import utils.observer.Observer;
 
 @SuppressWarnings("serial")
-public class AffichageEditeur extends JFrame implements Observer{
-
-	protected PanelDraw dessin = new PanelDraw();
+public class AffichageEditeur extends Drawable implements Observer{
 	
 	public AbstractControlerEditeur controlerEditeur;
+	private BufferedImage im_white =null;
 	public JMenuBar getJMenuBar()
 	{
 		return controlerEditeur.edit.menuEdit.menuBar;
 	}
 	public AffichageEditeur(AbstractControlerEditeur _controlerEditeur)
 	{
+		super();
 		controlerEditeur=_controlerEditeur;
 		
 		this.getContentPane().removeAll();
@@ -48,21 +54,19 @@ public class AffichageEditeur extends JFrame implements Observer{
 		controlerEditeur.edit.menuEdit.initMenu();
 		
 		controlerEditeur.edit.init();
+		
+		im_white = new BufferedImage(InterfaceConstantes.tailleEcran.width,InterfaceConstantes.tailleEcran.height, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D    graphics = im_white.createGraphics();
+		graphics.setColor(Color.white);
+		graphics.fillRect ( 0, 0, im_white.getWidth(), im_white.getHeight() );
 
 		this.getContentPane().setLayout(new BorderLayout());
 		this.getContentPane().add(controlerEditeur.edit.barreOut.scroll,BorderLayout.NORTH);
-	    this.getContentPane().add(dessin,BorderLayout.CENTER);
+		this.getContentPane().setOpaque(false);
+		//mainPanel.setBackground(Color.white);
+	   //REMOVE  this.getContentPane().add(dessin,BorderLayout.CENTER);
 	}
-
-	public class PanelDraw extends JPanel
-	{
-		//changed paint to paintComponent 27/05/17
-		public void paintComponent(Graphics g)
-		{
-			super.paintComponent(g);
-			controlerEditeur.edit.draw(g, this);
-		}
-	}
+	
 	
 	public class DeleteMonstrePopUp extends JDialog {
 		  public DeleteMonstrePopUp(JFrame parent, String title, boolean modal){
@@ -91,6 +95,7 @@ public class AffichageEditeur extends JFrame implements Observer{
 		    
 		    ok.addActionListener(new ActionListener(){
 				public void actionPerformed(ActionEvent arg0) {
+					AffichageEditeur.this.controlerEditeur.edit.computationDone=false; 
 					List<StockageMonstre> monstreASupprimer= new ArrayList<StockageMonstre>();
 					 for(int i=0; i<listChecks.size();i++)
 					   {
@@ -104,7 +109,9 @@ public class AffichageEditeur extends JFrame implements Observer{
 					  {
 						 controlerEditeur.edit.tabEditeurMonstre.remove(monstreASupprimer.get(i));
 					  }	
-					setVisible(false);}});
+					setVisible(false);
+					AffichageEditeur.this.controlerEditeur.edit.computationDone=true; 
+					}});
 		   
 		    affichage.add(listLabels.get(0),BorderLayout.NORTH);
 		    for(int i=1; i<listLabels.size();i++)
@@ -140,6 +147,7 @@ public class AffichageEditeur extends JFrame implements Observer{
 		    ok.addActionListener(new ActionListener(){
 				public void actionPerformed(ActionEvent arg0) 
 				{
+					AffichageEditeur.this.controlerEditeur.edit.computationDone=false; 
 					if(checkStatic.isSelected())
 					{
 						controlerEditeur.edit.staticMonstre=true;
@@ -149,7 +157,7 @@ public class AffichageEditeur extends JFrame implements Observer{
 						controlerEditeur.edit.staticMonstre=false;
 					}
 					setVisible(false);
-					
+					AffichageEditeur.this.controlerEditeur.edit.computationDone=true; 
 				}	});
 		    affichage.setLayout(new BorderLayout());
 		    panelStaticSpirel.setLayout(new GridLayout(1,2));
@@ -164,10 +172,12 @@ public class AffichageEditeur extends JFrame implements Observer{
 	
 	class DragListener extends MouseAdapter{
 		public void mouseDragged(MouseEvent e){
+			AffichageEditeur.this.controlerEditeur.edit.computationDone=false; 
 			if ((e.getModifiers() & InputEvent.BUTTON3_MASK) != 0)
 			{
 				controlerEditeur.edit.moveViewPort(e.getX(),e.getY());
 			}
+			AffichageEditeur.this.controlerEditeur.edit.computationDone=true; 
 		}
 		
 		public void mouseReleased(MouseEvent e){
@@ -178,17 +188,21 @@ public class AffichageEditeur extends JFrame implements Observer{
 	
 		//lorsqu'on drag, on dessine sur chacune des cases sur lesquels on passe
 		public void mouseDragged(MouseEvent e) {
+			AffichageEditeur.this.controlerEditeur.edit.computationDone=false; 
 			if(!controlerEditeur.edit.drag && ((e.getModifiers() & InputEvent.BUTTON1_MASK) != 0))
 			controlerEditeur.controlDraw(e.getX(), e.getY());
 			controlerEditeur.edit.xMousePos=e.getX();
 			controlerEditeur.edit.yMousePos=e.getY();
-			dessin.repaint();
+			AffichageEditeur.this.controlerEditeur.edit.computationDone=true; 
+			//REMOVE mainPanel.repaint();
 		}
 		public void mouseMoved(MouseEvent e) 
 		{
+			AffichageEditeur.this.controlerEditeur.edit.computationDone=false; 
 			controlerEditeur.edit.xMousePos=e.getX();
 			controlerEditeur.edit.yMousePos=e.getY();
-			dessin.repaint();
+			AffichageEditeur.this.controlerEditeur.edit.computationDone=true; 
+			//REMOVE mainPanel.repaint();
 		}
 	}
 
@@ -197,8 +211,10 @@ public class AffichageEditeur extends JFrame implements Observer{
 		public void mouseEntered(MouseEvent e) {}
 		public void mouseExited(MouseEvent e) {}
 		public void mousePressed(MouseEvent e) {
+			AffichageEditeur.this.controlerEditeur.edit.computationDone=false; 
 			if(!controlerEditeur.edit.drag && ((e.getModifiers() & InputEvent.BUTTON1_MASK)!=0) )
 				controlerEditeur.controlDraw(e.getX(), e.getY());
+			AffichageEditeur.this.controlerEditeur.edit.computationDone=true; 
 		}
 		public void mouseReleased(MouseEvent e) {}
 	}
@@ -208,10 +224,10 @@ public class AffichageEditeur extends JFrame implements Observer{
 		
 			controlerEditeur.edit.menuEdit.addListenerMenuEditeur();
 			
-			dessin.addMouseListener(new DragListener());
-			dessin.addMouseMotionListener(new DragListener());
-			dessin.addMouseMotionListener(new ImageListener());
-			dessin.addMouseListener(new AjoutListener());
+			mainPanel.addMouseListener(new DragListener());
+			mainPanel.addMouseMotionListener(new DragListener());
+			mainPanel.addMouseMotionListener(new ImageListener());
+			mainPanel.addMouseListener(new AjoutListener());
 		 	 
 	}
 	public void removeListenerEditeur() 
@@ -220,37 +236,51 @@ public class AffichageEditeur extends JFrame implements Observer{
 		controlerEditeur.edit.menuEdit.removeListenerMenuEditeur();
 		
 		//remove the two last elements 
-		dessin.removeMouseMotionListener(dessin.getMouseMotionListeners()[dessin.getMouseMotionListeners().length-2]);
-		dessin.removeMouseMotionListener(dessin.getMouseMotionListeners()[dessin.getMouseMotionListeners().length-1]);
+		mainPanel.removeMouseMotionListener(mainPanel.getMouseMotionListeners()[mainPanel.getMouseMotionListeners().length-2]);
+		mainPanel.removeMouseMotionListener(mainPanel.getMouseMotionListeners()[mainPanel.getMouseMotionListeners().length-1]);
 		//remove the two last elements 
-		dessin.removeMouseListener(dessin.getMouseListeners()[dessin.getMouseListeners().length-2]);
-		dessin.removeMouseListener(dessin.getMouseListeners()[dessin.getMouseListeners().length-1]);
+		mainPanel.removeMouseListener(mainPanel.getMouseListeners()[mainPanel.getMouseListeners().length-2]);
+		mainPanel.removeMouseListener(mainPanel.getMouseListeners()[mainPanel.getMouseListeners().length-1]);
 	}
 	
+
+	@Override
+	public void draw(Graphics g)
+	{
+		//Nothing to draw
+		//draw white background 
+		g.drawImage(im_white, 0, 0, null);
+		controlerEditeur.edit.draw(g, mainPanel);
+		mainFrame.warnFadeOutCanStart();
+	}
 	
+	public JFrame getMainFrame()
+	{
+		return mainFrame;
+	}
 	
 	public void update() 
 	{
 			if(controlerEditeur.edit.getRepaint())
 			{
-				dessin.repaint();
+				mainPanel.repaint();
 			}
 			
 			if(controlerEditeur.edit.getShowMonsters())
 			{
-				DeleteMonstrePopUp popUp= new DeleteMonstrePopUp(this,"test",true);
+				DeleteMonstrePopUp popUp= new DeleteMonstrePopUp(mainFrame,"test",true);
 				popUp.setVisible(true);
 			}
 			
 			if(controlerEditeur.edit.getShowStaticMonsters())
 			{
-				ComportementSpirelPopUp comportement = new ComportementSpirelPopUp(this,"Choix comportement spirel",true);
+				ComportementSpirelPopUp comportement = new ComportementSpirelPopUp(mainFrame,"Choix comportement spirel",true);
 				comportement.setVisible(true);
 			}
 			
 			if(controlerEditeur.edit.showMessageDialog)
 			{
-				JOptionPane.showMessageDialog(this, controlerEditeur.edit.textMessageDialog[0], 
+				JOptionPane.showMessageDialog(mainPanel, controlerEditeur.edit.textMessageDialog[0], 
 						controlerEditeur.edit.textMessageDialog[1],controlerEditeur.edit.typeMessageDialog);
 			}
 

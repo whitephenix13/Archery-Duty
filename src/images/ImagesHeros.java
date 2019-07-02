@@ -24,13 +24,17 @@ public class ImagesHeros extends LoaderItem{
 
 	public ImagesHeros()
 	{
+		super("Image heros");
 	}
 	
 	@Override
 	public void run()
 	{
-		if(alreadyLoaded)
+		percentage=0;
+		if(alreadyLoaded){
+			percentage=100;
 			return;
+		}
 		
 		int numberOfItems = 76;
 		int currentNbItems = 0 ;

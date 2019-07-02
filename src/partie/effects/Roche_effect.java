@@ -12,6 +12,7 @@ import java.util.List;
 
 import javax.vecmath.Vector2d;
 
+import menu.menuPrincipal.ModelPrincipal;
 import partie.collision.Collidable;
 import partie.collision.Collision;
 import partie.collision.Hitbox;
@@ -85,7 +86,9 @@ public class Roche_effect extends Effect{
 			Point _correctedPointCollision, boolean _groundCollision)
 	{
 
+		ModelPrincipal.debugTime.startElapsedForVerbose();
 		super.init(_anim,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,_groundCollision,_groundCollision);
+		ModelPrincipal.debugTime.elapsed("Roche effect: call super.init");
 		this.setCollideWithAll();
 
 		this.isWorldCollider= groundEffect? true :false; //groundEffect=_groundCollision
@@ -98,13 +101,14 @@ public class Roche_effect extends Effect{
 			updateHitbox(partie);
 		else
 			this.onUpdate(partie, false); //update rotated hitbox and drawtr
-
+		
+		ModelPrincipal.debugTime.elapsed("Roche effect: call update hitbox");
 		partie.arrowsEffects.add(this);
 
 		int initialEject = 2;
 		ejectCollidable(partie,initialEject,true);
 		this.onUpdate(partie, false); //update rotated hitbox and drawtr
-
+		ModelPrincipal.debugTime.elapsed("Roche effect: call on update");
 		//if the eject failed, the object is stuck (for example when arrow roche shot in corner) then destroy it
 	}
 

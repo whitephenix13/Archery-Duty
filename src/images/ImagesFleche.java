@@ -33,44 +33,55 @@ public class ImagesFleche extends LoaderItem{
 
 	public ImagesFleche()
 	{
+		super("Image fleche");
 	}
 
 	@Override
 	public void run()
 	{
-		if(alreadyLoaded)
+		percentage = 0;
+		if(alreadyLoaded){
+			percentage = 100;
 			return;
-
+		}
+		float count=0;
+		int num_tot = 68;
 		for(int i=0; i<4; ++i){
 			im_fleche.add(getIm(path+"/"+i+".png",true));
-
-			percentage = ((int)((1.0 + i*17)/0.68));
+			
+			count+=1;
+			percentage = ((int)(100*count/num_tot));
 			im_electrique_aura.add(getIm(path+"auras/electrique/"+i+".png",true));
 			im_glace_aura.add(getIm(path+"auras/glace/"+i+".png",true));
 			im_roche_aura.add(getIm(path+"auras/roche/"+i+".png",true));
 			im_feu_aura.add(getIm(path+"auras/feu/"+i+".png",true));
 
-			percentage = ((int)((5.0 + i*17)/0.68));
+			count+=4;
+			percentage = ((int)(100*count/num_tot));
 
 			im_lumiere_aura.add(getIm(path+"auras/lumiere/"+i+".png",true));
 			im_ombre_aura.add(getIm(path+"auras/ombre/"+i+".png",true));
 			im_vent_aura.add(getIm(path+"auras/vent/"+i+".png",true));
 			im_grappin_aura.add(getIm(path+"auras/grappin/"+i+".png",true));
 
-			percentage = ((int)((9.0 + i*17)/0.68));
+			count+=4;
+			percentage = ((int)(100*count/num_tot));
 
 			im_bogue_aura.add(getIm(path+"auras/bogue/"+i+".png",true));
 			im_explosive_aura.add(getIm(path+"auras/explosive/"+i+".png",true));
 			im_trou_noir_aura.add(getIm(path+"auras/trou_noir/"+i+".png",true));
 			im_foudre_aura.add(getIm(path+"auras/foudre/"+i+".png",true));
-
-			percentage = ((int)((13.0 + i*17)/0.68));
+			
+			count+=4;
+			percentage = ((int)(100*count/num_tot));
 
 			im_auto_teleguidee_aura.add(getIm(path+"auras/auto_teleguidee/"+i+".png",true));
 			im_retard_aura.add(getIm(path+"auras/retard/"+i+".png",true));
 			im_v_fleche_aura.add(getIm(path+"auras/v_fleche/"+i+".png",true));
 			im_cac_aura.add(getIm(path+"auras/corps_a_corps/"+i+".png",true));
-			percentage = ((int)((17.0 + i*17)/0.68));
+			
+			count+=4;
+			percentage = ((int)(100*count/num_tot));
 		}
 		percentage=100;
 		alreadyLoaded=true;

@@ -20,6 +20,7 @@ import javax.swing.JTextField;
 import Affichage.MenuScroller;
 import editeur.AffichageEditeur;
 import menu.menuPrincipal.AbstractModelPrincipal;
+import menu.menuPrincipal.GameHandler.GameModeType;
 import partie.bloc.Bloc.TypeBloc;
 
 
@@ -157,13 +158,13 @@ public class menuEditeur {
 	
 	public void controlTexture(Object source) {
 	if (source == m_souris ){
-		affichageEditeur.controlerEditeur.edit.setTexture(TypeBloc.VIDE);
+		affichageEditeur.controlerEditeur.edit.setTexture(TypeBloc.NONE);
 	}
 	else if (source == m_deleteItem ){
 		affichageEditeur.controlerEditeur.edit.setTexture(TypeBloc.DELETE);
 	}
 	else if (source == m_vide ){
-		affichageEditeur.controlerEditeur.edit.setTexture(TypeBloc.VIDE);
+		affichageEditeur.controlerEditeur.edit.setTexture(TypeBloc.NONE);
 
 	}
 	else if(source == m_sol) {
@@ -213,15 +214,18 @@ public class menuEditeur {
 		public void actionPerformed(ActionEvent e) {
 			//on reset les variables 
 			affichageEditeur.controlerEditeur.edit.init();
-			affichageEditeur.repaint();
+			affichageEditeur.getContentPane().repaint();
 			}
 		}
 	public class retourMenuListener implements ActionListener{
 
 			public void actionPerformed(ActionEvent e) {
-				AbstractModelPrincipal.modeSuivant="Principal";
-				AbstractModelPrincipal.changeFrame=true;
-				AbstractModelPrincipal.changeMode=true;				
+				
+				//REMOVE AbstractModelPrincipal.modeSuivant="Principal";
+				//REMOVE AbstractModelPrincipal.changeMode=true;				
+
+				//REMOVE AbstractModelPrincipal.changeFrame=true; //REMOVE? 
+				menuEditeur.this.affichageEditeur.controlerEditeur.edit.gameHandler.setGameMode(GameModeType.MAIN_MENU);
 			}
 			
 		}
@@ -235,7 +239,7 @@ public class menuEditeur {
 	public class SauvegarderListener implements ActionListener{
 
 			public void actionPerformed(ActionEvent e) {
-				PopUpSauv_Charg popup = new PopUpSauv_Charg(affichageEditeur,"Sauvegarder un fichier",true);
+				PopUpSauv_Charg popup = new PopUpSauv_Charg(affichageEditeur.getMainFrame(),"Sauvegarder un fichier",true);
 				popup.setVisible(true);
 				affichageEditeur.controlerEditeur.controlSauvegarde(nomFichier);
 				nomFichier="";
@@ -247,7 +251,7 @@ public class menuEditeur {
 	public class ChargerListener  implements ActionListener  {
 
 			public void actionPerformed(ActionEvent e) {
-				PopUpSauv_Charg popup = new PopUpSauv_Charg(affichageEditeur,"Charger un fichier",true);
+				PopUpSauv_Charg popup = new PopUpSauv_Charg(affichageEditeur.getMainFrame(),"Charger un fichier",true);
 				popup.setVisible(true);
 				affichageEditeur.controlerEditeur.controlChargement(nomFichier);
 				nomFichier="";

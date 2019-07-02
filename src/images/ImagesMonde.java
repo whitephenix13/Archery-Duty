@@ -27,13 +27,17 @@ public class ImagesMonde extends LoaderItem{
 	Image pend;
 	public ImagesMonde()
 	{
+		super("Image monde");
 	}
 	
 	@Override
 	public void run()
 	{
-		if(alreadyLoaded)
+		percentage=0;
+		if(alreadyLoaded){
+			percentage=100;
 			return;
+		}
 		
 		 ciel=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"ciel.png"));		 
 		 terre=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"terre.png"));
@@ -76,12 +80,13 @@ public class ImagesMonde extends LoaderItem{
 	 */	
 	public Image getImages(TypeBloc type, boolean loupe)
 	{
-		if(type.equals(TypeBloc.VIDE))
+		/*REMOVE if(type.equals(TypeBloc.VIDE))
 		{
 			if(loupe)return(pvide);
 			return(vide);
 		}
-		else if (type.equals(TypeBloc.CIEL))
+		else */
+		if (type.equals(TypeBloc.CIEL))
 		{
 			if(loupe)return(pciel);
 			return(ciel);

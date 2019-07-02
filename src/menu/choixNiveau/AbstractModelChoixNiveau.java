@@ -5,11 +5,16 @@ import java.util.List;
 
 import javax.swing.JButton;
 
+import menu.menuPrincipal.GameHandler;
+import menu.menuPrincipal.GameMode;
 import utils.observer.Observable;
 import utils.observer.Observer;
 
-public abstract class AbstractModelChoixNiveau implements Observable{
-
+public abstract class AbstractModelChoixNiveau implements Observable,GameMode{
+	
+	protected GameHandler gameHandler;
+	protected boolean computationDone;
+	
 	protected String niveauSelectionne="";
 	protected List<String> listNomNiveaux = new ArrayList<String>();
 	protected List<JButton> listNiveaux = new ArrayList<JButton>();
@@ -26,6 +31,12 @@ public abstract class AbstractModelChoixNiveau implements Observable{
 
 	public abstract String getNiveauSelectionne();
 	public abstract List<JButton> getListBoutonNiveau();
+	
+	public AbstractModelChoixNiveau()
+	{
+		computationDone=true;
+	}
+	
 	
 	public boolean getUpdateListLevels()
 	{

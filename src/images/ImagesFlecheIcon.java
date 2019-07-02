@@ -30,12 +30,18 @@ public class ImagesFlecheIcon extends LoaderItem{
 	Image im_v_fleche= null;
 	Image im_cac= null;
 
-	public ImagesFlecheIcon(){}
+	public ImagesFlecheIcon()
+	{
+		super("Image fleche icon");
+	}
 
 	@Override
 	public void run() {
-		if(alreadyLoaded)
+		percentage=0;
+		if(alreadyLoaded){
+			percentage=100;
 			return;
+		}
 
 		int nb = 16;
 		im_electrique=(getIm(path+"electrique.png",true));
@@ -43,21 +49,21 @@ public class ImagesFlecheIcon extends LoaderItem{
 		im_glace=(getIm(path+"glace.png",true));
 		im_roche=(getIm(path+"roche.png",true));
 		
-		percentage = (int)(400.0/nb);
+		percentage = (int)(4*100.0/nb);
 
 		im_lumiere=(getIm(path+"lumiere.png",true));
 		im_ombre=(getIm(path+"ombre.png",true));
 		im_vent=(getIm(path+"vent.png",true));
 		im_grappin=(getIm(path+"grappin.png",true));
 
-		percentage = (int)(800.0/nb);
+		percentage = (int)(8*100.0/nb);
 
 		im_foudre =(getIm(path+"foudre.png",true));
 		im_explosive=(getIm(path+"explosive.png",true));
 		im_trou_noir=(getIm(path+"trou_noir.png",true));
 		im_bogue=(getIm(path+"bogue.png",true));	
 
-		percentage = (int)(1200.0/nb);
+		percentage = (int)(12*100.0/nb);
 
 		im_auto_teleguidee=(getIm(path+"auto_teleguidee.png",true));
 		im_retard=(getIm(path+"retard.png",true));

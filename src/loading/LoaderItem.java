@@ -7,6 +7,16 @@ public class LoaderItem implements Runnable {
 	
 	protected boolean alreadyLoaded = false;
 	protected int percentage;
+	private String name;
+	
+	public LoaderItem(String name)
+	{
+		this.name=name;
+	}
+	
+	public String getName(){
+		return name;
+	}
 	public int getProgress()
 	{
 		return percentage;

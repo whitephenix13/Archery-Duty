@@ -15,13 +15,17 @@ public class ImagesTirMonstre extends LoaderItem{
 	
 	public ImagesTirMonstre()
 	{
+		super("Image tir monstre");
 	}
 	
 	@Override
 	public void run()
 	{
-		if(alreadyLoaded)
+		percentage=0;
+		if(alreadyLoaded){
+			percentage=100;
 			return;
+		}
 		
 		for(int i=0; i<3; ++i)
 			im_SP_tir.add(getIm(path+"spirel/"+i+".png",true));

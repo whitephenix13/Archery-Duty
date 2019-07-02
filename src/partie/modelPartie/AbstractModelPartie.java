@@ -14,6 +14,7 @@ import Affichage.Affichage;
 import Affichage.DrawImageHandler;
 import debug.DebugDraw;
 import gameConfig.InterfaceConstantes;
+import images.ImagesBackground;
 import images.ImagesCondition;
 import images.ImagesEffect;
 import images.ImagesFleche;
@@ -23,6 +24,8 @@ import images.ImagesMonde;
 import images.ImagesMonstre;
 import images.ImagesTirMonstre;
 import loading.Loader;
+import menu.menuPrincipal.GameHandler;
+import menu.menuPrincipal.GameMode;
 import music.MusicBruitage;
 import option.Touches;
 import partie.AI.A_Star;
@@ -36,14 +39,18 @@ import partie.projectile.Projectile;
 import utils.observer.Observable;
 import utils.observer.Observer;
 
-public abstract class AbstractModelPartie  implements Observable {
-	//frame flag 
+public abstract class AbstractModelPartie  implements Observable, GameMode{
+
+	protected GameHandler gameHandler;
+	
 	public Loader loaderPartie = null;
 	protected int frame = 0;
 	public void nextFrame(){frame+=1;}
 	public int getFrame(){return frame;}
 	//repaint flag 
 	public boolean computationDone=false;
+	public boolean listenersComputationDone=false;
+	public boolean isFirstFrameReady=false;
 	
 	/**Override the draw method to debug with draw*/
 	public DebugDraw debugDraw =null;
@@ -98,6 +105,7 @@ public abstract class AbstractModelPartie  implements Observable {
 	//}}
 	///AFFICHAGE 
 	//pour pouvoir acceder aux images chargées 
+	public ImagesBackground imBackground= new ImagesBackground();
 	public ImagesMonde imMonde= new ImagesMonde();
 	public ImagesMonstre imMonstre= new ImagesMonstre();
 	public ImagesHeros imHeros= new ImagesHeros();
@@ -138,12 +146,6 @@ public abstract class AbstractModelPartie  implements Observable {
 	 */
 	public int getXYViewport(boolean x)
 	{return (x?INIT_RECT.x:INIT_RECT.y)- getXYScreendispBloc(x);}
-	//entier permettant de déplacer légérement l'ecran pour pas qu'il ne bouge par bloc(<100) 
-	//public int xdeplaceEcran = 0;
-	//public int ydeplaceEcran = 0;
-	//entier stockant les centaines de décallage (>100) 
-	//public int xdeplaceEcranBloc = 0;
-	//public int ydeplaceEcranBloc = 0;
 
 	//variables pour l'affichage 
 	protected boolean disableBoutonsFin=false;
@@ -213,6 +215,7 @@ public abstract class AbstractModelPartie  implements Observable {
 		xScreendisp = 0;
 		yScreendisp = 0;
 		
+		listenersComputationDone=true;
 		//Reference A_Star and A_Star_Helper for the first time to load the class once so that referencing them later is faster (~6 ms saved)
 		A_Star astar = new A_Star();
 		A_Star_Helper astarHelper = new A_Star_Helper(1,1,new Point(1,1),1,1);
@@ -250,11 +253,12 @@ public abstract class AbstractModelPartie  implements Observable {
 
 	public abstract void startPartie(int typeDeSpawn);
 	public abstract void play(Affichage affich) ;
-
+	
+	public abstract void precomputeDraw();
 	public abstract void drawPartie(Graphics g);
 
-	public abstract void drawMonde(Graphics g,boolean drawHitbox);
-	public abstract void drawMonstres(Graphics g,boolean drawHitbox);
+	public abstract void drawMonde(boolean drawHitbox);
+	public abstract void drawMonstres(boolean drawHitbox);
 	/**
 	 * @param pos : position of hitbox
 	 * @param anchor: position of center of rotation relative to top left of hitbox
@@ -264,11 +268,11 @@ public abstract class AbstractModelPartie  implements Observable {
 	 */
 	
 	//public static abstract AffineTransform getRotatedTransform(Point pos, Point topLeftAnchor, double rotation);
-	public abstract void drawPerso(Graphics g,boolean drawHitbox);
-	public abstract void drawFleches(Graphics g,boolean drawHitbox);
-	public abstract void drawTirMonstres(Graphics g,boolean drawHitbox);
-	public abstract void drawEffects(Graphics g,boolean drawHitbox);
-	public abstract void drawInterface(Graphics g);
+	public abstract void drawPerso(boolean drawHitbox);
+	public abstract void drawFleches(boolean drawHitbox);
+	public abstract void drawTirMonstres(boolean drawHitbox);
+	public abstract void drawEffects(boolean drawHitbox);
+	public abstract void drawInterface();
 	
 	public abstract BufferedImage apply_width_mask(BufferedImage original,BufferedImage previousMaskedIm, int w_start, int last_start,float transparency);
 	public abstract BufferedImage apply_height_mask(BufferedImage original,BufferedImage previousMaskedIm, int h_start_mask,float transparency);

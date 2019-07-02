@@ -1,5 +1,6 @@
 package Affichage;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -119,13 +120,13 @@ public class DrawImageItem {
 	}
 	public void draw(Graphics g)
 	{
+		Graphics2D g2d = (Graphics2D)g;
 		if (Type_Item.Image.equals(item))
 		{
 			g.drawImage(img, x,y,observer);
 		}
 		else if (Type_Item.Transform_Image.equals(item))
 		{
-			Graphics2D g2d = (Graphics2D)g;
 			g2d.drawImage(img,tr,observer);
 		}
 		else if (Type_Item.String.equals(item))

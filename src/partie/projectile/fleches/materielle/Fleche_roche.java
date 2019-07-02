@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.vecmath.Vector2d;
 
+import menu.menuPrincipal.ModelPrincipal;
 import music.MusicBruitage;
 import partie.bloc.Bloc;
 import partie.collision.Collidable;
@@ -31,12 +32,14 @@ public class Fleche_roche extends Materielle {
 	@Override
 	protected void onPlanted(List<Entity> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
 	{
+		ModelPrincipal.debugTime.startElapsedForVerbose();
 		if(this.afterDecochee && stuck){
 			Collidable[] collidedObjects = {new Bloc()};
 			stuck  = !ejectArrow(partie,unprojectedSpeed,collidedObjects);
-			if(!(collidedObjects[0] instanceof Bloc) || !((Bloc) collidedObjects[0]).isVide())
+			if(!(collidedObjects[0] instanceof Bloc) || collidedObjects==null)
 				collidedObject=collidedObjects[0];
 		}
+		ModelPrincipal.debugTime.elapsed("Fleche roche: After eject arrow");
 		if(stuck){
 			destroy(partie,false);
 			return;
@@ -44,6 +47,7 @@ public class Fleche_roche extends Materielle {
 		if(!generatedEffect){
 			generatedEffect=true;
 			flecheEffect=new Roche_effect(partie,this,0,partie.getFrame(),this.normCollision,this.pointCollision,this.correctedPointCollision,true);
+			ModelPrincipal.debugTime.elapsed("Fleche roche: After generating roche effect");
 			if(collidedObject instanceof Roche_effect)
 			{
 				Roche_effect eff = (Roche_effect) collidedObject;
@@ -55,9 +59,12 @@ public class Fleche_roche extends Materielle {
 						eff.addSynchroSpeed(flecheEffect);
 				}
 			}
+			ModelPrincipal.debugTime.elapsed("Fleche roche: After synchro speed with other roche");
 			if(!flecheEffect.getNeedDestroy())
 				this.isVisible=false;
+			ModelPrincipal.debugTime.elapsed("Fleche roche: After set fleche invisible");
 			MusicBruitage.me.startBruitage("arc");
+			ModelPrincipal.debugTime.elapsed("Fleche roche: After start bruitage");
 		}
 	}
 
@@ -69,7 +76,7 @@ public class Fleche_roche extends Materielle {
 			if(((Effect)collider).isWorldCollider){
 				Collidable[] collidedObjects = {new Bloc()};
 				ejectArrow(partie,unprojectedSpeed,collidedObjects);
-				if(!(collidedObjects[0] instanceof Bloc) || !((Bloc) collidedObjects[0]).isVide())
+				if(!(collidedObjects[0] instanceof Bloc) || collidedObjects[0]==null)
 					collider=collidedObjects[0];
 			}
 		}

@@ -17,7 +17,10 @@ import loading.LoaderItem;
 public class LoaderMusicBruitage extends LoaderItem implements InterfaceConstantes{
 	
 	Map<String,Clip> mapClips = new HashMap<String,Clip>();
-
+	
+	public LoaderMusicBruitage() {
+		super("bruitages");
+	}
 	@Override
 	public void run() {
 		if(alreadyLoaded)

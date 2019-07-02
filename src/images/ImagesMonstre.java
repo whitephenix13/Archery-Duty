@@ -17,13 +17,17 @@ public class ImagesMonstre extends LoaderItem{
 	
 	public ImagesMonstre()
 	{
+		super("Image monstre");
 	}
 	
 	@Override
 	public void run()
 	{
-		if(alreadyLoaded)
+		percentage=0;
+		if(alreadyLoaded){
+			percentage=100;
 			return;
+		}
 		
 		for(int i=0; i<2; ++i)
 			im_SP_attente.add(getIm(path+"spirel/attente/"+i+".gif",true));

@@ -7,7 +7,12 @@ import java.util.TimerTask;
 import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 
+import Affichage.Affichage;
+import Affichage.Drawable;
 import menu.menuPrincipal.AbstractModelPrincipal;
+import menu.menuPrincipal.GameHandler;
+import menu.menuPrincipal.GameHandler.GameModeType;
+import menu.menuPrincipal.GameMode;
 import music.Music;
 import music.MusicBruitage;
 import partie.modelPartie.InputPartie;
@@ -15,15 +20,19 @@ import partie.modelPartie.InputPartie;
 
 public class ModelOption extends AbstractModelOption{
 
-	public ModelOption(Touches _touches, InputPartie _inputPartie)
+	public ModelOption(Touches _touches, InputPartie _inputPartie,GameHandler gameHandler)
 	{
+		super();
+		this.gameHandler=gameHandler;
 		touches=_touches;
 		inputPartie=_inputPartie;
 	}
 	public void retourMenuPrincipal() {
-		AbstractModelPrincipal.changeFrame=true;
-		AbstractModelPrincipal.modeSuivant="Principal";
-		AbstractModelPrincipal.changeMode=true;
+		
+		//REMOVE AbstractModelPrincipal.changeFrame=true; //REMOVE
+		gameHandler.setGameMode(GameModeType.MAIN_MENU);
+		/*REMOVE AbstractModelPrincipal.modeSuivant="Principal";
+		AbstractModelPrincipal.changeMode=true;*/
 	}
 
 
@@ -116,5 +125,25 @@ public class ModelOption extends AbstractModelOption{
 		updateInputText=true;
 		notifyObserver();
 	}
-
+	
+	public void doComputations(Affichage affich){
+		//As this mode is controlled by listeners, the computationDone is set to false when a listener is triggered. This function is then left empty
+	}
+	public void updateGraphics(){
+		this.notifyMainObserver();
+	}
+	public boolean isComputationDone(){
+		return computationDone;
+	}
+	@Override
+	public boolean isGameModeLoaded()
+	{
+		//loading not required 
+		return true;
+	}
+	@Override
+	public GameMode getLoaderGameMode(){
+		//loading not required 
+		return null;
+	}
 }

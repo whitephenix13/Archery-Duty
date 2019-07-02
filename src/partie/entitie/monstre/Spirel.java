@@ -6,6 +6,7 @@ import java.util.List;
 import javax.vecmath.Vector2d;
 
 import gameConfig.InterfaceConstantes;
+import menu.menuPrincipal.ModelPrincipal;
 import music.MusicBruitage;
 import partie.collision.CachedAffineTransform;
 import partie.collision.CachedHitbox;
@@ -97,11 +98,9 @@ public class Spirel extends Monstre{
 	private void updateShootTime()
 	{
 		double mult = conditions.getSpeedFactor();
-		double deltaShoot = (System.nanoTime() - last_update_shoot_time) * (mult-1);		
+		double deltaShoot = (System.nanoTime() - last_update_shoot_time) * (mult-1);	
 		last_shoot_time -= deltaShoot;
-		
 		last_update_shoot_time=System.nanoTime();
-;
 	}
 	public String droite_gauche (int anim)
 	{
@@ -152,12 +151,16 @@ public class Spirel extends Monstre{
 	@Override
 	public boolean[] deplace(AbstractModelPartie partie,Deplace deplace)
 	{
+		ModelPrincipal.debugTime.startElapsedForVerbose();
 		updateShootTime();
+		ModelPrincipal.debugTime.elapsed("Spirel update shoot time" );
 		//compute the next desired movement 
 		IA(partie.tabTirMonstre,partie.heros,partie);
-		//compute the true next movement depending on landing, gravity, ...
+		ModelPrincipal.debugTime.elapsed("Spirel IA");
+		//compute the true next movement depending on landing, gravity, ... 
 		animationChanged=true;
 		changeMouv(partie,deplace);
+		ModelPrincipal.debugTime.elapsed("Spirel changeMouv");
 		boolean[] res= {true,animationChanged};
 		return res;//move the object
 	}
@@ -365,6 +368,7 @@ public class Spirel extends Monstre{
 	 */	
 	public void changeMouv (AbstractModelPartie partie,Deplace deplace)
 	{
+		ModelPrincipal.debugTime.startElapsedForVerbose();
 		boolean herosAGauche= getXpos()-(partie.heros.getXpos()-partie.xScreendisp)>=0;
 		boolean falling= !isGrounded(partie);
 		wasGrounded = !falling;
@@ -375,6 +379,7 @@ public class Spirel extends Monstre{
 		this.peutSauter=!falling;
 		this.finSaut=this.finSaut && !falling;
 		
+		ModelPrincipal.debugTime.elapsed("Spirel chang mouv: init var");
 		//chute
 		if(falling)
 		{
@@ -390,7 +395,7 @@ public class Spirel extends Monstre{
 			getDeplacement().setSpeed(this,getAnim());
 
 		}
-		
+		ModelPrincipal.debugTime.elapsed("Spirel chang mouv: falling");
 		//atterrissage
 		if(landing)
 		{
@@ -405,6 +410,7 @@ public class Spirel extends Monstre{
 			sautDroit=false;
 			sautGauche=false;
 			finSaut=false;
+			ModelPrincipal.debugTime.elapsed("Spirel chang mouv: landing");
 		}
 		//on execute l'action voulue
 		else
@@ -417,15 +423,19 @@ public class Spirel extends Monstre{
 				setDeplacement(nouvMouv);
 				setAnim(nouvAnim);
 				getDeplacement().setSpeed(this,getAnim());
+				ModelPrincipal.debugTime.elapsed("Spirel chang mouv: doit changer mouv");
 
 			}
 			else 
 			{
 				animationChanged=false;
 				int nextAnim = getDeplacement().updateAnimation(this,getAnim(), partie.getFrame(),conditions.getSpeedFactor());
-				alignHitbox(getAnim(),getDeplacement(),nextAnim,partie,deplace);
-				setAnim(nextAnim);
+				if(getAnim() != nextAnim){
+					alignHitbox(getAnim(),getDeplacement(),nextAnim,partie,deplace);
+					setAnim(nextAnim);
+				}
 				getDeplacement().setSpeed(this, getAnim());
+				ModelPrincipal.debugTime.elapsed("Spirel chang mouv: meme mouv");
 			}
 		}
 		doitChangMouv=false;

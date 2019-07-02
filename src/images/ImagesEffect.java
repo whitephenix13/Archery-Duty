@@ -32,15 +32,19 @@ public class ImagesEffect extends LoaderItem{
 	Image im_slowdown =null;
 	public ImagesEffect()
 	{
+		super("Image effect");
 	}
 	
 	@Override
 	public void run()
 	{
 		int count = 0;
-		int nb= 15;
-		if(alreadyLoaded)
+		int nb= 70;
+		percentage = 0;
+		if(alreadyLoaded){
+			percentage = 100;
 			return;
+		}
 		if(im_slowdown==null)
 			im_slowdown=getIm("resources/slowDownFX.png",true);
 		count ++;
@@ -116,7 +120,6 @@ public class ImagesEffect extends LoaderItem{
 			im_roche_effect[1].add(getIm(path+"roche/1/"+i+".png",true));
 			count ++;
 		}
-		percentage = (int)(100.0*count/nb);
 
 		percentage = (int)(100.0*count/nb);
 		for(int i=0; i<4; ++i){

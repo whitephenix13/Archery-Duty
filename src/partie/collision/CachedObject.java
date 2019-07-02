@@ -33,7 +33,8 @@ public abstract class CachedObject<T> {
 	public CachedObject(CachedObject<T> obj)
 	{
 		parent = obj.parent;//don't need a deep copy here because in case of memorizeCurrentValue reverting to original, parent will also be reverted
-		cachedScreenDisp = new Point(obj.cachedScreenDisp);
+		if(obj.cachedScreenDisp!=null)
+			cachedScreenDisp = new Point(obj.cachedScreenDisp);
 		valueChanged = obj.valueChanged;
 		valueChangedStrategy = obj.valueChangedStrategy;
 		cachedObject = obj.cachedObject;

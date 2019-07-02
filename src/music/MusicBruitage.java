@@ -1,20 +1,24 @@
 package music;
 
+import java.util.ArrayList;
+
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
 
 import gameConfig.InterfaceConstantes;
+import menu.menuPrincipal.ModelPrincipal;
 import option.Config;
 
-public class MusicBruitage implements InterfaceConstantes{
+public class MusicBruitage extends AsynchroneMusic implements InterfaceConstantes{
 
 	public static MusicBruitage me;
 	public LoaderMusicBruitage loaderMusicBruitage;
 	double gain;
 	int nombreBruitage =0 ;
-
+	
 	private MusicBruitage()
-	{		
+	{	
+		super();
 		gain = Config.bruitageVolume;
 		loaderMusicBruitage= new LoaderMusicBruitage();
 	}
@@ -24,7 +28,6 @@ public class MusicBruitage implements InterfaceConstantes{
 			me = new MusicBruitage();
 		}
 	}
-	
 	
 
 	public void volumeControl(double nouvGain)
@@ -40,20 +43,24 @@ public class MusicBruitage implements InterfaceConstantes{
 		}
 	}
 
-	public void startBruitage(String typeBruitage)
+	public void startBruitage(final String typeBruitage)
 	{
-		volumeControl(me.gain);
-
-		Clip c = me.loaderMusicBruitage.mapClips.get(typeBruitage);
-		if(!c.isRunning() || (c.isRunning() && (c.getFramePosition()>0)) )
-		{
-			c.stop();
-			c.setMicrosecondPosition(0);
-			while(c.isRunning())
-			{}
-			c.start();
-		}
-
+		ModelPrincipal.debugTime.startElapsedForVerbose();
+		this.requests.add(new Request(){
+			@Override
+			public void run() {
+				volumeControl(me.gain);
+				final Clip c = me.loaderMusicBruitage.mapClips.get(typeBruitage);
+				c.stop();
+				c.setMicrosecondPosition(0);
+				while(c.isRunning())
+				{}
+				c.start();
+			}
+		});
+		ModelPrincipal.debugTime.elapsed("MusicBruitage : create request");
+		this.runRequests();
+		ModelPrincipal.debugTime.elapsed("MusicBruitage : run request");
 	}
 
 }

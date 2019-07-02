@@ -166,8 +166,7 @@ public class Fleche_auto_teleguidee extends Rusee{
 	@Override
 	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
 		
-		int currentVerbose = 3;
-		ModelPrincipal.debugTime.startElapsedForVerbose(currentVerbose);
+		ModelPrincipal.debugTime.startElapsedForVerbose();
 		
 		boolean[] res = {doitDeplace,animationChanged};
 		
@@ -179,10 +178,10 @@ public class Fleche_auto_teleguidee extends Rusee{
 				Vector2d dir = Deplace.angleToVector(getRotation());
 				Vector2d thisMid = Hitbox.getHitboxCenter(getHitbox(partie.INIT_RECT, partie.getScreenDisp()));
 				Vector2d target = FindTarget(partie,thisMid);
-				ModelPrincipal.debugTime.elapsed("find target", currentVerbose);
+				ModelPrincipal.debugTime.elapsed("find target");
 				if(target!=null){
 					ArrayList<Point> nextPathPoints = pathAlgo.GetNextTargets(partie, this, dir, target,MAX_NUMBER_TARGET);
-					ModelPrincipal.debugTime.elapsed("get next targest", currentVerbose);
+					ModelPrincipal.debugTime.elapsed("get next targets");
 					if(nextPathPoints != null && nextPathPoints.size()>0){
 						//Point to the next target and move to exactly end up at the target point.
 						//This is due to avoid trajectory imprecision 
@@ -191,7 +190,7 @@ public class Fleche_auto_teleguidee extends Rusee{
 						
 						if(!final_direction.equals(new Vector2d(0,0))){
 							setRotation(Deplace.XYtoAngle(final_direction.x, final_direction.y));
-							ModelPrincipal.debugTime.elapsed("rotation", currentVerbose);
+							ModelPrincipal.debugTime.elapsed("rotation");
 
 							//Set speed to reach the target. Make sure that this speed is not bigger than the normal one 
 							Vector2d vit1 = final_direction;
@@ -201,7 +200,7 @@ public class Fleche_auto_teleguidee extends Rusee{
 							}
 							this.setLocalVit(new Vitesse(vit1));
 							shouldSetSpeed=false;
-							ModelPrincipal.debugTime.elapsed("set speed with targeting", currentVerbose);
+							ModelPrincipal.debugTime.elapsed("set speed with targeting");
 						}
 
 					}
@@ -209,9 +208,9 @@ public class Fleche_auto_teleguidee extends Rusee{
 					{
 						Vector2d final_direction = new Vector2d(target.x-thisMid.x,target.y-thisMid.y);
 						setRotation(Deplace.XYtoAngle(final_direction.x, final_direction.y));
-						ModelPrincipal.debugTime.elapsed("rotation", currentVerbose);
+						ModelPrincipal.debugTime.elapsed("rotation");
 						partie.forceRepaint();
-						ModelPrincipal.debugTime.elapsed("force repaint", currentVerbose);
+						ModelPrincipal.debugTime.elapsed("force repaint");
 						
 						double scaler = this.getDeplacement().getSpeed(this, getAnim()).length() / final_direction.length();
 						if(scaler<1){
@@ -221,7 +220,7 @@ public class Fleche_auto_teleguidee extends Rusee{
 						
 						shouldSetSpeed=false;
 						stopTargeting=true;
-						ModelPrincipal.debugTime.elapsed("set speed without targeting", currentVerbose);
+						ModelPrincipal.debugTime.elapsed("set speed without targeting");
 					}
 				}
 				else
@@ -231,7 +230,7 @@ public class Fleche_auto_teleguidee extends Rusee{
 			
 			try {
 				setAnim(changeAnim(partie,deplace));
-				ModelPrincipal.debugTime.elapsed("change anim", currentVerbose);	
+				ModelPrincipal.debugTime.elapsed("change anim");	
 			} 
 			catch (InterruptedException e) {e.printStackTrace();}
 			if(shouldSetSpeed)	
@@ -241,14 +240,14 @@ public class Fleche_auto_teleguidee extends Rusee{
 		{
 			try {
 				setAnim(changeAnim(partie,deplace));
-				ModelPrincipal.debugTime.elapsed("change anim", currentVerbose);	
+				ModelPrincipal.debugTime.elapsed("change anim");	
 			} 
 			catch (InterruptedException e) {e.printStackTrace();}
 		}
 		//updateTransformAndHitbox(partie);
-		ModelPrincipal.debugTime.elapsed("update transform and hitbox", currentVerbose);
+		ModelPrincipal.debugTime.elapsed("update transform and hitbox");
 		updateTrail(partie);
-		ModelPrincipal.debugTime.elapsed("update trail", currentVerbose);
+		ModelPrincipal.debugTime.elapsed("update trail");
 
 		res[0]=doitDeplace;res[1]=animationChanged;
 		return res;

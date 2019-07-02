@@ -20,12 +20,17 @@ import javax.swing.JButton;
 import Affichage.Affichage;
 import Affichage.DrawImageHandler;
 import Affichage.DrawImageItem;
+import Affichage.Drawable;
+import debug.DebugTime;
 import gameConfig.Destroyable;
 import gameConfig.InterfaceConstantes;
 import gameConfig.TypeObject;
 import images.ImagesEffect;
 import menu.menuPrincipal.AbstractModelPrincipal;
+import menu.menuPrincipal.GameHandler;
 import menu.menuPrincipal.ModelPrincipal;
+import menu.menuPrincipal.GameHandler.GameModeType;
+import menu.menuPrincipal.GameMode;
 import music.Music;
 import option.Config;
 import option.Touches;
@@ -61,12 +66,13 @@ import partie.entitie.monstre.Spirel;
 import partie.projectile.Projectile;
 import partie.projectile.fleches.Fleche;
 import partie.projectile.fleches.rusee.Fleche_auto_teleguidee;
-import partie.projectile.tirMonstre.TirSpirel;
+import serialize.Serialize;
 
 public class ModelPartie extends AbstractModelPartie{
 
-	public ModelPartie(Touches _touches)
+	public ModelPartie(Touches _touches,GameHandler gameHandler)
 	{
+		this.gameHandler=gameHandler;
 		touches = _touches;
 		inputPartie = new InputPartie(this);
 	}
@@ -82,6 +88,18 @@ public class ModelPartie extends AbstractModelPartie{
 		//on fait apparaitre les monstres 
 		nombreMonstreRestant=100;
 		spawnMonster(nombreMonstreRestant,typeDeSpawn);
+		
+		//Force creation of heros hitbox
+		final Hitbox herosHit = heros.getHitbox(INIT_RECT, getScreenDisp());
+		//Force creation of bloc hitbox
+		for(Collidable bloc: Collision.getMondeBlocs(monde, herosHit, INIT_RECT, getScreenDisp(), InterfaceConstantes.TAILLE_BLOC))
+			bloc.getHitbox(INIT_RECT, getScreenDisp());//force creation of hitbox
+		//Force creation of entity hitbox
+		for(Entity ent : Collidable.getAllEntitiesCollidable(this,heros))
+			ent.getHitbox(INIT_RECT, getScreenDisp());//force creation of hitbox
+		
+		ModelPrincipal.debugTime = new DebugTime(InterfaceConstantes.DEBUG_TIME_LOOP_TO_SLOW,InterfaceConstantes.DEBUG_TIME_ACTION_TO_SLOW,InterfaceConstantes.DEBUG_TIME_VERBOSE);
+		
 	}
 
 	/**
@@ -99,7 +117,7 @@ public class ModelPartie extends AbstractModelPartie{
 				inPause=true;
 				Toolkit.getDefaultToolkit().setLockingKeyState(KeyEvent.VK_CAPS_LOCK, false);
 				keyAction();
-				AbstractModelPrincipal.changeFrame=true;
+				//REMOVE AbstractModelPrincipal.changeFrame=true;
 				affich.actuAffichage();
 
 				firstNonFocused=false;
@@ -107,8 +125,7 @@ public class ModelPartie extends AbstractModelPartie{
 
 		}
 		firstNonFocused=true;
-		int currentVerbose = 2;
-		ModelPrincipal.debugTime.startElapsedForVerbose(currentVerbose);
+		ModelPrincipal.debugTime.startElapsedForVerbose();
 		//int x= heros.xPos + heros.deplacement.xdecallsprite[heros.anim]; //la vrai position du heros necessite encore un - variablesPartieRapide.xdeplaceEcran
 		//int y= heros.yPos+ heros.deplacement.ydecallsprite[heros.anim]; 
 
@@ -119,32 +136,36 @@ public class ModelPartie extends AbstractModelPartie{
 
 		keyAction();
 
-		ModelPrincipal.debugTime.elapsed("action", currentVerbose);
+		ModelPrincipal.debugTime.elapsed("action");
 
 		//Lors d'une pause, on ne veut pas réinitaliser la partie en cours mais juste y accéder à nouveau
 		if(!inPause)
 		{
-
 			//First action is to delete since we want the user to see the colliding objects for at least 1 frame 
-			deleteObject(lEffaceFleche,(List<Destroyable>)(List<?>) tabFleche);
-			deleteObject(lEffaceTirMonstre,(List<Destroyable>)(List<?>)tabTirMonstre);
-			deleteObject(lEffaceMonstre,(List<Destroyable>)(List<?>)tabMonstre);
-			deleteObject(lEffaceEffect,(List<Destroyable>)(List<?>)arrowsEffects);
-
+			if(!lEffaceFleche.isEmpty()){
+				deleteObject(lEffaceFleche,tabFleche);
+				lEffaceFleche.clear();
+			}
+			if(!lEffaceTirMonstre.isEmpty()){
+				deleteObject(lEffaceTirMonstre,tabTirMonstre);
+				lEffaceTirMonstre.clear();
+			}
+			if(!lEffaceMonstre.isEmpty()){
+				deleteObject(lEffaceMonstre,tabMonstre);
+				lEffaceMonstre.clear();
+			}
+			if(!lEffaceEffect.isEmpty()){
+				deleteObject(lEffaceEffect,arrowsEffects);
+				lEffaceEffect.clear();
+			}
 			
-			//on vide les listes
-			lEffaceFleche.clear();
-			lEffaceTirMonstre.clear();
-			lEffaceMonstre.clear();
-			lEffaceEffect.clear();
-
-			ModelPrincipal.debugTime.elapsed("delete", currentVerbose);
+			ModelPrincipal.debugTime.elapsed("delete");
 
 			//DEPLACEMENT ENTITIES
 
 			for(Entity ent : Collidable.getAllEntitiesCollidable(this))
 			{
-				ModelPrincipal.debugTime.startElapsedForVerbose(currentVerbose+1);
+				ModelPrincipal.debugTime.startElapsedForVerbose();
 				Mouvement mouv = ent.getDeplacement();
 				if(ent instanceof Heros){
 					Heros h = (Heros)ent;
@@ -152,51 +173,51 @@ public class ModelPartie extends AbstractModelPartie{
 				}
 				boolean shouldBeDestroyed = ent.getNeedDestroy() || ((PartieTimer.me.getElapsedNano()-ent.tempsDetruit) > ent.TEMPS_DESTRUCTION) && ent.tempsDetruit>0;
 				if(!shouldBeDestroyed)
-					deplace.DeplaceObject(ent, mouv, this,currentVerbose+2);
+					deplace.DeplaceObject(ent, mouv, this);
 				//Handle case where deplace set need destroy to true 
 				if(shouldBeDestroyed )
 					ent.destroy(this, true);
-				ModelPrincipal.debugTime.elapsed("deplace entitie: ", ent.toString(), currentVerbose+1);
+				ModelPrincipal.debugTime.elapsed("deplace entitie: ", ent.toString());
 			}
 			
-			ModelPrincipal.debugTime.elapsed("deplaceEntities", currentVerbose);
+			ModelPrincipal.debugTime.elapsed("deplaceEntities");
 
 			//DEPLACEMENT PROJECTILES 
 			for(Projectile proj : Collidable.getAllProjectileCollidable(this))
 			{
-				ModelPrincipal.debugTime.startElapsedForVerbose(currentVerbose+1);
+				ModelPrincipal.debugTime.startElapsedForVerbose();
 				//Pos is incorrect for Fleche when encochee hence never destroy it in that case.
 				//Otherwise destroy projectile if too far out of screen 
 				boolean destroyTooFar = (proj instanceof Fleche? !((Fleche)proj).encochee : true) &&
 						!Collidable.objectInBoundingSquare(this,proj,CustomBoundingSquare.getScreen()); 
 				boolean shouldBeDestroyed =  destroyTooFar || proj.getNeedDestroy() || ((PartieTimer.me.getElapsedNano()-proj.tempsDetruit) > proj.TEMPS_DESTRUCTION) && proj.tempsDetruit>0;
 				if(!shouldBeDestroyed)
-					deplace.DeplaceObject(proj, proj.getDeplacement(), this,currentVerbose+2);
+					deplace.DeplaceObject(proj, proj.getDeplacement(), this);
 				//Handle case where deplace set need destroy to true 
 				if(shouldBeDestroyed )
 					proj.destroy(this, true);
-				ModelPrincipal.debugTime.elapsed("deplace projectile: "+ proj.toString(), currentVerbose+1);
+				ModelPrincipal.debugTime.elapsed("deplace projectile: "+ proj.toString());
 			}
 
-			ModelPrincipal.debugTime.elapsed("deplaceProjectiles", currentVerbose);
+			ModelPrincipal.debugTime.elapsed("deplaceProjectiles");
 
 			//UPDATE AND DEPLACEMENT OF EFFECTS
 			for(Collidable col : arrowsEffects)
 			{
-				ModelPrincipal.debugTime.startElapsedForVerbose(currentVerbose+1);
+				ModelPrincipal.debugTime.startElapsedForVerbose();
 				Effect eff = (Effect) col;
 				boolean shouldBeDestroyed = eff.getNeedDestroy() || (((PartieTimer.me.getElapsedNano()-eff.tempsDetruit) > eff.TEMPS_DESTRUCTION) && eff.tempsDetruit>0);
 				boolean ended = eff.isEnded();
 				if(!shouldBeDestroyed && !ended){
-					deplace.DeplaceObject(eff, eff.getDeplacement(), this,currentVerbose+2);
+					deplace.DeplaceObject(eff, eff.getDeplacement(), this);
 					eff.onUpdate(this, false);
 				}
 				else
 					eff.destroy(this, true);
-				ModelPrincipal.debugTime.elapsed("deplace and update effects: "+ col.toString(), currentVerbose+1);
+				ModelPrincipal.debugTime.elapsed("deplace and update effects: "+ col.toString() );
 			}
 			
-			ModelPrincipal.debugTime.elapsed("update and deplacement of effects", currentVerbose);
+			ModelPrincipal.debugTime.elapsed("update and deplacement of effects");
 
 			//COLLISION ENTITIES/PROJECTILE/EFFECTS
 			List<List<Entity>> allEntities = Collidable.getAllEntitiesCollidableSeparately(this);
@@ -206,7 +227,7 @@ public class ModelPartie extends AbstractModelPartie{
 			for(int i=0; i<(allProjectiles.size()-1);i++)
 				for(int j=i+1; j<(allProjectiles.size());j++)
 				{
-					ModelPrincipal.debugTime.startElapsedForVerbose(currentVerbose+1);
+					ModelPrincipal.debugTime.startElapsedForVerbose();
 					List<Collidable> groupI = allProjectiles.get(i);
 					List<Collidable> groupJ = allProjectiles.get(j);
 
@@ -222,16 +243,16 @@ public class ModelPartie extends AbstractModelPartie{
 									(TypeObject.isMemberOf(proj_j, proj_i.getImmuneType())))
 								continue;
 							Collision.collisionObjects(this, proj_i, proj_j,true);//Object are warn if collision in this function
-							ModelPrincipal.debugTime.elapsed("collision between projectile: ", proj_i.toString()," " , proj_i.toString(), currentVerbose+1);
+							ModelPrincipal.debugTime.elapsed("collision between projectile: ", proj_i.toString()," " , proj_i.toString());
 						}
 				}
-			ModelPrincipal.debugTime.elapsed("collision between projectiles", currentVerbose);
+			ModelPrincipal.debugTime.elapsed("collision between projectiles");
 
 			//Compare groups of entities and projectiles between them (ie: fleche and monstre)
 			for(int i=0; i<(allEntities.size());i++)
 				for(int j=0; j<(allProjectiles.size());j++)
 				{
-					ModelPrincipal.debugTime.startElapsedForVerbose(currentVerbose+1);
+					ModelPrincipal.debugTime.startElapsedForVerbose();
 					List<Entity> groupEntitie = allEntities.get(i);
 					List<Collidable> groupProjectile = allProjectiles.get(j);
 
@@ -247,16 +268,16 @@ public class ModelPartie extends AbstractModelPartie{
 									|| (TypeObject.isMemberOf(proj,ent.getImmuneType() )))
 								continue;
 							Collision.collisionObjects(this, ent, proj,true);//Object are warn if collision in this function
-							ModelPrincipal.debugTime.elapsed("collision between entitie/projectile: ", ent.toString()," " , proj.toString(), currentVerbose+1);
+							ModelPrincipal.debugTime.elapsed("collision between entitie/projectile: ", ent.toString()," " , proj.toString() );
 						}
 				}
 				}
-			ModelPrincipal.debugTime.elapsed("collision entitie/projectiles", currentVerbose);
+			ModelPrincipal.debugTime.elapsed("collision entitie/projectiles");
 			//COLLISION ENTITIE EFFECTS 
 			for(int i=0; i<(allEntities.size());i++){
 				List<Entity> groupEntitie = allEntities.get(i);
 				for(int i_index =0; i_index<groupEntitie.size(); i_index++){
-					ModelPrincipal.debugTime.startElapsedForVerbose(currentVerbose+1);
+					ModelPrincipal.debugTime.startElapsedForVerbose();
 					Entity ent = groupEntitie.get(i_index);
 					for(Collidable col : arrowsEffects)
 					{
@@ -270,11 +291,11 @@ public class ModelPartie extends AbstractModelPartie{
 							}
 						//if col does not have effect and collide with it: add it 
 						//Effect eff = (Effect) col;
-						ModelPrincipal.debugTime.elapsed("collision between entitie/effect: ", ent.toString()," " , eff.toString(), currentVerbose+1);
+						ModelPrincipal.debugTime.elapsed("collision between entitie/effect: ", ent.toString()," " , eff.toString());
 					}
 				}
 			}
-			ModelPrincipal.debugTime.elapsed("collision entitie/effects", currentVerbose);
+			ModelPrincipal.debugTime.elapsed("collision entitie/effects");
 
 			//Update Variables after collisions 
 			nombreMonstreRestant=tabMonstre.size();
@@ -287,7 +308,7 @@ public class ModelPartie extends AbstractModelPartie{
 			for(Entity c : Collidable.getAllEntitiesCollidable(this))
 				c.conditions.updateConditionState();
 
-			ModelPrincipal.debugTime.elapsed("effect updates", currentVerbose);
+			ModelPrincipal.debugTime.elapsed("effect updates");
 
 			//PREPARE OBJECTS FOR DESTRUCTION 
 
@@ -308,7 +329,7 @@ public class ModelPartie extends AbstractModelPartie{
 					lEffaceEffect.add(i);
 				}
 
-			ModelPrincipal.debugTime.elapsed("object destruction preparation", currentVerbose);
+			ModelPrincipal.debugTime.elapsed("object destruction preparation");
 
 			//on test si la partie est finie 
 
@@ -319,55 +340,31 @@ public class ModelPartie extends AbstractModelPartie{
 			//on detecte la fin de la partie de la première fois : 
 			if(!finPartieAvant &&finPartie )
 			{
-				AbstractModelPrincipal.changeFrame=true;
+				//REMOVE gameHandler.updateGraphics();
+				//REMOVE AbstractModelPrincipal.changeFrame=true;
 			}
 
 		}
-
-		computationDone=true;
+		
+		isFirstFrameReady=true;
 		//else "pause"
-		ModelPrincipal.debugTime.elapsed("end of play loop", currentVerbose);
-
+		ModelPrincipal.debugTime.elapsed("end of play loop");
 	}
 
 
 
-	/*void gestionEffect()
-	 * NOT USED 
+	
+	<T extends Destroyable> void deleteObject(List<Integer> indexList, List<T> objectList )
 	{
-		for(int i=0;i<arrowsEffects.size();++i)
-		{
-			Effect eff = (Effect) arrowsEffects.get(i);
-			//if anim ended: delete
-			double tempsEffect=  PartieTimer.me.getElapsedNano()-eff.tempsDetruit;
-
-			if(!eff.isEnded() && tempsEffect>eff.TEMPS_DESTRUCTION && eff.tempsDetruit>0)
-			{
-				eff.destroy(this, true);
-			}	
-			//increment anim
-			else if(!eff.isEnded() && !eff.getNeedDestroy() && (eff.tempsDetruit==0) )
-			{
-				eff.onUpdate(this,false);
-				eff.anim=eff.animation.update(eff.anim, this.getFrame(),1);
-			}
-			if(eff.isEnded())
-			{
-				//eff.ref_fleche.OnFlecheEffectDestroy(this, true);
-				eff.destroy(this, true);
-			}
-		}
-
-
-	}*/
-	void deleteObject(List<Integer> indexList, List<Destroyable> objectList )
-	{
+		ModelPrincipal.debugTime.startElapsedForVerbose();
 		Collections.sort(indexList);
-
+		ModelPrincipal.debugTime.elapsed("deleteObject: sort");
 		for(int i=0; i<indexList.size(); i++)
 		{
 			objectList.get(indexList.get(i)-i).onDestroy(this);
+			ModelPrincipal.debugTime.elapsed("deleteObject: on destroy");
 			objectList.remove(indexList.get(i)-i);
+			ModelPrincipal.debugTime.elapsed("deleteObject: remove");
 		}
 	}
 
@@ -446,11 +443,11 @@ public class ModelPartie extends AbstractModelPartie{
 	{
 		if(!finPartie)
 		{
-			boolean bothDirection = (inputPartie.courseDroiteDown || inputPartie.marcheDroiteDown) &&  (inputPartie.courseGaucheDown || inputPartie.marcheGaucheDown);
-			boolean courseDroiteDown = inputPartie.courseDroiteDown  && (bothDirection? nextDirectionRightInBothCase : true );
-			boolean marcheDroiteDown = inputPartie.marcheDroiteDown  && (bothDirection? nextDirectionRightInBothCase : true );
-			boolean marcheGaucheDown = inputPartie.marcheGaucheDown  && (bothDirection? !nextDirectionRightInBothCase : true );
-			boolean courseGaucheDown = inputPartie.courseGaucheDown  && (bothDirection? !nextDirectionRightInBothCase : true );
+			final boolean bothDirection = (inputPartie.courseDroiteDown || inputPartie.marcheDroiteDown) &&  (inputPartie.courseGaucheDown || inputPartie.marcheGaucheDown);
+			final boolean courseDroiteDown = inputPartie.courseDroiteDown  && (bothDirection? nextDirectionRightInBothCase : true );
+			final boolean marcheDroiteDown = inputPartie.marcheDroiteDown  && (bothDirection? nextDirectionRightInBothCase : true );
+			final boolean marcheGaucheDown = inputPartie.marcheGaucheDown  && (bothDirection? !nextDirectionRightInBothCase : true );
+			final boolean courseGaucheDown = inputPartie.courseGaucheDown  && (bothDirection? !nextDirectionRightInBothCase : true );
 
 			if(inputPartie.pauseDown )
 			{
@@ -686,6 +683,7 @@ public class ModelPartie extends AbstractModelPartie{
 
 				if(inputPartie.toucheSlowDown)
 				{
+					System.out.println("slow down clicked "+ getFrame());
 					slowCount=0;
 					slowDown= ! slowDown;
 					PartieTimer.me.changedSlowMotion(slowDown);
@@ -751,8 +749,8 @@ public class ModelPartie extends AbstractModelPartie{
 		}
 		//on arrete de deplacer le heros qui saute: 
 		//TIR 
-		boolean normal_tir_R= inputPartie.toucheTirReleased;//left click
-		boolean normal_2tir_R= inputPartie.touche2TirReleased; //right click
+		final boolean normal_tir_R= inputPartie.toucheTirReleased;//left click
+		final boolean normal_2tir_R= inputPartie.touche2TirReleased; //right click
 
 		if( (normal_tir_R|| normal_2tir_R) && ((System.nanoTime()-heros.last_armed_time)>InterfaceConstantes.ARMED_MIN_TIME))
 		{
@@ -788,7 +786,7 @@ public class ModelPartie extends AbstractModelPartie{
 
 		}
 
-		boolean just_wall_jump= heros.getDeplacement().IsDeplacement(TypeMouvEntitie.Saut) && (((PartieTimer.me.getElapsedNano()-heros.last_wall_jump_time)<=InterfaceConstantes.WALL_JUMP_DISABLE_TIME));
+		final boolean just_wall_jump= heros.getDeplacement().IsDeplacement(TypeMouvEntitie.Saut) && (((PartieTimer.me.getElapsedNano()-heros.last_wall_jump_time)<=InterfaceConstantes.WALL_JUMP_DISABLE_TIME));
 		//MARCHE
 		if ((inputPartie.marcheDroiteReleased||inputPartie.marcheGaucheReleased
 				||inputPartie.courseDroiteReleased||inputPartie.courseGaucheReleased) && !just_wall_jump)
@@ -810,8 +808,8 @@ public class ModelPartie extends AbstractModelPartie{
 				inputPartie.courseGaucheDown=false;inputPartie.courseGaucheReleased=false;heros.runBeforeJump=false;
 			}
 
-			boolean heros_glisse = heros.getDeplacement().IsDeplacement(TypeMouvEntitie.Glissade);
-			boolean heros_accroche = heros.getDeplacement().IsDeplacement(TypeMouvEntitie.Accroche);
+			final boolean heros_glisse = heros.getDeplacement().IsDeplacement(TypeMouvEntitie.Glissade);
+			final boolean heros_accroche = heros.getDeplacement().IsDeplacement(TypeMouvEntitie.Accroche);
 
 			if( !heros_glisse && !heros_accroche && !heros.flecheEncochee )
 			{
@@ -897,45 +895,50 @@ public class ModelPartie extends AbstractModelPartie{
 		}
 		else if(button.getText().equals("Quitter"))
 		{
-			AbstractModelPrincipal.changeFrame=true; 
-			AbstractModelPrincipal.modeSuivant="Quitter";
+			//REMOVE AbstractModelPrincipal.changeFrame=true; //REMOVE
+			//REMOVE AbstractModelPrincipal.modeSuivant="Quitter";
 
 			if(inPause)
 			{
 				//on arrete la partie pour sortir du Thread d'affichage de partie rapide
 				finPartie=true;
 				//on choisit de ne pas afficher la fin de la partie(elle n'est en réalité pas finie
-				AbstractModelPrincipal.changeFrame=false;
+				//REMOVE AbstractModelPrincipal.changeFrame=false;
 			}
-			AbstractModelPrincipal.changeMode=true; 
+			//REMOVE sAbstractModelPrincipal.changeMode=true; 
+			gameHandler.setGameMode(GameModeType.QUIT);
 		}
 		else if(button.getText().equals("Rejouer"))
 		{
-			AbstractModelPrincipal.modeSuivant="Partie";
+			
+			//REMOVE AbstractModelPrincipal.modeSuivant="Partie";
 			finPartie=false;
-			AbstractModelPrincipal.changeFrame=true;
-			AbstractModelPrincipal.changeMode=true; 
+			//REMOVE AbstractModelPrincipal.changeFrame=true;
+			//REMOVE AbstractModelPrincipal.changeMode=true; 
 
 			disableBoutonsFin=true;
 			notifyObserver();
+			gameHandler.setGameMode(GameModeType.GAME);
 
 		}
 		else if(button.getText().equals("Menu Principal"))
 		{
-			AbstractModelPrincipal.modeSuivant="Principal";
-			AbstractModelPrincipal.changeFrame=true;
+			//REMOVE AbstractModelPrincipal.modeSuivant="Principal";
+			//REMOVE AbstractModelPrincipal.changeFrame=true;//REMOVE 
 			finPartie=true;
-			AbstractModelPrincipal.changeMode=true; 
+			//REMOVE AbstractModelPrincipal.changeMode=true; 
 
 			disableBoutonsFin=true;
 			notifyObserver();
+			gameHandler.setGameMode(GameModeType.MAIN_MENU);
 
 		}
 
 		else if(button.getText().equals("Reprendre"))
 		{
 			inPause=false;
-			AbstractModelPrincipal.changeFrame=true;
+			//REMOVE gameHandler.updateGraphics();
+			//REMOVE AbstractModelPrincipal.changeFrame=true;
 		}
 	}
 
@@ -943,25 +946,34 @@ public class ModelPartie extends AbstractModelPartie{
 	 * Permet de reinitialiser tout les appuis de touches, utile notamment lors de la perte de focus de la fenetre
 	 */	
 
+	public void precomputeDraw()
+	{
+		imageDrawer.clearImages();
+		drawBackground();
+		drawMonde(false);
+		drawMonstres(false);
+		drawPerso(false);
+		drawFleches(false);
+		drawTirMonstres(false);
+		drawEffects(false );
+		drawInterface();
+		imageDrawer.sortImages();
+	}
 
 	//DRAW
 	public void drawPartie(Graphics g) {
 
-		drawMonde(g,false);
-		drawMonstres(g,false);
-		drawPerso(g,true);
-		drawFleches(g,true);
-		drawTirMonstres(g,false);
-		drawEffects(g,false );
-		drawInterface(g);
-		
 		imageDrawer.drawAll(g);
 		if(debugDraw != null)
 			debugDraw.draw(g);
+
 	}
-
-
-	public void drawMonde(Graphics g,boolean drawHitbox) 
+	public void drawBackground()
+	{
+		imageDrawer.addImage(new DrawImageItem(imBackground.getImage(""), 0 ,0 ,null,DrawImageHandler.BACKGROUND));
+	}
+	
+	public void drawMonde(boolean drawHitbox) 
 	{
 		int xviewport = getXYViewport(true);
 		int yviewport = getXYViewport(false);
@@ -996,7 +1008,7 @@ public class ModelPartie extends AbstractModelPartie{
 			}
 	}
 
-	public void drawMonstres(Graphics g,boolean drawHitbox) {
+	public void drawMonstres(boolean drawHitbox) {
 
 		for(Entity m : tabMonstre )
 		{
@@ -1042,7 +1054,7 @@ public class ModelPartie extends AbstractModelPartie{
 
 	}
 
-	public Point drawPersoTir(Graphics g)
+	public Point drawPersoTir()
 	{
 		int anim = heros.getAnim();
 		Point anchor = new Point(((Mouvement_entity)heros.getDeplacement()).x_rot_pos.get(anim),((Mouvement_entity)heros.getDeplacement()).y_rot_pos.get(anim));
@@ -1065,13 +1077,13 @@ public class ModelPartie extends AbstractModelPartie{
 		}
 		return returnedAnchor;
 	}
-	public void drawPerso(Graphics g,boolean drawHitbox) {
+	public void drawPerso(boolean drawHitbox) {
 
 		Point anchor = null;
 		if(heros.afficheTouche)
 		{
 			if(heros.getDeplacement().IsDeplacement(TypeMouvEntitie.Tir))
-				anchor=drawPersoTir(g);
+				anchor=drawPersoTir();
 			else
 			{
 				ArrayList<Image> l_image = imHeros.getImages(heros);
@@ -1106,7 +1118,7 @@ public class ModelPartie extends AbstractModelPartie{
 	}
 
 
-	public void drawFleches(Graphics g,boolean drawHitbox) {
+	public void drawFleches(boolean drawHitbox) {
 		//Affichage des flèches
 		if(tabFleche == null)
 		{
@@ -1184,7 +1196,7 @@ public class ModelPartie extends AbstractModelPartie{
 		}
 	}
 
-	public void drawTirMonstres(Graphics g,boolean drawHitbox) {
+	public void drawTirMonstres(boolean drawHitbox) {
 		//Affichage des tirs de monstres 
 		try{
 			for(Projectile tir : tabTirMonstre)
@@ -1211,7 +1223,7 @@ public class ModelPartie extends AbstractModelPartie{
 
 	}
 
-	public void drawEffects(Graphics g,boolean drawHitbox) {
+	public void drawEffects(boolean drawHitbox) {
 		//Draw arrow effect
 		for(int i =0; i< arrowsEffects.size(); ++i)
 		{
@@ -1248,7 +1260,7 @@ public class ModelPartie extends AbstractModelPartie{
 
 	}
 	@Override
-	public void drawInterface(Graphics g) {
+	public void drawInterface() {
 		//AFFICHAGE DE L'INTERFACE 
 		//life
 		int[] x_l= {10,10};
@@ -1421,6 +1433,44 @@ public class ModelPartie extends AbstractModelPartie{
 		// Return the buffered image
 		return bimage;
 	}
+	@Override
+	public boolean isComputationDone(){
+		return computationDone && listenersComputationDone;
+	}
+	@Override
+	public void doComputations(Affichage affich){
+		//wait for loader to end
+		if(!isGameModeLoaded())
+			return;
+		
+		ModelPrincipal.debugTime.print();
+		ModelPrincipal.debugTime.init(InterfaceConstantes.DEBUG_TIME_PRINT_MODE,getFrame());
 
+		computationDone=false;
+		
+		ModelPrincipal.debugTime.startElapsedForVerbose();
+		play(affich);
+		
+		ModelPrincipal.debugTime.elapsed("partie");
+		precomputeDraw();
+		ModelPrincipal.debugTime.elapsed("precomute draw");
+		if(!getinPause() && (!slowDown || (slowDown && slowCount==0)))
+			nextFrame();
+		computationDone=true;
+	}
+	@Override
+	public void updateGraphics(){
+		notifyObserver();//call update from affichagePartie to request a repaint
+		ModelPrincipal.debugTime.elapsed("validate affichage");
+	}
+	@Override
+	public boolean isGameModeLoaded()
+	{
+		return Serialize.niveauLoaded && loaderPartie.isGameModeLoaded();
+	}
+	@Override
+	public GameMode getLoaderGameMode(){
+		return loaderPartie;
+	}
 
 }

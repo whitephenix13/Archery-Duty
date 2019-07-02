@@ -547,8 +547,7 @@ public class Heros extends Entity{
 	 */	
 	public int changeMouv(Mouvement nouvMouv, int nouvAnim, AbstractModelPartie partie,Deplace deplace) throws InterruptedException
 	{
-		int currentVerbose = 4;
-		ModelPrincipal.debugTime.startElapsedForVerbose(currentVerbose);
+		ModelPrincipal.debugTime.startElapsedForVerbose();
 		Hitbox blocDroitGlisseHit = null;
 		Hitbox blocGaucheGlisseHit = null;
 
@@ -558,16 +557,20 @@ public class Heros extends Entity{
 		int animHeros=getAnim();
 		//translate all object hitboxes, see collision to get full formula
 		Hitbox herosHitbox= getHitbox(partie.getScreenDisp(),partie.getScreenDisp());
+		ModelPrincipal.debugTime.elapsed("get heros hitbox");
 
 		List<Collidable> mondeBlocs = Collision.getMondeBlocs(partie.monde,herosHitbox, partie.INIT_RECT,partie.getScreenDisp(),partie.TAILLE_BLOC);
+		ModelPrincipal.debugTime.elapsed("monde bloc");
+
 		List<Collidable> effectColl = Collidable.getAllCollidableEffect(partie, CustomBoundingSquare.getScreen());
+		ModelPrincipal.debugTime.elapsed("get all collidable effect");
+
 		List<Collidable> allColli = new ArrayList<Collidable>();
 		allColli.addAll(mondeBlocs);
 		allColli.addAll(effectColl);
 
-		ModelPrincipal.debugTime.elapsed("monde bloc;", currentVerbose);
 		
-		ModelPrincipal.debugTime.startElapsedForVerbose(currentVerbose+1);
+		ModelPrincipal.debugTime.startElapsedForVerbose();
 		for(Collidable coll : allColli)
 		{
 
@@ -598,9 +601,9 @@ public class Heros extends Entity{
 			{
 				break;
 			}
-			ModelPrincipal.debugTime.elapsed("get hitbox", currentVerbose+1);
+			ModelPrincipal.debugTime.elapsed("get hitbox");
 		}
-		ModelPrincipal.debugTime.elapsed("loop collision", currentVerbose);
+		ModelPrincipal.debugTime.elapsed("loop collision");
 
 		boolean blocDroitGlisse=blocDroitGlisseHit!=null;
 		boolean blocGaucheGlisse=blocGaucheGlisseHit!=null;
@@ -664,7 +667,7 @@ public class Heros extends Entity{
 		
 		int anim=animHeros;
 
-		ModelPrincipal.debugTime.elapsed("Init 2", currentVerbose);
+		ModelPrincipal.debugTime.elapsed("Init 2");
 
 		if( (doitEncocherFleche || flecheEncochee))//cas different puisqu'on ne veut pas que l'avatar ait l'animation de chute en l'air
 		{
@@ -685,7 +688,7 @@ public class Heros extends Entity{
 			return(animSuivante);
 
 		}
-		ModelPrincipal.debugTime.elapsed("fleche", currentVerbose);
+		ModelPrincipal.debugTime.elapsed("fleche");
 
 		//SPECIAL CASE that comes from computation on the current Mouvement 
 		if( (beginSliding_r||beginSliding_l) && !getDeplacement().IsDeplacement(TypeMouvEntitie.Glissade))
@@ -702,7 +705,7 @@ public class Heros extends Entity{
 			localVit.x=(0);
 			return(anim);
 		}
-		ModelPrincipal.debugTime.elapsed("slide", currentVerbose);
+		ModelPrincipal.debugTime.elapsed("slide");
 
 		if((beginAccroche_r || beginAccroche_l) && !getDeplacement().IsDeplacement(TypeMouvEntitie.Accroche))
 		{
@@ -770,7 +773,7 @@ public class Heros extends Entity{
 			}
 
 		}
-		ModelPrincipal.debugTime.elapsed("accroche", currentVerbose);
+		ModelPrincipal.debugTime.elapsed("accroche");
 
 		//attention, falling est le seul bloc de code � ne pas avoir de return 
 		if(falling)
@@ -879,12 +882,12 @@ public class Heros extends Entity{
 			return(anim);
 
 		}
-		ModelPrincipal.debugTime.elapsed("fall", currentVerbose);
+		ModelPrincipal.debugTime.elapsed("fall");
 
 		//Call function to check if move is allowed
 		boolean allowed = moveAllowed(nouvMouv,nouvAnim);
 		//CHANGEMENT DE MOUVEMENT
-		ModelPrincipal.debugTime.elapsed("move allow", currentVerbose);
+		ModelPrincipal.debugTime.elapsed("move allow");
 
 		if(partie.changeMouv && allowed)
 		{
@@ -961,16 +964,18 @@ public class Heros extends Entity{
 			getDeplacement().setSpeed(this, anim);
 		}
 		else
-			//if(!partie.changeMouv ) // MEME MOUVEMENT QUE PRECEDEMMENT , otherwise problem with landing 
+			//if(!partie.changeMouv ) // MEME MOUVEMENT QUE PRECEDEMMENT
 		{
 			animationChanged=false;
 			int nextAnim = getDeplacement().updateAnimation(this,animHeros, partie.getFrame(),conditions.getSpeedFactor());
-			alignHitbox(animHeros,getDeplacement(),nextAnim,partie,deplace,blocGaucheGlisse);
-			anim= nextAnim;
+			if(anim!=nextAnim){
+				alignHitbox(animHeros,getDeplacement(),nextAnim,partie,deplace,blocGaucheGlisse);
+				anim= nextAnim;				
+			}
 			getDeplacement().setSpeed(this, anim);
 
 		}
-		ModelPrincipal.debugTime.elapsed("End changMouv", currentVerbose);
+		ModelPrincipal.debugTime.elapsed("End changMouv");
 
 		partie.changeMouv=false;
 

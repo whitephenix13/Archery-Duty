@@ -1,5 +1,8 @@
 package loading;
 
+import java.lang.ref.WeakReference;
+
+import gameConfig.InterfaceConstantes;
 import menu.menuPrincipal.AbstractModelPrincipal;
 import music.Music;
 import music.MusicBruitage;
@@ -27,30 +30,83 @@ public class LoaderUtils {
 	public static LoaderItem loadWorld(final String nomFichier, final AbstractModelPartie partie)
 	{
 		Serialize.loadPercentage=0;
-		
-		return new LoaderItem(){
+		return new LoaderItem("Load world"){
+			private int startPartieLoadPercentage = 0;
 			@Override
 			public void run()
 			{
 				Bloc[][] oldniveau = partie.monde.name.equals(nomFichier)? partie.monde.niveau :null;
 				partie.monde = Serialize.charger(nomFichier,oldniveau);
+				
+				//Consider that loading is done at 95% from here 
+				startPartieLoadPercentage=0;
+				partie.startPartie(InterfaceConstantes.SPAWN_PROGRAMME);//SPAWN_ALEATOIRE, SPAWN_PROGRAMME
+				startPartieLoadPercentage=100;
 			}
 			@Override
 			public int getProgress()
 			{
-				return Serialize.loadPercentage;
+				return (int)Math.round(0.95*Serialize.loadPercentage+0.05*startPartieLoadPercentage);
 			}
 		};
 	}
 	
+	public static LoaderItem waitForLoaderToEnd(final Loader loader)
+	{
+		return new LoaderItem("Wait for loader to end "){
+			@Override
+			public void run()
+			{
+				loader.waitToEnd(null);
+			}
+			@Override
+			public int getProgress()
+			{
+				return loader.getProgress();
+			}
+		};
+	}
+	
+	public static void waitForGarbageCollectorToEnd()
+	{
+		Object obj = new Object();
+		WeakReference<Object> ref = new WeakReference<Object>(obj);
+		obj = null;
+		System.out.println("wait for object destruction 1");
+		while(ref.get() != null)
+		{
+			System.gc();
+			try {Thread.sleep(16);} catch (InterruptedException e) {e.printStackTrace();}
+		}
+	}
+	
+	public static LoaderItem waitForGarbageCollectorToEndInALoader()
+	{
+		return new LoaderItem("Wait for GC"){
+			private int percentage = 0;
+			@Override
+			public void run()
+			{
+				percentage=0;
+				waitForGarbageCollectorToEnd();
+				percentage=100;
+			}
+			@Override
+			public int getProgress()
+			{
+				return percentage;
+			}
+		};
+	}
 	public static LoaderItem loadAllImagesAndSounds(final AbstractModelPrincipal princip, final AbstractModelPartie partie)
 	{
-		return new LoaderItem(){
+		return new LoaderItem("Load all images and sounds "){
 			@Override
 			public void run()
 			{
 				//Load Heros, Monstre, TirMonstre, Fleche
 				princip.imPrincipal.run();
+				partie.imBackground.run();
 				partie.imHeros.run();
 				partie.imMonstre.run();
 				partie.imTirMonstre.run();
@@ -69,6 +125,7 @@ public class LoaderUtils {
 			{
 				int res = (int) Math.round((
 						princip.imPrincipal.getProgress()+
+						partie.imBackground.getProgress()+
 						partie.imHeros.getProgress() + 
 						partie.imMonstre.getProgress() + 
 						partie.imTirMonstre.getProgress() + 
@@ -79,7 +136,7 @@ public class LoaderUtils {
 						partie.imFlecheIcon.getProgress() +
 						Music.me.loaderMusic.getProgress() +
 						MusicBruitage.me.loaderMusicBruitage.getProgress()
-						)/11.0) ;
+						)/12.0) ;
 				return res;
 			}
 		};
@@ -87,7 +144,7 @@ public class LoaderUtils {
 	
 	public static LoaderItem load(final String media_type, final String media_categorie, final String filename, final AbstractModelPrincipal princip,final AbstractModelPartie partie )
 	{
-		return new LoaderItem(){
+		return new LoaderItem("Loader single media"){
 			private LoaderItem media;
 			@Override
 			public void run()

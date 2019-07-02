@@ -6,11 +6,14 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 
+import Affichage.Affichage;
 import gameConfig.InterfaceConstantes;
+import menu.menuPrincipal.GameMode;
 import utils.observer.Observable;
 
-public class Loader {
+public class Loader implements GameMode{
 	
+	public Runnable callback;
 	/**
 	 * To use this : 
 	 * create the loader : Loader loader = new Loader();
@@ -27,7 +30,27 @@ public class Loader {
 	private LoaderItem mainLoader = null;
 	private boolean loadingDone=false;
 	private boolean lastRound = true;
+
+	private AffichageLoader affichageLoader;
 	
+	public Loader(Affichage mainAffich)
+	{
+		super();
+		callback=null;
+		affichageLoader = new AffichageLoader(this);
+		affichageLoader.setFrameReference(mainAffich);
+	}
+	
+	public void setCallback(Runnable run)
+	{
+		if(run!=null)
+			callback = run;
+	}
+	
+	public AffichageLoader getAffichageLoader()
+	{
+		return affichageLoader;
+	}
 	public int getProgress()
 	{
 		if(mainLoader==null)
@@ -53,7 +76,7 @@ public class Loader {
 	
 	public void start()
 	{
-		mainLoader = new LoaderItem(){
+		mainLoader = new LoaderItem("Main loader"){
 			@Override
 			public void run()
 			{
@@ -66,11 +89,13 @@ public class Loader {
 			{
 				int res = 0;
 				int num = pendingItems.size();
+				//DEBUG String str ="(";
 				for(int i =0; i< num; ++i){
+					//DEBUG str+=pendingItems.get(i).getName() +" " + pendingItems.get(i).getProgress()+",";
 					res+=pendingItems.get(i).getProgress();
 				}
 				res= (int) (((float) res )/ num);
-				
+				//DEBUG System.out.println(res+": " + str.substring(0, str.length()-1)+")");
 				return res;
 			}
 		};
@@ -78,10 +103,11 @@ public class Loader {
 		Thread t = new Thread(mainLoader);
 		t.start();
 	}
-	public void wait(Observable modelToUpdateGraphics)
+	public void waitToEnd(Observable modelToUpdateGraphics)
 	{
 		while(!this.loadingDone || lastRound)
 		{
+			affichageLoader.getContentPane().repaint();
 			if(this.loadingDone)
 				lastRound=false;
 			
@@ -122,5 +148,35 @@ public class Loader {
 		g2.setColor(Color.WHITE);
 		g2.drawString(s, InterfaceConstantes.WINDOW_WIDTH/2-120, InterfaceConstantes.WINDOW_HEIGHT/2-25);
 		g2.drawString(getProgress()+"%", InterfaceConstantes.WINDOW_WIDTH/2-50, InterfaceConstantes.WINDOW_HEIGHT/2+40);
+	}
+	
+	public void doComputations(Affichage affich){
+		if(this.loadingDone && !lastRound)
+		{
+			System.out.println("Callback " + callback);
+			if(callback != null){
+				callback.run();
+				callback =null;
+			}
+		}
+		if(this.loadingDone)
+			lastRound=false;
+	}
+	public void updateGraphics(){
+		affichageLoader.onUpdateGraphics();
+	}
+	public boolean isComputationDone(){
+		return true; //computation is done in a different thread
+	}
+	@Override
+	public boolean isGameModeLoaded()
+	{
+		//a loader does not need any loader to be loader => always true
+		return true;
+	}
+	@Override
+	public GameMode getLoaderGameMode(){
+		//a loader does not need any loader to be loader => always null as it is not needed
+		return null;
 	}
 }

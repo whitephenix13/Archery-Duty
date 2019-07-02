@@ -9,11 +9,21 @@ import java.util.List;
 
 import javax.swing.JButton;
 
+import Affichage.Affichage;
+import Affichage.Drawable;
 import menu.menuPrincipal.AbstractModelPrincipal;
+import menu.menuPrincipal.GameHandler;
+import menu.menuPrincipal.GameMode;
+import menu.menuPrincipal.GameHandler.GameModeType;
 import utils.TypeApplication;
 
 public class ModelChoixNiveau extends AbstractModelChoixNiveau{
 
+	public ModelChoixNiveau(GameHandler gameHandler)
+	{
+		this.gameHandler=gameHandler;
+	}
+	
 	public void resetBouton(JButton bouton, String nomNiveau)
 	{
 		bouton.setText(nomNiveau);
@@ -111,10 +121,33 @@ public class ModelChoixNiveau extends AbstractModelChoixNiveau{
 	}
 
 	public void playLevel() {
-		AbstractModelPrincipal.changeFrame=true;
-		AbstractModelPrincipal.modeSuivant="Partie";
-		AbstractModelPrincipal.changeMode=true;
+		//REMOVE AbstractModelPrincipal.changeFrame=true;//REMOVE
+		//REMOVEAbstractModelPrincipal.modeSuivant="Partie";
+		//REMOVEAbstractModelPrincipal.changeMode=true;
+		System.out.println("Play level");
 		resetBoutons();
+		gameHandler.setGameMode(GameModeType.GAME);
+	}
+	
+	public void doComputations(Affichage affich){
+		//As this mode is controlled by listeners, the computationDone is set to false when a listener is triggered. This function is then left empty
+	}
+	public void updateGraphics(){
+		this.notifyMainObserver();
+	}
+	public boolean isComputationDone(){
+		return computationDone;
+	}
+	@Override
+	public boolean isGameModeLoaded()
+	{
+		//loading not required 
+		return true;
+	}
+	@Override
+	public GameMode getLoaderGameMode(){
+		//loading not required 
+		return null;
 	}
 
 }

@@ -375,11 +375,14 @@ public abstract class Collidable extends Destroyable{
 
 		int xdir = left ? -1 :1;
 		int ydir = down ? 1 :-1;
-		int dx= (int) Math.round( (Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),depActu, animActu).polygon).x -
-				Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),depSuiv, animSuiv).polygon).x));
+		final Polygon currentPol = getHitbox(partie.INIT_RECT,partie.getScreenDisp(),depActu, animActu).polygon;
+		final Polygon nextHit = getHitbox(partie.INIT_RECT,partie.getScreenDisp(),depSuiv, animSuiv).polygon;
+		
+		int dx= (int) Math.round( (Hitbox.supportPoint(new Vector2d(xdir,0),currentPol ).x -
+				Hitbox.supportPoint(new Vector2d(xdir,0), nextHit).x));
 
-		int dy= (int) Math.round((Hitbox.supportPoint(new Vector2d(0,ydir), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),depActu, animActu).polygon).y -
-				Hitbox.supportPoint(new Vector2d(0,ydir), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),depSuiv, animSuiv).polygon).y));
+		int dy= (int) Math.round((Hitbox.supportPoint(new Vector2d(0,ydir), currentPol).y -
+				Hitbox.supportPoint(new Vector2d(0,ydir), nextHit).y));
 
 		int m_dx=0; //-dx, computed if needed
 		int m_dy=0; //-dy, computed if needed

@@ -16,12 +16,16 @@ import loading.LoaderItem;
 
 public class LoaderMusic extends LoaderItem implements InterfaceConstantes{
 	
+
 	private boolean soundFound =false;
 	private Map<String,Clip> mapClips = new HashMap<String,Clip>();
 	
 	public boolean isSoundFound(){return soundFound;}
 	public Map<String,Clip> getMapClips(){return mapClips;}
 
+	public LoaderMusic() {
+		super("musics");
+	}
 	@Override
 	public void run() {
 		//fill the hash map
@@ -65,7 +69,7 @@ public class LoaderMusic extends LoaderItem implements InterfaceConstantes{
 			c=AudioSystem.getClip();
 			c.open(audio);
 			mapClips.put(nom,c);
-
+			soundFound=true;
 		} catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
 			e.printStackTrace();
 		}

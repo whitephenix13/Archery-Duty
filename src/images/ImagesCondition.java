@@ -19,12 +19,15 @@ public class ImagesCondition extends LoaderItem{
 	Image im_force =null;
 	Image im_faiblesse =null;
 
-	public ImagesCondition (){}
+	public ImagesCondition (){super("Image conditions");}
 
 	@Override
 	public void run() {
-		if(alreadyLoaded)
+		percentage = 0;
+		if(alreadyLoaded){
+			percentage = 100;
 			return;
+		}
 
 		int nb_condi = 10;
 		run("",Condition.BRULURE);

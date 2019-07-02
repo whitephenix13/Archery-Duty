@@ -6,13 +6,17 @@ import java.util.Timer;
 
 import javax.swing.event.ChangeEvent;
 
+import menu.menuPrincipal.GameHandler;
+import menu.menuPrincipal.GameMode;
 import option.AffichageOption.CustomClickableLabel;
 import partie.modelPartie.InputPartie;
 import utils.observer.Observable;
 import utils.observer.Observer;
 
-public abstract class AbstractModelOption implements Observable{
-
+public abstract class AbstractModelOption implements Observable,GameMode{
+	
+	protected GameHandler gameHandler;
+	
 	protected Touches touches;
 
 	//add Option Model variables 
@@ -25,16 +29,15 @@ public abstract class AbstractModelOption implements Observable{
 	//variables pour l'affichage 
 	protected boolean showInputError=false;
 	protected boolean updateInputText=false;
-
+	protected boolean computationDone;
+	
 	private ArrayList<Observer> listObserver = new ArrayList<Observer>();
 
-
-	public abstract void retourMenuPrincipal();
-	public abstract void blinkCustomClickableLabel();
-	public abstract void setVolumeMusique(ChangeEvent event);
-	public abstract void setVolumeBruitage(ChangeEvent event);
-	public abstract void setModifTouches(String value, InputPartie inpPartie);
-
+	public AbstractModelOption()
+	{
+		computationDone=true;
+	}
+	
 	public void setCaseFocus(boolean _caseFocus){caseFocus=_caseFocus;}
 	public void setShowInputError(boolean value){showInputError=value;}
 	public void setMemCustomClickableLabel(CustomClickableLabel _mem)
@@ -99,4 +102,12 @@ public abstract class AbstractModelOption implements Observable{
 	public void removeMainObserver() {
 		mainObserver=null;
 	}  
+	
+
+	public abstract void retourMenuPrincipal();
+	public abstract void blinkCustomClickableLabel();
+	public abstract void setVolumeMusique(ChangeEvent event);
+	public abstract void setVolumeBruitage(ChangeEvent event);
+	public abstract void setModifTouches(String value, InputPartie inpPartie);
+
 }

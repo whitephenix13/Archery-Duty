@@ -1,12 +1,15 @@
 package Affichage;
 
+import java.awt.AlphaComposite;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
 public class DrawImageHandler {
 	
+	public static int BACKGROUND = 0;
 	public static int MONDE = 1;
 	public static int MONSTRE = 2;
 	public static int PERSO = 3;
@@ -33,18 +36,25 @@ public class DrawImageHandler {
 					(Integer.valueOf(o2.layerIndex));
 		}
 	};
-	
-	public void drawAll(Graphics g)
+	public void clearImages()
+	{
+		listImage.clear();
+	}
+	public void sortImages()
 	{
 		if(!ordered)
 		{
 			Collections.sort(listImage, imageComparator);
 			ordered = true;
 		}
+	}
+	public void drawAll(Graphics g)
+	{
 		for(int i=0; i<listImage.size();++i)
 		{
+			//bloc behind hero =78; heros = 140 ; 
 			listImage.get(i).draw(g);
 		}
-		listImage.clear();
+		
 	}
 }

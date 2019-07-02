@@ -11,9 +11,13 @@ import java.util.List;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import Affichage.Affichage;
+import Affichage.Drawable;
 import gameConfig.InterfaceConstantes;
 import images.ImagesHeros;
 import images.ImagesMonstre;
+import menu.menuPrincipal.GameHandler;
+import menu.menuPrincipal.GameMode;
 import partie.bloc.Bloc;
 import partie.bloc.Bloc.TypeBloc;
 import partie.bloc.Monde;
@@ -28,6 +32,12 @@ public class ModelEditeur extends AbstractModelEditeur{
 	private int yLengthZoomArea;
 
 	private int tailleMenu =90;
+	
+	public ModelEditeur(GameHandler gameHandler){
+		super();
+		this.gameHandler=gameHandler;
+	}
+	
 	public void moveViewPort(int xpos, int ypos) {
 		/*xViewPort est toujours relatif a la taile du bloc d'origine: xViewPort/tailleBlocOrigine = indice dans la matrice
 		 * De meme, x delta a des coordonnées dans le meme repere que celle de x view port
@@ -104,7 +114,9 @@ public class ModelEditeur extends AbstractModelEditeur{
 	{
 		int xBlocPos=calculateDrawPos(xpos,xViewPort);
 		int yBlocPos=calculateDrawPos(ypos,yViewPort);
-		final Bloc tempPict= new Bloc(texture,xBlocPos,yBlocPos,bloquant,background);
+		Bloc tempPict =null;
+		if(!texture.equals(TypeBloc.NONE))
+			tempPict= new Bloc(texture,xBlocPos,yBlocPos,bloquant,background);
 		monde.niveau[xBlocPos/InterfaceConstantes.TAILLE_BLOC][yBlocPos/InterfaceConstantes.TAILLE_BLOC]=tempPict;
 
 		repaint=true;
@@ -171,7 +183,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 
 		if(monde.niveau==null){
 			monde.niveau= new Bloc[InterfaceConstantes.ABS_MAX][InterfaceConstantes.ORD_MAX];
-			monde.initMonde();
+			//REMOVE monde.initMonde();
 		}
 
 		for(int abs=xStartAff;abs<xEndAff;abs++)
@@ -179,6 +191,8 @@ public class ModelEditeur extends AbstractModelEditeur{
 			for(int ord=yStartAff;ord<yEndAff;ord++)
 			{
 				final Bloc tempPict= monde.niveau[abs][ord];
+				if(tempPict==null)
+					continue;
 				//xViewPort= xViewPortNonDécallé - x decallage 
 				int xdraw = (int) ((tempPict.getXpos() -xViewPort)*((loupe) ? dezoomFactor : 1 ));
 				int ydraw=(int) ((tempPict.getYpos()-yViewPort)*((loupe) ? dezoomFactor : 1 ));
@@ -208,7 +222,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 		}
 
 		//on dessine l'image du bloc choisi si il existe une texture 
-		if(!texture.equals(TypeBloc.VIDE))
+		if(!texture.equals(TypeBloc.NONE))
 		{
 			image = pan.getToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/"+texture +((loupe) ? "_p" : "" )+".png"));
 			if(texture.equals(TypeBloc.DELETE))
@@ -315,10 +329,10 @@ public class ModelEditeur extends AbstractModelEditeur{
 		{
 			menuEdit.setBloquant(false);
 		}
-		else if (_texture.equals(TypeBloc.VIDE))
+		/*REMOVE else if (_texture.equals(TypeBloc.VIDE))
 		{
 			menuEdit.setBloquant(false);
-		}
+		}*/
 		else if (_texture.equals(TypeBloc.SOL))
 		{
 			menuEdit.setBloquant(true);
@@ -512,5 +526,28 @@ public class ModelEditeur extends AbstractModelEditeur{
 
 
 	}
-
+	
+	@Override
+	public void doComputations(Affichage affich){
+		//As this mode is controlled by listeners, the computationDone is set to false when a listener is triggered. This function is then left empty
+	}
+	@Override
+	public void updateGraphics(){
+		this.notifyMainObserver();
+	}
+	@Override
+	public boolean isComputationDone(){
+		return computationDone;
+	}
+	@Override
+	public boolean isGameModeLoaded()
+	{
+		//loading not required 
+		return true;
+	}
+	@Override
+	public GameMode getLoaderGameMode(){
+		//loading not required 
+		return null;
+	}
 }

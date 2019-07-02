@@ -17,6 +17,7 @@ import java.util.List;
 import javax.vecmath.Vector2d;
 
 import gameConfig.InterfaceConstantes;
+import menu.menuPrincipal.ModelPrincipal;
 import partie.bloc.Bloc;
 import partie.bloc.Monde;
 import partie.entitie.heros.Heros;
@@ -56,7 +57,7 @@ public abstract class Collision implements InterfaceConstantes{
 				if(xIndex>=0 && (yIndex>=0) && (xIndex<monde.niveau.length) && (yIndex<monde.niveau[0].length) )
 				{
 					Bloc bloc = monde.niveau[xIndex][yIndex];
-					if(bloc.getHitbox(INIT_RECT,screenDisp)!=null)
+					if(bloc != null && bloc.getHitbox(INIT_RECT,screenDisp)!=null)
 					{
 						mondeBlocs.add(bloc);
 					}
@@ -424,7 +425,8 @@ public abstract class Collision implements InterfaceConstantes{
 	public static boolean ejectCollision(AbstractModelPartie partie, Collidable object1, Collidable object2,Vector2d _ejectDeplacement,boolean considerEffects,
 			Point appliedMotion,boolean computeWorld,boolean setColliInfo, boolean warnCollision,Collidable[] resCollidedObject)
 	{
-
+		ModelPrincipal.debugTime.startElapsedForVerbose();
+		
 		boolean shouldApplyMotion = (appliedMotion ==null);
 
 		Hitbox object1Hitbox = null;
@@ -454,7 +456,8 @@ public abstract class Collision implements InterfaceConstantes{
 		}
 		else
 			ejectDeplacement = new Vector2d(_ejectDeplacement.x,_ejectDeplacement.y);
-				
+		
+		ModelPrincipal.debugTime.elapsed("Eject deplacement computed");
 		minEjectDeplacement.negate(ejectDeplacement);
 
 		Point desired_dep = PointHelper.RountVecToPoint(ejectDeplacement);
@@ -480,7 +483,8 @@ public abstract class Collision implements InterfaceConstantes{
 		List<Collidable> collidableEffects = null;
 		if(computeWorld && considerEffects)
 			collidableEffects=Collidable.getAllCollidableEffect(partie,CustomBoundingSquare.getScreen());
-
+		
+		ModelPrincipal.debugTime.elapsed("got all collidable effects");
 		Point prevtotalInterDist = new Point(-1,-1);
 		boolean xlimExceeded = false;
 		boolean ylimExceeded = false;
@@ -490,7 +494,7 @@ public abstract class Collision implements InterfaceConstantes{
 		{
 			object2Hitbox=object2.getHitbox(partie.INIT_RECT, partie.getScreenDisp()).copy();
 		}
-
+		ModelPrincipal.debugTime.elapsed("got object 2 hitbox");
 		while(!noIntersection && ((prevtotalInterDist.x!=totalInterDist.x ) || (prevtotalInterDist.y !=totalInterDist.y)) )
 		{
 			prevtotalInterDist= new Point(totalInterDist.x,totalInterDist.y);
@@ -508,7 +512,7 @@ public abstract class Collision implements InterfaceConstantes{
 				p = new Point(); //do not substract x deplacement as usual because we assumed the object already moved by ejectDeplacement
 
 			object1Hitbox= Hitbox.plusPoint(object1.getHitbox(partie.INIT_RECT,partie.getScreenDisp()),p,true);
-
+			ModelPrincipal.debugTime.elapsed("While: objectHitbox");
 			//WARNING: SPECIAL BREAK HERE Break here if lim exceed so that the hitbox 1 is computed correctly 
 			if(xlimExceeded || ylimExceeded)
 			{
@@ -527,6 +531,7 @@ public abstract class Collision implements InterfaceConstantes{
 					mondeBlocs = getMondeBlocs(partie.monde,object1Hitbox, partie.INIT_RECT,partie.getScreenDisp(),
 							partie.TAILLE_BLOC);
 					allCollidables.addAll(mondeBlocs);
+					ModelPrincipal.debugTime.elapsed("While: get monde blocs");
 				}
 
 				if(collidableEffects!=null && object1.checkCollideWithEffect())
@@ -547,6 +552,7 @@ public abstract class Collision implements InterfaceConstantes{
 				Vector2d firstDir = new Vector2d(supp1.x-supp2.x, supp1.y-supp2.y);
 
 				List<Vector2d> simplex = GJK_EPA.intersects(object2Hitbox.polygon,object1Hitbox.polygon ,firstDir);
+				ModelPrincipal.debugTime.elapsed("While/AllColli: gjk intersects");
 				List<Vector2d> normals = new ArrayList<Vector2d>();
 
 				int collision_type=-1;
@@ -557,6 +563,7 @@ public abstract class Collision implements InterfaceConstantes{
 				{
 					dNull=false;
 					dInter= GJK_EPA.EPA(object2Hitbox.polygon,object1Hitbox.polygon, simplex, new Vector2d(minEjectDeplacement.x,minEjectDeplacement.y), normals);
+					ModelPrincipal.debugTime.elapsed("While/AllColli: epa");
 				}
 
 				collision_type =  GJK_EPA.isIntersect(dInter,dNull);
@@ -577,6 +584,7 @@ public abstract class Collision implements InterfaceConstantes{
 
 					//avoid that the ejected object is exactly on the collided object
 					Point correctEject = ejectFromTouch(new Vector2d(ejectDeplacement.x,ejectDeplacement.y), vectOut);
+					ModelPrincipal.debugTime.elapsed("While/AllColli: eject from touch");
 					Vector2d vectOut_corrected= new Vector2d(Math.floor(round(vectOut.x))+correctEject.x,Math.floor(round(vectOut.y))+correctEject.y);
 					//Only remember the bigest vect out 
 					if((Math.abs(maxInterDist.x))<Math.abs((int)vectOut_corrected.x) || 
@@ -596,7 +604,8 @@ public abstract class Collision implements InterfaceConstantes{
 							catch(Exception e){e.printStackTrace(); 
 							computeCollisionPoint(new Vector2d(ejectDeplacement.x,ejectDeplacement.y),dInter,object1Hitbox,object2Hitbox,true);}
 							Vector2d projectedEPA = GJK_EPA.projectVectorTo90(EPA_normal,false,0);
-							ejectFromCollisionPoint=PointHelper.VecToPoint(projectedEPA);;
+							ejectFromCollisionPoint=PointHelper.VecToPoint(projectedEPA);
+							ModelPrincipal.debugTime.elapsed("While/AllColli: compute collision point");
 						}
 
 						maxInterDist.x =(int)vectOut_corrected.x;
@@ -606,6 +615,7 @@ public abstract class Collision implements InterfaceConstantes{
 				}
 
 			}
+			ModelPrincipal.debugTime.elapsed("While: allColli ended");
 			totalInterDist.x += maxInterDist.x;
 			totalInterDist.y += maxInterDist.y;
 
@@ -614,7 +624,7 @@ public abstract class Collision implements InterfaceConstantes{
 			ylimExceeded = (Math.abs(totalInterDist.y)> Math.abs(desired_dep.y));
 
 		}
-
+		ModelPrincipal.debugTime.elapsed("While ended");
 		int final_x_dep = xlimExceeded ? 0 : (desired_dep.x+totalInterDist.x);
 		int final_y_dep = ylimExceeded ? 0 : (desired_dep.y+totalInterDist.y);	
 
@@ -646,15 +656,19 @@ public abstract class Collision implements InterfaceConstantes{
 					object1.setCollisionInformation(null, null, null);
 				}
 		}
-
+		ModelPrincipal.debugTime.elapsed("Collision information");
+		
 		if(shouldApplyMotion && isWorldCollision(partie, object1,true)){
+			ModelPrincipal.debugTime.elapsed("Check world collision");
 			object1.addXpos_sync(-final_x_dep);
 			object1.addYpos_sync(-final_y_dep);
 			return false; // object is stuck
 		}
+		ModelPrincipal.debugTime.elapsed("Check world collision 2");
 		if(computeWorld && (intersectedCol!=null) && warnCollision)
 			object1.handleWorldCollision(EPA_normal,partie,intersectedCol,false);
-
+		
+		ModelPrincipal.debugTime.elapsed("Handle world collision");
 		return true; //not stuck
 	}
 

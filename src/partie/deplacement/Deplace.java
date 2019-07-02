@@ -23,14 +23,10 @@ public class Deplace implements InterfaceConstantes{
 	public Deplace() 
 	{
 	}
-	
+
 	public void DeplaceObject(Collidable object, Mouvement nouvMouv, AbstractModelPartie partie)
 	{
-		DeplaceObject(object,nouvMouv,partie,3);
-	}
-	public void DeplaceObject(Collidable object, Mouvement nouvMouv, AbstractModelPartie partie,int currentVerbose)
-	{
-		ModelPrincipal.debugTime.startElapsedForVerbose(currentVerbose);
+		ModelPrincipal.debugTime.startElapsedForVerbose();
 		boolean isHeros = object instanceof Heros;
 
 		
@@ -39,7 +35,7 @@ public class Deplace implements InterfaceConstantes{
 		}
 
 		object.memorizeCurrentValue();
-		ModelPrincipal.debugTime.elapsed("test memorize values", currentVerbose);
+		ModelPrincipal.debugTime.elapsed("test memorize values");
 
 		
 		boolean update_with_speed = ( !partie.slowDown || (partie.slowDown && partie.slowCount==0));
@@ -52,18 +48,18 @@ public class Deplace implements InterfaceConstantes{
 		
 		if(!shouldMove)
 			return;
-		ModelPrincipal.debugTime.elapsed(object.toString()," deplace", currentVerbose);
+		ModelPrincipal.debugTime.elapsed(object.toString()+" deplace");
 
 		boolean useGravity = object.useGravity && update_with_speed;
 
 		if(useGravity)
 			gravite.gravite(object);
 		
-		ModelPrincipal.debugTime.elapsed("gravity and friction", currentVerbose);
+		ModelPrincipal.debugTime.elapsed("gravity and friction");
 
 		if(update_with_speed)
 			object.applyFriction(0,0);
-		ModelPrincipal.debugTime.elapsed("after friction and before reset", currentVerbose);
+		ModelPrincipal.debugTime.elapsed("after friction and before reset");
 
 		//deplacement à l'aide de la vitesse  si il n'y a pas collision 
 		//on reset les dernières positions de collisions:
@@ -99,7 +95,7 @@ public class Deplace implements InterfaceConstantes{
 
 		}
 		
-		ModelPrincipal.debugTime.elapsed("collision", currentVerbose);
+		ModelPrincipal.debugTime.elapsed("collision");
 
 		object.resetVarDeplace(update_with_speed);
 		
@@ -108,7 +104,7 @@ public class Deplace implements InterfaceConstantes{
 			deplaceEcran(delta,partie,object);
 		}
 		
-		ModelPrincipal.debugTime.elapsed("deplace ecran", currentVerbose);
+		ModelPrincipal.debugTime.elapsed("deplace ecran");
 		
 		if(object instanceof Entity){
 			Entity enti = (Entity) object;
@@ -121,7 +117,7 @@ public class Deplace implements InterfaceConstantes{
 			enti.addLife(enti.conditions.conditionDamageReceived());
 		}
 		
-		ModelPrincipal.debugTime.elapsed("update conditions", currentVerbose);
+		ModelPrincipal.debugTime.elapsed("update conditions");
 	
 	}
 
