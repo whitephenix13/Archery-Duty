@@ -1,12 +1,15 @@
 package menu.menuPrincipal;
 
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Image;
 import java.awt.Point;
 import java.io.IOException;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.ref.WeakReference;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -18,11 +21,10 @@ import javax.management.NotificationListener;
 import javax.management.openmbean.CompositeData;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
-import javax.swing.JFrame;
 
 import com.sun.management.GarbageCollectionNotificationInfo ;
 
-import Affichage.Affichage;
+import Affichage.GameRenderer;
 import Affichage.Drawable;
 import debug.DebugObjectCreation;
 import debug.DebugTime;
@@ -30,6 +32,12 @@ import editeur.AffichageEditeur;
 import editeur.ControlerEditeur;
 import editeur.ModelEditeur;
 import gameConfig.InterfaceConstantes;
+import gameConfig.ObjectTypeHelper.ObjectType;
+import images.ImagesContainer;
+import images.ImagesContainer.ImageGroup;
+import images.ImagesContainer.ImageInfo;
+import images.ImagesContainer.ObjectSubType;
+import images.ImagesPrincipal.ImPrincipalInfo;
 import images.ImagesPrincipal;
 import loading.Loader;
 import loading.LoaderItem;
@@ -71,10 +79,10 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 			deltaTime=(System.nanoTime()-last_update)/Math.pow(10, 6);//delta time in ms
 
 			//if((deltaTime>Config.getDeltaFrame(true)) &&currentGameMode.isComputationDone()){ 
-				last_update=System.nanoTime();
-				currentGameMode.doComputations(affich);//main game mode logic
-				partie.computationDone=true;
-				currentGameMode.updateGraphics(); //update the screen based on the new computations
+			last_update=System.nanoTime();
+			currentGameMode.doComputations(gameRenderer);//main game mode logic
+			gameRenderer.render(false);
+				//REMOVEcurrentGameMode.updateGraphics(); //update the screen based on the new computations
 			//}
 			}
 			catch(Exception e){e.printStackTrace();}
@@ -89,6 +97,27 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 	protected void Init() {
 		
 		debugTimeAffichage = new DebugTime(InterfaceConstantes.DEBUG_TIME_AFFICHAGE_LOOP_TO_SLOW,InterfaceConstantes.DEBUG_TIME_AFFICHAGE_ACTION_TO_SLOW,InterfaceConstantes.DEBUG_TIME_AFFICHAGE_VERBOSE);
+
+		nextGameMode = null;
+		gameRenderer = new GameRenderer(this);
+		gameRenderer.setBackground(Color.black);
+		//Specific case: for the transition to loading screen since we are going to wait for the loader to end
+		//This shoud be done in the draw() method of ModelPrincipal but this init thread must be completed before being able the access the main loop hence the trick
+		loaderMenuPrincipal = new Loader(gameRenderer,this);
+		
+		currentGameModeType=GameModeType.LOADER;
+		currentGameMode = loaderMenuPrincipal; //get loader from partie 
+		loaderMenuPrincipal.setCallback(new Runnable(){
+			@Override
+			public void run() {
+				ModelPrincipal.this.setGameMode(GameModeType.MAIN_MENU); 
+			}
+		});
+		gameRenderer.changeGameModeRendering(loaderMenuPrincipal.getAffichageLoader());//begin transition to loader
+		
+		
+		//Enough elements have been created for the game to start (at this point, we only start rendering the loading screen)
+		startGame();
 		
 		touches=new Touches();
 		
@@ -98,25 +127,24 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		principal.addObserver(affichagePrincipal);
 
 		
-		affich = new Affichage(affichagePrincipal,this);
-
+		gameRenderer.setAffichagePrincipal(affichagePrincipal);
 		//on met en place le conteneur 
-		affich.setResizable(false);
+		//REMOVE gameRenderer.setResizable(false);
 
-		affich.getContentPane().setFocusable(true);
-		affich.getContentPane().requestFocus();
+		//REMOVE gameRenderer.getContentPane().setFocusable(true);
+		//REMOVE gameRenderer.getContentPane().requestFocus();
 
-		affich.setSize(new Dimension(InterfaceConstantes.WINDOW_WIDTH,InterfaceConstantes.WINDOW_HEIGHT));
-		affich.setLocationRelativeTo(null);
-		affich.setTitle("Menu principal");
-		affich.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		//REMOVE gameRenderer.setSize(new Dimension(InterfaceConstantes.WINDOW_WIDTH,InterfaceConstantes.WINDOW_HEIGHT));
+		//REMOVE gameRenderer.setLocationRelativeTo(null);
+		//REMOVE gameRenderer.setTitle("Menu principal");
+		//REMOVE gameRenderer.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-		affich.setVisible(true);	
+		//REMOVE gameRenderer.setVisible(true);	
 		
 
 		//add main observer used to ask for global screen update ie: when loading 
 
-		principal.addMainObserver(affich);
+		principal.addMainObserver(gameRenderer);
 		
 		//TODO: show loading screen here => first instantiate affichage, then give references to other affichages 
 		LoaderItem mainObjectsCreation = new LoaderItem("Main objects creation"){
@@ -153,13 +181,13 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 
 				
 				//Now that all other affichage are loaded, we can set the reference and end the loading screen 
-				affich.setOtherAffichageReferences(affichageOption,affichageEditeur,affichageCredit,affichageChoix,affichagePartie);
+				gameRenderer.setOtherAffichageReferences(affichageOption,affichageEditeur,affichageCredit,affichageChoix,affichagePartie);
 				
 				//add main observer used to ask for global screen update ie: when loading 
-				edit.addMainObserver(affich);
-				choix.addMainObserver(affich);
-				partie.addMainObserver(affich);
-				option.addMainObserver(affich);
+				edit.addMainObserver(gameRenderer);
+				choix.addMainObserver(gameRenderer);
+				partie.addMainObserver(gameRenderer);
+				option.addMainObserver(gameRenderer);
 
 				Music.init();
 				percentage = 100;
@@ -168,27 +196,22 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		
 		
 		//Wait for background to be visible + music principal to be loaded
-		loaderMenuPrincipal = new Loader(affich);
+		
 		loaderMenuPrincipal.addItem(mainObjectsCreation);
-		loaderMenuPrincipal.addItem(LoaderUtils.load(LoaderUtils.MT_IMAGE, LoaderUtils.C_PRINCIPAL, ImagesPrincipal.BACKGROUND, this, partie));
+		loaderMenuPrincipal.addItem(LoaderUtils.load(LoaderUtils.MT_IMAGE, LoaderUtils.C_PRINCIPAL, null, this, partie));
 		loaderMenuPrincipal.addItem(LoaderUtils.load(LoaderUtils.MT_SOUND, LoaderUtils.C_MUSIC, InterfaceConstantes.musiquePrincipal, this, partie));
 		loaderMenuPrincipal.start();
-		
-		//Specific case: for the transition to loading screen since we are going to wait for the loader to end
-		//This shoud be done in the draw() method of ModelPrincipal but this init thread must be completed before being able the access the main loop hence the trick
-		affich.beginTransition(loaderMenuPrincipal.getAffichageLoader());
-		
+
 		loaderMenuPrincipal.waitToEnd(principal);
 		
 		affichagePrincipal.setButtons();
-		affich.repaint();
+		//REMOVE gameRenderer.repaint();
 
 		//start music 
-		System.out.println("Start music menu P");
 		Music.me.startNewMusic(InterfaceConstantes.musiquePrincipal);
 
 		//load all image + music + bruitage in different Thread 
-		loaderAllMedia = new Loader(affich);
+		loaderAllMedia = new Loader(gameRenderer,this);
 		loaderAllMedia.addItem(LoaderUtils.loadAllImagesAndSounds(this, partie));
 		loaderAllMedia.start();
 	}
@@ -241,9 +264,15 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 	{
 		//Very important: This method tries to keep up: 
 		//if one game tick took long enough to delay the next game tick, the executor service will consider this in the calculation for the next sleep duration.
-		ScheduledExecutorService executor = Executors
+		executor = Executors
                 .newSingleThreadScheduledExecutor();
         executor.scheduleAtFixedRate(new MainLoop(), 0, (int)Math.round(Config.getDeltaFrame(true)), TimeUnit.MILLISECONDS);//call scheduleAtFixedRate.shutdown() to stop this
+	}
+	
+	@Override 
+	public void forceRepaint()
+	{
+		gameRenderer.render(true);
 	}
 	
 	public GameModeType currentGameMode() {return currentGameModeType;}
@@ -267,7 +296,7 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 				Music.me.startNewMusic(nextMusic);
 			}
 			//listener 
-			affich.removeListener(currentGameModeType);
+			gameRenderer.removeListener(currentGameModeType);
 
 			//changement de mode
 			currentGameModeType=newMode;
@@ -275,37 +304,56 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 
 			//affichage
 			//REMOVE changeFrame=true;
-			affich.actuAffichage();
+			gameRenderer.changeGameModeRendering();
 
 			//listener
-			affich.addListener(currentGameModeType);
+			gameRenderer.addListener(currentGameModeType);
 
 		}
 		else if (newMode.equals(GameModeType.EDITOR))
 		{
-
-			//musique 
-			String nextMusic = InterfaceConstantes.musiqueEditeur;
-
-			if(!Music.musiqueEnCours.equals(nextMusic))
-			{
-				Music.me.startNewMusic(nextMusic);
+			if(!currentGameModeType.equals(GameModeType.LOADER)){
+				//listener
+				gameRenderer.removeListener(currentGameModeType);
+			
+				edit.loaderEditeur = new Loader(gameRenderer,this);
+				edit.loaderEditeur.addItem(LoaderUtils.waitForLoaderToEnd(loaderAllMedia));
+				edit.loaderEditeur.addItem(LoaderUtils.waitForGarbageCollectorToEndInALoader());
+				edit.loaderEditeur.start();
 			}
-			//listener
-			affich.removeListener(currentGameModeType);
-			
-			loaderAllMedia.waitToEnd(partie); //Make sure that all media are loader before running editeur
-			edit.imMonde = partie.imMonde;
-			
 			//changement de mode
-			currentGameModeType=newMode;
-			currentGameMode = edit;
-			//listener
-			affich.addListener(currentGameModeType);
-
-			//affichage
-			//REMOVE changeFrame=true;
-			affich.actuAffichage();
+			if(!edit.isGameModeLoaded()){//editeur loader not done 
+				currentGameModeType=GameModeType.LOADER;
+				currentGameMode = edit.getLoaderGameMode();  
+				((Loader)edit.getLoaderGameMode()).setCallback(new Runnable(){
+					@Override
+					public void run() {
+						ModelPrincipal.this.setGameMode(GameModeType.EDITOR); //return back to this function to finish initialization of partie 
+					}
+				});
+				gameRenderer.changeGameModeRendering(((Loader)edit.getLoaderGameMode()).getAffichageLoader());//begin transition to loader
+			}
+			else{
+				//musique 
+				String nextMusic = InterfaceConstantes.musiqueEditeur;
+	
+				if(!Music.musiqueEnCours.equals(nextMusic))
+				{
+					Music.me.startNewMusic(nextMusic);
+				}
+				//listener
+				gameRenderer.removeListener(currentGameModeType);
+				
+				//changement de mode
+				currentGameModeType=newMode;
+				currentGameMode = edit;
+				//listener
+				gameRenderer.addListener(currentGameModeType);
+	
+				//affichage
+				//REMOVE changeFrame=true;
+				gameRenderer.changeGameModeRendering();
+			}
 		}
 		else if (newMode.equals(GameModeType.CREDIT))
 		{
@@ -317,17 +365,17 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 				Music.me.startNewMusic(nextMusic);
 			}
 			//listener
-			affich.removeListener(currentGameModeType);
+			gameRenderer.removeListener(currentGameModeType);
 
 			//changement de mode
 			currentGameModeType=newMode;
 			currentGameMode = affichageCredit;
 			//listener
-			affich.addListener(currentGameModeType);
+			gameRenderer.addListener(currentGameModeType);
 
 			//affichage
 			//REMOVE changeFrame=true;
-			affich.actuAffichage();
+			gameRenderer.changeGameModeRendering();
 		}
 		else if (newMode.equals(GameModeType.LEVEL_SELECTION))
 		{
@@ -338,7 +386,7 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 				Music.me.startNewMusic(nextMusic);
 			}
 			//listener
-			affich.removeListener(currentGameModeType);
+			gameRenderer.removeListener(currentGameModeType);
 
 			//changement de mode
 			currentGameModeType=newMode;
@@ -346,10 +394,10 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 			//affichage
 			//REMOVE changeFrame=true;
 
-			affich.actuAffichage();
+			gameRenderer.changeGameModeRendering();
 
 			//listener
-			affich.addListener(currentGameModeType);
+			gameRenderer.addListener(currentGameModeType);
 
 		}
 		else if (newMode.equals(GameModeType.GAME))
@@ -360,7 +408,7 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 			//If we come from the partie loader, don't init the partie again 
 			if(!currentGameModeType.equals(GameModeType.LOADER)){
 				//listener
-				affich.removeListener(currentGameModeType);
+				gameRenderer.removeListener(currentGameModeType);
 	
 				//on reinitialiser les variables pour pouvoir rejouer plusieurs fois
 	
@@ -368,7 +416,7 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 	
 				//on lance la partie rapide si elle n'est pas deja en cours ie: le jeu n'est pas en pause
 				//And load level
-				partie.loaderPartie = new Loader(affich);
+				partie.loaderPartie = new Loader(gameRenderer,this);
 				partie.loaderPartie.addItem(LoaderUtils.loadWorld(choix.getNiveauSelectionne(), partie));
 				partie.loaderPartie.addItem(LoaderUtils.waitForLoaderToEnd(loaderAllMedia));
 				partie.loaderPartie.addItem(LoaderUtils.waitForGarbageCollectorToEndInALoader());
@@ -384,7 +432,7 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 						ModelPrincipal.this.setGameMode(GameModeType.GAME); //return back to this function to finish initialization of partie 
 					}
 				});
-				affich.actuAffichage(((Loader)partie.getLoaderGameMode()).getAffichageLoader());//begin transition to loader
+				gameRenderer.changeGameModeRendering(((Loader)partie.getLoaderGameMode()).getAffichageLoader());//begin transition to loader
 			}
 			else{
 				currentGameModeType=newMode;
@@ -402,7 +450,7 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 				
 				//affichage
 				//REMOVE changeFrame=true;
-				affich.actuAffichage();
+				gameRenderer.changeGameModeRendering();
 				
 				//REMOVE partie.loaderPartie.wait(partie);
 				//make sure that all other media are loaded correctly
@@ -411,11 +459,9 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 					DebugObjectCreation.start();
 				
 				//LoaderUtils.waitForGarbageCollectorToEnd();//REMOVE ? collect the loading thread to avoid a major GC of 3000ms at the start of the game
-	
-				System.out.println("Start partie");
-	
+		
 				//listener
-				affich.addListener(currentGameModeType);
+				gameRenderer.addListener(currentGameModeType);
 	
 				//définition du thread d'affichage qui fait tourner partie rapide.play() en continue 
 				/*REMOVE class ThreadAffichage implements Runnable
@@ -476,28 +522,27 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 			String nextMusic = InterfaceConstantes.musiquePrincipal;
 			if(!Music.musiqueEnCours.equals(nextMusic))
 			{
-				System.out.println("Start music menu P");
 				Music.me.startNewMusic(nextMusic);
 			}
 			//listener 
-			affich.removeListener(currentGameModeType);
+			gameRenderer.removeListener(currentGameModeType);
 
 			//changement de mode
 			currentGameModeType=newMode;
 			currentGameMode = this;
 			
 			//listeners
-			affich.addListener(currentGameModeType);
+			gameRenderer.addListener(currentGameModeType);
 
 
 			//affichage
 			//REMOVE changeFrame=true;
-			affich.actuAffichage();
+			gameRenderer.changeGameModeRendering();
 
 
 		}
-		affich.repaint();
-		affich.validate();
+		//REMOVE gameRenderer.repaint();
+		gameRenderer.validate();
 	}
 	
 
@@ -517,11 +562,11 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 	{
 	}
 	
-	public void doComputations(Affichage affich){
+	public void doComputations(GameRenderer affich){
 		//As this mode is controlled by listeners, the computationDone is set to false when a listener is triggered. This function is then left empty
 	}
-	public void updateGraphics(){
-		affich.repaint();
+	public void updateSwing(){
+		//REMOVE gameRenderer.repaint();
 	}
 	public boolean isComputationDone(){
 		return computationDone;
@@ -538,6 +583,45 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		//Specific loading in that case, it is called manually when initializating all the classes
 		return null;
 	}
+	@Override
+	public Image getImage(ImageGroup group,ObjectType typeObj, ImageInfo info1,ImageInfo info2)
+	{
+		return getImageGroup(group).getImage(typeObj,  info1, info2);
+	}
+	@Override
+	public ArrayList<Image> getImages(ImageGroup group,ObjectType typeObj, ImageInfo info1,ImageInfo info2,int anim)
+	{
+		return getImageGroup(group).getImages(typeObj, info1, info2,anim);
+	}
+	@Override
+	public ImagesContainer getImageGroup(ImageGroup group) {
+		if(group.equals(ImageGroup.BACKGROUND))
+			return this.imBackground;
+		else if(group.equals(ImageGroup.CONDITION))
+			return this.imConditions;
+		else if(group.equals(ImageGroup.EFFECT))
+			return this.imEffect;
+		else if(group.equals(ImageGroup.FLECHE))
+			return this.imFleches;
+		else if(group.equals(ImageGroup.FLECHEICON))
+			return this.imFlecheIcon;
+		else if(group.equals(ImageGroup.HEROS))
+			return this.imHeros;
+		else if(group.equals(ImageGroup.MONDE))
+			return this.imMonde;
+		else if(group.equals(ImageGroup.MONSTRE))
+			return this.imMonstre;
+		else if(group.equals(ImageGroup.PRINCIPAL))
+			return this.imPrincipal;
+		else if(group.equals(ImageGroup.TIRMONSTRE))
+			return this.imTirMonstre;
+		else {
+			try {throw new Exception("No image group for "+ group);} catch (Exception e) {e.printStackTrace();}
+			return null;
+		}
+		
+	}
+	
 	public static void main(String[] args) throws InterruptedException, UnsupportedAudioFileException, IOException, LineUnavailableException, URISyntaxException 
 	{	
 		TypeApplication.isJar= new TypeApplication().isJar();
@@ -546,7 +630,6 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		
 		ModelPrincipal principal = new ModelPrincipal();
 		principal.Init();
-		principal.startGame();
 		//REMOVEprincipal.StartBoucleJeu();
 
 		//test();
@@ -554,4 +637,5 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		//conv.convertir();
 
 	}
+
 }

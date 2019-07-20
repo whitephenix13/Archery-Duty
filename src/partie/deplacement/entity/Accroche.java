@@ -5,24 +5,27 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import gameConfig.TypeObject;
+import gameConfig.ObjectTypeHelper;
+import gameConfig.ObjectTypeHelper.ObjectType;
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
 import partie.deplacement.Animation;
 import partie.deplacement.Mouvement;
-import partie.deplacement.TypeMouv;
 import utils.Vitesse;
 
 //il y a 1 animations de deux cotés 
 
 public class Accroche extends Mouvement_entity{
 
-	public enum TypeAccroche implements TypeMouv {AccrocheGauche,AccrocheDroite,GrimpeGauche, GrimpeDroite };
+	//REMOVE public enum TypeAccroche implements TypeMouv {AccrocheGauche,AccrocheDroite,GrimpeGauche, GrimpeDroite };
+	public static enum SubMouvAccrocheEnum implements SubTypeMouv {ACCROCHE_DROITE, ACCROCHE_GAUCHE,GRIMPE_DROITE,GRIMPE_GAUCHE};
 	
-	public Accroche(Object obj,TypeMouv _type_mouv, int current_frame){
+	public Accroche(ObjectType objType,SubTypeMouv _sub_type_mouv, int current_frame){
 		super();
-		type_mouv=_type_mouv;
-		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
+		type_mouv=MouvEntityEnum.ACCROCHE;
+		sub_type_mouv=_sub_type_mouv;
+		this.objType=objType;
+		if(objType.equals(ObjectType.HEROS))
 		{
 			xtaille =  Arrays.asList(83,44,83,44);
 			ytaille =  Arrays.asList(99,82,99,82);
@@ -42,19 +45,20 @@ public class Accroche extends Mouvement_entity{
 			hitbox = Hitbox.createHitbox(hitboxCreation);
 			//animation frame, current_frame, start_index, end_index
 			int start_index=0;int end_index=0;
-			if(type_mouv.equals(TypeAccroche.AccrocheGauche)){
-				start_index=0;end_index=1;}
-			else if(type_mouv.equals(TypeAccroche.GrimpeGauche)){
-				start_index=1;end_index=2;}
-			else if(type_mouv.equals(TypeAccroche.AccrocheDroite)){
-				start_index=2;end_index=3;}
-			else if(type_mouv.equals(TypeAccroche.GrimpeDroite)){
-				start_index=3;end_index=4;}
+			if(sub_type_mouv.equals(SubMouvAccrocheEnum.ACCROCHE_GAUCHE)){
+				start_index= 0; end_index = 1;}
+			else if(sub_type_mouv.equals(SubMouvAccrocheEnum.GRIMPE_GAUCHE)){
+				start_index= 1; end_index = 2;}
+			else if(sub_type_mouv.equals(SubMouvAccrocheEnum.ACCROCHE_DROITE)){
+				start_index= 2; end_index = 3;}
+			else if(sub_type_mouv.equals(SubMouvAccrocheEnum.GRIMPE_DROITE)){
+				start_index= 3; end_index = 4;}
+			
 			animation.start(Arrays.asList(10,4,10,4), current_frame, start_index, end_index);
 		}
 	}
-	public Accroche(Object obj,TypeMouv _type_mouv, int current_frame,Animation _animation){
-		this(obj,_type_mouv,current_frame);
+	public Accroche(ObjectType objType,SubTypeMouv _sub_type_mouv, int current_frame,Animation _animation){
+		this(objType,_sub_type_mouv,current_frame);
 		animation = _animation;
 	}
 	
@@ -64,20 +68,20 @@ public class Accroche extends Mouvement_entity{
 		return 100;
 	}*/
 
-	public Mouvement Copy(Object obj) {
-		return new Accroche(obj,type_mouv,animation.getStartFrame(),animation);
+	public Mouvement Copy() {
+		return new Accroche(objType,sub_type_mouv,animation.getStartFrame(),animation);
 	}
 	
 	@Override
 	public Vitesse __getUncheckedSpeed(Collidable object, int anim) {
-		if(TypeObject.isTypeOf(object, TypeObject.HEROS))
+		if(ObjectTypeHelper.isTypeOf(object, ObjectType.HEROS))
 			return new Vitesse(0,0);
 		return null;
 		}
 
 	@Override
 	public String droite_gauche(Object obj,int anim) {
-		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
+		if(ObjectTypeHelper.isTypeOf(obj, ObjectType.HEROS))
 			if(anim<2)
 				return (Mouvement.GAUCHE);
 			else 

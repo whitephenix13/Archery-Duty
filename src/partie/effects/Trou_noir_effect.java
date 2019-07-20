@@ -1,12 +1,10 @@
 package partie.effects;
 
 import java.awt.Point;
-import java.awt.geom.AffineTransform;
 
 import javax.vecmath.Vector2d;
 
 import partie.collision.Collidable;
-import partie.deplacement.effect.Mouvement_effect.TypeMouvEffect;
 import partie.deplacement.effect.Trou_noir_idle;
 import partie.entitie.Entity;
 import partie.modelPartie.AbstractModelPartie;
@@ -18,11 +16,10 @@ public class Trou_noir_effect extends Effect{
 	public Trou_noir_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame,Vector2d _normalCollision,Point _pointCollision,
 			Point _correctedPointCollision)
 	{
-		boolean _typeEffect = false;//doesn't matter
-
-		super.init(_anim,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,_typeEffect,true);
+		super(_anim,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,false,true);
 		
-		setDeplacement(new Trou_noir_idle(TypeMouvEffect.Trou_noir,partie.getFrame()));
+		subTypeMouv = null;
+		setDeplacement(new Trou_noir_idle(subTypeMouv,partie.getFrame()));
 
 		partie.arrowsEffects.add(this);
 		setFirstPos(partie);

@@ -1,6 +1,7 @@
 package menu.choixNiveau;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.Point;
@@ -10,13 +11,15 @@ import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
+import javax.swing.BoxLayout;
 
+import ActiveJComponent.ActiveJButton;
+import ActiveJComponent.ActiveJPanel;
+import ActiveJComponent.ActiveJScrollPane;
 import Affichage.Drawable;
 import gameConfig.InterfaceConstantes;
-import menu.menuPrincipal.AbstractModelPrincipal;
+import images.ImagesBackground.ImBackgroundInfo;
+import images.ImagesContainer.ImageGroup;
 import menu.menuPrincipal.GameHandler.GameModeType;
 import utils.observer.Observer;
 
@@ -25,14 +28,14 @@ public class AffichageChoixNiveau extends Drawable implements Observer{
 
 	protected AbstractControlerChoixNiveau controlerChoix;
 	
-	protected JButton boutonJouer = new JButton();
-	protected JButton boutonRetour = new JButton();
+	protected ActiveJButton boutonJouer = new ActiveJButton();
+	protected ActiveJButton boutonRetour = new ActiveJButton();
 
 	
-	protected JPanel panelBoutons= new JPanel();
-	protected JScrollPane panelBoutonScroll;
+	protected ActiveJPanel panelBoutons= new ActiveJPanel();
+	protected ActiveJScrollPane panelBoutonScroll;
 
-	protected JPanel panelInterraction = new JPanel();
+	protected ActiveJPanel panelInterraction = new ActiveJPanel();
 	
 	public AffichageChoixNiveau(AbstractControlerChoixNiveau _controlerChoix)
 	{
@@ -54,9 +57,10 @@ public class AffichageChoixNiveau extends Drawable implements Observer{
 	
 	public void initAffichage()
 	{
-		panelBoutonScroll = new JScrollPane(panelBoutons);
-		panelBoutonScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-		panelBoutonScroll.setBounds(50, 30, 300, 50);
+		panelBoutonScroll = new ActiveJScrollPane(panelBoutons);
+		panelBoutonScroll.setVerticalScrollBarPolicy(ActiveJScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		panelBoutonScroll.getVerticalScrollBar().setUnitIncrement(16);
+		//panelBoutonScroll.setVerticalScrollBarPolicy(ActiveJScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 		
 		panelInterraction.setLayout(null);
 		//panelInterraction.setLayout(new GridLayout(1,2));
@@ -73,30 +77,35 @@ public class AffichageChoixNiveau extends Drawable implements Observer{
 		
 		panelInterraction.add(boutonJouer);
 		panelInterraction.add(boutonRetour);
+		panelInterraction.setOpaque(false);
 		panelInterraction.setBackground(InterfaceConstantes.BACKGROUND_COLOR);
 	}
 	
 	public void fillPanelBoutons()
 	{
 		List<String> listNomNiveaux = controlerChoix.choix.listNomNiveaux;
-		List<JButton> listNiveaux = new ArrayList<JButton>();
+		List<ActiveJButton> listNiveaux = new ArrayList<ActiveJButton>();
 		//on créer les boutons
 		panelBoutons.setLayout(new GridLayout(listNomNiveaux.size(),1));
 		panelBoutons.setBackground(InterfaceConstantes.BACKGROUND_COLOR);
 		//panelBoutons.setLayout(new FlowLayout());
+		ActiveJButton but;
 		for(int i=0; i <listNomNiveaux.size(); i++ )
 		{
-			listNiveaux.add(new JButton());
+			but=new ActiveJButton();
+			listNiveaux.add(but);
 			
-			controlerChoix.choix.resetBouton(listNiveaux.get(i),listNomNiveaux.get(i));
-			listNiveaux.get(i).setEnabled(true);
-			listNiveaux.get(i).setVisible(true);
-			listNiveaux.get(i).setBackground(InterfaceConstantes.BACKGROUND_COLOR);
+			controlerChoix.choix.resetBouton(but,listNomNiveaux.get(i));
+			but.setEnabled(true);
+			but.setVisible(true);
+			//but.setOpaque(false);
+				
+			but.setBackground(InterfaceConstantes.BACKGROUND_COLOR);
 			
 			panelBoutons.add(listNiveaux.get(i));
 		}
-		panelBoutonScroll = new JScrollPane(panelBoutons);
-		panelBoutonScroll.setBackground(InterfaceConstantes.BACKGROUND_COLOR);
+		//panelBoutonScroll = new ActiveJScrollPane(panelBoutons);
+		//panelBoutonScroll.setBackground(InterfaceConstantes.BACKGROUND_COLOR);
 		controlerChoix.choix.listNiveaux=listNiveaux;
 	}
 	
@@ -109,11 +118,11 @@ public class AffichageChoixNiveau extends Drawable implements Observer{
 		public void mouseReleased(MouseEvent e) 
 		{
 			controlerChoix.choix.computationDone=false;
-			JButton button = (JButton)e.getSource();
+			ActiveJButton button = (ActiveJButton)e.getSource();
 			Rectangle r = button.getBounds();
 			//Apply pressed only if the release is on the pressed button
 			if(r.contains(new Point(r.x+e.getX(),r.y+e.getY()))){
-				controlerChoix.choix.selectLevel((JButton)e.getSource());
+				controlerChoix.choix.selectLevel((ActiveJButton)e.getSource());
 			}
 			controlerChoix.choix.computationDone=true;
 		}
@@ -131,7 +140,7 @@ public class AffichageChoixNiveau extends Drawable implements Observer{
 		public void mouseReleased(MouseEvent e) 
 		{
 			controlerChoix.choix.computationDone=false;
-			JButton button = (JButton)e.getSource();
+			ActiveJButton button = (ActiveJButton)e.getSource();
 			Rectangle r = button.getBounds();
 			//Apply pressed only if the release is on the pressed button
 			if(r.contains(new Point(r.x+e.getX(),r.y+e.getY()))){
@@ -156,7 +165,7 @@ public class AffichageChoixNiveau extends Drawable implements Observer{
 		public void mouseReleased(MouseEvent e) 
 		{
 			controlerChoix.choix.computationDone=false;
-			JButton button = (JButton)e.getSource();
+			ActiveJButton button = (ActiveJButton)e.getSource();
 			Rectangle r = button.getBounds();
 			//Apply pressed only if the release is on the pressed button
 			if(r.contains(new Point(r.x+e.getX(),r.y+e.getY()))){
@@ -179,10 +188,10 @@ public class AffichageChoixNiveau extends Drawable implements Observer{
 
 	public void removeListener()
 	{
-		List<JButton> listNiveaux = controlerChoix.choix.listNiveaux;
+		List<ActiveJButton> listNiveaux = controlerChoix.choix.listNiveaux;
 		for(int i=0; i <controlerChoix.choix.listNomNiveaux.size(); i++ )
 		{
-			JButton button = listNiveaux.get(i);
+			ActiveJButton button = listNiveaux.get(i);
 			MouseListener[] ml = button.getMouseListeners();
 			button.removeMouseListener(ml[ml.length-1]);
 		}
@@ -194,10 +203,9 @@ public class AffichageChoixNiveau extends Drawable implements Observer{
 
 	}
 	@Override
-	public void draw(Graphics g)
+	public void drawOnGraphics(Graphics g,boolean forceRepaint) 
 	{
-		//Nothing to draw
-		mainFrame.warnFadeOutCanStart();
+		g.drawImage(controlerChoix.choix.gameHandler.getImage(ImageGroup.BACKGROUND, null, ImBackgroundInfo.BLACK, null),0,0,null);
 	}
 	
 	public void update() {
@@ -207,7 +215,7 @@ public class AffichageChoixNiveau extends Drawable implements Observer{
 			fillPanelBoutons();
 		}	
 		controlerChoix.choix.resetVariablesAffichages();
-		mainPanel.repaint();
+		//REMOVE mainPanel.repaint();
 	}
 
 }

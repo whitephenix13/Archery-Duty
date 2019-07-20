@@ -1,11 +1,12 @@
 package images;
 
 import java.awt.Image;
+import java.util.ArrayList;
 
-import loading.LoaderItem;
-import partie.conditions.Condition;
+import gameConfig.ObjectTypeHelper.ObjectType;
+import partie.conditions.Condition.ConditionEnum;
 
-public class ImagesCondition extends LoaderItem{
+public class ImagesCondition extends ImagesContainer{
 
 	private static String path ="resources/conditions/";
 	Image im_brulure =null;
@@ -30,129 +31,140 @@ public class ImagesCondition extends LoaderItem{
 		}
 
 		int nb_condi = 10;
-		run("",Condition.BRULURE);
+		run("",ConditionEnum.BRULURE);
 		percentage = (int)(1*100.0/nb_condi);
-		run("",Condition.LENTEUR);
+		run("",ConditionEnum.LENTEUR);
 		percentage = (int)(2*100.0/nb_condi);
-		run("",Condition.VITESSE);
+		run("",ConditionEnum.VITESSE);
 		percentage = (int)(3*100.0/nb_condi);
-		run("",Condition.PARALYSIE);
+		run("",ConditionEnum.PARALYSIE);
 		percentage = (int)(4*100.0/nb_condi);
-		run("",Condition.DEFAILLANCE);
+		run("",ConditionEnum.DEFAILLANCE);
 		percentage = (int)(5*100.0/nb_condi);
-		run("",Condition.RESISTANCE);
+		run("",ConditionEnum.RESISTANCE);
 		percentage = (int)(6*100.0/nb_condi);
-		run("",Condition.FORCE);
+		run("",ConditionEnum.FORCE);
 		percentage = (int)(7*100.0/nb_condi);
-		run("",Condition.FAIBLESSE);
+		run("",ConditionEnum.FAIBLESSE);
 		percentage = (int)(8*100.0/nb_condi);
-		run("",Condition.REGENERATION);
+		run("",ConditionEnum.REGENERATION);
 		percentage = (int)(9*100.0/nb_condi);
-		run("",Condition.PRECISION);
+		run("",ConditionEnum.PRECISION);
 		percentage=100;
 		alreadyLoaded=true;
 
 
 	}
 
-	public void run(String media_categorie, String filename) {
-		if(filename.equals(Condition.BRULURE))
+	public void run(String media_categorie, ConditionEnum type) {
+		if(type.equals(ConditionEnum.BRULURE))
 		{
 			if(im_brulure==null)
 				im_brulure= getIm(path+"brulure.png",true);		
 		}
-		else if(filename.equals(Condition.LENTEUR))
+		else if(type.equals(ConditionEnum.LENTEUR))
 		{
 			if(im_lenteur==null)
 				im_lenteur= getIm(path+"lenteur.png",true);		
 		}
-		else if(filename.equals(Condition.VITESSE))
+		else if(type.equals(ConditionEnum.VITESSE))
 		{
 			if(im_vitesse==null)
 				im_vitesse= getIm(path+"vitesse.png",true);		
 		}
-		else if(filename.equals(Condition.PARALYSIE))
+		else if(type.equals(ConditionEnum.PARALYSIE))
 		{
 			if(im_paralysie==null)
 				im_paralysie= getIm(path+"paralysie.png",true);		
 		}
-		else if(filename.equals(Condition.DEFAILLANCE))
+		else if(type.equals(ConditionEnum.DEFAILLANCE))
 		{
 			if(im_defaillance==null)
 				im_defaillance= getIm(path+"defaillance.png",true);		
 		}
-		else if(filename.equals(Condition.FORCE))
+		else if(type.equals(ConditionEnum.FORCE))
 		{
 			if(im_force==null)
 				im_force= getIm(path+"force.png",true);		
 		}
-		else if(filename.equals(Condition.RESISTANCE))
+		else if(type.equals(ConditionEnum.RESISTANCE))
 		{
 			if(im_resistance==null)
 				im_resistance= getIm(path+"resistance.png",true);		
 		}
-		else if(filename.equals(Condition.FAIBLESSE))
+		else if(type.equals(ConditionEnum.FAIBLESSE))
 		{
 			if(im_faiblesse==null)
 				im_faiblesse= getIm(path+"faiblesse.png",true);		
 		}	
-		else if(filename.equals(Condition.REGENERATION))
+		else if(type.equals(ConditionEnum.REGENERATION))
 		{
 			if(im_regeneration==null)
 				im_regeneration= getIm(path+"regeneration.png",true);		
 		}	
-		else if(filename.equals(Condition.PRECISION))
+		else if(type.equals(ConditionEnum.PRECISION))
 		{
 			if(im_precision==null)
 				im_precision= getIm(path+"precision.png",true);		
 		}	
 		else{
 			try {
-				throw(new Exception("Condition not known: "+ filename));
+				throw(new Exception("Condition not known: "+ type));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 	}
-	public Image getImage(String name)
+	
+	/***
+	 * objType: null
+	 * info1 : {@link ConditionEnum}
+	 * info2 : null
+	 */
+	@Override
+	public Image getImage(ObjectType objType, ImageInfo info1,ImageInfo info2)
 	{
-		if(name.equals(Condition.BRULURE))
+		if(info1.equals(ConditionEnum.BRULURE))
 			return im_brulure;
 
-		else if(name.equals(Condition.LENTEUR))
+		else if(info1.equals(ConditionEnum.LENTEUR))
 			return im_lenteur;	
 
-		else if(name.equals(Condition.VITESSE))
+		else if(info1.equals(ConditionEnum.VITESSE))
 			return im_vitesse;
 
-		else if(name.equals(Condition.PARALYSIE))
+		else if(info1.equals(ConditionEnum.PARALYSIE))
 			return im_paralysie;		
 
-		else if(name.equals(Condition.DEFAILLANCE))
+		else if(info1.equals(ConditionEnum.DEFAILLANCE))
 			return im_defaillance;		
 
-		else if(name.equals(Condition.FORCE))
+		else if(info1.equals(ConditionEnum.FORCE))
 			return im_force;		
 
-		else if(name.equals(Condition.RESISTANCE))
+		else if(info1.equals(ConditionEnum.RESISTANCE))
 			return im_resistance;		
 
-		else if(name.equals(Condition.FAIBLESSE))
+		else if(info1.equals(ConditionEnum.FAIBLESSE))
 			return im_faiblesse;	
 		
-		else if(name.equals(Condition.REGENERATION))
+		else if(info1.equals(ConditionEnum.REGENERATION))
 			return im_regeneration;	
 		
-		else if(name.equals(Condition.PRECISION))
+		else if(info1.equals(ConditionEnum.PRECISION))
 			return im_precision;	
 		else{
 			try {
-				throw(new Exception("Condition not known: "+ name));
+				throw(new Exception("Condition not known: "+ info1));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 		return null;
 	}
-
+	@Override 
+	public ArrayList<Image> getImages(ObjectType objType, ImageInfo info1,ImageInfo info2, int anim)
+	{
+		return null;
+	}
 }

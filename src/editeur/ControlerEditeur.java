@@ -1,7 +1,6 @@
 package editeur;
 
-import javax.swing.JOptionPane;
-
+import ActiveJComponent.ActiveJOptionPane;
 import partie.bloc.Bloc.TypeBloc;
 import serialize.Serialize;
 
@@ -39,7 +38,7 @@ public class ControlerEditeur extends AbstractControlerEditeur{
 			edit.showMessageDialog=true;
 			edit.textMessageDialog[0]="Echec de la sauvegarde: nom incorrect ";
 			edit.textMessageDialog[1]="Erreur Saisie";
-			edit.typeMessageDialog=JOptionPane.ERROR_MESSAGE;
+			edit.typeMessageDialog=ActiveJOptionPane.ERROR_MESSAGE;
 			edit.notifyObserver();
 
 			return;
@@ -51,16 +50,16 @@ public class ControlerEditeur extends AbstractControlerEditeur{
 			edit.showMessageDialog=true;
 			edit.textMessageDialog[0]="Une erreur s'est produite lors de la sauvegarde";
 			edit.textMessageDialog[1]="Erreur sauvegarde";
-			edit.typeMessageDialog=JOptionPane.ERROR_MESSAGE;
+			edit.typeMessageDialog=ActiveJOptionPane.ERROR_MESSAGE;
 			edit.notifyObserver();
 
 		}
 		else
 		{
 			edit.showMessageDialog=true;
-			edit.textMessageDialog[0]="La sauvegarde a ete effectuee correctement au nom de :  " + nom;
+			edit.textMessageDialog[0]="La sauvegarde a ete effectuee correctement au nom de :" + nom;
 			edit.textMessageDialog[1]="Sauvegarde reussite";
-			edit.typeMessageDialog=JOptionPane.INFORMATION_MESSAGE;
+			edit.typeMessageDialog=ActiveJOptionPane.INFORMATION_MESSAGE;
 			edit.notifyObserver();
 
 		}
@@ -73,7 +72,7 @@ public class ControlerEditeur extends AbstractControlerEditeur{
 			edit.showMessageDialog=true;
 			edit.textMessageDialog[0]="Echec du chargement: nom vide ";
 			edit.textMessageDialog[1]="Erreur Saisie";
-			edit.typeMessageDialog=JOptionPane.ERROR_MESSAGE;
+			edit.typeMessageDialog=ActiveJOptionPane.ERROR_MESSAGE;
 			edit.notifyObserver();
 			return;
 		}
@@ -85,16 +84,16 @@ public class ControlerEditeur extends AbstractControlerEditeur{
 			edit.showMessageDialog=true;
 			edit.textMessageDialog[0]=Serialize.erreurMsgChargement;
 			edit.textMessageDialog[1]="Echec chargement";
-			edit.typeMessageDialog=JOptionPane.ERROR_MESSAGE;
+			edit.typeMessageDialog=ActiveJOptionPane.ERROR_MESSAGE;
 			edit.notifyObserver();
 		}
 		else
 		{
-		edit.showMessageDialog=true;
-		edit.textMessageDialog[0]="Le niveau  "+nom +" a ete correctement chargé";
-		edit.textMessageDialog[1]="Chargement reussi";
-		edit.typeMessageDialog=JOptionPane.INFORMATION_MESSAGE;
-		edit.notifyObserver();
+			edit.showMessageDialog=true;
+			edit.textMessageDialog[0]="Le niveau "+nom +" a ete correctement chargé";
+			edit.textMessageDialog[1]="Chargement reussi";
+			edit.typeMessageDialog=ActiveJOptionPane.INFORMATION_MESSAGE;
+			edit.notifyObserver();
 		}
 	}
 

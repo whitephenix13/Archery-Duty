@@ -2,7 +2,6 @@ package partie.effects;
 
 import java.awt.Image;
 import java.awt.Point;
-import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
@@ -16,10 +15,9 @@ import menu.menuPrincipal.ModelPrincipal;
 import partie.collision.Collidable;
 import partie.collision.Collision;
 import partie.collision.Hitbox;
-import partie.conditions.Condition;
+import partie.conditions.Condition.ConditionEnum;
 import partie.deplacement.Deplace;
 import partie.deplacement.Mouvement;
-import partie.deplacement.effect.Mouvement_effect.TypeMouvEffect;
 import partie.deplacement.effect.Roche_idle;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
@@ -85,16 +83,16 @@ public class Roche_effect extends Effect{
 	public Roche_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame,Vector2d _normalCollision,Point _pointCollision,
 			Point _correctedPointCollision, boolean _groundCollision)
 	{
-
+		super(_anim,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,_groundCollision,_groundCollision);
 		ModelPrincipal.debugTime.startElapsedForVerbose();
-		super.init(_anim,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,_groundCollision,_groundCollision);
 		ModelPrincipal.debugTime.elapsed("Roche effect: call super.init");
 		this.setCollideWithAll();
 
 		this.isWorldCollider= groundEffect? true :false; //groundEffect=_groundCollision
-
-		setDeplacement(new Roche_idle(groundEffect?TypeMouvEffect.RocheGround:TypeMouvEffect.RocheEntitie,partie.getFrame()));
-
+		
+		subTypeMouv = groundEffect?EffectCollisionEnum.GROUND:EffectCollisionEnum.ENTITY;
+		setDeplacement(new Roche_idle(subTypeMouv,partie.getFrame()));
+		
 		setFirstPos(partie);
 
 		if(groundEffect)
@@ -287,7 +285,6 @@ public class Roche_effect extends Effect{
 				//destruction was already called
 				if(startDestroyAnim)
 					return;
-				
 				//else make sure to stop growing before calling destroy 
 				stopGrowing=true;
 				lastPilarFullLength=UPDATE_LENGTH_TIME*Math.pow(10, 9)+1;
@@ -304,7 +301,7 @@ public class Roche_effect extends Effect{
 	{
 		if(!groundEffect)
 			if(Collision.testcollisionObjects(partie, this, attacher,true))
-				attacher.conditions.addNewCondition(Condition.DEFAILLANCE, DUREE_DEFAILLANCE,System.identityHashCode(this));
+				attacher.conditions.addNewCondition(ConditionEnum.DEFAILLANCE, DUREE_DEFAILLANCE,System.identityHashCode(this));
 	}
 
 	private void ejectCollidable(AbstractModelPartie partie,int initEject,boolean init)
@@ -411,7 +408,7 @@ public class Roche_effect extends Effect{
 		}
 
 		int prevAnim = getAnim();
-		setAnim(getDeplacement().updateAnimation(this, getAnim(), partie.getFrame(), 1));
+		setAnim(getDeplacement().updateAnimation(getAnim(), partie.getFrame(), 1));
 		if(prevAnim!=getAnim())
 			previousMaskedIm=null;
 		//doit deplace, change anim

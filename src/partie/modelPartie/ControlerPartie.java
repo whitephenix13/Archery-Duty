@@ -2,10 +2,9 @@ package partie.modelPartie;
 
 import java.awt.event.MouseEvent;
 
-import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
+import ActiveJComponent.ActiveJButton;
 import option.Touches;
 
 public class ControlerPartie extends AbstractControlerPartie{
@@ -33,7 +32,7 @@ public class ControlerPartie extends AbstractControlerPartie{
 			partie.inputPartie.applyMouseInput( partie.inputPartie.buildReleaseKeyStroke(partie.touches.MIDDLE_MOUSE));
 	}
 
-	public void controlBoutonsPressed(JButton button) {
+	public void controlBoutonsPressed(ActiveJButton button) {
 		partie.HandleBoutonsPressed(button);
 	}
 }

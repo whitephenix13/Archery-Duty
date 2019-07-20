@@ -5,15 +5,15 @@ import java.util.Arrays;
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
 import partie.deplacement.Mouvement;
-import partie.deplacement.TypeMouv;
-import partie.effects.Ombre_effect;
+import partie.deplacement.effect.Mouvement_effect.MouvEffectEnum;
 import utils.Vitesse;
 
 public class Ombre_idle extends Mouvement_effect{
-		public Ombre_idle(TypeMouv _type_mouv, int current_frame){
+		public Ombre_idle(SubTypeMouv _sub_type_mouv, int current_frame){
 			super();
-			type_mouv=_type_mouv;
-
+			type_mouv = MouvEffectEnum.OMBRE_IDLE;
+			sub_type_mouv=_sub_type_mouv;
+			
 			xtaille =  Arrays.asList(92,92,92,92);
 			ytaille =  Arrays.asList(79,79,79,79);
 			hitbox = Hitbox.createSquareHitboxes(0,0,92,79,4);
@@ -27,8 +27,8 @@ public class Ombre_idle extends Mouvement_effect{
 			vit = new Vitesse();
 		}
 		@Override
-		public Mouvement Copy(Object obj) {
-			return new Ombre_idle(type_mouv,animation.getStartFrame());
+		public Mouvement Copy() {
+			return new Ombre_idle(sub_type_mouv,animation.getStartFrame());
 		}
 
 		@Override

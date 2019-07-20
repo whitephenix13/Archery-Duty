@@ -1,5 +1,6 @@
 package partie.conditions;
 
+import partie.conditions.Condition.ConditionEnum;
 import partie.modelPartie.PartieTimer;
 
 public class C_Precision extends Condition{
@@ -9,7 +10,7 @@ public class C_Precision extends Condition{
 
 	public C_Precision(double _duree)
 	{
-		name=PRECISION;
+		type=ConditionEnum.PRECISION;
 		DUREE= _duree*Math.pow(10, 9); //sec 
 		FACTOR= 0.25; //speed x2  
 		startTime=PartieTimer.me.getElapsedNano();

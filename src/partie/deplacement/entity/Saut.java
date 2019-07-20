@@ -6,28 +6,32 @@ import java.util.Arrays;
 //il y a 3 animations de deux cotés 
 import java.util.List;
 
-import gameConfig.TypeObject;
+import gameConfig.ObjectTypeHelper;
+import gameConfig.ObjectTypeHelper.ObjectType;
 import option.Config;
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
 import partie.deplacement.Animation;
 import partie.deplacement.Gravite;
 import partie.deplacement.Mouvement;
-import partie.deplacement.TypeMouv;
 import partie.entitie.heros.Heros;
 import partie.entitie.monstre.Spirel;
 import utils.Vitesse;
 
 public class Saut extends Mouvement_entity{
 
-	public enum TypeSaut implements TypeMouv {JumpGauche,FallGauche,LandGauche,JumpDroite,FallDroite,LandDroite };
+	//REMOVE public enum TypeSaut implements TypeMouv {JumpGauche,FallGauche,LandGauche,JumpDroite,FallDroite,LandDroite };
+	public static enum SubMouvSautEnum implements SubTypeMouv {JUMP_GAUCHE, FALL_GAUCHE,LAND_GAUCHE,JUMP_DROITE,FALL_DROITE,LAND_DROITE};
 
 
 	//constructeur
-	public Saut(Object obj,TypeMouv _type_mouv,int current_frame) {
+	public Saut(ObjectType objType,SubTypeMouv _sub_type_mouv,int current_frame) {
 		super();
-		type_mouv=_type_mouv;
-		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
+		type_mouv=MouvEntityEnum.SAUT;
+		sub_type_mouv=_sub_type_mouv;
+		this.objType=objType;
+		
+		if(objType.equals(ObjectType.HEROS))
 		{
 			xtaille =  Arrays.asList(85,84,74,85,84,74);
 			ytaille =  Arrays.asList(97,105,91,97,105,91); 
@@ -47,22 +51,22 @@ public class Saut extends Mouvement_entity{
 			hitbox = Hitbox.createHitbox(hitboxCreation);
 			//animation frame, current_frame, start_index, end_index
 			int start_index=0;int end_index=0;
-			if(type_mouv.equals(TypeSaut.JumpGauche)){
+			if(sub_type_mouv.equals(SubMouvSautEnum.JUMP_GAUCHE)){
 				start_index=0;end_index=1;}
-			else if(type_mouv.equals(TypeSaut.FallGauche)){
+			else if(sub_type_mouv.equals(SubMouvSautEnum.FALL_GAUCHE)){
 				start_index=1;end_index=2;}
-			else if(type_mouv.equals(TypeSaut.LandGauche)){
+			else if(sub_type_mouv.equals(SubMouvSautEnum.LAND_GAUCHE)){
 				start_index=2;end_index=3;}
-			else if(type_mouv.equals(TypeSaut.JumpDroite)){
+			else if(sub_type_mouv.equals(SubMouvSautEnum.JUMP_DROITE)){
 				start_index=3;end_index=4;}
-			else if(type_mouv.equals(TypeSaut.FallDroite)){
+			else if(sub_type_mouv.equals(SubMouvSautEnum.FALL_DROITE)){
 				start_index=4;end_index=5;}
-			else if(type_mouv.equals(TypeSaut.LandDroite)){
+			else if(sub_type_mouv.equals(SubMouvSautEnum.LAND_DROITE)){
 				start_index=5;end_index=6;}
 			animation.start(Arrays.asList(1,1,2,1,1,2), current_frame, start_index, end_index);
 
 		}
-		else if(TypeObject.isTypeOf(obj, TypeObject.SPIREL))
+		else if(objType.equals(ObjectType.SPIREL))
 		{
 			xtaille =  Arrays.asList(56,56,-1,-1,-1,-1,-1,-1);
 			ytaille =  Arrays.asList(75,75,-1,-1,-1,-1,-1,-1);
@@ -82,23 +86,23 @@ public class Saut extends Mouvement_entity{
 			hitbox = Hitbox.createHitbox(hitboxCreation);
 			//animation frame, current_frame, start_index, end_index
 			int start_index=0;int end_index=0;
-			if(type_mouv.equals(TypeSaut.JumpGauche)){
+			if(type_mouv.equals(SubMouvSautEnum.JUMP_GAUCHE)){
 				start_index=0;end_index=1;}
-			else if(type_mouv.equals(TypeSaut.FallGauche)){
+			else if(sub_type_mouv.equals(SubMouvSautEnum.FALL_GAUCHE)){
 				start_index=1;end_index=2;}
-			else if(type_mouv.equals(TypeSaut.LandGauche)){
+			else if(sub_type_mouv.equals(SubMouvSautEnum.LAND_GAUCHE)){
 				start_index=2;end_index=3;}
-			else if(type_mouv.equals(TypeSaut.JumpDroite)){
+			else if(sub_type_mouv.equals(SubMouvSautEnum.JUMP_DROITE)){
 				start_index=3;end_index=4;}
-			else if(type_mouv.equals(TypeSaut.FallDroite)){
+			else if(sub_type_mouv.equals(SubMouvSautEnum.FALL_DROITE)){
 				start_index=4;end_index=5;}
-			else if(type_mouv.equals(TypeSaut.LandDroite)){
+			else if(sub_type_mouv.equals(SubMouvSautEnum.LAND_DROITE)){
 				start_index=5;end_index=6;}
 			animation.start(Arrays.asList(5,5), current_frame, start_index, end_index);
 		}
 	}
-	public Saut(Object obj,TypeMouv _type_mouv, int current_frame,Animation _animation){
-		this(obj,_type_mouv,current_frame);
+	public Saut(ObjectType objType,SubTypeMouv _sub_type_mouv, int current_frame,Animation _animation){
+		this(objType,_sub_type_mouv,current_frame);
 		animation = _animation;
 	}
 	/*@Override
@@ -111,8 +115,8 @@ public class Saut extends Mouvement_entity{
 		else
 			return 0;
 	}*/
-	public Mouvement Copy(Object obj) {
-		return new Saut(obj,type_mouv,animation.getStartFrame(),animation);
+	public Mouvement Copy() {
+		return new Saut(objType,sub_type_mouv,animation.getStartFrame(),animation);
 	}
 	
 	@Override
@@ -121,7 +125,7 @@ public class Saut extends Mouvement_entity{
 		
 		Heros heros = null; 		
 		//reset variables saut to ensure coherency
-		if(TypeObject.isTypeOf(object, TypeObject.HEROS))
+		if(ObjectTypeHelper.isTypeOf(object, ObjectType.HEROS))
 		{
 			if (object instanceof Heros) 
 				heros = (Heros) object;
@@ -158,7 +162,7 @@ public class Saut extends Mouvement_entity{
 	@Override
 	public Vitesse __getUncheckedSpeed(Collidable object, int anim) {
 
-		if(TypeObject.isTypeOf(object, TypeObject.HEROS))
+		if(ObjectTypeHelper.isTypeOf(object, ObjectType.HEROS))
 		{
 			Heros heros = null; 
 			if (object instanceof Heros) {
@@ -200,7 +204,7 @@ public class Saut extends Mouvement_entity{
 				}
 			}
 		}
-		else if(TypeObject.isTypeOf(object, TypeObject.SPIREL))
+		else if(ObjectTypeHelper.isTypeOf(object, ObjectType.SPIREL))
 		{
 			Spirel spirel=null;
 			if(object instanceof Spirel)
@@ -223,12 +227,12 @@ public class Saut extends Mouvement_entity{
 	}
 	@Override
 	public String droite_gauche(Object obj,int anim) {
-		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
+		if(ObjectTypeHelper.isTypeOf(obj, ObjectType.HEROS))
 			if(anim<3)
 				return (Mouvement.GAUCHE);
 			else 
 				return(Mouvement.DROITE);
-		else if(TypeObject.isTypeOf(obj, TypeObject.SPIREL))
+		else if(ObjectTypeHelper.isTypeOf(obj, ObjectType.SPIREL))
 			if(anim<1)
 				return (Mouvement.GAUCHE);
 			else 

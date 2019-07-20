@@ -1,5 +1,6 @@
 package partie.conditions;
 
+import partie.conditions.Condition.ConditionEnum;
 import partie.modelPartie.PartieTimer;
 
 public class C_Lenteur extends Condition{
@@ -9,7 +10,7 @@ public class C_Lenteur extends Condition{
 
 	public C_Lenteur(double _duree)
 	{
-		name=LENTEUR;
+		type=ConditionEnum.LENTEUR;
 		DUREE= _duree*Math.pow(10, 9); //sec 
 		FACTOR= 0.5; //speed x0.5  
 		startTime=PartieTimer.me.getElapsedNano();

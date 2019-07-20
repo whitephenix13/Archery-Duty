@@ -12,7 +12,8 @@ import java.util.List;
 import javax.vecmath.Vector2d;
 
 import gameConfig.InterfaceConstantes;
-import gameConfig.TypeObject;
+import gameConfig.ObjectTypeHelper;
+import gameConfig.ObjectTypeHelper.ObjectType;
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
 import partie.deplacement.Deplace;
@@ -48,12 +49,11 @@ public abstract class Monstre extends Entity implements InterfaceConstantes, Ser
 	Image SPmarche1;
 	Image SPmarche2;
 	Image SPmarche3; 
-
-	@Override
-	public void init()
+	
+	public Monstre()
 	{
-		super.init();
-		this.setCollideWithout(Arrays.asList(TypeObject.MONSTRE,TypeObject.TIR_MONSTRE));
+		super();
+		this.setCollideWithout(Arrays.asList(ObjectType.MONSTRE,ObjectType.TIR_MONSTRE));
 	}
 	/**
 	 * Permet de savoir de quel cote est tourné le monstre
@@ -139,7 +139,7 @@ public abstract class Monstre extends Entity implements InterfaceConstantes, Ser
 
 	@Override
 	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp,Mouvement _dep, int _anim) {
-		Mouvement temp = _dep.Copy(this); //create the mouvement
+		Mouvement temp = _dep.Copy(); //create the mouvement
 		return Hitbox.plusPoint(temp.getHitbox().get(_anim), new Point(getXpos(),getYpos()),true);	
 	}
 	
@@ -181,7 +181,7 @@ public abstract class Monstre extends Entity implements InterfaceConstantes, Ser
 	@Override
 	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider,Vector2d normal) 
 	{
-		if(TypeObject.isTypeOf(collider, TypeObject.FLECHE))
+		if(ObjectTypeHelper.isTypeOf(collider, ObjectType.FLECHE))
 		{
 			addLife( ((Fleche)collider).damage);
 		}

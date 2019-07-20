@@ -8,10 +8,10 @@ import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
-import javax.swing.JButton;
-
+import ActiveJComponent.ActiveJButton;
 import Affichage.Drawable;
 import images.ImagesPrincipal;
+import images.ImagesPrincipal.ImPrincipalInfo;
 import loading.Loader;
 import menu.credit.AffichageCredit;
 import menu.menuPrincipal.GameHandler.GameModeType;
@@ -34,7 +34,7 @@ public class AffichagePrincipal extends Drawable implements Observer{
 	//@Override
 	//public void execute(){panelBoutons.repaint();};
 	
-	public class BoutonPrincipal extends JButton
+	public class BoutonPrincipal extends ActiveJButton
 	{
 		public BoutonPrincipal(String s)
 		{
@@ -94,7 +94,7 @@ public class AffichagePrincipal extends Drawable implements Observer{
 
 		public void mouseReleased(MouseEvent e) {
 			AffichagePrincipal.this.controlerPrincipal.principal.computationDone=false; 
-			JButton button = (JButton)e.getSource();
+			ActiveJButton button = (ActiveJButton)e.getSource();
 			Rectangle r = button.getBounds();
 			//Apply pressed only if the release is on the pressed button
 			if(r.contains(new Point(r.x+e.getX(),r.y+e.getY()))){
@@ -163,15 +163,16 @@ public class AffichagePrincipal extends Drawable implements Observer{
 	
 	
 	@Override
-	public void draw(Graphics g)
+	public void drawOnGraphics(Graphics g,boolean forceRepaint)
 	{
-		if(controlerPrincipal.principal.loaderMenuPrincipal ==null)
+		g.drawImage(controlerPrincipal.principal.imPrincipal.getImage(null,ImPrincipalInfo.BACKGROUND,null),0,0,mainPanel);		
+		/*REMOVE if(controlerPrincipal.principal.loaderMenuPrincipal ==null)
 		{
 			return;
 		}
 		if(controlerPrincipal.principal.loaderMenuPrincipal.isGameModeLoaded())
 		{
-			mainFrame.warnFadeOutCanStart();
+			warnFadeOutCanStart();
 			
 			g.drawImage(controlerPrincipal.principal.imPrincipal.getImage(ImagesPrincipal.BACKGROUND),0,0,mainPanel);		
 							
@@ -179,7 +180,7 @@ public class AffichagePrincipal extends Drawable implements Observer{
 		else
 		{
 			controlerPrincipal.principal.loaderMenuPrincipal.showLoading(g);
-		}
+		}*/
 	}
 	
 	public Loader getLoader()
@@ -187,7 +188,7 @@ public class AffichagePrincipal extends Drawable implements Observer{
 		return controlerPrincipal.principal.loaderMenuPrincipal;
 	}
 	public void update() {
-		mainFrame.repaint();
+		//REMOVE getFrame().repaint();
 	}
 
 }

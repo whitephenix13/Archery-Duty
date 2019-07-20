@@ -3,14 +3,16 @@ package images;
 import java.awt.Image;
 import java.util.ArrayList;
 
-import gameConfig.TypeObject;
-import loading.LoaderItem;
-import partie.effects.Effect;
+import gameConfig.ObjectTypeHelper.ObjectType;
+import partie.deplacement.effect.Mouvement_effect.MouvEffectEnum;
+import partie.effects.Effect.EffectCollisionEnum;
 
-public class ImagesEffect extends LoaderItem{
+public class ImagesEffect extends ImagesContainer{
 
 	private static String path ="resources/projectile/fleches/effects/";
-	public static String SLOWDOWN = "slowdown";
+	
+	public static enum ImEffectInfo implements ImageInfo{SLOWDOWN};
+	
 	ArrayList<Image> im_vent_effect= new ArrayList<Image>();
 	ArrayList<Image> im_grappin_effect= new ArrayList<Image>();
 	ArrayList<Image> im_lumiere_effect= new ArrayList<Image>();
@@ -142,38 +144,62 @@ public class ImagesEffect extends LoaderItem{
 		alreadyLoaded=true;
 	}
 	
-	public Image getImage(String s)
+	/***
+	 * objType: null
+	 * info1 : {@link ImEffectInfo}
+	 * info2 : null
+	 */
+	@Override
+	public Image getImage(ObjectType objType, ImageInfo info1,ImageInfo info2)
 	{
-		if(s.equals(SLOWDOWN))
+		if(info1.equals(ImEffectInfo.SLOWDOWN))
 			return im_slowdown;
 		else 
 			return null;
 	}
-	public ArrayList<Image> getImage(Effect effect)
+	/***
+	 * objType: null
+	 * info1 : {@link MouvEffectEnum}}
+	 * info2 : {@link EffectCollisionEnum}}
+	 */
+	@Override
+	public ArrayList<Image> getImages(ObjectType objType, ImageInfo info1,ImageInfo info2, int anim)
 	{
 		ArrayList<Image> im = new ArrayList<Image>();
-		if (TypeObject.isTypeOf(effect, TypeObject.VENT_EFF))
-			im.add(im_vent_effect.get(effect.getAnim()));
-		if (TypeObject.isTypeOf(effect, TypeObject.GRAPPIN_EFF))
-			im.add(im_grappin_effect.get(effect.getAnim()));
-		if (TypeObject.isTypeOf(effect, TypeObject.LUMIERE_EFF))
-			im.add(im_lumiere_effect.get(effect.getAnim()));
-		if (TypeObject.isTypeOf(effect, TypeObject.OMBRE_EFF))
-			im.add(im_ombre_effect.get(effect.getAnim()));
+		if (info1.equals(MouvEffectEnum.VENT_IDLE))
+			im.add(im_vent_effect.get(anim));
+		if (info1.equals(MouvEffectEnum.GRAPPIN_IDLE))
+			im.add(im_grappin_effect.get(anim));
+		if (info1.equals(MouvEffectEnum.LUMIERE_IDLE))
+			im.add(im_lumiere_effect.get(anim));
+		if (info1.equals(MouvEffectEnum.OMBRE_IDLE))
+			im.add(im_ombre_effect.get(anim));
 		
-		if (TypeObject.isTypeOf(effect, TypeObject.FEU_EFF))
-			im.add(im_feu_effect[effect.groundEffect?0:1].get(effect.getAnim()));
-		if (TypeObject.isTypeOf(effect, TypeObject.ELECTRIQUE_EFF))
-			im.add(im_electrique_effect[effect.groundEffect?0:1].get(effect.getAnim()));
-		if (TypeObject.isTypeOf(effect, TypeObject.GLACE_EFF))
-			im.add(im_glace_effect[effect.groundEffect?0:1].get(effect.getAnim()));
-		if (TypeObject.isTypeOf(effect, TypeObject.ROCHE_EFF))
-			im.add(im_roche_effect[effect.groundEffect?0:1].get(effect.getAnim()));
+		if (info1.equals(MouvEffectEnum.FEU_IDLE))
+			if(info2.equals(EffectCollisionEnum.GROUND))
+				im.add(im_feu_effect[0].get(anim));
+			else
+				im.add(im_feu_effect[1].get(anim));			
+		if (info1.equals(MouvEffectEnum.ELECTRIQUE_IDLE))
+			if(info2.equals(EffectCollisionEnum.GROUND))
+				im.add(im_electrique_effect[0].get(anim));
+			else
+				im.add(im_electrique_effect[1].get(anim));
+		if (info1.equals(MouvEffectEnum.GLACE_IDLE))
+			if(info2.equals(EffectCollisionEnum.GROUND))
+				im.add(im_glace_effect[0].get(anim));
+			else
+				im.add(im_glace_effect[1].get(anim));
+		if (info1.equals(MouvEffectEnum.ROCHE_IDLE))
+			if(info2.equals(EffectCollisionEnum.GROUND))
+				im.add(im_roche_effect[0].get(anim));
+			else
+				im.add(im_roche_effect[1].get(anim));
 		
-		if (TypeObject.isTypeOf(effect, TypeObject.TROU_NOIR_EFF))
-			im.add(im_trou_noir_effect.get(effect.getAnim()));
-		if (TypeObject.isTypeOf(effect, TypeObject.EXPLOSIVE_EFF))
-			im.add(im_explosive_effect.get(effect.getAnim()));
+		if (info1.equals(MouvEffectEnum.TROU_NOIR_IDLE))
+			im.add(im_trou_noir_effect.get(anim));
+		if (info1.equals(MouvEffectEnum.EXPLOSIVE_IDLE))
+			im.add(im_explosive_effect.get(anim));
 		
 		return im;
 		

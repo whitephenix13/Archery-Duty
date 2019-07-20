@@ -12,6 +12,11 @@ public abstract class Projectile extends Collidable{
 	
 	protected float speedFactor = 1;
 	
+	public Projectile()
+	{
+		super();
+	}
+	
 	@Override
 	public AffineTransform computeDrawTr(Point screenDisp)
 	{

@@ -6,17 +6,16 @@ import java.awt.geom.AffineTransform;
 import javax.vecmath.Vector2d;
 
 import gameConfig.InterfaceConstantes;
-import gameConfig.TypeObject;
+import gameConfig.ObjectTypeHelper;
+import gameConfig.ObjectTypeHelper.ObjectType;
 import music.MusicBruitage;
 import partie.collision.Collidable;
 import partie.collision.Collision;
 import partie.collision.Hitbox;
 import partie.deplacement.Deplace;
 import partie.deplacement.Mouvement;
-import partie.deplacement.entity.Attente;
 import partie.deplacement.projectile.Mouvement_projectile;
 import partie.deplacement.projectile.T_normal;
-import partie.deplacement.projectile.T_normal.TypeTirNormal;
 import partie.modelPartie.AbstractModelPartie;
 import utils.Vitesse;
 
@@ -32,9 +31,9 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	 */	
 	public TirSpirel(AbstractModelPartie partie,int _x_mid_pos, int _y_mid_pos,int _anim, double _rotation,int current_frame,float damageMultiplier,float _speedFactor)
 	{
-		super.init();
+		super();
 		
-		setDeplacement(new T_normal(this,TypeTirNormal.Tir,current_frame));
+		setDeplacement(new T_normal(ObjectType.TIR_SPIREL,null,current_frame));
 	
 		//Desired location for the projectile: spirel pos + middle of spirel = projectile pos + middle back of projectile
 		//projectile pos = (xpos,ypos) + (xtaille/2,ytaille/2) - (-ytailleproj/2 * sin(angle), ytailleproj/2 * cos(angle)) 
@@ -76,7 +75,7 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 		//update rotation : not needed 
 		//switch anim 
 		int prev_anim = getAnim();
-		setAnim(getDeplacement().updateAnimation(this,getAnim(), partie.getFrame(),speedFactor,false));
+		setAnim(getDeplacement().updateAnimation(getAnim(), partie.getFrame(),speedFactor,false));
 		animationChanged = (prev_anim != getAnim());
 		if(animationChanged)
 		{
@@ -166,7 +165,7 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	}
 	@Override
 	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp, Mouvement _dep, int _anim) {
-		Mouvement_projectile dep_copy = (Mouvement_projectile) _dep.Copy(this); //create the mouvement
+		Mouvement_projectile dep_copy = (Mouvement_projectile) _dep.Copy(); //create the mouvement
 		Hitbox rotatedTempHit = computeRotatedHitbox(screenDisp,dep_copy,_anim);
 
 		return Hitbox.plusPoint(rotatedTempHit, new Point(getXpos(),getYpos()),true);
@@ -188,7 +187,7 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	}
 	@Override
 	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider,Vector2d normal) {
-		if(TypeObject.isTypeOf(collider, TypeObject.FLECHE))
+		if(ObjectTypeHelper.isTypeOf(collider, ObjectType.FLECHE))
 			MusicBruitage.me.startBruitage("annulation tir");
 		needDestroy=true;
 	}

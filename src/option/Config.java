@@ -2,10 +2,10 @@ package option;
 
 public class Config {
 	
-	public static double musicVolume=0.2;//between 0 and 1
-	public static double bruitageVolume= 0.2;//between 0 and 1
+	public static double musicVolume=0;//between 0 and 1
+	public static double bruitageVolume= 0;//between 0 and 1
 	private static int default_fps = 60;
-	private static int fps = 60; // update every 17ms
+	private static int fps = 60; // 60 update every 17ms
 	public static boolean pauseWhenLooseFocus = false;
 	public static int fps(){return fps;}
 	/**

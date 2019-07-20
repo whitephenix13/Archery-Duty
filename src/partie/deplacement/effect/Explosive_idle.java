@@ -1,20 +1,18 @@
 package partie.deplacement.effect;
 
 import java.util.Arrays;
-import java.util.List;
 
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
 import partie.deplacement.Mouvement;
-import partie.deplacement.TypeMouv;
-import partie.deplacement.effect.Mouvement_effect.TypeMouvEffect;
-import partie.effects.Electrique_effect;
+import partie.deplacement.effect.Mouvement_effect.MouvEffectEnum;
 import utils.Vitesse;
 
 public class Explosive_idle extends Mouvement_effect{
-	public Explosive_idle(TypeMouv _type_mouv, int current_frame){
+	public Explosive_idle(SubTypeMouv _sub_type_mouv, int current_frame){
 		super();
-		type_mouv=_type_mouv;
+		type_mouv = MouvEffectEnum.EXPLOSIVE_IDLE;
+		sub_type_mouv=_sub_type_mouv;
 
 		xtaille =  Arrays.asList(400,400,400,400,400,400,400,400,400,400,400,400);
 		ytaille =  Arrays.asList(400,400,400,400,400,400,400,400,400,400,400,400);
@@ -34,8 +32,8 @@ public class Explosive_idle extends Mouvement_effect{
 		vit = new Vitesse();
 	}
 	@Override
-	public Mouvement Copy(Object obj) {
-		return new Explosive_idle(type_mouv,animation.getStartFrame());
+	public Mouvement Copy() {
+		return new Explosive_idle(sub_type_mouv,animation.getStartFrame());
 	}
 
 	@Override

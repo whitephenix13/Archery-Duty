@@ -7,9 +7,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-import javax.swing.JButton;
-
-import Affichage.Affichage;
+import ActiveJComponent.ActiveJButton;
+import Affichage.GameRenderer;
 import Affichage.Drawable;
 import menu.menuPrincipal.AbstractModelPrincipal;
 import menu.menuPrincipal.GameHandler;
@@ -24,19 +23,18 @@ public class ModelChoixNiveau extends AbstractModelChoixNiveau{
 		this.gameHandler=gameHandler;
 	}
 	
-	public void resetBouton(JButton bouton, String nomNiveau)
+	public void resetBouton(ActiveJButton bouton, String nomNiveau)
 	{
-		bouton.setText(nomNiveau);
+		if(nomNiveau!=null)
+			bouton.setText(nomNiveau);
 		bouton.setForeground(Color.WHITE);
 		bouton.setBackground(Color.BLACK);
 		bouton.setFont(new Font("Courrier",Font.PLAIN,44));
 	}
 	public void resetBoutons()
 	{
-		for(JButton bouton:listNiveaux){
-			bouton.setForeground(Color.WHITE);
-			bouton.setBackground(Color.BLACK);
-			bouton.setFont(new Font("Courrier",Font.PLAIN,44));
+		for(ActiveJButton bouton:listNiveaux){
+			resetBouton(bouton,null);
 		}
 	}
 	/**
@@ -107,12 +105,12 @@ public class ModelChoixNiveau extends AbstractModelChoixNiveau{
 	}
 
 
-	public List<JButton> getListBoutonNiveau()
+	public List<ActiveJButton> getListBoutonNiveau()
 	{
 		return(listNiveaux);
 	}
 
-	public void selectLevel(JButton button) {
+	public void selectLevel(ActiveJButton button) {
 		//on reset les boutons 
 		for (int i=0; i<listNiveaux.size();i++){resetBouton(listNiveaux.get(i),listNomNiveaux.get(i));}
 
@@ -124,15 +122,14 @@ public class ModelChoixNiveau extends AbstractModelChoixNiveau{
 		//REMOVE AbstractModelPrincipal.changeFrame=true;//REMOVE
 		//REMOVEAbstractModelPrincipal.modeSuivant="Partie";
 		//REMOVEAbstractModelPrincipal.changeMode=true;
-		System.out.println("Play level");
 		resetBoutons();
 		gameHandler.setGameMode(GameModeType.GAME);
 	}
 	
-	public void doComputations(Affichage affich){
+	public void doComputations(GameRenderer affich){
 		//As this mode is controlled by listeners, the computationDone is set to false when a listener is triggered. This function is then left empty
 	}
-	public void updateGraphics(){
+	public void updateSwing(){
 		this.notifyMainObserver();
 	}
 	public boolean isComputationDone(){

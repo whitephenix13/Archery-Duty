@@ -101,7 +101,6 @@ public class Music extends AsynchroneMusic implements InterfaceConstantes{
 	
 	private void startMusic()
 	{
-		System.out.println("Start music" );
 		if(!loaderMusic.isSoundFound())
 			return;
 	

@@ -9,11 +9,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import menu.menuPrincipal.ModelPrincipal;
+import partie.conditions.Condition.ConditionEnum;
 import partie.modelPartie.PartieTimer;
 import utils.Vitesse;
 
 public class ConditionHandler {
-	public Map<String,Condition> conditionsMap = new HashMap<String,Condition>();
+	public Map<ConditionEnum,Condition> conditionsMap = new HashMap<ConditionEnum,Condition>();
 
 	private int XDRAW_TOLERANCE = 5; 
 	private int YDRAW_TOLERANCE = 10; 
@@ -23,23 +24,23 @@ public class ConditionHandler {
 
 	public ConditionHandler()
 	{
-		conditionsMap.put(Condition.BRULURE, null);
-		conditionsMap.put(Condition.DEFAILLANCE, null);
-		conditionsMap.put(Condition.FAIBLESSE, null);
-		conditionsMap.put(Condition.FORCE, null);
-		conditionsMap.put(Condition.LENTEUR, null);
-		conditionsMap.put(Condition.PARALYSIE, null);
-		conditionsMap.put(Condition.PRECISION, null);
-		conditionsMap.put(Condition.REGENERATION, null);
-		conditionsMap.put(Condition.RESISTANCE, null);
-		conditionsMap.put(Condition.VITESSE, null);
-		conditionsMap.put(Condition.MOTION, null);
+		conditionsMap.put(ConditionEnum.BRULURE, null);
+		conditionsMap.put(ConditionEnum.DEFAILLANCE, null);
+		conditionsMap.put(ConditionEnum.FAIBLESSE, null);
+		conditionsMap.put(ConditionEnum.FORCE, null);
+		conditionsMap.put(ConditionEnum.LENTEUR, null);
+		conditionsMap.put(ConditionEnum.PARALYSIE, null);
+		conditionsMap.put(ConditionEnum.PRECISION, null);
+		conditionsMap.put(ConditionEnum.REGENERATION, null);
+		conditionsMap.put(ConditionEnum.RESISTANCE, null);
+		conditionsMap.put(ConditionEnum.VITESSE, null);
+		conditionsMap.put(ConditionEnum.MOTION, null);
 
 	}
 
 	/*if not working, go back to https://stackoverflow.com/questions/5245093/using-comparator-to-make-custom-sort */
-	List<String> conditionOrder = Arrays.asList(Condition.MOTION,Condition.BRULURE,Condition.PARALYSIE,Condition.DEFAILLANCE,Condition.FAIBLESSE,
-			Condition.LENTEUR,Condition.RESISTANCE,Condition.REGENERATION,Condition.PRECISION,Condition.FORCE,Condition.VITESSE);
+	List<ConditionEnum> conditionOrder = Arrays.asList(ConditionEnum.MOTION,ConditionEnum.BRULURE,ConditionEnum.PARALYSIE,ConditionEnum.DEFAILLANCE,ConditionEnum.FAIBLESSE,
+			ConditionEnum.LENTEUR,ConditionEnum.RESISTANCE,ConditionEnum.REGENERATION,ConditionEnum.PRECISION,ConditionEnum.FORCE,ConditionEnum.VITESSE);
 
 	Comparator<Condition> conditionComparator = new Comparator<Condition>(){
 
@@ -47,10 +48,10 @@ public class ConditionHandler {
 		public int compare(final Condition o1, final Condition o2){
 			// let your comparator look up your car's color in the custom order
 			return Integer.valueOf(
-					conditionOrder.indexOf(o1.name))
+					conditionOrder.indexOf(o1.type))
 					.compareTo(
 							Integer.valueOf(
-									conditionOrder.indexOf(o2.name)));
+									conditionOrder.indexOf(o2.type)));
 		}
 	};
 
@@ -58,7 +59,7 @@ public class ConditionHandler {
 	public double conditionDamageReceived()
 	{
 		int damage = 0;
-		Condition brulure = conditionsMap.get(Condition.BRULURE);
+		Condition brulure = conditionsMap.get(ConditionEnum.BRULURE);
 		if(brulure != null){
 			double currentT = PartieTimer.me.getElapsedNano() ;
 			if( (currentT- brulure.lastStepTime) > brulure.STEP){
@@ -66,7 +67,7 @@ public class ConditionHandler {
 				damage+= brulure.DAMAGE;
 			}
 		}
-		Condition regen = conditionsMap.get(Condition.REGENERATION);
+		Condition regen = conditionsMap.get(ConditionEnum.REGENERATION);
 		if(regen != null){
 			double currentT = PartieTimer.me.getElapsedNano() ;
 			if( (currentT- regen.lastStepTime) > regen.STEP){
@@ -80,8 +81,8 @@ public class ConditionHandler {
 	public double onDamageReceived(double damage)
 	{
 		double factor =1; 
-		Condition defaillance = conditionsMap.get(Condition.DEFAILLANCE);
-		Condition resistance = conditionsMap.get(Condition.RESISTANCE);
+		Condition defaillance = conditionsMap.get(ConditionEnum.DEFAILLANCE);
+		Condition resistance = conditionsMap.get(ConditionEnum.RESISTANCE);
 
 		if(defaillance != null)
 			factor*=defaillance.FACTOR;
@@ -95,8 +96,8 @@ public class ConditionHandler {
 	public float getDamageFactor()
 	{
 		float factor =1; 
-		Condition force = conditionsMap.get(Condition.FORCE);
-		Condition faiblesse = conditionsMap.get(Condition.FAIBLESSE);
+		Condition force = conditionsMap.get(ConditionEnum.FORCE);
+		Condition faiblesse = conditionsMap.get(ConditionEnum.FAIBLESSE);
 
 		if(force != null)
 			factor*=force.FACTOR;
@@ -111,11 +112,11 @@ public class ConditionHandler {
 	public float getShotSpeedFactor()
 	{
 		float factor =1;
-		Condition paralysie = conditionsMap.get(Condition.PARALYSIE);
+		Condition paralysie = conditionsMap.get(ConditionEnum.PARALYSIE);
 		if(paralysie != null)
 			factor*=paralysie.FACTOR;
 
-		Condition precision = conditionsMap.get(Condition.PRECISION);
+		Condition precision = conditionsMap.get(ConditionEnum.PRECISION);
 		if(precision != null)
 			factor*=precision.FACTOR;
 
@@ -127,8 +128,8 @@ public class ConditionHandler {
 	public double getSpeedFactor()
 	{
 		double factor =1; 
-		Condition lenteur = conditionsMap.get(Condition.LENTEUR);
-		Condition vitesse = conditionsMap.get(Condition.VITESSE);
+		Condition lenteur = conditionsMap.get(ConditionEnum.LENTEUR);
+		Condition vitesse = conditionsMap.get(ConditionEnum.VITESSE);
 
 		if(lenteur != null)
 			factor*=lenteur.FACTOR;
@@ -142,7 +143,7 @@ public class ConditionHandler {
 	 */
 	public Vitesse getModifiedVitesse()
 	{
-		Condition motion = conditionsMap.get(Condition.MOTION);
+		Condition motion = conditionsMap.get(ConditionEnum.MOTION);
 		if(motion != null)
 			return ((C_Motion)motion).getModifiedVitesse();
 		else
@@ -150,65 +151,65 @@ public class ConditionHandler {
 	}
 
 	/** Add a new condition to the list or replace existing one */
-	public void addNewCondition(String name,double _duree, Vitesse init_speed,int id)
+	public void addNewCondition(ConditionEnum type,double _duree, Vitesse init_speed,int id)
 	{
-		if(conditionsMap.containsKey(name))
+		if(conditionsMap.containsKey(type))
 		{
-			Condition condi = conditionsMap.get(name);
+			Condition condi = conditionsMap.get(type);
 			if(condi != null){
 				condi.onAddCondition(_duree,init_speed,id);
 				return;
 			}
 		}
 
-		if(name.equals(Condition.BRULURE))
-			conditionsMap.put(name, new C_Brulure(_duree));
-		else if(name.equals(Condition.REGENERATION))
-			conditionsMap.put(name, new C_Regeneration(_duree));
+		if(type.equals(ConditionEnum.BRULURE))
+			conditionsMap.put(type, new C_Brulure(_duree));
+		else if(type.equals(ConditionEnum.REGENERATION))
+			conditionsMap.put(type, new C_Regeneration(_duree));
 
-		else if(name.equals(Condition.LENTEUR))
-			conditionsMap.put(name, new C_Lenteur(_duree));
+		else if(type.equals(ConditionEnum.LENTEUR))
+			conditionsMap.put(type, new C_Lenteur(_duree));
 
-		else if(name.equals(Condition.VITESSE))
-			conditionsMap.put(name, new C_Vitesse(_duree));
+		else if(type.equals(ConditionEnum.VITESSE))
+			conditionsMap.put(type, new C_Vitesse(_duree));
 
-		else if(name.equals(Condition.PARALYSIE))
-			conditionsMap.put(name, new C_Paralysie(_duree));		
+		else if(type.equals(ConditionEnum.PARALYSIE))
+			conditionsMap.put(type, new C_Paralysie(_duree));		
 
-		else if(name.equals(Condition.PRECISION))
-			conditionsMap.put(name, new C_Precision(_duree));		
+		else if(type.equals(ConditionEnum.PRECISION))
+			conditionsMap.put(type, new C_Precision(_duree));		
 
-		else if(name.equals(Condition.DEFAILLANCE))
-			conditionsMap.put(name, new C_Defaillance(_duree));	
+		else if(type.equals(ConditionEnum.DEFAILLANCE))
+			conditionsMap.put(type, new C_Defaillance(_duree));	
 
-		else if(name.equals(Condition.FORCE))
-			conditionsMap.put(name, new C_Force(_duree));	
+		else if(type.equals(ConditionEnum.FORCE))
+			conditionsMap.put(type, new C_Force(_duree));	
 
-		else if(name.equals(Condition.RESISTANCE))
-			conditionsMap.put(name, new C_Resistance(_duree));	
+		else if(type.equals(ConditionEnum.RESISTANCE))
+			conditionsMap.put(type, new C_Resistance(_duree));	
 
-		else if(name.equals(Condition.FAIBLESSE))
-			conditionsMap.put(name, new C_Faiblesse(_duree));
+		else if(type.equals(ConditionEnum.FAIBLESSE))
+			conditionsMap.put(type, new C_Faiblesse(_duree));
 
-		else if(name.equals(Condition.MOTION))
-			conditionsMap.put(name, new C_Motion(init_speed));
+		else if(type.equals(ConditionEnum.MOTION))
+			conditionsMap.put(type, new C_Motion(init_speed));
 		else{
 			try {
-				throw(new Exception("Condition not known: "+ name));
+				throw(new Exception("Condition not known: "+ type));
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 	}  
 
-	public void addNewCondition(String name,double _duree,int id)
+	public void addNewCondition(ConditionEnum type,double _duree,int id)
 	{
-		addNewCondition(name,_duree,new Vitesse(),id);
+		addNewCondition(type,_duree,new Vitesse(),id);
 	}  
 	/** Remove conditions that expired */
 	public void updateConditionState()
 	{
-		for(String key : conditionsMap.keySet()){
+		for(ConditionEnum key : conditionsMap.keySet()){
 			Condition condi = conditionsMap.get(key);
 			if(condi!=null){
 				condi.Update();
@@ -221,7 +222,7 @@ public class ConditionHandler {
 	
 	public void OnAttacherCollided()
 	{
-		for(String key : conditionsMap.keySet()){
+		for(ConditionEnum key : conditionsMap.keySet()){
 			Condition condi = conditionsMap.get(key);
 			if(condi!=null){
 				condi.OnAttacherCollided();
@@ -233,10 +234,10 @@ public class ConditionHandler {
 	public ArrayList<Condition> getAllConditions()
 	{
 		ArrayList<Condition> activeCondi = new ArrayList<Condition>();
-		for(String key : conditionsMap.keySet())
+		for(ConditionEnum key : conditionsMap.keySet())
 		{
 			Condition condi = conditionsMap.get(key);
-			if(condi != null && !condi.name.equals(Condition.MOTION)){
+			if(condi != null && !condi.type.equals(ConditionEnum.MOTION)){
 				activeCondi.add(condi);
 				//test if the object should start/continue blinking by checking the remaining time 
 				double currentT = PartieTimer.me.getElapsedNano();

@@ -10,7 +10,7 @@ public class DebugBreak {
 	{
 		partie.forceRepaint();
 		try {
-			TimeUnit.MILLISECONDS.sleep(10);
+			Thread.sleep(20);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}

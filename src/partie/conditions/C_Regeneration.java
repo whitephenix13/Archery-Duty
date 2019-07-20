@@ -1,5 +1,6 @@
 package partie.conditions;
 
+import partie.conditions.Condition.ConditionEnum;
 import partie.modelPartie.PartieTimer;
 
 public class C_Regeneration extends Condition{
@@ -9,7 +10,7 @@ public class C_Regeneration extends Condition{
 	
 	public C_Regeneration(double _duree)
 	{
-		name=REGENERATION;
+		type=ConditionEnum.REGENERATION;
 		DUREE= _duree*Math.pow(10, 9); //sec 
 		STEP = 1*Math.pow(10, 9); //damage every seconds
 		DAMAGE = 5; //heals 5 every STEP

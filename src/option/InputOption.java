@@ -1,13 +1,11 @@
 package option;
 
 import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 
 import javax.swing.AbstractAction;
 import javax.swing.JComponent;
 import javax.swing.KeyStroke;
-import javax.swing.plaf.basic.BasicInternalFrameTitlePane.MoveAction;
 
 import partie.modelPartie.InputPartie;
 

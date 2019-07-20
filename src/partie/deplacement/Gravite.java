@@ -3,7 +3,7 @@ package partie.deplacement;
 import gameConfig.InterfaceConstantes;
 import option.Config;
 import partie.collision.Collidable;
-import partie.deplacement.entity.Mouvement_entity.TypeMouvEntitie;
+import partie.deplacement.entity.Mouvement_entity.MouvEntityEnum;
 import partie.entitie.heros.Heros;
 
 public class Gravite implements InterfaceConstantes
@@ -17,7 +17,7 @@ public class Gravite implements InterfaceConstantes
 	public void gravite(Collidable object) {
 		float varVitesseGlissade = varVitesse;
 		float limVitesseGlissade = limVitesse/2;
-		if (object.getDeplacement().IsDeplacement(TypeMouvEntitie.Glissade))
+		if (object.getDeplacement().IsDeplacement(MouvEntityEnum.GLISSADE))
 		{
 			if(object.localVit.y<(limVitesseGlissade - varVitesseGlissade))
 				object.localVit.y += varVitesseGlissade;

@@ -12,12 +12,12 @@ public interface InterfaceConstantes {
 	
 	static boolean DEBUG_OBJECT_CREATION = false;
 	
-	static int DEBUG_GC_VERBOSE=1;
+	static int DEBUG_GC_VERBOSE=0;
 	
 	static int DEBUG_TIME_LOOP_TO_SLOW = 15;//ms
 	static int DEBUG_TIME_ACTION_TO_SLOW = 2;//ms
 	static int DEBUG_TIME_VERBOSE=1;
-	static PrintMode DEBUG_TIME_PRINT_MODE = PrintMode.PRINT_ONLY_SLOW_LOOP;
+	static PrintMode DEBUG_TIME_PRINT_MODE = PrintMode.NONE;
 	
 	static int DEBUG_TIME_AFFICHAGE_LOOP_TO_SLOW = 4;//ms
 	static int DEBUG_TIME_AFFICHAGE_ACTION_TO_SLOW = 1;//ms
@@ -57,8 +57,8 @@ public interface InterfaceConstantes {
 	static Hitbox SCREEN =new Hitbox(InterfaceConstantes.HG_FENETRE,InterfaceConstantes.BG_FENETRE,
 									InterfaceConstantes.BD_FENETRE,InterfaceConstantes.HD_FENETRE);
 		
-	static Color BACKGROUND_COLOR = Color.BLACK;
-	static int SCREEN_FADE_OUT_TIME = 200; //ms
+	final static Color BACKGROUND_COLOR = Color.BLACK;
+	static int SCREEN_FADE_OUT_TIME = 204; //204ms
 
 	//permet de determiner les vitesses de chute, de deplacement et de saut 
 	long TDash= 150;

@@ -441,7 +441,6 @@ public abstract class GJK_EPA {
 				j = i+1;
 			Vector2d origin = new Vector2d(0,0);
 			intersectTest = getProjectionDistance(simplex.get(i),simplex.get(j),dir,origin);
-			//System.out.println("Projection: " +simplex.get(i) +" "+simplex.get(j)+ " "+dir);
 			if(intersectTest!=null)
 			{
 				//check if the next one can't be better ie normal distance shorter
@@ -469,7 +468,6 @@ public abstract class GJK_EPA {
 					}
 				}
 				
-				//System.out.println(intersectTest.normal);
 				intersectTest.index=j;
 				if(intersectTest.normal==null)
 				{

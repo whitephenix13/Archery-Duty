@@ -5,24 +5,26 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import gameConfig.TypeObject;
+import gameConfig.ObjectTypeHelper;
+import gameConfig.ObjectTypeHelper.ObjectType;
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
 import partie.deplacement.Animation;
 import partie.deplacement.Mouvement;
-import partie.deplacement.TypeMouv;
 import utils.Vitesse;
 
 public class Glissade extends Mouvement_entity
 {
-	public enum TypeGlissade implements TypeMouv {GlissadeGauche,GlissadeDroite};
+	//REMOVE public enum TypeGlissade implements TypeMouv {GlissadeGauche,GlissadeDroite};
 
 	//constructeur monstre
-	public Glissade(Object obj,TypeMouv _type_mouv,int current_frame) 
+	public Glissade(ObjectType objType,SubTypeMouv _sub_type_mouv,int current_frame) 
 	{
 		super();
-		type_mouv=_type_mouv;
-		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
+		type_mouv=MouvEntityEnum.GLISSADE;
+		sub_type_mouv=_sub_type_mouv;
+		this.objType=objType;
+		if(objType.equals(ObjectType.HEROS))
 		{
 			xtaille =  Arrays.asList(49,49);
 			ytaille =  Arrays.asList(89,89);
@@ -43,14 +45,14 @@ public class Glissade extends Mouvement_entity
 
 
 			//animation frame, current_frame, start_index, end_index
-			int start_index =type_mouv.equals(TypeGlissade.GlissadeGauche) ? 0 : 1;
-			int end_index =type_mouv.equals(TypeGlissade.GlissadeGauche) ? 1 : 2;
+			int start_index =sub_type_mouv.equals(SubMouvEntityEnum.GAUCHE) ? 0 : 1;
+			int end_index =sub_type_mouv.equals(SubMouvEntityEnum.GAUCHE) ? 1 : 2;
 			animation.start(Arrays.asList(2,2), current_frame, start_index, end_index);
 
 		}
 	}
-	public Glissade(Object obj,TypeMouv _type_mouv, int current_frame,Animation _animation){
-		this(obj,_type_mouv,current_frame);
+	public Glissade(ObjectType _typeObj,SubTypeMouv _sub_type_mouv, int current_frame,Animation _animation){
+		this(_typeObj,_sub_type_mouv,current_frame);
 		animation = _animation;
 	}
 	/*@Override
@@ -58,12 +60,12 @@ public class Glissade extends Mouvement_entity
 	{
 		return 90;
 	}*/
-	public Mouvement Copy(Object obj) {
-		return new Glissade(obj,type_mouv,animation.getStartFrame(),animation);
+	public Mouvement Copy() {
+		return new Glissade(objType,sub_type_mouv,animation.getStartFrame(),animation);
 	}
 	@Override
 	public Vitesse __getUncheckedSpeed(Collidable object, int anim) {
-		if(TypeObject.isTypeOf(object, TypeObject.HEROS))
+		if(ObjectTypeHelper.isTypeOf(object, ObjectType.HEROS))
 		{
 			return null; //nothing to set
 		}
@@ -71,7 +73,7 @@ public class Glissade extends Mouvement_entity
 	}
 	@Override
 	public String droite_gauche(Object obj,int anim) {
-		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
+		if(ObjectTypeHelper.isTypeOf(obj, ObjectType.HEROS))
 			if(anim<1)
 				return (Mouvement.GAUCHE);
 			else 

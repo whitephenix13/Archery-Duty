@@ -313,7 +313,6 @@ public abstract class Collision implements InterfaceConstantes{
 			collision_type =  GJK_EPA.isIntersect(dInter,dNull);
 
 			if( (collision_type == GJK_EPA.INTER && !considerTouch) || (considerTouch && collision_type != GJK_EPA.NOT_INTER) ){
-				//System.out.println("\tCollide with " + col +" "+ box);
 				return true;
 			}
 		}

@@ -3,11 +3,10 @@ package images;
 import java.awt.Image;
 import java.util.ArrayList;
 
-import loading.LoaderItem;
-import partie.deplacement.entity.Mouvement_entity.TypeMouvEntitie;
-import partie.entitie.heros.Heros;
+import gameConfig.ObjectTypeHelper.ObjectType;
+import partie.deplacement.entity.Mouvement_entity.MouvEntityEnum;
 
-public class ImagesHeros extends LoaderItem{
+public class ImagesHeros extends ImagesContainer{
 	
 	public static String path ="resources/entitie/heros/";
 	ArrayList<Image> attente = new ArrayList<Image>(); // 4
@@ -80,38 +79,49 @@ public class ImagesHeros extends LoaderItem{
 		percentage = 100;
 		alreadyLoaded=true;
 	}
-
-	public ArrayList<Image> getImages(Heros heros)
+	
+	@Override
+	public Image getImage(ObjectType objType, ImageInfo info1,ImageInfo info2)
+	{
+		return null;
+	}
+	/***
+	 * objType: null
+	 * info1 : {@link MouvEntityEnum}
+	 * info2 : null
+	 */
+	@Override
+	public ArrayList<Image> getImages(ObjectType objType, ImageInfo info1,ImageInfo info2, int anim)
 	{
 		ArrayList<Image> l = new ArrayList<Image>();
-		if(heros.getDeplacement().IsDeplacement(TypeMouvEntitie.Attente))
-			l.add(attente.get(heros.getAnim()));
+		if(info1.equals(MouvEntityEnum.ATTENTE))
+			l.add(attente.get(anim));
 		
-		else if(heros.getDeplacement().IsDeplacement(TypeMouvEntitie.Glissade))
-			l.add(glissade.get(heros.getAnim()));
+		else if(info1.equals(MouvEntityEnum.GLISSADE))
+			l.add(glissade.get(anim));
 		
-		else if(heros.getDeplacement().IsDeplacement(TypeMouvEntitie.Accroche))
-			l.add(accroche.get(heros.getAnim()));
+		else if(info1.equals(MouvEntityEnum.ACCROCHE))
+			l.add(accroche.get(anim));
 		
-		else if(heros.getDeplacement().IsDeplacement(TypeMouvEntitie.Saut))
-			l.add(saut.get(heros.getAnim()));
+		else if(info1.equals(MouvEntityEnum.SAUT))
+			l.add(saut.get(anim));
 
-		else if(heros.getDeplacement().IsDeplacement(TypeMouvEntitie.Marche))
-			l.add(marche.get(heros.getAnim()));
+		else if(info1.equals(MouvEntityEnum.MARCHE))
+			l.add(marche.get(anim));
 
-		else if(heros.getDeplacement().IsDeplacement(TypeMouvEntitie.Course))
-			l.add(course.get(heros.getAnim()));
+		else if(info1.equals(MouvEntityEnum.COURSE))
+			l.add(course.get(anim));
 
-		else if(heros.getDeplacement().IsDeplacement(TypeMouvEntitie.Tir))
+		else if(info1.equals(MouvEntityEnum.TIR))
 		{
-			l.add(tir_body.get(heros.getAnim()));
-			l.add(tir_back_arm.get(heros.getAnim()));
-			l.add(tir_head.get(heros.getAnim()));
-			l.add(tir_front_arm.get(heros.getAnim()));
+			l.add(tir_body.get(anim));
+			l.add(tir_back_arm.get(anim));
+			l.add(tir_head.get(anim));
+			l.add(tir_front_arm.get(anim));
 		}
 		else
 		{
-			throw new IllegalArgumentException("Heros: GetImages deplacement inconnu "+heros.getDeplacement().getClass().getName() +" "+heros.getAnim() );
+			throw new IllegalArgumentException("Heros: GetImages deplacement inconnu "+info1 +" "+anim );
 		}
 		return l;
 	}

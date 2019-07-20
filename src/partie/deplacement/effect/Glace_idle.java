@@ -7,18 +7,20 @@ import java.util.List;
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
 import partie.deplacement.Mouvement;
-import partie.deplacement.TypeMouv;
+import partie.deplacement.effect.Mouvement_effect.MouvEffectEnum;
 import partie.effects.Effect;
+import partie.effects.Effect.EffectCollisionEnum;
 import utils.Vitesse;
 
 public class Glace_idle extends Mouvement_effect{
 	int speedNorm = 5;
 	boolean isBeingDestroyed = false;
-	public Glace_idle(TypeMouv _type_mouv, int current_frame){
+	public Glace_idle(SubTypeMouv _sub_type_mouv, int current_frame){
 		super();
-		type_mouv=_type_mouv;
+		type_mouv = MouvEffectEnum.GLACE_IDLE;
+		sub_type_mouv=_sub_type_mouv;
 		
-		if(type_mouv.equals(TypeMouvEffect.GlaceGround)){
+		if(sub_type_mouv.equals(EffectCollisionEnum.GROUND)){
 			xtaille =  Arrays.asList(90,90,90,90,90);
 			ytaille =  Arrays.asList(72,72,72,72,72);
 			this.hitbox =Hitbox.createQuadriHitboxes(
@@ -41,9 +43,9 @@ public class Glace_idle extends Mouvement_effect{
 		
 	
 		int start_index =0;
-		int end_index = type_mouv.equals(TypeMouvEffect.GlaceGround)? 1 : 4; //5:4
-		List<Integer> animTimes= type_mouv.equals(TypeMouvEffect.GlaceGround)? Arrays.asList(6,12,18,24,30):Arrays.asList(4,8,12,16);
-		if(!type_mouv.equals(TypeMouvEffect.GlaceGround)){
+		int end_index = sub_type_mouv.equals(EffectCollisionEnum.GROUND)? 1 : 4; //5:4
+		List<Integer> animTimes= sub_type_mouv.equals(EffectCollisionEnum.GROUND)? Arrays.asList(6,12,18,24,30):Arrays.asList(4,8,12,16);
+		if(!sub_type_mouv.equals(EffectCollisionEnum.GROUND)){
 			animation.setMaxNumAnim(1);
 		}
 		else{
@@ -56,7 +58,7 @@ public class Glace_idle extends Mouvement_effect{
 	
 	public void setDestroyAnimation(int frame)
 	{
-		if(!type_mouv.equals(TypeMouvEffect.GlaceGround))
+		if(!sub_type_mouv.equals(EffectCollisionEnum.GROUND))
 			return;
 		int start_index =1;
 		int end_index =5;
@@ -68,7 +70,7 @@ public class Glace_idle extends Mouvement_effect{
 	
 	@Override
 	public Vitesse getSpeed(Collidable object, int anim) {
-		if(!type_mouv.equals(TypeMouvEffect.GlaceGround))
+		if(!sub_type_mouv.equals(EffectCollisionEnum.GROUND))
 			return vit;
 		
 		if(isBeingDestroyed)
@@ -79,8 +81,8 @@ public class Glace_idle extends Mouvement_effect{
 	}
 	
 	@Override
-	public Mouvement Copy(Object obj) {
-		return new Glace_idle(type_mouv,animation.getStartFrame());
+	public Mouvement Copy() {
+		return new Glace_idle(sub_type_mouv,animation.getStartFrame());
 	}
 	
 	@Override

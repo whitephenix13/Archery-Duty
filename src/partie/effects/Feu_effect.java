@@ -1,15 +1,13 @@
 package partie.effects;
 
 import java.awt.Point;
-import java.awt.geom.AffineTransform;
 
 import javax.vecmath.Vector2d;
 
 import partie.collision.Collidable;
 import partie.collision.Collision;
-import partie.conditions.Condition;
+import partie.conditions.Condition.ConditionEnum;
 import partie.deplacement.effect.Feu_idle;
-import partie.deplacement.effect.Mouvement_effect.TypeMouvEffect;
 import partie.entitie.Entity;
 import partie.modelPartie.AbstractModelPartie;
 import partie.modelPartie.PartieTimer;
@@ -26,10 +24,13 @@ public class Feu_effect extends Effect{
 	public Feu_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame,Vector2d _normalCollision,Point _pointCollision,
 			Point _correctedPointCollision,boolean groundEffect,int shift)
 	{
-		super.init(_anim,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,groundEffect,groundEffect);
+		super(_anim,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,groundEffect,groundEffect);
 		this.shift=shift;
 		this.groundEffect = groundEffect;
-		setDeplacement(new Feu_idle(groundEffect?TypeMouvEffect.FeuGround:TypeMouvEffect.FeuEntitie,partie.getFrame()));
+		
+		subTypeMouv = groundEffect?EffectCollisionEnum.GROUND:EffectCollisionEnum.ENTITY;
+		setDeplacement(new Feu_idle(subTypeMouv,partie.getFrame()));
+		
 		partie.arrowsEffects.add(this);
 		setFirstPos(partie);
 		this.onUpdate(partie, false); //update rotated hitbox and drawtr
@@ -40,7 +41,7 @@ public class Feu_effect extends Effect{
 	{
 		if(!groundEffect){
 			if(Collision.testcollisionObjects(partie, this, attacher,true))
-				attacher.conditions.addNewCondition(Condition.BRULURE, DUREE_BRULURE,System.identityHashCode(this));}
+				attacher.conditions.addNewCondition(ConditionEnum.BRULURE, DUREE_BRULURE,System.identityHashCode(this));}
 		else
 			if((PartieTimer.me.getElapsedNano() - attacher.last_feu_effect_update)>UPDATE_TIME*Math.pow(10, 9) && Collision.testcollisionObjects(partie, this, attacher,true)){
 				attacher.addLife(damage);

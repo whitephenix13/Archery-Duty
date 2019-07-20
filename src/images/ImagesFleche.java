@@ -3,15 +3,13 @@ package images;
 import java.awt.Image;
 import java.util.ArrayList;
 
-import gameConfig.TypeObject;
-import loading.LoaderItem;
-import partie.projectile.fleches.Fleche;
+import gameConfig.ObjectTypeHelper.ObjectType;
 
-public class ImagesFleche extends LoaderItem{
+public class ImagesFleche extends ImagesContainer{
 	
 	private static String path ="resources/projectile/fleches/";
 	ArrayList<Image> im_fleche= new ArrayList<Image>();
-	ArrayList<Image> im_foudre_aura= new ArrayList<Image>();
+	ArrayList<Image> im_faucon_aura= new ArrayList<Image>();
 	ArrayList<Image> im_electrique_aura= new ArrayList<Image>();
 	ArrayList<Image> im_glace_aura= new ArrayList<Image>();
 	ArrayList<Image> im_roche_aura= new ArrayList<Image>();
@@ -24,12 +22,12 @@ public class ImagesFleche extends LoaderItem{
 	ArrayList<Image> im_lumiere_aura= new ArrayList<Image>();
 	ArrayList<Image> im_explosive_aura= new ArrayList<Image>();
 	ArrayList<Image> im_trou_noir_aura= new ArrayList<Image>();
-	ArrayList<Image> im_bogue_aura= new ArrayList<Image>();
+	ArrayList<Image> im_barrage_aura= new ArrayList<Image>();
 
-	ArrayList<Image> im_auto_teleguidee_aura= new ArrayList<Image>();
-	ArrayList<Image> im_retard_aura= new ArrayList<Image>();
-	ArrayList<Image> im_v_fleche_aura= new ArrayList<Image>();
-	ArrayList<Image> im_cac_aura= new ArrayList<Image>();
+	ArrayList<Image> im_marque_mortelle_aura= new ArrayList<Image>();
+	ArrayList<Image> im_absorption_aura= new ArrayList<Image>();
+	ArrayList<Image> im_ninja_aura= new ArrayList<Image>();
+	ArrayList<Image> im_leurre_aura= new ArrayList<Image>();
 
 	public ImagesFleche()
 	{
@@ -67,18 +65,18 @@ public class ImagesFleche extends LoaderItem{
 			count+=4;
 			percentage = ((int)(100*count/num_tot));
 
-			im_bogue_aura.add(getIm(path+"auras/bogue/"+i+".png",true));
+			im_barrage_aura.add(getIm(path+"auras/barrage/"+i+".png",true));
 			im_explosive_aura.add(getIm(path+"auras/explosive/"+i+".png",true));
 			im_trou_noir_aura.add(getIm(path+"auras/trou_noir/"+i+".png",true));
-			im_foudre_aura.add(getIm(path+"auras/foudre/"+i+".png",true));
+			im_faucon_aura.add(getIm(path+"auras/faucon/"+i+".png",true));
 			
 			count+=4;
 			percentage = ((int)(100*count/num_tot));
 
-			im_auto_teleguidee_aura.add(getIm(path+"auras/auto_teleguidee/"+i+".png",true));
-			im_retard_aura.add(getIm(path+"auras/retard/"+i+".png",true));
-			im_v_fleche_aura.add(getIm(path+"auras/v_fleche/"+i+".png",true));
-			im_cac_aura.add(getIm(path+"auras/corps_a_corps/"+i+".png",true));
+			im_marque_mortelle_aura.add(getIm(path+"auras/marque_mortelle/"+i+".png",true));
+			im_absorption_aura.add(getIm(path+"auras/absorption/"+i+".png",true));
+			im_ninja_aura.add(getIm(path+"auras/ninja/"+i+".png",true));
+			im_leurre_aura.add(getIm(path+"auras/leurre/"+i+".png",true));
 			
 			count+=4;
 			percentage = ((int)(100*count/num_tot));
@@ -86,49 +84,59 @@ public class ImagesFleche extends LoaderItem{
 		percentage=100;
 		alreadyLoaded=true;
 	}
-
-	public ArrayList<Image> getImage(Fleche fleche)
+	@Override
+	public Image getImage(ObjectType objType, ImageInfo info1,ImageInfo info2)
+	{
+		return null;
+	}
+	/***
+	 * objType:{@link ObjectType#FLECHE} ... 
+	 * info1 : null
+	 * info2 : null
+	 */
+	@Override
+	public ArrayList<Image> getImages(ObjectType objType, ImageInfo info1,ImageInfo info2, int anim)
 	{
 		ArrayList<Image> im = new ArrayList<Image>();
 
-		if (TypeObject.isTypeOf(fleche, TypeObject.ELECTRIQUE))
-			im.add(this.im_electrique_aura.get(fleche.getAnim()));
-		if (TypeObject.isTypeOf(fleche, TypeObject.FEU))
-			im.add(this.im_feu_aura.get(fleche.getAnim()));
-		if (TypeObject.isTypeOf(fleche, TypeObject.GLACE))
-			im.add(this.im_glace_aura.get(fleche.getAnim()));
-		if (TypeObject.isTypeOf(fleche, TypeObject.ROCHE))
-			im.add(this.im_roche_aura.get(fleche.getAnim()));
+		if (objType.equals(ObjectType.ELECTRIQUE))
+			im.add(this.im_electrique_aura.get(anim));
+		if (objType.equals(ObjectType.FEU))
+			im.add(this.im_feu_aura.get(anim));
+		if (objType.equals(ObjectType.GLACE))
+			im.add(this.im_glace_aura.get(anim));
+		if (objType.equals(ObjectType.ROCHE))
+			im.add(this.im_roche_aura.get(anim));
 
 
-		if (TypeObject.isTypeOf(fleche, TypeObject.GRAPPIN))
-			im.add(this.im_grappin_aura.get(fleche.getAnim()));
-		if (TypeObject.isTypeOf(fleche, TypeObject.OMBRE))
-			im.add(this.im_ombre_aura.get(fleche.getAnim()));
-		if (TypeObject.isTypeOf(fleche, TypeObject.LUMIERE))
-			im.add(this.im_lumiere_aura.get(fleche.getAnim()));
-		if (TypeObject.isTypeOf(fleche, TypeObject.VENT))
-			im.add(this.im_vent_aura.get(fleche.getAnim()));
+		if (objType.equals(ObjectType.GRAPPIN))
+			im.add(this.im_grappin_aura.get(anim));
+		if (objType.equals(ObjectType.OMBRE))
+			im.add(this.im_ombre_aura.get(anim));
+		if (objType.equals(ObjectType.LUMIERE))
+			im.add(this.im_lumiere_aura.get(anim));
+		if (objType.equals(ObjectType.VENT))
+			im.add(this.im_vent_aura.get(anim));
 
-		if (TypeObject.isTypeOf(fleche, TypeObject.BOGUE))
-			im.add(this.im_bogue_aura.get(fleche.getAnim()));
-		if (TypeObject.isTypeOf(fleche, TypeObject.FOUDRE))
-			im.add(this.im_foudre_aura.get(fleche.getAnim()));
-		if (TypeObject.isTypeOf(fleche, TypeObject.EXPLOSIVE))
-			im.add(this.im_explosive_aura.get(fleche.getAnim()));
-		if (TypeObject.isTypeOf(fleche, TypeObject.TROU_NOIR))
-			im.add(this.im_trou_noir_aura.get(fleche.getAnim()));
+		if (objType.equals(ObjectType.BARRAGE))
+			im.add(this.im_barrage_aura.get(anim));
+		if (objType.equals(ObjectType.FAUCON))
+			im.add(this.im_faucon_aura.get(anim));
+		if (objType.equals(ObjectType.EXPLOSIVE))
+			im.add(this.im_explosive_aura.get(anim));
+		if (objType.equals(ObjectType.TROU_NOIR))
+			im.add(this.im_trou_noir_aura.get(anim));
 
-		if (TypeObject.isTypeOf(fleche, TypeObject.AUTO_TELEGUIDEE))
-			im.add(this.im_auto_teleguidee_aura.get(fleche.getAnim()));
-		if (TypeObject.isTypeOf(fleche, TypeObject.CAC))
-			im.add(this.im_cac_aura.get(fleche.getAnim()));
-		if (TypeObject.isTypeOf(fleche, TypeObject.RETARD))
-			im.add(this.im_retard_aura.get(fleche.getAnim()));
-		if (TypeObject.isTypeOf(fleche, TypeObject.V_FLECHE))
-			im.add(this.im_v_fleche_aura.get(fleche.getAnim()));
+		if (objType.equals(ObjectType.MARQUE_MORTELLE))
+			im.add(this.im_marque_mortelle_aura.get(anim));
+		if (objType.equals(ObjectType.LEURRE))
+			im.add(this.im_leurre_aura.get(anim));
+		if (objType.equals(ObjectType.ABSORPTION))
+			im.add(this.im_absorption_aura.get(anim));
+		if (objType.equals(ObjectType.NINJA))
+			im.add(this.im_ninja_aura.get(anim));
 
-		im.add(im_fleche.get(fleche.getAnim()));
+		im.add(im_fleche.get(anim));
 
 		return im;
 

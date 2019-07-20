@@ -50,11 +50,12 @@ public class LoaderMusic extends LoaderItem implements InterfaceConstantes{
 
 	
 	public void run(String media_categorie, String filename) {
+		if(mapClips.containsKey(filename))
+			return;
 		URL url = getClass().getClassLoader().getResource("resources/musique/"+filename+".wav");
 		if(url!=null) { 
 			addToMap(filename);
 		}
-		percentage = 100;
 	}
 
 	public void addToMap(String nom)

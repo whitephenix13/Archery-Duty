@@ -1,13 +1,23 @@
 package menu.menuPrincipal;
 
 import java.util.ArrayList;
+import java.util.concurrent.ScheduledExecutorService;
 
-import Affichage.Affichage;
+import Affichage.GameRenderer;
 import debug.DebugTime;
 import editeur.AbstractControlerEditeur;
 import editeur.AbstractModelEditeur;
 import editeur.AffichageEditeur;
+import images.ImagesBackground;
+import images.ImagesCondition;
+import images.ImagesEffect;
+import images.ImagesFleche;
+import images.ImagesFlecheIcon;
+import images.ImagesHeros;
+import images.ImagesMonde;
+import images.ImagesMonstre;
 import images.ImagesPrincipal;
+import images.ImagesTirMonstre;
 import loading.Loader;
 import menu.choixNiveau.AbstractControlerChoixNiveau;
 import menu.choixNiveau.AbstractModelChoixNiveau;
@@ -35,7 +45,16 @@ public abstract class AbstractModelPrincipal implements Observable,GameHandler,G
 	public Loader loaderAllMedia = null;
 	
 	public ImagesPrincipal imPrincipal= new ImagesPrincipal();
-
+	public ImagesBackground imBackground= new ImagesBackground();
+	public ImagesMonde imMonde= new ImagesMonde();
+	public ImagesMonstre imMonstre= new ImagesMonstre();
+	public ImagesHeros imHeros= new ImagesHeros();
+	public ImagesTirMonstre imTirMonstre= new ImagesTirMonstre();
+	public ImagesFleche imFleches = new ImagesFleche();
+	public ImagesEffect imEffect= new ImagesEffect();
+	public ImagesCondition imConditions= new ImagesCondition();
+	public ImagesFlecheIcon imFlecheIcon = new ImagesFlecheIcon();
+	
 	public GameModeType currentGameModeType;
 	//public static String modeSuivant=""; //REMOVE
 	//public static boolean changeMode=false;//REMOVE
@@ -45,6 +64,8 @@ public abstract class AbstractModelPrincipal implements Observable,GameHandler,G
 	public static DebugTime debugTimeAffichage;
 
 	protected boolean forceActuAffichage; 
+	
+	protected ScheduledExecutorService executor;
 	
 	protected AbstractModelPrincipal principal ;
 	protected AbstractControlerPrincipal controlerPrincipal ;
@@ -68,18 +89,18 @@ public abstract class AbstractModelPrincipal implements Observable,GameHandler,G
 	protected AbstractControlerPartie controlerPartie ;
 	protected AffichagePartie affichagePartie ;
 	
-	protected Affichage affich; 
+	protected GameRenderer gameRenderer; 
 	
 	protected GameMode currentGameMode; 
 	protected GameModeType nextGameMode;
 	protected boolean computationDone;
 	
-	protected boolean gameInit;
+	//protected boolean gameInit;
 	private ArrayList<Observer> listObserver = new ArrayList<Observer>();
 	public AbstractModelPrincipal()
 	{
 		currentGameModeType = GameModeType.MAIN_MENU;
-		nextGameMode=GameModeType.MAIN_MENU;
+		//nextGameMode=GameModeType.MAIN_MENU;
 		currentGameMode = this;
 		computationDone=true;//set to false via listeners 
 	}

@@ -1,17 +1,16 @@
 package partie.effects;
 
 import java.awt.Point;
-import java.awt.geom.AffineTransform;
 import java.util.Arrays;
 
 import javax.vecmath.Vector2d;
 
-import gameConfig.TypeObject;
+import gameConfig.ObjectTypeHelper.ObjectType;
 import partie.collision.Collidable;
 import partie.collision.Collision;
-import partie.conditions.Condition;
+import partie.conditions.Condition.ConditionEnum;
+import partie.deplacement.Mouvement.SubTypeMouv;
 import partie.deplacement.effect.Electrique_idle;
-import partie.deplacement.effect.Mouvement_effect.TypeMouvEffect;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
@@ -36,13 +35,14 @@ public class Electrique_effect extends Effect{
 	public Electrique_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame,Vector2d _normalCollision,Point _pointCollision,
 			Point _correctedPointCollision,boolean groundCollision,int _numberExplosion,Collidable prevCollider)
 	{
-		super.init(_anim,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,groundCollision,groundCollision);
+		super(_anim,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,groundCollision,groundCollision);
 		TEMPS_DESTRUCTION = 1*(long) Math.pow(10, 8);//nanos, 0.3sec 
 		isProjectile =true; //to allow for collision with other projectile and entities
-		this.setCollideWithout(Arrays.asList(TypeObject.ELECTRIQUE_EFF,TypeObject.FLECHE));
+		this.setCollideWithout(Arrays.asList(ObjectType.ELECTRIQUE_EFF,ObjectType.FLECHE));
 		numberExplosion=_numberExplosion;
 		previousCollider=prevCollider;
-		setDeplacement(new Electrique_idle(groundEffect?TypeMouvEffect.ElectriqueGround:TypeMouvEffect.ElectriqueEntitie,partie.getFrame()));
+		subTypeMouv = groundEffect?EffectCollisionEnum.GROUND:EffectCollisionEnum.ENTITY;
+		setDeplacement(new Electrique_idle(subTypeMouv,partie.getFrame()));
 		
 		partie.arrowsEffects.add(this);
 		if(!groundEffect)
@@ -61,7 +61,7 @@ public class Electrique_effect extends Effect{
 	{
 		if(groundEffect)
 			if(Collision.testcollisionObjects(partie, this, attacher,true))
-				attacher.conditions.addNewCondition(Condition.PARALYSIE, DUREE_PARALYSIE,System.identityHashCode(this));
+				attacher.conditions.addNewCondition(ConditionEnum.PARALYSIE, DUREE_PARALYSIE,System.identityHashCode(this));
 	}
 
 	private void setFirstPos(AbstractModelPartie partie) {

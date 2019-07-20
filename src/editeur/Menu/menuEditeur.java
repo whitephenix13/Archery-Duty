@@ -2,24 +2,30 @@ package editeur.Menu;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JTextField;
 
+import ActiveJComponent.ActiveJButton;
+import ActiveJComponent.PassiveJDialog;
+import ActiveJComponent.ActiveJFrame;
+import ActiveJComponent.ActiveJLabel;
+import ActiveJComponent.ActiveJMenu;
+import ActiveJComponent.ActiveJMenuBar;
+import ActiveJComponent.ActiveJMenuItem;
+import ActiveJComponent.ActiveJPanel;
+import ActiveJComponent.ActiveJRadioButtonMenuItem;
+import ActiveJComponent.ActiveJTextField;
 import Affichage.MenuScroller;
 import editeur.AffichageEditeur;
-import menu.menuPrincipal.AbstractModelPrincipal;
 import menu.menuPrincipal.GameHandler.GameModeType;
 import partie.bloc.Bloc.TypeBloc;
 
@@ -30,41 +36,41 @@ public class menuEditeur {
 	
 	protected String nomFichier ="";
 	
-	public JMenuBar menuBar = new JMenuBar();
-	JMenu m_fichier = new JMenu(" Fichier   ");
-	JMenu m_objet = new JMenu(" Objet   ");
-	JMenu m_texture = new JMenu(" Texture ");
-	JMenu m_bloc = new JMenu("Objet Bloquant");
-	JMenu m_back = new JMenu("Objet en Background");
+	public ActiveJMenuBar menuBar = new ActiveJMenuBar();
+	ActiveJMenu m_fichier = new ActiveJMenu(" Fichier   ");
+	ActiveJMenu m_objet = new ActiveJMenu(" Objet   ");
+	ActiveJMenu m_texture = new ActiveJMenu(" Texture ");
+	ActiveJMenu m_bloc = new ActiveJMenu("Objet Bloquant");
+	ActiveJMenu m_back = new ActiveJMenu("Objet en Background");
 	
-	JMenuItem m_charger = new JMenuItem("Charger");
-	JMenuItem m_sauvegarder= new JMenuItem("Sauvegarder");
+	ActiveJMenuItem m_charger = new ActiveJMenuItem("Charger");
+	ActiveJMenuItem m_sauvegarder= new ActiveJMenuItem("Sauvegarder");
 	
-	JMenuItem m_informations = new JMenuItem(" Informations ");
+	ActiveJMenuItem m_informations = new ActiveJMenuItem(" Informations ");
 	
-	JMenuItem m_nouv = new JMenuItem("Nouveau monde");
-	JMenuItem m_menuP = new JMenuItem("Menu principal");
-	JMenuItem m_quit = new JMenuItem("Quitter");
+	ActiveJMenuItem m_nouv = new ActiveJMenuItem("Nouveau monde");
+	ActiveJMenuItem m_menuP = new ActiveJMenuItem("Menu principal");
+	ActiveJMenuItem m_quit = new ActiveJMenuItem("Quitter");
 	
-	JMenuItem m_loupe= new JMenuItem("Loupe");
-	JMenuItem m_souris= new JMenuItem("Souris");
-	JMenuItem m_deleteItem= new JMenuItem("Delete");
-	JMenuItem m_vide = new JMenuItem("Vide");
-	JMenuItem m_sol = new JMenuItem("Sol");
-	JMenuItem m_terre = new JMenuItem("Terre");
-	JMenuItem m_ciel = new JMenuItem("Ciel");
-	JMenuItem m_perso= new JMenuItem("Perso");
-	JMenuItem m_start= new JMenuItem("Start");
-	JMenuItem m_end= new JMenuItem("End");
-	JMenuItem m_spirel= new JMenuItem("Spirel");
+	ActiveJMenuItem m_loupe= new ActiveJMenuItem("Loupe");
+	ActiveJMenuItem m_souris= new ActiveJMenuItem("Souris");
+	ActiveJMenuItem m_deleteItem= new ActiveJMenuItem("Delete");
+	ActiveJMenuItem m_vide = new ActiveJMenuItem("Vide");
+	ActiveJMenuItem m_sol = new ActiveJMenuItem("Sol");
+	ActiveJMenuItem m_terre = new ActiveJMenuItem("Terre");
+	ActiveJMenuItem m_ciel = new ActiveJMenuItem("Ciel");
+	ActiveJMenuItem m_perso= new ActiveJMenuItem("Perso");
+	ActiveJMenuItem m_start= new ActiveJMenuItem("Start");
+	ActiveJMenuItem m_end= new ActiveJMenuItem("End");
+	ActiveJMenuItem m_spirel= new ActiveJMenuItem("Spirel");
 	
-	JRadioButtonMenuItem r_bloquant =new JRadioButtonMenuItem("Objet bloquant");
-	JRadioButtonMenuItem r_nonBloquant =new JRadioButtonMenuItem("Objet non bloquant");
+	ActiveJRadioButtonMenuItem r_bloquant =new ActiveJRadioButtonMenuItem("Objet bloquant");
+	ActiveJRadioButtonMenuItem r_nonBloquant =new ActiveJRadioButtonMenuItem("Objet non bloquant");
 	ButtonGroup gp1 =new ButtonGroup();
 	
 	
-	JRadioButtonMenuItem r_isBackground =new JRadioButtonMenuItem("Objet a afficher en arriere plan");
-	JRadioButtonMenuItem r_nonIsBackground =new JRadioButtonMenuItem("Objet a ne pas afficher en arriere plan");
+	ActiveJRadioButtonMenuItem r_isBackground =new ActiveJRadioButtonMenuItem("Objet a afficher en arriere plan");
+	ActiveJRadioButtonMenuItem r_nonIsBackground =new ActiveJRadioButtonMenuItem("Objet a ne pas afficher en arriere plan");
 	ButtonGroup gp2 =new ButtonGroup();
 	//}}
 	
@@ -75,39 +81,61 @@ public class menuEditeur {
 	}
 	
 	@SuppressWarnings("serial")
-	public class PopUpSauv_Charg extends JDialog {
+	public class PopUpSauv_Charg extends PassiveJDialog {
 
-		public PopUpSauv_Charg(JFrame parent, String title, boolean modal){
+		public PopUpSauv_Charg(ActiveJFrame parent, String title, boolean modal,boolean savePopup){
 			    //On appelle le construteur de JDialog correspondant
-			    super(parent, title, modal);
-			    //On specifie une taille
-			    this.setSize(400, 120);
-			    //La position
-			    this.setLocationRelativeTo(null);
-			    //La boite ne devra pas etre redimensionnable
-			    this.setResizable(false);
-			    JPanel affichage = new JPanel();
-			    final JTextField texte= new JTextField("alpha");
-			    JButton ok = new JButton("OK");	
-			    JLabel info1 = new JLabel("Seul les caracteres a-z A-Z 0-9 et '_' sont autorises ");
-			    JLabel info2 = new JLabel("Entrez un nom de fichier ");
-			    ok.addActionListener(new ActionListener(){
-					public void actionPerformed(ActionEvent arg0) {
-						String texteTape = texte.getText();
-						if( texteTape.matches("^[a-zA-Z0-9_]*$")){
-							nomFichier=texteTape;
-							setVisible(false);
-						}}});
-			    affichage.add(info1,BorderLayout.NORTH);
-			    affichage.add(info2,BorderLayout.CENTER);
-				affichage.add(texte,BorderLayout.CENTER);
-				affichage.add(ok,BorderLayout.SOUTH);
-				this.getContentPane().add(affichage);
-			    //Tout ceci ressemble à ce que nous faisons depuis le debut avec notre JFrame.
-			    
-			 
+			    super(parent, title, modal);		
+			    super.setComponentAndShowDialog(createContent(savePopup));
+
 			  }
+			private Component createContent(final boolean savePopup)
+			{
+				final JPanel mainPan = new JPanel();
+				mainPan.setLayout(new BoxLayout(mainPan,BoxLayout.Y_AXIS));
+
+			    JLabel info1 = new JLabel("Seul les caracteres a-z A-Z 0-9 et '_' sont autorises");
+				
+			    final JPanel filename = new JPanel();
+			    JLabel info2 = new JLabel("Entrez un nom de fichier: ");
+			    final JTextField text= new JTextField(15);
+
+				JPanel centeredButton = new JPanel();
+				centeredButton.setLayout(new BoxLayout(centeredButton,BoxLayout.X_AXIS));
+			    JButton ok = new JButton("OK");	
+			    ok.addActionListener(new ActionListener(){
+						public void actionPerformed(ActionEvent arg0) {
+							String texteTape = text.getText();
+							if( texteTape.matches("^[a-zA-Z0-9_]*$")){
+								nomFichier=texteTape;
+								PopUpSauv_Charg.this.getContentPane().remove(mainPan);
+								if(savePopup)
+									affichageEditeur.controlerEditeur.controlSauvegarde(nomFichier);
+								else
+									affichageEditeur.controlerEditeur.controlChargement(nomFichier);
+								nomFichier="";
+								PopUpSauv_Charg.this.dispose();
+								//PopUpSauv_Charg.this.setVisible(false);
+							}
+							
+						}});
+			    
+			    filename.add(info2);
+			    filename.add(text);
+			    
+			    centeredButton.add(Box.createHorizontalGlue());
+			    centeredButton.add(ok);
+			    centeredButton.add(Box.createHorizontalGlue());
+			    
+			    mainPan.add(info1);
+			    mainPan.add(filename);
+			    mainPan.add(centeredButton);
+				mainPan.setVisible(true);
+				
+				return mainPan;
 			}
+			
+		}
 	
 	public void initMenu() {
 
@@ -192,7 +220,6 @@ public class menuEditeur {
 }
 	
 	public void setBloquant(boolean _bloquant){	
-		System.out.println("set bloquant "+ _bloquant );
 		affichageEditeur.controlerEditeur.edit.setBloquant(_bloquant);
 		r_bloquant.setSelected(_bloquant);
 		r_nonBloquant.setSelected(!_bloquant);
@@ -214,7 +241,7 @@ public class menuEditeur {
 		public void actionPerformed(ActionEvent e) {
 			//on reset les variables 
 			affichageEditeur.controlerEditeur.edit.init();
-			affichageEditeur.getContentPane().repaint();
+			//REMOVE affichageEditeur.getContentPane().repaint();
 			}
 		}
 	public class retourMenuListener implements ActionListener{
@@ -239,10 +266,8 @@ public class menuEditeur {
 	public class SauvegarderListener implements ActionListener{
 
 			public void actionPerformed(ActionEvent e) {
-				PopUpSauv_Charg popup = new PopUpSauv_Charg(affichageEditeur.getMainFrame(),"Sauvegarder un fichier",true);
+				PopUpSauv_Charg popup = new PopUpSauv_Charg(affichageEditeur.getActiveJFrame(),"Sauvegarder un fichier",true,true);
 				popup.setVisible(true);
-				affichageEditeur.controlerEditeur.controlSauvegarde(nomFichier);
-				nomFichier="";
 			}
 			
 		}
@@ -251,10 +276,8 @@ public class menuEditeur {
 	public class ChargerListener  implements ActionListener  {
 
 			public void actionPerformed(ActionEvent e) {
-				PopUpSauv_Charg popup = new PopUpSauv_Charg(affichageEditeur.getMainFrame(),"Charger un fichier",true);
+				PopUpSauv_Charg popup = new PopUpSauv_Charg(affichageEditeur.getActiveJFrame(),"Charger un fichier",true,false);
 				popup.setVisible(true);
-				affichageEditeur.controlerEditeur.controlChargement(nomFichier);
-				nomFichier="";
 		}
 	}
 	
@@ -296,9 +319,9 @@ public class menuEditeur {
 			
 			for(Component item : m_texture.getMenuComponents())
 			{
-				JMenuItem jitem=null;
-				if(item instanceof JMenuItem)
-					jitem = (JMenuItem)item;
+				ActiveJMenuItem jitem=null;
+				if(item instanceof ActiveJMenuItem)
+					jitem = (ActiveJMenuItem)item;
 				if(jitem!=null)
 					if(jitem==m_loupe)
 						jitem.addActionListener(new LoupeListener());
@@ -326,9 +349,9 @@ public class menuEditeur {
 		
 		for(Component item : m_texture.getMenuComponents())
 		{
-			JMenuItem jitem=null;
-			if(item instanceof JMenuItem)
-				jitem = (JMenuItem)item;
+			ActiveJMenuItem jitem=null;
+			if(item instanceof ActiveJMenuItem)
+				jitem = (ActiveJMenuItem)item;
 			if(jitem!=null){
 				ActionListener[] al = jitem.getActionListeners();
 				jitem.removeActionListener(al[al.length-1]);

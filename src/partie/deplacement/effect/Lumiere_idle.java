@@ -5,15 +5,15 @@ import java.util.Arrays;
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
 import partie.deplacement.Mouvement;
-import partie.deplacement.TypeMouv;
-import partie.effects.Lumiere_effect;
+import partie.deplacement.effect.Mouvement_effect.MouvEffectEnum;
 import utils.Vitesse;
 
 public class Lumiere_idle extends Mouvement_effect{
-	public Lumiere_idle(TypeMouv _type_mouv, int current_frame){
+	public Lumiere_idle(SubTypeMouv _sub_type_mouv, int current_frame){
 		super();
-		type_mouv=_type_mouv;
-
+		type_mouv = MouvEffectEnum.LUMIERE_IDLE;
+		sub_type_mouv=_sub_type_mouv;
+		
 		xtaille =  Arrays.asList(100,100,100,100,100);
 		ytaille =  Arrays.asList(100,100,100,100,100);
 		hitbox = Hitbox.createSquareHitboxes(0,0,100,100,5);
@@ -26,8 +26,8 @@ public class Lumiere_idle extends Mouvement_effect{
 		vit = new Vitesse();
 	}
 	@Override
-	public Mouvement Copy(Object obj) {
-		return new Lumiere_idle(type_mouv,animation.getStartFrame());
+	public Mouvement Copy() {
+		return new Lumiere_idle(sub_type_mouv,animation.getStartFrame());
 	}
 
 	@Override

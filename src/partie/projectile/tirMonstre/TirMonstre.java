@@ -1,11 +1,9 @@
 package partie.projectile.tirMonstre;
 
 import java.awt.Point;
-import java.awt.geom.AffineTransform;
 import java.util.Arrays;
-import java.util.List;
 
-import gameConfig.TypeObject;
+import gameConfig.ObjectTypeHelper.ObjectType;
 import partie.collision.Hitbox;
 import partie.deplacement.Deplace;
 import partie.modelPartie.AbstractModelPartie;
@@ -14,11 +12,11 @@ import partie.projectile.Projectile;
 public abstract class TirMonstre extends Projectile{
 
 	public float damage;
-	@Override
-	public void init()
+
+	public TirMonstre()
 	{
-		super.init();
-		this.setCollideWithout(Arrays.asList(TypeObject.MONSTRE,TypeObject.TIR_MONSTRE));
+		super();
+		this.setCollideWithout(Arrays.asList(ObjectType.MONSTRE,ObjectType.TIR_MONSTRE));
 	}
 	@Override
 	public int getMaxBoundingSquare()

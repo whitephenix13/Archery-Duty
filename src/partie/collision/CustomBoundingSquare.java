@@ -25,7 +25,7 @@ public class CustomBoundingSquare extends Collidable{
 	 * */
 	public CustomBoundingSquare(Point center, boolean relative, int _maxBound)
 	{
-		super.init();
+		super();
 		setXpos(center.x);
 		setYpos(center.y);
 		fixedWhenScreenMoves = relative;

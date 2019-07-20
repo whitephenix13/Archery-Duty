@@ -13,7 +13,6 @@ import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
 import partie.projectile.Projectile;
-import partie.projectile.fleches.Fleche;
 
 public class Fleche_electrique extends Materielle {
 	// WARNING : effect moves with 

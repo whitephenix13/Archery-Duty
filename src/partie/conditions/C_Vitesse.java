@@ -1,5 +1,6 @@
 package partie.conditions;
 
+import partie.conditions.Condition.ConditionEnum;
 import partie.modelPartie.PartieTimer;
 
 public class C_Vitesse extends Condition{
@@ -9,7 +10,7 @@ public class C_Vitesse extends Condition{
 
 	public C_Vitesse(double _duree)
 	{
-		name=VITESSE;
+		type=ConditionEnum.VITESSE;
 		DUREE= _duree*Math.pow(10, 9); //sec 
 		FACTOR= 2; //speed x2 
 		startTime=PartieTimer.me.getElapsedNano();

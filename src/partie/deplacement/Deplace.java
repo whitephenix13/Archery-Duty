@@ -10,12 +10,11 @@ import partie.collision.Collidable;
 import partie.collision.Collision;
 import partie.collision.Hitbox;
 import partie.deplacement.entity.Mouvement_entity;
-import partie.deplacement.entity.Mouvement_entity.TypeMouvEntitie;
+import partie.deplacement.entity.Mouvement_entity.MouvEntityEnum;
 import partie.effects.Effect;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
-import partie.projectile.fleches.Fleche;
 
 public class Deplace implements InterfaceConstantes{
 	private Gravite gravite = new Gravite();
@@ -247,7 +246,7 @@ public class Deplace implements InterfaceConstantes{
 		 * */
 		double tolerance =0;
 		Heros heros = partie.heros;
-		boolean isFiring = heros.getDeplacement().IsDeplacement(TypeMouvEntitie.Tir);
+		boolean isFiring = heros.getDeplacement().IsDeplacement(MouvEntityEnum.TIR);
 		double xcenter= heros.getXpos()+ (isFiring? ((Mouvement_entity)heros.getDeplacement()).x_center_tir.get(heros.getAnim()) : 
 			(heros.getDeplacement().xtaille.get(heros.getAnim())/2));
 

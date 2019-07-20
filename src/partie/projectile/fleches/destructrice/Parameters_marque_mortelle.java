@@ -5,9 +5,7 @@ import java.util.List;
 
 import javax.vecmath.Vector2d;
 
-import partie.collision.Hitbox;
-
-public class Parameters_fleche_bogue {
+public class Parameters_marque_mortelle {
 	public double ADD_ARROW_TIME = 0.10; //add arrow every x sec
 	public double MAX_DISTANCE = 80; //distance before the arrows stops 
 	public int NB_ARROW = 32;
@@ -16,7 +14,7 @@ public class Parameters_fleche_bogue {
 	public boolean shoot_arrows = false; //state 1 -> state 2
 
 	public float damageMult =1;
-	public List<Fleche_bogue> bogueArrows = new ArrayList<Fleche_bogue>();//contains the seven created arrows 
+	public List<Fleche_barrage> barrageArrows = new ArrayList<Fleche_barrage>();//contains the seven created arrows 
 
 	public double last_add_time = 0;
 	public int nbarrow=0;

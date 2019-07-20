@@ -2,13 +2,20 @@ package partie.deplacement;
 
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import gameConfig.ObjectTypeHelper.ObjectType;
+import images.ImagesContainer.ImageInfo;
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
 import utils.Vitesse;
 
 public abstract class Mouvement{
+	
+	public static interface TypeMouv extends ImageInfo{}//used for polymorphism of all movements such that any enum of movement will implement it 
+	public static interface SubTypeMouv extends ImageInfo{}
+	public static enum DirSubTypeMouv implements SubTypeMouv{DROITE,GAUCHE}
 	
 	public static String DROITE = "DROITE";
 	public static String GAUCHE = "GAUCHE";
@@ -23,22 +30,21 @@ public abstract class Mouvement{
 	protected Animation animation = new Animation();
 	public boolean animEndedOnce(){return animation.isEndedOnce();}
 	public boolean animEnded(){return animation.isEnded();}
-	public TypeMouv type_mouv;
 	
+	protected TypeMouv type_mouv;
+	protected SubTypeMouv sub_type_mouv;
+	protected ObjectType objType;
+
 	public boolean stopSpeed = false;
 	
 	private static Vitesse zeroVit = new Vitesse();
 
 	//protected abstract void OnSetHitbox(boolean isRotated);
-	public abstract Mouvement Copy(Object obj);
+	public abstract Mouvement Copy();
 	/**
 	 * @return the maximum length or height that the hitbox can reached for this motion(often =max(xtaille,ytaille). This value will be multiplied by sqrt(2) to handle diagonals of squares
 	 * */
-	public abstract int getMaxBoundingSquare(Object obj);
-	public abstract Point getMaxBoundingRect(Object obj);
 
-	public abstract boolean IsDeplacement(Mouvement m);
-	public abstract boolean IsDeplacement(TypeMouv s);
 	/***
 	 * WARNING: you should never call this function except in getSpeed
 	 * This speed is the speed of the object without considering stopSpeed. To get the true speed use getSpeed instead
@@ -47,6 +53,49 @@ public abstract class Mouvement{
 	 * @return
 	 */
 	protected abstract Vitesse __getUncheckedSpeed(Collidable object, int anim);
+	
+	public TypeMouv getTypeMouv(){return type_mouv;}
+	public SubTypeMouv getSubTypeMouv(){return sub_type_mouv;}
+	public ObjectType getObjType(){return objType;}
+	
+	public boolean IsDeplacement(Mouvement m)
+	{
+		if(m==null)
+			return false;
+		return m.type_mouv.equals(type_mouv);
+		//REMOVE return (this.getClass().getName().equals(m.getClass().getName()));
+	}
+	public boolean IsDeplacement(TypeMouv type)
+	{
+		return type.equals(type_mouv);
+		/*REMOVE if(className ==null )
+			className = this.getClass().getName().replaceFirst("partie.deplacement.entity.", "");
+		return className.equals(type.toString());*/
+	}
+	public boolean IsDeplacement(TypeMouv type,SubTypeMouv sub)
+	{
+		if((sub==null && type_mouv!=null) ||(sub!=null && type_mouv==null) )
+			return false;
+		else if(sub==null && type_mouv==null)
+			return type.equals(type_mouv);
+		else
+			return type.equals(type_mouv) && sub.equals(sub_type_mouv);
+		/*REMOVEif(className ==null )
+			className = this.getClass().getName().replaceFirst("partie.deplacement.entity.", "");
+		return className.equals(type.toString());*/
+	}
+	
+	
+	public int getMaxBoundingSquare(Object obj)
+	{
+		return Math.max(Collections.max(xtaille), Collections.max(ytaille));
+	}
+
+	public Point getMaxBoundingRect(Object obj)
+	{
+		return new Point(Collections.max(xtaille), Collections.max(ytaille));
+	}
+	
 	public Vitesse getSpeed(Collidable object, int anim)
 	{
 		if(stopSpeed)
@@ -64,10 +113,10 @@ public abstract class Mouvement{
 	};
 	
 	public abstract String droite_gauche(Object obj,int anim);
-	public int updateAnimation(Object obj, int anim,int current_frame,double speedFactor) {
-		return updateAnimation(obj,anim,current_frame,speedFactor,false);
+	public int updateAnimation(int anim,int current_frame,double speedFactor) {
+		return updateAnimation(anim,current_frame,speedFactor,false);
 	}
-	public int updateAnimation(Object obj, int anim,int current_frame,double speedFactor,boolean log) {
+	public int updateAnimation(int anim,int current_frame,double speedFactor,boolean log) {
 		return animation.update(anim,current_frame,speedFactor,log);
 	}
 	}

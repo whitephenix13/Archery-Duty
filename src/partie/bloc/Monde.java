@@ -6,7 +6,6 @@ import java.util.List;
 
 import editeur.StockageMonstre;
 import gameConfig.InterfaceConstantes;
-import partie.bloc.Bloc.TypeBloc;
 
 @SuppressWarnings("serial")
 public class Monde implements InterfaceConstantes, Serializable{

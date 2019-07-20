@@ -5,7 +5,6 @@ import java.awt.Point;
 import java.awt.Polygon;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import javax.vecmath.Vector2d;
 
@@ -27,7 +26,7 @@ import partie.projectile.Projectile;
 import utils.PointHelper;
 import utils.Vitesse;
 
-public class Fleche_auto_teleguidee extends Rusee{
+public class Fleche_marque_mortelle extends Rusee{
 	
 	// WARNING : effect moves with 
 	//	-colliding entity        			NO 
@@ -65,7 +64,7 @@ public class Fleche_auto_teleguidee extends Rusee{
 
 	//Maximum number of trails (life duration of a trail)
 	private int MAX_NUMBER_TRAIL = 5;
-	public Fleche_auto_teleguidee(List<Projectile> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor) {
+	public Fleche_marque_mortelle(List<Projectile> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor) {
 		super(tabFleche, current_frame,_shooter,add_to_list,damageMult,speedFactor);
 		TEMPS_DESTRUCTION= (long) (2* Math.pow(10,8));//in nano sec = 0.2 sec 
 		//damage=-35*damageMult;

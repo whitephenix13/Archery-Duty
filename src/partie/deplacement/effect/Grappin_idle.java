@@ -5,14 +5,14 @@ import java.util.Arrays;
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
 import partie.deplacement.Mouvement;
-import partie.deplacement.TypeMouv;
-import partie.effects.Vent_effect;
+import partie.deplacement.effect.Mouvement_effect.MouvEffectEnum;
 import utils.Vitesse;
 
 public class Grappin_idle extends Mouvement_effect{
-	public Grappin_idle(TypeMouv _type_mouv, int current_frame){
+	public Grappin_idle(SubTypeMouv _sub_type_mouv, int current_frame){
 		super();
-		type_mouv=_type_mouv;
+		type_mouv = MouvEffectEnum.GRAPPIN_IDLE;
+		sub_type_mouv=_sub_type_mouv;
 		
 		xtaille =  Arrays.asList(1657);
 		ytaille =  Arrays.asList(30);
@@ -30,8 +30,8 @@ public class Grappin_idle extends Mouvement_effect{
 	}
 
 	@Override
-	public Mouvement Copy(Object obj) {
-		return new Grappin_idle(type_mouv,animation.getStartFrame());
+	public Mouvement Copy() {
+		return new Grappin_idle(sub_type_mouv,animation.getStartFrame());
 	}
 	
 	@Override

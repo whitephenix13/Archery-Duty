@@ -4,21 +4,26 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-
-import Affichage.Affichage;
+import ActiveJComponent.ActiveJOptionPane;
+import ActiveJComponent.ActiveJPanel;
+import Affichage.GameRenderer;
 import Affichage.Drawable;
 import gameConfig.InterfaceConstantes;
+import gameConfig.ObjectTypeHelper;
+import gameConfig.ObjectTypeHelper.ObjectType;
+import images.ImagesContainer.ImageGroup;
 import images.ImagesHeros;
 import images.ImagesMonstre;
+import loading.Loader;
 import menu.menuPrincipal.GameHandler;
 import menu.menuPrincipal.GameMode;
 import partie.bloc.Bloc;
+import partie.bloc.Bloc.BlocImModifier;
 import partie.bloc.Bloc.TypeBloc;
 import partie.bloc.Monde;
 import serialize.Serialize;
@@ -26,6 +31,7 @@ import serialize.Serialize;
 public class ModelEditeur extends AbstractModelEditeur{
 
 	//Variables initialisée dans la fonction dezoom et qui servent à dessiner la zone de zoom 
+	
 	private int xZoomArea ; 
 	private int yZoomArea; 
 	private int xLengthZoomArea;
@@ -36,6 +42,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 	public ModelEditeur(GameHandler gameHandler){
 		super();
 		this.gameHandler=gameHandler;
+		imagesMonde = gameHandler.getImageGroup(ImageGroup.MONDE);
 	}
 	
 	public void moveViewPort(int xpos, int ypos) {
@@ -54,7 +61,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 			drag=true;
 			xStartDrag=xpos;
 			yStartDrag=ypos;
-			repaint=true;
+			//REMOVE repaint=true;
 			notifyObserver();
 			return ;
 		}
@@ -86,7 +93,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 		}
 		xViewPort=_xViewPort;
 		yViewPort=_yViewPort;
-		repaint=true;
+		//REMOVE repaint=true;
 		notifyObserver();
 	}
 	public void releaseMoveViewport()
@@ -119,7 +126,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 			tempPict= new Bloc(texture,xBlocPos,yBlocPos,bloquant,background);
 		monde.niveau[xBlocPos/InterfaceConstantes.TAILLE_BLOC][yBlocPos/InterfaceConstantes.TAILLE_BLOC]=tempPict;
 
-		repaint=true;
+		//REMOVE repaint=true;
 		notifyObserver();
 	}
 	public void drawMonster(int xpos, int ypos) 
@@ -127,12 +134,12 @@ public class ModelEditeur extends AbstractModelEditeur{
 		int xMonstrePos = calculateDrawPos(xpos,xViewPort);
 		int yMonstrePos= calculateDrawPos(ypos,yViewPort);
 
-		if(texture==TypeBloc.SPIREL)
+		if(texture.equals(TypeBloc.SPIREL))
 		{
 			tabEditeurMonstre.add(new StockageMonstre(TypeBloc.SPIREL,new Point(xMonstrePos,yMonstrePos),staticMonstre));
 		}
 
-		repaint=true;
+		//REMOVE repaint=true;
 		notifyObserver();
 	}
 	public void drawSpecial(int x, int y) 
@@ -161,11 +168,11 @@ public class ModelEditeur extends AbstractModelEditeur{
 
 		texture=TypeBloc.NONE;//on remet la souris
 
-		repaint=true;
+		//REMOVE repaint=true;
 		notifyObserver();
 	}
 
-	public void draw(Graphics g,JPanel pan)
+	public void draw(Graphics g,ActiveJPanel pan)
 	{
 		java.awt.Image image=null;
 		Graphics2D g2 = (Graphics2D) g;
@@ -185,18 +192,22 @@ public class ModelEditeur extends AbstractModelEditeur{
 			monde.niveau= new Bloc[InterfaceConstantes.ABS_MAX][InterfaceConstantes.ORD_MAX];
 			//REMOVE monde.initMonde();
 		}
-
+		Image im;
+		Bloc tempPict;
+		int xdraw; 
+		int ydraw;
 		for(int abs=xStartAff;abs<xEndAff;abs++)
 		{
 			for(int ord=yStartAff;ord<yEndAff;ord++)
 			{
-				final Bloc tempPict= monde.niveau[abs][ord];
+				tempPict= monde.niveau[abs][ord];
 				if(tempPict==null)
 					continue;
 				//xViewPort= xViewPortNonDécallé - x decallage 
-				int xdraw = (int) ((tempPict.getXpos() -xViewPort)*((loupe) ? dezoomFactor : 1 ));
-				int ydraw=(int) ((tempPict.getYpos()-yViewPort)*((loupe) ? dezoomFactor : 1 ));
-				g.drawImage(imMonde.getImages(tempPict.getType(),loupe),xdraw,ydraw, null);
+				xdraw = (int) ((tempPict.getXpos() -xViewPort)*((loupe) ? dezoomFactor : 1 ));
+				ydraw=(int) ((tempPict.getYpos()-yViewPort)*((loupe) ? dezoomFactor : 1 ));
+				im = gameHandler.getImage(ImageGroup.MONDE, ObjectType.BLOC, tempPict.getType(), loupe?BlocImModifier.LOUPE:null);
+				g.drawImage(im,xdraw,ydraw, null);
 
 				//on dessine les limites de la carte 
 				g2.setStroke(new BasicStroke(2));
@@ -224,7 +235,8 @@ public class ModelEditeur extends AbstractModelEditeur{
 		//on dessine l'image du bloc choisi si il existe une texture 
 		if(!texture.equals(TypeBloc.NONE))
 		{
-			image = pan.getToolkit().getImage(getClass().getClassLoader().getResource("resources/Editeur/"+texture +((loupe) ? "_p" : "" )+".png"));
+			
+			image = imagesMonde.getImage(null, texture, loupe?BlocImModifier.LOUPE:null);;
 			if(texture.equals(TypeBloc.DELETE))
 			{
 				g.drawImage(image, xMousePos-10, yMousePos-7, null);
@@ -283,30 +295,28 @@ public class ModelEditeur extends AbstractModelEditeur{
 			g2.setColor(Color.black);
 			g2.setStroke(new BasicStroke(1));
 		}
-		String monsterName = "";
 		for(int i=0; i<tabEditeurMonstre.size(); i++)
 		{
-			monsterName = tabEditeurMonstre.get(i).type.toString().toLowerCase();
-			image = pan.getToolkit().getImage(getClass().getClassLoader().getResource(ImagesMonstre.path+ monsterName+ "/"+monsterName+((loupe) ? "_p" : "" )+".png"));
+			image = imagesMonde.getImage(null, tabEditeurMonstre.get(i).type, loupe?BlocImModifier.LOUPE:null);
 			g.drawImage(image, (int)((tabEditeurMonstre.get(i).pos.x -xViewPort)*((loupe) ? dezoomFactor : 1 )),(int)((tabEditeurMonstre.get(i).pos.y -yViewPort)*((loupe) ? dezoomFactor : 1 )), null);
 		}
 
 		//on dessine le personnage 
 		if(persoPos[0]!=-1)
 		{
-			image = pan.getToolkit().getImage(getClass().getClassLoader().getResource("resources/editeur/heros"+((loupe) ? "_p" : "" )+".png"));
+			image = imagesMonde.getImage(null, TypeBloc.PERSO, loupe?BlocImModifier.LOUPE:null);
 			g.drawImage(image, (int)((persoPos[0] -xViewPort)*((loupe) ? dezoomFactor : 1 )),(int)((persoPos[1] -yViewPort)*((loupe) ? dezoomFactor : 1 )), null);
 		}
 		//on dessine le début
 		if(startPos[0]!=-1)
 		{
-			image = pan.getToolkit().getImage(getClass().getClassLoader().getResource("resources/editeur/start"+((loupe) ? "_p" : "" )+".png"));
+			image = imagesMonde.getImage(null, TypeBloc.START, loupe?BlocImModifier.LOUPE:null);
 			g.drawImage(image,(int)( (startPos[0] -xViewPort)*((loupe) ? dezoomFactor : 1 )),(int)((startPos[1] -yViewPort)*((loupe) ? dezoomFactor : 1) ), null);
 		}
 		//on dessine la fin
 		if(endPos[0]!=-1)
 		{
-			image = pan.getToolkit().getImage(getClass().getClassLoader().getResource("resources/editeur/end"+((loupe) ? "_p" : "" )+".png"));
+			image = imagesMonde.getImage(null, TypeBloc.END, loupe?BlocImModifier.LOUPE:null);
 			g.drawImage(image, (int)((endPos[0] -xViewPort)*((loupe) ? dezoomFactor : 1 )),(int)((endPos[1] -yViewPort)*((loupe) ? dezoomFactor : 1 )), null);
 		}
 
@@ -318,8 +328,8 @@ public class ModelEditeur extends AbstractModelEditeur{
 		start=false;
 		end=false;
 		monstreActive=false;
-		System.out.println(_texture);
 		texture=_texture;
+		
 		if(_texture.equals(""))
 		{
 			menuEdit.setBloquant(false);
@@ -363,7 +373,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 			showStaticMonsters=true;
 		}
 
-		repaint=true;
+		//REMOVE repaint=true;
 		notifyObserver();
 	}
 
@@ -411,12 +421,12 @@ public class ModelEditeur extends AbstractModelEditeur{
 		String err = Serialize.sauver(nom, monde);
 		return err;
 	}
-	@SuppressWarnings("unused")
 	public void charger(String nom) 
 	{
 		Monde _monde = Serialize.charger(nom,null);		
 		if(_monde==null)
 		{
+			System.out.println("monde null");
 			return;
 		}
 		startPos[0]=_monde.xStartMap;
@@ -431,8 +441,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 		tabEditeurMonstre=_monde.listMonstreOriginal;
 
 		monde=_monde;
-
-		repaint=true;
+		//REMOVE repaint=true;
 		notifyObserver();
 
 	}
@@ -452,7 +461,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 		showMessageDialog=true;
 		textMessageDialog[0]=info;
 		textMessageDialog[1]="A propos";
-		typeMessageDialog= JOptionPane.INFORMATION_MESSAGE;
+		typeMessageDialog= ActiveJOptionPane.INFORMATION_MESSAGE;
 
 		notifyObserver();
 	}
@@ -484,7 +493,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 			showMessageDialog=true;
 			textMessageDialog[0]="Dezoom impossible: taille du monde trop petit";
 			textMessageDialog[1]="Erreur dezoom";
-			typeMessageDialog=JOptionPane.ERROR_MESSAGE;
+			typeMessageDialog=ActiveJOptionPane.ERROR_MESSAGE;
 			notifyObserver();
 			return;
 		}
@@ -510,7 +519,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 			tailleBloc = futurTailleBloc;
 			loupe=!loupe;
 
-			repaint=true;
+			//REMOVE repaint=true;
 			notifyObserver();
 		}
 		else 
@@ -520,7 +529,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 			yViewPort+=deltaYViewPort;
 			tailleBloc=futurTailleBloc;
 			loupe=!loupe;
-			repaint=true;
+			//REMOVE repaint=true;
 			notifyObserver();
 		}
 
@@ -528,11 +537,15 @@ public class ModelEditeur extends AbstractModelEditeur{
 	}
 	
 	@Override
-	public void doComputations(Affichage affich){
+	public void doComputations(GameRenderer affich){
+		if(!barreOut.isInit()){
+			barreOut.InitWhenImageLoaded();
+			this.notifyObserver();//request the affichage editeur to complete the layout
+		}
 		//As this mode is controlled by listeners, the computationDone is set to false when a listener is triggered. This function is then left empty
 	}
 	@Override
-	public void updateGraphics(){
+	public void updateSwing(){
 		this.notifyMainObserver();
 	}
 	@Override
@@ -542,12 +555,13 @@ public class ModelEditeur extends AbstractModelEditeur{
 	@Override
 	public boolean isGameModeLoaded()
 	{
-		//loading not required 
-		return true;
+		if(loaderEditeur==null)
+			return true;
+		else
+			return loaderEditeur.isLoadingDone();
 	}
 	@Override
 	public GameMode getLoaderGameMode(){
-		//loading not required 
-		return null;
+		return loaderEditeur;
 	}
 }

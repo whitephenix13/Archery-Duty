@@ -25,7 +25,6 @@ public class DebugTime {
 
 	public void init(PrintMode _printMode,int frame)
 	{
-		//System.out.println("RESET DEBUG TIME");
 		starttime = System.nanoTime();
 		currentStackLength=0;
 		currentStackLength= computeVerbose(-1); //so that verbose index starts at 1 

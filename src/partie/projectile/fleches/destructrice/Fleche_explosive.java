@@ -14,7 +14,6 @@ import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
 import partie.projectile.Projectile;
-import partie.projectile.fleches.Fleche;
 
 public class Fleche_explosive extends Destructrice {
 	
@@ -24,7 +23,7 @@ public class Fleche_explosive extends Destructrice {
 	
 	public Fleche_explosive(List<Projectile> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor) {
 		super(tabFleche, current_frame,_shooter,add_to_list,damageMult,speedFactor);
-
+		
 		TEMPS_DESTRUCTION= (long) (2* Math.pow(10,8));//in nano sec = 0.2 sec 
 		damage=0*damageMult;
 	}

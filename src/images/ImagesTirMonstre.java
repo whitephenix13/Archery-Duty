@@ -3,12 +3,10 @@ package images;
 import java.awt.Image;
 import java.util.ArrayList;
 
-import gameConfig.TypeObject;
-import loading.LoaderItem;
-import partie.deplacement.projectile.Mouvement_projectile.TypeTir;
-import partie.projectile.Projectile;
+import gameConfig.ObjectTypeHelper.ObjectType;
+import partie.deplacement.projectile.Mouvement_projectile.MouvProjectileEnum;
 
-public class ImagesTirMonstre extends LoaderItem{
+public class ImagesTirMonstre extends ImagesContainer{
 	
 	private static String path ="resources/projectile/tirMonstre/";
 	ArrayList<Image> im_SP_tir= new ArrayList<Image>();
@@ -32,17 +30,28 @@ public class ImagesTirMonstre extends LoaderItem{
 		percentage = 100;;
 		alreadyLoaded=true;
 	}
-	public ArrayList<Image> getImage(Projectile tir)
+	
+	@Override
+	public Image getImage(ObjectType objType, ImageInfo info1,ImageInfo info2)
+	{
+		return null;
+	}
+	
+	/***
+	 * objType: {@link ObjectType#TIR_SPIREL}
+	 * info1 : {@link MouvProjectileEnum}
+	 * info2 : null
+	 */
+	@Override
+	public ArrayList<Image> getImages(ObjectType objType, ImageInfo info1,ImageInfo info2, int anim)
 	{
 		ArrayList<Image> im = new ArrayList<Image>();
-		if(TypeObject.isTypeOf(tir, TypeObject.TIR_SPIREL))
+		if(objType.equals(ObjectType.TIR_SPIREL))
 		{
-			if(tir.getDeplacement().IsDeplacement(TypeTir.T_normal))
-				im.add(im_SP_tir.get(tir.getAnim()));
+			if(info1.equals(MouvProjectileEnum.T_normal))
+				im.add(im_SP_tir.get(anim));
 		}
 
 		return im;
 	}
-
-
 }

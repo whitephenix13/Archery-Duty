@@ -14,16 +14,18 @@ import java.awt.event.MouseListener;
 import java.util.LinkedHashMap;
 
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import ActiveJComponent.ActiveJButton;
+import ActiveJComponent.ActiveJLabel;
+import ActiveJComponent.ActiveJOptionPane;
+import ActiveJComponent.ActiveJPanel;
+import ActiveJComponent.ActiveJSlider;
 import Affichage.Drawable;
 import gameConfig.InterfaceConstantes;
+import images.ImagesBackground.ImBackgroundInfo;
+import images.ImagesContainer.ImageGroup;
 import utils.observer.Observer;
 
 @SuppressWarnings("serial")
@@ -32,10 +34,10 @@ public class AffichageOption extends Drawable implements Observer{
 	public CustomLabel lSon = new CustomLabel("SON");   
 
 	public CustomLabel lReglageSon = new CustomLabel("Reglage son: ");  
-	public JSlider lSonSlider =new JSlider();
+	public ActiveJSlider lSonSlider =new ActiveJSlider();
 
 	public CustomLabel lReglageBruitage = new CustomLabel("Reglage bruitage: ");  
-	public JSlider lBruitageSlider =new JSlider();
+	public ActiveJSlider lBruitageSlider =new ActiveJSlider();
 
 	public CustomLabel lControle = new CustomLabel("CONTROLE"); 
 
@@ -61,15 +63,15 @@ public class AffichageOption extends Drawable implements Observer{
 	public CustomClickableLabel tPause;
 
 
-	public JButton retour = new JButton("Retour");
+	public ActiveJButton retour = new ActiveJButton("Retour");
 
-	public LinkedHashMap<String,JPanel> mapPanel = new LinkedHashMap<String,JPanel>();
+	public LinkedHashMap<String,ActiveJPanel> mapPanel = new LinkedHashMap<String,ActiveJPanel>();
 	String[] nomMapPanel = {"SON","son","CONTROLE","droite","gauche","saut","tir","tir secondaire","slow","pause","retour"};
 
 	private AbstractControlerOption controler;
 
 	//Utilisé pour les textes du menu option
-	public class CustomLabel extends JLabel
+	public class CustomLabel extends ActiveJLabel
 	{
 		public CustomLabel(String s)
 		{
@@ -80,7 +82,7 @@ public class AffichageOption extends Drawable implements Observer{
 	}
 
 	//utilisé pour le choix des touches dans le menu option
-	public class CustomClickableLabel extends JLabel
+	public class CustomClickableLabel extends ActiveJLabel
 	{
 		public CustomClickableLabel(String text, String name)
 		{
@@ -102,7 +104,7 @@ public class AffichageOption extends Drawable implements Observer{
 		initComposant();
 	}
 
-	public void setSlider(JSlider slider,String name, int initValue)
+	public void setSlider(ActiveJSlider slider,String name, int initValue)
 	{
 		slider.setMaximum(100);
 		slider.setMinimum(0);
@@ -136,7 +138,7 @@ public class AffichageOption extends Drawable implements Observer{
 
 		//On ajoute les listeners pour changer les touches 
 		inputListeners in = new inputListeners();
-		for(JPanel p : mapPanel.values())
+		for(ActiveJPanel p : mapPanel.values())
 		{
 			p.addMouseListener(in);
 			controler.opt.inputOption.init(p);
@@ -162,7 +164,7 @@ public class AffichageOption extends Drawable implements Observer{
 		lSonSlider.removeChangeListener(lSonSlider.getChangeListeners()[lSonSlider.getChangeListeners().length-1]);
 		lBruitageSlider.removeChangeListener(lBruitageSlider.getChangeListeners()[lBruitageSlider.getChangeListeners().length-1]);
 
-		for(JPanel p : mapPanel.values())
+		for(ActiveJPanel p : mapPanel.values())
 		{
 			MouseListener[] ml = p.getMouseListeners();
 			//KeyListener[] kl = p.getKeyListeners();
@@ -198,7 +200,7 @@ public class AffichageOption extends Drawable implements Observer{
 		tSlow= new CustomClickableLabel(touch.ToString(touch.t_slow),"slow");
 		tPause= new CustomClickableLabel(touch.ToString(touch.t_pause),"pause");
 
-		retour = new JButton("Retour");
+		retour = new ActiveJButton("Retour");
 
 		//on régle les slideur 
 		setSlider(lSonSlider,"son slider",(int) (Config.musicVolume*100));
@@ -207,7 +209,7 @@ public class AffichageOption extends Drawable implements Observer{
 		//on rempli les panels pour option
 		for(String s : nomMapPanel)
 		{
-			JPanel pan = new JPanel();
+			ActiveJPanel pan = new ActiveJPanel();
 			pan.setName(s);
 			pan.setBackground(Color.BLACK);
 			mapPanel.put(s, pan);
@@ -215,7 +217,7 @@ public class AffichageOption extends Drawable implements Observer{
 
 		mapPanel.get("SON").add(lSon);
 
-		JPanel panelSon = mapPanel.get("son");
+		ActiveJPanel panelSon = mapPanel.get("son");
 		panelSon.add(lReglageSon);
 		panelSon.add(lSonSlider);
 		panelSon.add(lReglageBruitage);
@@ -223,31 +225,31 @@ public class AffichageOption extends Drawable implements Observer{
 
 		mapPanel.get("CONTROLE").add(lControle);
 
-		JPanel panelDroit = mapPanel.get("droite");
+		ActiveJPanel panelDroit = mapPanel.get("droite");
 		panelDroit.add(lDepDroit);
 		panelDroit.add(tDepDroit);
 
-		JPanel panelGauche = mapPanel.get("gauche");
+		ActiveJPanel panelGauche = mapPanel.get("gauche");
 		panelGauche.add(lDepGauche);
 		panelGauche.add(tDepGauche);
 
-		JPanel panelSaut = mapPanel.get("saut");
+		ActiveJPanel panelSaut = mapPanel.get("saut");
 		panelSaut.add(lSaut);
 		panelSaut.add(tSaut);
 
-		JPanel panelTir = mapPanel.get("tir");
+		ActiveJPanel panelTir = mapPanel.get("tir");
 		panelTir.add(lTir);
 		panelTir.add(tTir);
 		
-		JPanel panel2Tir = mapPanel.get("tir secondaire");
+		ActiveJPanel panel2Tir = mapPanel.get("tir secondaire");
 		panel2Tir.add(l2Tir);
 		panel2Tir.add(t2Tir);
 		
-		JPanel panelSlow = mapPanel.get("slow");
+		ActiveJPanel panelSlow = mapPanel.get("slow");
 		panelSlow.add(lSlow);
 		panelSlow.add(tSlow);
 
-		JPanel panelPause = mapPanel.get("pause");
+		ActiveJPanel panelPause = mapPanel.get("pause");
 		panelPause.add(lPause);
 		panelPause.add(tPause);
 
@@ -257,7 +259,7 @@ public class AffichageOption extends Drawable implements Observer{
 		this.getContentPane().setLayout(new GridLayout(11,1));
 		this.getContentPane().setBackground(InterfaceConstantes.BACKGROUND_COLOR);
 		this.getContentPane().setOpaque(false);
-		for(JPanel pan : mapPanel.values())
+		for(ActiveJPanel pan : mapPanel.values())
 		{
 			this.getContentPane().add(pan);
 		}
@@ -273,7 +275,7 @@ public class AffichageOption extends Drawable implements Observer{
 		public void mouseReleased(MouseEvent e) 
 		{
 			controler.opt.computationDone=false;
-			JButton button = (JButton)e.getSource();
+			ActiveJButton button = (ActiveJButton)e.getSource();
 			Rectangle r = button.getBounds();
 			//Apply pressed only if the release is on the pressed button
 			if(r.contains(new Point(r.x+e.getX(),r.y+e.getY()))){
@@ -381,10 +383,9 @@ public class AffichageOption extends Drawable implements Observer{
 	}
 	
 	@Override
-	public void draw(Graphics g)
+	public void drawOnGraphics(Graphics g,boolean forceRepaint)
 	{
-		//Nothing to draw
-		mainFrame.warnFadeOutCanStart();
+		g.drawImage(controler.opt.gameHandler.getImage(ImageGroup.BACKGROUND, null, ImBackgroundInfo.BLACK, null),0,0,null);
 	}
 
 	@Override
@@ -392,7 +393,7 @@ public class AffichageOption extends Drawable implements Observer{
 
 		//message d'erreur lors d'un input invalide
 		if(controler.opt.getShowInputError())
-			JOptionPane.showMessageDialog(this.getContentPane(), "Touches autorisées: A-Z, 0-9, F1-F12, ESPACE, CTRL, SHIFT, BACKSPACE, ENTER, FLECHES, SOURIS" , "Erreur Saisie", JOptionPane.ERROR_MESSAGE);
+			ActiveJOptionPane.showMessageDialog(this.getContentPane(), "Touches autorisées: A-Z, 0-9, F1-F12, ESPACE, CTRL, SHIFT, BACKSPACE, ENTER, FLECHES, SOURIS" , "Erreur Saisie", ActiveJOptionPane.ERROR_MESSAGE);
 
 		//Met à jour les touches
 		if(controler.opt.getUpdateInputText())
@@ -400,7 +401,7 @@ public class AffichageOption extends Drawable implements Observer{
 
 		//Remet à 0 les variables demandant d'updater un composant
 		controler.opt.resetVariablesAffichage();
-		this.getContentPane().repaint();
+		//REMOVE this.getContentPane().repaint();
 	}
 
 

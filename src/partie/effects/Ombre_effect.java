@@ -1,14 +1,12 @@
 package partie.effects;
 
 import java.awt.Point;
-import java.awt.geom.AffineTransform;
 
 import javax.vecmath.Vector2d;
 
 import partie.collision.Collidable;
 import partie.collision.Collision;
-import partie.conditions.Condition;
-import partie.deplacement.effect.Mouvement_effect.TypeMouvEffect;
+import partie.conditions.Condition.ConditionEnum;
 import partie.deplacement.effect.Ombre_idle;
 import partie.entitie.Entity;
 import partie.modelPartie.AbstractModelPartie;
@@ -22,11 +20,11 @@ public class Ombre_effect extends Effect{
 	public Ombre_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame,Vector2d _normalCollision,Point _pointCollision,
 			Point _correctedPointCollision)
 	{
-		boolean _typeEffect = false;//doesn't matter
-
-		super.init(_anim,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,_typeEffect,true);
-
-		setDeplacement(new Ombre_idle(TypeMouvEffect.Ombre,partie.getFrame()));
+		super(_anim,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,false,true);
+		
+		subTypeMouv = null;
+		setDeplacement(new Ombre_idle(subTypeMouv,partie.getFrame()));
+		
 		partie.arrowsEffects.add(this);
 		setFirstPos(partie);
 		this.onUpdate(partie, false); //update rotated hitbox and drawtr
@@ -37,7 +35,7 @@ public class Ombre_effect extends Effect{
 	public void updateOnCollidable(AbstractModelPartie partie,Entity attacher)
 	{
 		if(Collision.testcollisionObjects(partie, this, attacher,true))
-			attacher.conditions.addNewCondition(Condition.LENTEUR, LENTEUR_DUREE,System.identityHashCode(this));
+			attacher.conditions.addNewCondition(ConditionEnum.LENTEUR, LENTEUR_DUREE,System.identityHashCode(this));
 	}
 	
 	@Override

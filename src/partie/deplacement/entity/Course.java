@@ -6,24 +6,27 @@ import java.util.Arrays;
 //il y a 4 animations de deux cotés 
 import java.util.List;
 
-import gameConfig.TypeObject;
+import gameConfig.ObjectTypeHelper;
+import gameConfig.ObjectTypeHelper.ObjectType;
 import option.Config;
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
 import partie.deplacement.Animation;
 import partie.deplacement.Mouvement;
-import partie.deplacement.TypeMouv;
 import utils.Vitesse;
 
 public class Course extends Mouvement_entity{
 
-	public enum TypeCourse implements TypeMouv {CourseGauche,CourseDroite };
+	//REMOVE public enum TypeCourse implements TypeMouv {CourseGauche,CourseDroite };
 
 	//constructeur monstre
-	public Course(Object obj,TypeMouv _type_mouv,int current_frame){
+	public Course(ObjectType objType,SubTypeMouv _sub_type_mouv,int current_frame){
 		super();
-		type_mouv=_type_mouv;
-		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
+		type_mouv= MouvEntityEnum.COURSE;
+		sub_type_mouv=_sub_type_mouv;
+		this.objType=objType;
+		
+		if(objType.equals(ObjectType.HEROS))
 		{
 			xtaille =  Arrays.asList(55,79,75,82,55,79,75,82);
 			ytaille =  Arrays.asList(89,85,89,94,89,85,89,94);
@@ -43,16 +46,16 @@ public class Course extends Mouvement_entity{
 			hitboxCreation.add(Hitbox.asListPoint(xg,yb));
 
 			hitbox = Hitbox.createHitbox(hitboxCreation);
-			int start_index =type_mouv.equals(TypeCourse.CourseGauche) ? 0 : 4;
-			int end_index =type_mouv.equals(TypeCourse.CourseGauche) ? 4 : 8;
+			int start_index =sub_type_mouv.equals(SubMouvEntityEnum.GAUCHE) ? 0 : 4;
+			int end_index =sub_type_mouv.equals(SubMouvEntityEnum.GAUCHE) ? 4 : 8;
 			//animation frame, current_frame, start_index, end_index
 			animation.start(Arrays.asList(6,12,18,24,6,12,18,24), current_frame, start_index, end_index);
 
 		}
 	}
 
-	public Course(Object obj,TypeMouv _type_mouv, int current_frame,Animation _animation){
-		this(obj,_type_mouv,current_frame);
+	public Course(ObjectType objType,SubTypeMouv _sub_type_mouv, int current_frame,Animation _animation){
+		this(objType,_sub_type_mouv,current_frame);
 		animation = _animation;
 	}
 
@@ -62,13 +65,13 @@ public class Course extends Mouvement_entity{
 		return 100;
 	}*/
 
-	public Mouvement Copy(Object obj) {
-		return new Course(obj,type_mouv,animation.getStartFrame(),animation);
+	public Mouvement Copy() {
+		return new Course(objType,sub_type_mouv,animation.getStartFrame(),animation);
 	}
 
 	@Override
 	public Vitesse __getUncheckedSpeed(Collidable object, int anim) {
-		if(TypeObject.isTypeOf(object, TypeObject.HEROS))
+		if(ObjectTypeHelper.isTypeOf(object, ObjectType.HEROS))
 		{
 			assert (anim>=0 && anim <8);
 
@@ -83,7 +86,7 @@ public class Course extends Mouvement_entity{
 	}
 	@Override
 	public String droite_gauche(Object obj,int anim) {
-		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
+		if(ObjectTypeHelper.isTypeOf(obj, ObjectType.HEROS))
 			if(anim<4)
 				return (Mouvement.GAUCHE);
 			else 

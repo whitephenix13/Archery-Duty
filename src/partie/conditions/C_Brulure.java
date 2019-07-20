@@ -9,7 +9,7 @@ public class C_Brulure extends Condition{
 	
 	public C_Brulure(double _duree)
 	{
-		name=BRULURE;
+		type=ConditionEnum.BRULURE;
 		DUREE= _duree*Math.pow(10, 9); //sec 
 		STEP = 1*Math.pow(10, 9); //in nano : damage every seconds
 		DAMAGE = -5; //5 damage every STEP

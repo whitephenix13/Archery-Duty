@@ -567,7 +567,8 @@ public class A_Star {
 		//Check if the initialPos and the object/initIndex or target are not too far one from the other 
 		if(Dist(startPos,params.initialPos)> MAX_DISTANCE || Dist(params.worldTarget,params.initialPos)> MAX_DISTANCE)
 		{
-			System.out.println(Dist(startPos,params.initialPos)+" between pos "+ Dist(params.worldTarget,params.initialPos) +" between target "+ MAX_DISTANCE +" max distance");
+			if(params.LOG)
+				System.out.println(Dist(startPos,params.initialPos)+" between pos "+ Dist(params.worldTarget,params.initialPos) +" between target "+ MAX_DISTANCE +" max distance");
 			params.lastError = ERROR.TOO_FAR;
 			return null;
 		}

@@ -5,25 +5,26 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import gameConfig.TypeObject;
+import gameConfig.ObjectTypeHelper;
+import gameConfig.ObjectTypeHelper.ObjectType;
 import option.Config;
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
 import partie.deplacement.Animation;
 import partie.deplacement.Mouvement;
-import partie.deplacement.TypeMouv;
 import partie.effects.Electrique_effect;
 import partie.projectile.fleches.Fleche;
 import utils.Vitesse;
 
 public class T_normal extends Mouvement_projectile{
 
-	public enum TypeTirNormal implements TypeMouv {Tir};
-
-	public T_normal(Object obj,TypeMouv _type_mouv,int current_frame){
+	public T_normal(ObjectType objType,SubTypeMouv _sub_type_mouv,int current_frame){
 		super();
-		type_mouv=_type_mouv;
-		if(TypeObject.isTypeOf(obj, TypeObject.FLECHE))
+		type_mouv=MouvProjectileEnum.T_normal;
+		sub_type_mouv=_sub_type_mouv;
+		this.objType=objType;
+		
+		if(objType.equals(ObjectType.FLECHE))
 		{                     
 			xtaille=Arrays.asList(45,45,45,45);
 			ytaille=Arrays.asList(19,19,19,19);
@@ -46,7 +47,7 @@ public class T_normal extends Mouvement_projectile{
 			animation.start(Arrays.asList(delta,2*delta,3*delta,4*delta), current_frame, 0, 4);
 
 		}
-		else if(TypeObject.isTypeOf(obj, TypeObject.TIR_SPIREL))
+		else if(objType.equals(ObjectType.TIR_SPIREL))
 		{
 
 			xtaille= Arrays.asList(36,63,114);
@@ -71,10 +72,10 @@ public class T_normal extends Mouvement_projectile{
 			animation.start(Arrays.asList(delta,2*delta,3*delta), current_frame, 0, 3);
 		}
 		else
-			System.err.println("Unkown type "+ obj.getClass().getName());
+			System.err.println("Unkown type "+ objType);
 	}
-	public T_normal(Object obj,TypeMouv _type_mouv, int current_frame,Animation _animation){
-		this(obj,_type_mouv,current_frame);
+	public T_normal(ObjectType _typeObj,SubTypeMouv _sub_type_mouv, int current_frame,Animation _animation){
+		this(_typeObj,_sub_type_mouv,current_frame);
 		animation = _animation;
 	}
 	/*@Override
@@ -88,20 +89,20 @@ public class T_normal extends Mouvement_projectile{
 			return 0;
 	}*/
 	@Override
-	public Mouvement Copy(Object obj) {
-		return new T_normal(obj,type_mouv,animation.getStartFrame(),animation);
+	public Mouvement Copy() {
+		return new T_normal(objType,sub_type_mouv,animation.getStartFrame(),animation);
 	}
 	@Override
 	public Vitesse __getUncheckedSpeed(Collidable object, int anim) {
-		if(TypeObject.isTypeOf(object, TypeObject.FLECHE))
+		if(ObjectTypeHelper.isTypeOf(object, ObjectType.FLECHE))
 		{
 			Fleche f = (Fleche)object;
 			int speed_norm = (int)(30.0 / Config.ratio_fps());
-			if(TypeObject.isTypeOf(object, TypeObject.GRAPPIN))
+			if(ObjectTypeHelper.isTypeOf(object, ObjectType.GRAPPIN))
 				speed_norm = (int)(60.0 / Config.ratio_fps());//60
 			return object.convertSpeed(speed_norm,object.getRotation());
 		}
-		else if(TypeObject.isTypeOf(object, TypeObject.TIR_SPIREL))
+		else if(ObjectTypeHelper.isTypeOf(object, ObjectType.TIR_SPIREL))
 		{
 			int speed_norm = (int)(10.0 / Config.ratio_fps());
 			return object.convertSpeed(speed_norm,object.getRotation());
@@ -112,14 +113,14 @@ public class T_normal extends Mouvement_projectile{
 	}
 	@Override
 	public String droite_gauche(Object obj,int anim) {
-		if(TypeObject.isTypeOf(obj, TypeObject.FLECHE))
+		if(ObjectTypeHelper.isTypeOf(obj, ObjectType.FLECHE))
 		{
 			if( (((Fleche)obj).getRotation() <= Math.PI/2) && (((Fleche)obj).getRotation() >= 3*Math.PI/2) )
 				return Mouvement.GAUCHE; 
 			else
 				return Mouvement.DROITE;
 		}
-		else if(TypeObject.isTypeOf(obj, TypeObject.TIR_SPIREL))
+		else if(ObjectTypeHelper.isTypeOf(obj, ObjectType.TIR_SPIREL))
 			if(anim<2)
 				return (Mouvement.GAUCHE);
 			else 
@@ -130,10 +131,10 @@ public class T_normal extends Mouvement_projectile{
 		}
 	}
 	@Override
-	public int updateAnimation(Object obj,int anim,int current_frame,double speedFactor) {
-		if(TypeObject.isTypeOf(obj, TypeObject.FLECHE))
+	public int updateAnimation(int anim,int current_frame,double speedFactor) {
+		if(objType.equals(ObjectType.FLECHE))
 			return animation.update(anim,current_frame,speedFactor);
-		else  if(TypeObject.isTypeOf(obj, TypeObject.TIR_SPIREL))
+		else if(objType.equals(ObjectType.TIR_SPIREL))
 			return animation.update(0,current_frame,speedFactor);
 		else 
 			return -1;

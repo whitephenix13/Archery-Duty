@@ -5,23 +5,25 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import gameConfig.TypeObject;
+import gameConfig.ObjectTypeHelper;
+import gameConfig.ObjectTypeHelper.ObjectType;
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
 import partie.deplacement.Animation;
 import partie.deplacement.Mouvement;
-import partie.deplacement.TypeMouv;
 import utils.Vitesse;
 
 public class Tir extends Mouvement_entity
 {
-	public enum TypeTirPerso implements TypeMouv {Tir};
+	//REMOVE public enum TypeTirPerso implements TypeMouv {Tir};
 
-	public Tir(Object obj, TypeMouv _type_mouv,int current_frame) 
+	public Tir(ObjectType objType, SubTypeMouv _sub_type_mouv,int current_frame) 
     {
 		super();
-		type_mouv=_type_mouv;
-		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
+		type_mouv=MouvEntityEnum.TIR;
+		sub_type_mouv=_sub_type_mouv;
+		this.objType=objType;
+		if(objType.equals(ObjectType.HEROS))
 		{
 			xtaille =  Arrays.asList(50,63,75,75,63,50,57,75,75,57);
 			ytaille =  Arrays.asList(105,97,86,86,97,105,112,101,101,112);
@@ -60,8 +62,8 @@ public class Tir extends Mouvement_entity
 		}
 	
 	}
-	public Tir(Object obj,TypeMouv _type_mouv, int current_frame,Animation _animation){
-		this(obj,_type_mouv,current_frame);
+	public Tir(ObjectType objType, SubTypeMouv _sub_type_mouv, int current_frame,Animation _animation){
+		this(objType,_sub_type_mouv,current_frame);
 		animation = _animation;
 	}
 	
@@ -74,12 +76,12 @@ public class Tir extends Mouvement_entity
 			return 0;
 	}*/
 	
-	public Mouvement Copy(Object obj) {
-		return new Tir(obj,type_mouv,animation.getStartFrame(),animation);
+	public Mouvement Copy() {
+		return new Tir(objType,sub_type_mouv,animation.getStartFrame(),animation);
 	}
 	@Override
 	public Vitesse __getUncheckedSpeed(Collidable object, int anim) {
-		if(TypeObject.isTypeOf(object, TypeObject.HEROS))
+		if(ObjectTypeHelper.isTypeOf(object, ObjectType.HEROS))
 		{
 			return null;//nothing
 		}
@@ -87,7 +89,7 @@ public class Tir extends Mouvement_entity
 	}
 	@Override
 	public String droite_gauche(Object obj,int anim) {
-		if(TypeObject.isTypeOf(obj, TypeObject.HEROS))
+		if(ObjectTypeHelper.isTypeOf(obj, ObjectType.HEROS))
 			if(anim>=3 && anim <= 7 )
 				return (Mouvement.GAUCHE);
 			else 
@@ -98,7 +100,7 @@ public class Tir extends Mouvement_entity
 		}
 	}
 	@Override
-	public int updateAnimation(Object obj, int anim,int current_frame,double speedFactor) {
+	public int updateAnimation(int anim,int current_frame,double speedFactor) {
 		return animation.update(0,current_frame,speedFactor);
 	}
 }

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import javax.vecmath.Vector2d;
 
 import gameConfig.InterfaceConstantes;
+import partie.conditions.Condition.ConditionEnum;
 import partie.modelPartie.PartieTimer;
 import utils.Vitesse;
 
@@ -23,7 +24,7 @@ public class C_Motion extends Condition{
 	private ArrayList<Integer> ids = new ArrayList<Integer>();
 	public C_Motion(Vitesse init_speed)
 	{
-		name=MOTION;
+		type=ConditionEnum.MOTION;
 		DUREE= -1 ; // no timer  
 		startTime=PartieTimer.me.getElapsedNano();
 		speed=correctSpeed(init_speed);

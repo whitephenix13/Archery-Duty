@@ -6,15 +6,12 @@ import javax.vecmath.Vector2d;
 
 import music.MusicBruitage;
 import partie.collision.Collidable;
-import partie.collision.Hitbox;
 import partie.effects.Roche_effect;
 import partie.effects.Trou_noir_effect;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
 import partie.projectile.Projectile;
-import partie.projectile.fleches.Fleche;
-import utils.Vitesse;
 
 public class Fleche_trou_noir extends Destructrice {
 	

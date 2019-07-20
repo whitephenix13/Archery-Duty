@@ -1,16 +1,14 @@
 package partie.effects;
 
 import java.awt.Point;
-import java.awt.geom.AffineTransform;
 
 import javax.vecmath.Vector2d;
 
 import partie.collision.Collidable;
 import partie.collision.Collision;
 import partie.collision.Hitbox;
-import partie.conditions.Condition;
+import partie.conditions.Condition.ConditionEnum;
 import partie.deplacement.Deplace;
-import partie.deplacement.effect.Mouvement_effect.TypeMouvEffect;
 import partie.deplacement.effect.Vent_idle;
 import partie.entitie.Entity;
 import partie.modelPartie.AbstractModelPartie;
@@ -40,13 +38,12 @@ public class Vent_effect extends Effect{
 	public Vent_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame,Vector2d _normalCollision,Point _pointCollision,
 			Point _correctedPointCollision,boolean fromCenter)
 	{
-		boolean _typeEffect = false;//doesn't matter
-
-		super.init(_anim,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,_typeEffect,false);
+		super(_anim,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,false,false);
 		if(fromCenter)
 			xalign = 0.5f;
-
-		setDeplacement(new Vent_idle(TypeMouvEffect.Vent,partie.getFrame()));
+		
+		subTypeMouv = null;
+		setDeplacement(new Vent_idle(subTypeMouv,partie.getFrame()));
 		
 		partie.arrowsEffects.add(this);
 		setFirstPos(partie);
@@ -105,7 +102,7 @@ public class Vent_effect extends Effect{
 	{
 		if(Collision.testcollisionObjects(partie, this, attacher,true)){
 			Vitesse init_vit = computeProjectSpeed(partie,attacher); 
-			attacher.conditions.addNewCondition(Condition.MOTION, DUREE_EJECT,init_vit,System.identityHashCode(this));
+			attacher.conditions.addNewCondition(ConditionEnum.MOTION, DUREE_EJECT,init_vit,System.identityHashCode(this));
 		}
 	}
 
@@ -113,7 +110,7 @@ public class Vent_effect extends Effect{
 	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
 		updatePos(partie);
 		int prev_anim =getAnim();
-		setAnim(getDeplacement().updateAnimation(this,getAnim(),partie.getFrame(),1));
+		setAnim(getDeplacement().updateAnimation(getAnim(),partie.getFrame(),1));
 		if(prev_anim != getAnim())
 			onAnimChanged(prev_anim,getAnim());
 		//doit deplace, change anim

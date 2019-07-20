@@ -9,12 +9,12 @@ import java.awt.image.WritableRaster;
 
 import javax.vecmath.Vector2d;
 
-import gameConfig.TypeObject;
+import gameConfig.ObjectTypeHelper;
+import gameConfig.ObjectTypeHelper.ObjectType;
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
 import partie.deplacement.Deplace;
 import partie.deplacement.effect.Grappin_idle;
-import partie.deplacement.effect.Mouvement_effect.TypeMouvEffect;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
@@ -57,13 +57,15 @@ public class Grappin_effect extends Effect{
 	private double DRAG_SPEED=15;//15
 	public Grappin_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame, Collidable _shooter )
 	{
-		super.init(_anim,_ref_fleche);
+		super(_anim,_ref_fleche);
 		
 		ref_fleche=_ref_fleche;
 		localVit= new Vitesse();
 		setRotation(0);
 		shooter=_shooter;
-		setDeplacement(new Grappin_idle(TypeMouvEffect.Grappin,partie.getFrame()));
+		
+		subTypeMouv = null;
+		setDeplacement(new Grappin_idle(subTypeMouv,partie.getFrame()));
 		
 		xplace=2;
 		yplace=1;
@@ -158,10 +160,10 @@ public class Grappin_effect extends Effect{
 	
 	@Override
 	public Vitesse getModifiedVitesse(AbstractModelPartie partie,Collidable obj) {
-		if(TypeObject.isTypeOf(obj, TypeObject.HEROS) && ! this.shooterDragged)
+		if(ObjectTypeHelper.isTypeOf(obj, ObjectType.HEROS) && ! this.shooterDragged)
 			return new Vitesse(); 
 
-		if(!TypeObject.isTypeOf(obj, TypeObject.HEROS) &&  this.shooterDragged)
+		if(!ObjectTypeHelper.isTypeOf(obj, ObjectType.HEROS) &&  this.shooterDragged)
 			return new Vitesse(); 
 
 		double[] XY = Deplace.angleToXY(getRotation());

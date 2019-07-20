@@ -5,19 +5,17 @@ import java.util.List;
 
 import partie.collision.Hitbox;
 import partie.deplacement.Mouvement;
-import partie.deplacement.TypeMouv;
-import partie.deplacement.effect.Mouvement_effect.TypeMouvEffect;
-import partie.effects.Electrique_effect;
-import partie.effects.Feu_effect;
+import partie.deplacement.effect.Mouvement_effect.MouvEffectEnum;
+import partie.effects.Effect.EffectCollisionEnum;
 import utils.Vitesse;
 
 public class Feu_idle extends Mouvement_effect{
 	
-	public Feu_idle(TypeMouv _type_mouv, int current_frame){
+	public Feu_idle(SubTypeMouv _sub_type_mouv, int current_frame){
 		super();
-		type_mouv=_type_mouv;
-
-		if(type_mouv.equals(TypeMouvEffect.FeuGround)){
+		type_mouv = MouvEffectEnum.FEU_IDLE;
+		sub_type_mouv=_sub_type_mouv;
+		if(sub_type_mouv.equals(EffectCollisionEnum.GROUND)){
 			xtaille =  Arrays.asList(40,40,40,40,40,40);
 			ytaille =  Arrays.asList(300,300,300,300,300,300);
 			this.hitbox = Hitbox.createSquareHitboxes(
@@ -33,8 +31,8 @@ public class Feu_idle extends Mouvement_effect{
 		}
 		
 		int start_index =0;
-		int end_index = type_mouv.equals(TypeMouvEffect.FeuGround)? 6 : 4;
-		List<Integer> animTimes=  type_mouv.equals(TypeMouvEffect.FeuGround)? Arrays.asList(4,8,12,16,20,24):Arrays.asList(4,8,12,16);
+		int end_index = sub_type_mouv.equals(EffectCollisionEnum.GROUND)? 6 : 4;
+		List<Integer> animTimes=  sub_type_mouv.equals(EffectCollisionEnum.GROUND)? Arrays.asList(4,8,12,16,20,24):Arrays.asList(4,8,12,16);
 		animation.start(animTimes, current_frame, start_index, end_index);
 		animation.setMaxNumAnim(1);
 
@@ -42,8 +40,8 @@ public class Feu_idle extends Mouvement_effect{
 	}
 	
 	@Override
-	public Mouvement Copy(Object obj) {
-		return new Feu_idle(type_mouv,animation.getStartFrame());
+	public Mouvement Copy() {
+		return new Feu_idle(sub_type_mouv,animation.getStartFrame());
 	}
 	
 }

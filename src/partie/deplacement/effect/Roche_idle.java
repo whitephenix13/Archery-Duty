@@ -6,18 +6,19 @@ import java.util.List;
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
 import partie.deplacement.Mouvement;
-import partie.deplacement.TypeMouv;
-import partie.effects.Roche_effect;
+import partie.deplacement.effect.Mouvement_effect.MouvEffectEnum;
+import partie.effects.Effect.EffectCollisionEnum;
 import utils.Vitesse;
 
 public class Roche_idle extends Mouvement_effect{
 	
 	boolean isBeingDestroyed = false;
-	public Roche_idle(TypeMouv _type_mouv, int current_frame){
+	public Roche_idle(SubTypeMouv _sub_type_mouv, int current_frame){
 		super();
-		type_mouv=_type_mouv;
-
-		if(type_mouv.equals(TypeMouvEffect.RocheGround)){
+		type_mouv = MouvEffectEnum.ROCHE_IDLE;
+		sub_type_mouv = _sub_type_mouv;
+		
+		if(sub_type_mouv.equals(EffectCollisionEnum.GROUND)){
 			xtaille =  Arrays.asList(100,100,100,100,100);
 			ytaille =  Arrays.asList(99,100,100,100,100);
 		}
@@ -27,10 +28,10 @@ public class Roche_idle extends Mouvement_effect{
 			hitbox = Hitbox.createSquareHitboxes(0,0,99,99,4);
 		}
 		int start_index =0;
-		int end_index = type_mouv.equals(TypeMouvEffect.RocheGround)? 1 : 4;
-		List<Integer> animTimes= type_mouv.equals(TypeMouvEffect.RocheGround)? Arrays.asList(10,4,8,12,16):Arrays.asList(4,8,12,16);
+		int end_index = sub_type_mouv.equals(EffectCollisionEnum.GROUND)? 1 : 4;
+		List<Integer> animTimes= sub_type_mouv.equals(EffectCollisionEnum.GROUND)? Arrays.asList(10,4,8,12,16):Arrays.asList(4,8,12,16);
 		animation.start(animTimes, current_frame, start_index, end_index);
-		if(type_mouv.equals(TypeMouvEffect.RocheGround))
+		if(sub_type_mouv.equals(EffectCollisionEnum.GROUND))
 			animation.setMaxNumAnim(-1);
 		else
 			animation.setMaxNumAnim(1);
@@ -41,7 +42,7 @@ public class Roche_idle extends Mouvement_effect{
 	
 	public void setDestroyAnimation(int frame)
 	{
-		if(!type_mouv.equals(TypeMouvEffect.RocheGround))
+		if(!sub_type_mouv.equals(EffectCollisionEnum.GROUND))
 			return;
 		int start_index =1;
 		int end_index =5;
@@ -51,8 +52,8 @@ public class Roche_idle extends Mouvement_effect{
 		isBeingDestroyed=true;
 	}
 	@Override
-	public Mouvement Copy(Object obj) {
-		return new Roche_idle(type_mouv,animation.getStartFrame());
+	public Mouvement Copy() {
+		return new Roche_idle(sub_type_mouv,animation.getStartFrame());
 	}
 
 	@Override

@@ -8,21 +8,13 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JButton;
-
-import Affichage.Affichage;
+import ActiveJComponent.ActiveJButton;
 import Affichage.DrawImageHandler;
+import Affichage.GameRenderer;
 import debug.DebugDraw;
 import gameConfig.InterfaceConstantes;
-import images.ImagesBackground;
-import images.ImagesCondition;
-import images.ImagesEffect;
-import images.ImagesFleche;
+import images.ImagesContainer;
 import images.ImagesFlecheIcon;
-import images.ImagesHeros;
-import images.ImagesMonde;
-import images.ImagesMonstre;
-import images.ImagesTirMonstre;
 import loading.Loader;
 import menu.menuPrincipal.GameHandler;
 import menu.menuPrincipal.GameMode;
@@ -105,15 +97,15 @@ public abstract class AbstractModelPartie  implements Observable, GameMode{
 	//}}
 	///AFFICHAGE 
 	//pour pouvoir acceder aux images chargées 
-	public ImagesBackground imBackground= new ImagesBackground();
-	public ImagesMonde imMonde= new ImagesMonde();
-	public ImagesMonstre imMonstre= new ImagesMonstre();
-	public ImagesHeros imHeros= new ImagesHeros();
-	public ImagesTirMonstre imTirMonstre= new ImagesTirMonstre();
-	public ImagesFleche imFleches = new ImagesFleche();
-	public ImagesEffect imEffect= new ImagesEffect();
-	public ImagesCondition imConditions= new ImagesCondition();
-	public ImagesFlecheIcon imFlecheIcon = new ImagesFlecheIcon();
+	public ImagesContainer imBackground;
+	public ImagesContainer imMonde;
+	public ImagesContainer imMonstre;
+	public ImagesContainer imHeros;
+	public ImagesContainer imTirMonstre;
+	public ImagesContainer imFleches;
+	public ImagesContainer imEffect;
+	public ImagesContainer imConditions;
+	public ImagesFlecheIcon imFlecheIcon;
 	
 	public Point INIT_RECT= new Point(50000,50000); //(abs,ord)
 	//public int absRect =INIT_RECT.x;
@@ -151,14 +143,12 @@ public abstract class AbstractModelPartie  implements Observable, GameMode{
 	protected boolean disableBoutonsFin=false;
 	protected boolean setAffichageOption=false; 
 	protected boolean arrowSlotIconChanged =true;
-	private boolean forceRepaint = false;
+	//private boolean forceRepaint = false;
 	
 	private ArrayList<Observer> listObserver = new ArrayList<Observer>();
 	//}}
 	public boolean getDisableBoutonsFin(){return disableBoutonsFin ;}
 	public boolean getFinPartie(){return finPartie;}
-	public boolean getForceRepaint(){return forceRepaint;}
-	public void resetForceRepaint(){forceRepaint=false;}
 
 	public void init()
 	{
@@ -249,10 +239,10 @@ public abstract class AbstractModelPartie  implements Observable, GameMode{
 		return trans;
 	}
 
-	public abstract void HandleBoutonsPressed(JButton button);
+	public abstract void HandleBoutonsPressed(ActiveJButton button);
 
 	public abstract void startPartie(int typeDeSpawn);
-	public abstract void play(Affichage affich) ;
+	public abstract void play(GameRenderer affich) ;
 	
 	public abstract void precomputeDraw();
 	public abstract void drawPartie(Graphics g);
@@ -288,7 +278,7 @@ public abstract class AbstractModelPartie  implements Observable, GameMode{
 			obs.update();
 	}
 	public void forceRepaint() {
-		forceRepaint=true;
+		gameHandler.forceRepaint();
 		notifyObserver();
 	}
 	public void removeObserver() {

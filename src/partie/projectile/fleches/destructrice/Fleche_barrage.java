@@ -8,31 +8,27 @@ import java.util.List;
 
 import javax.vecmath.Vector2d;
 
-import gameConfig.TypeObject;
-import partie.collision.Collidable;
+import gameConfig.ObjectTypeHelper;
+import gameConfig.ObjectTypeHelper.ObjectType;
 import partie.collision.GJK_EPA;
 import partie.collision.Hitbox;
 import partie.deplacement.Deplace;
 import partie.deplacement.Mouvement;
-import partie.deplacement.entity.Mouvement_entity;
-import partie.effects.Roche_effect;
-import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
 import partie.modelPartie.PartieTimer;
 import partie.projectile.Projectile;
 import partie.projectile.fleches.Fleche;
-import utils.PointHelper;
 
-public class Fleche_bogue  extends Destructrice{
+public class Fleche_barrage  extends Destructrice{
 	
 	// WARNING : effect moves with 
 	//	-colliding entity        			NO 
 	//  -colliding ground (ie roche_effect) NO
 	
-	Parameters_fleche_bogue params = new Parameters_fleche_bogue();
+	Parameters_marque_mortelle params = new Parameters_marque_mortelle();
 	//Used to created the 7 copy arrows
-	public Fleche_bogue(AbstractModelPartie partie,Fleche_bogue mainF,int xpos, int ypos, double _rotation) {
+	public Fleche_barrage(AbstractModelPartie partie,Fleche_barrage mainF,int xpos, int ypos, double _rotation) {
 		super(partie.tabFleche, partie.getFrame(),mainF.shooter,true,mainF.params.damageMult,mainF.speedFactor);
 		TEMPS_DESTRUCTION= (long) (2* Math.pow(10,8));//in nano sec = 0.2 sec 
 		damage=-10*mainF.params.damageMult;
@@ -47,23 +43,23 @@ public class Fleche_bogue  extends Destructrice{
 		setYpos_sync(ypos);
 		setRotation(_rotation);
 
-		this.setCollideWithout(Arrays.asList(TypeObject.BLOC,TypeObject.FLECHE,TypeObject.HEROS));
+		this.setCollideWithout(Arrays.asList(ObjectType.BLOC,ObjectType.FLECHE,ObjectType.HEROS));
 		
 	}
 	//Used to create the main arrow
-	public Fleche_bogue(List<Projectile> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor) {
+	public Fleche_barrage(List<Projectile> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor) {
 		super(tabFleche, current_frame,_shooter,add_to_list,damageMult,speedFactor);
 		TEMPS_DESTRUCTION= (long) (2* Math.pow(10,8));//in nano sec = 0.2 sec 
 		damage=-20*damageMult;
 		shooter=_shooter;
 		this.MAX_NUMBER_INSTANCE=1;
-		params.bogueArrows.add(this);
+		params.barrageArrows.add(this);
 		params.nbarrow+=1;
 		
 	}
 	
 	
-	private int[] computeBoguePos(AbstractModelPartie partie,double rot)
+	private int[] computeBarragePos(AbstractModelPartie partie,double rot)
 	{		
 		//compute direction
 		Vector2d direction = Deplace.angleToVector(rot);
@@ -89,8 +85,8 @@ public class Fleche_bogue  extends Destructrice{
 				{
 					//position is heros center + maxdistance in correct direction 
 					double rot = params.creat_rot + ((i%2)==0? 2*Math.PI/params.NB_ARROW*(i+2)/2: -1 * 2*Math.PI/params.NB_ARROW*(i+1)/2);
-					int[] xypos = computeBoguePos(partie,rot);//,getHitbox(partie.INIT_RECT),deplacement.hitbox_rotated
-					params.bogueArrows.add(new Fleche_bogue(partie,this,xypos[0],xypos[1],rot));
+					int[] xypos = computeBarragePos(partie,rot);//,getHitbox(partie.INIT_RECT),deplacement.hitbox_rotated
+					params.barrageArrows.add(new Fleche_barrage(partie,this,xypos[0],xypos[1],rot));
 					params.nbarrow+=1;
 				}
 				else
@@ -222,7 +218,7 @@ public class Fleche_bogue  extends Destructrice{
 		if(params.shoot_arrows){
 			this.doitDeplace=true;
 			getDeplacement().setSpeed(this, getAnim());
-			this.setCollideWithout(Arrays.asList(TypeObject.FLECHE,TypeObject.HEROS));
+			this.setCollideWithout(Arrays.asList(ObjectType.FLECHE,ObjectType.HEROS));
 			return super.deplace(partie, deplace);
 		}
 		boolean computeDist = !this.encochee; 
@@ -231,26 +227,26 @@ public class Fleche_bogue  extends Destructrice{
 			double dist=0;
 			if(computeDist)
 				dist = getDistanceToShooter(partie);
-			//The main arrow is shot (bogue still not created) but max distance is not reached yet: use regular deplace
+			//The main arrow is shot (barrage still not created) but max distance is not reached yet: use regular deplace
 			if(dist<params.MAX_DISTANCE && !params.reached_max_distance)
 				return super.deplace(partie, deplace);
 			else
 			{
 				//Update the distance
 				if(!params.reached_max_distance){
-					this.setCollideWithout(Arrays.asList(TypeObject.BLOC,TypeObject.FLECHE,TypeObject.HEROS));
+					this.setCollideWithout(Arrays.asList(ObjectType.BLOC,ObjectType.FLECHE,ObjectType.HEROS));
 					params.reached_max_distance=true;
 					params.last_add_time= PartieTimer.me.getElapsedNano();
 					params.current_distance=dist; 
 				}
 				else
 				{
-					//The bogue is built but is not shot yet: synchronzize the arrows's position with the hero (computeBoguePos), update the pos, the transform and the hitbox
+					//The barrage is built but is not shot yet: synchronzize the arrows's position with the hero (computeBarragePos), update the pos, the transform and the hitbox
 					int[] xypos = new int[2];
-					for(int i=0; i<params.bogueArrows.size();i++)
+					for(int i=0; i<params.barrageArrows.size();i++)
 					{
-						Fleche_bogue fb = params.bogueArrows.get(i);
-						xypos = computeBoguePos(partie,fb.getRotation());
+						Fleche_barrage fb = params.barrageArrows.get(i);
+						xypos = computeBarragePos(partie,fb.getRotation());
 						fb.setXpos_sync(xypos[0]);
 						fb.setYpos_sync(xypos[1]);
 					}
@@ -292,7 +288,7 @@ public class Fleche_bogue  extends Destructrice{
 	@Override
 	protected Hitbox computeRotatedHitbox(Point screenDisp,Mouvement dep, int anim)
 	{
-		//Override this function since the rotation has to be done around (0,0). The correct position was already computed by computeBoguePos
+		//Override this function since the rotation has to be done around (0,0). The correct position was already computed by computeBarragePos
 		if(!encochee && !params.shoot_arrows)
 		{
 			AffineTransform tr =  new AffineTransform();

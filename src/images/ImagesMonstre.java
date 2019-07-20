@@ -3,12 +3,10 @@ package images;
 import java.awt.Image;
 import java.util.ArrayList;
 
-import gameConfig.TypeObject;
-import loading.LoaderItem;
-import partie.deplacement.entity.Mouvement_entity.TypeMouvEntitie;
-import partie.entitie.Entity;
+import gameConfig.ObjectTypeHelper.ObjectType;
+import partie.deplacement.entity.Mouvement_entity.MouvEntityEnum;
 
-public class ImagesMonstre extends LoaderItem{
+public class ImagesMonstre extends ImagesContainer{
 
 	public static String path ="resources/entitie/monstre/";
 	ArrayList<Image> im_SP_attente= new ArrayList<Image>();
@@ -43,26 +41,31 @@ public class ImagesMonstre extends LoaderItem{
 		alreadyLoaded=true;
 		
 	}
-	/**
-	 * Renvoie la bonne image pour un monstre donné
-	 * 
-	 * @param monstre, le monstre a afficher
-	 * 
-	 * @return l'image a afficher
+	@Override
+	public Image getImage(ObjectType objType, ImageInfo info1,ImageInfo info2)
+	{
+		return null;
+	}
+	
+	/***
+	 * objType: {@link ObjectType#SPIREL}
+	 * info1 : {@link MouvEntityEnum}
+	 * info2 : null
 	 */
-	public ArrayList<Image> getImage(Entity monstre)
+	@Override
+	public ArrayList<Image> getImages(ObjectType objType, ImageInfo info1,ImageInfo info2, int anim)
 	{
 		ArrayList<Image> im = new ArrayList<Image>();
 //				im.add(this.im_electrique_aura.get(fleche.anim));
 
-		if (TypeObject.isTypeOf(monstre, TypeObject.SPIREL))
+		if (objType.equals(ObjectType.SPIREL))
 		{
-			if(monstre.getDeplacement().IsDeplacement(TypeMouvEntitie.Attente))
-				im.add(im_SP_attente.get(monstre.getAnim()));
-			else if (monstre.getDeplacement().IsDeplacement(TypeMouvEntitie.Marche))
-				im.add(im_SP_marche.get(monstre.getAnim()));
-			else if(monstre.getDeplacement().IsDeplacement(TypeMouvEntitie.Saut))
-				im.add(im_SP_saut.get(monstre.getAnim()));
+			if(info1.equals(MouvEntityEnum.ATTENTE))
+				im.add(im_SP_attente.get(anim));
+			else if (info1.equals(MouvEntityEnum.MARCHE))
+				im.add(im_SP_marche.get(anim));
+			else if(info1.equals(MouvEntityEnum.SAUT))
+				im.add(im_SP_saut.get(anim));
 		}
 		return im;
 	}

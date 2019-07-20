@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.Graphics;
 
 import Affichage.Drawable;
+import images.ImagesBackground.ImBackgroundInfo;
+import images.ImagesContainer.ImageGroup;
 
 public class AffichageLoader extends Drawable{
 	
@@ -13,22 +15,22 @@ public class AffichageLoader extends Drawable{
 		super();
 		this.loader=loader;
 		mainPanel.setOpaque(false);
-		mainPanel.setBackground(Color.BLACK);
 	}
 	
 	@Override 
-	public void draw(Graphics g)
+	public void drawOnGraphics(Graphics g,boolean forceRepaint)
 	{
-		mainFrame.warnFadeOutCanStart();
-
+		g.drawImage(loader.getGameHandler().getImage(ImageGroup.BACKGROUND, null, ImBackgroundInfo.BLACK, null), 0, 0, null);
+		
 		//show loading 
 		loader.showLoading(g);
+		
 		//mainFrame.repaint();REMOVE
 	}
 	
 	public void onUpdateGraphics()
 	{
-		mainFrame.repaint();
+		//REMOVE getFrame().repaint();
 	}
 	
 }

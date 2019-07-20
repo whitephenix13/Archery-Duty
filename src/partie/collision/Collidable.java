@@ -10,22 +10,24 @@ import java.util.List;
 import javax.vecmath.Vector2d;
 
 import gameConfig.Destroyable;
-import gameConfig.TypeObject;
+import gameConfig.ObjectTypeHelper;
+import gameConfig.ObjectTypeHelper.ObjectType;
 import partie.deplacement.Deplace;
 import partie.deplacement.Mouvement;
-import partie.deplacement.entity.Mouvement_entity.TypeMouvEntitie;
+import partie.deplacement.Mouvement.SubTypeMouv;
+import partie.deplacement.Mouvement.TypeMouv;
+import partie.deplacement.entity.Mouvement_entity.MouvEntityEnum;
 import partie.effects.Effect;
 import partie.entitie.Entity;
-import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
 import partie.projectile.Projectile;
-import partie.projectile.fleches.Fleche;
-import partie.projectile.tirMonstre.TirSpirel;
 import utils.Vitesse;
 
 //Specify that an object can enter in collision. 
 //Store the information needed to manage a collision
 public abstract class Collidable extends Destroyable{
+	
+	public ObjectType objType;
 	
 	//Used to determine the index of cachedParameters 
 	public final static int ANIM_CHANGED =0; 
@@ -60,7 +62,7 @@ public abstract class Collidable extends Destroyable{
 	private double rotation=0;
 
 	//All types that the object will not be consider when colliding
-	private List<String> immuneType =null;
+	private List<ObjectType> immuneType =null;
 	
 	//protected boolean[] cachedParametersForHitbox;
 	private CachedHitbox cachedHitbox;
@@ -73,7 +75,7 @@ public abstract class Collidable extends Destroyable{
 	public CachedAffineTransform getCacheDrawTrCopy(){if(cachedDrawTr==null) return null;return cachedDrawTr.copy();}
 	public void setCachedDrawTr(CachedAffineTransform cachedDrawTrCopy){if(cachedDrawTr==null) return; cachedDrawTr.set(cachedDrawTrCopy);}
 	
-	public List<String> getImmuneType() {return immuneType;}
+	public List<ObjectType> getImmuneType() {return immuneType;}
 	
 	public int getAnim(){return anim;}
 	public void setAnim(int i){
@@ -102,11 +104,14 @@ public abstract class Collidable extends Destroyable{
 	public void OnChangedRotation(){if(cachedHitbox !=null) cachedHitbox.OnChangedRotation();if(cachedDrawTr !=null) cachedDrawTr.OnChangedRotation();}
 
 	public Mouvement getDeplacement(){return deplacement;}
+	public boolean isDeplacement(TypeMouv t){return deplacement.IsDeplacement(t);}
+	public boolean isDeplacement(Mouvement m){return deplacement.IsDeplacement(m);}
+	public boolean isDeplacement(TypeMouv type,SubTypeMouv sub){return deplacement.IsDeplacement(type, sub);}
 	public void setDeplacement(Mouvement dep){
 		if(!dep.equals(deplacement))
 		{
 			deplacement = dep;
-			OnDeplacementChanged(deplacement==null?false: dep.type_mouv.equals(deplacement.type_mouv));
+			OnDeplacementChanged(deplacement==null?false: dep.IsDeplacement(deplacement));
 		}
 	}
 	
@@ -210,31 +215,31 @@ public abstract class Collidable extends Destroyable{
 
 	public void setCollideWithAll()
 	{
-		this.immuneType=new ArrayList<String>();
+		this.immuneType=new ArrayList<ObjectType>();
 	}
-	public void setCollideWithout(List<String> list )
+	public void setCollideWithout(List<ObjectType> list )
 	{
 		this.immuneType=list;
 	}
 	public void setCollideWithNone()
 	{
-		this.immuneType=Arrays.asList(TypeObject.COLLIDABLE);
+		this.immuneType=Arrays.asList(ObjectType.COLLIDABLE);
 	}
 	public boolean checkCollideWithWorld()
 	{
-		return !TypeObject.isMemberOf(TypeObject.BLOC, immuneType);
+		return !ObjectTypeHelper.isMemberOf(ObjectType.BLOC, immuneType);
 	}
 	public boolean checkCollideWithEntitie()
 	{
-		return !TypeObject.isMemberOf(TypeObject.ENTITIE, immuneType);
+		return !ObjectTypeHelper.isMemberOf(ObjectType.ENTITIE, immuneType);
 	}
 	public boolean checkCollideWithEffect()
 	{
-		return !TypeObject.isMemberOf(TypeObject.EFFECT, immuneType);
+		return !ObjectTypeHelper.isMemberOf(ObjectType.EFFECT, immuneType);
 	}
 	public boolean checkCollideWithNone()
 	{
-		return immuneType.contains(TypeObject.COLLIDABLE);
+		return immuneType.contains(ObjectType.COLLIDABLE);
 	}
 
 	public abstract Vitesse getGlobalVit(AbstractModelPartie partie);
@@ -246,9 +251,10 @@ public abstract class Collidable extends Destroyable{
 	public void setNormCollision(Vector2d _norm){normCollision=_norm;}
 	//return the last norm of colliding object. This object has to be unpenetrable.
 	public abstract Vector2d getNormCollision();
-
-	public void init()
+	
+	public Collidable()
 	{
+		objType = ObjectTypeHelper.getTypeObject(this);
 		synchroSpeed= new ArrayList<Collidable>();
 		normCollision=null;
 		last_colli_left=false;
@@ -256,8 +262,9 @@ public abstract class Collidable extends Destroyable{
 		max_speed_norm=-1;
 		pos = new Point();		
 		setCollideWithNone();
-	} 
-	
+	}
+
+	public TypeMouv getTypeMouv(){return deplacement.getTypeMouv();}
 	
 	public AffineTransform getDrawTr(Point currentScreendisp)
 	{	if(cachedDrawTr==null)
@@ -402,7 +409,7 @@ public abstract class Collidable extends Destroyable{
 		boolean valid=alignTestValid(depSuiv, animSuiv, partie,deplace,obj,useTouchCollision);
 
 		//s+= (valid && s=="") ? s_x+s_y : "";
-		boolean n_glisse = depSuiv.IsDeplacement(TypeMouvEntitie.Glissade);
+		boolean n_glisse = depSuiv.IsDeplacement(MouvEntityEnum.GLISSADE);
 		//test the opposite y 
 		if(!valid)
 		{
@@ -459,7 +466,7 @@ public abstract class Collidable extends Destroyable{
 			Object obj, boolean useTouchCollision)
 	{
 		int prev_anim = anim;
-		Mouvement prev_mouv = deplacement.Copy(obj);
+		Mouvement prev_mouv = deplacement.Copy();
 		anim = animSuiv;
 		this.deplacement=depSuiv;
 

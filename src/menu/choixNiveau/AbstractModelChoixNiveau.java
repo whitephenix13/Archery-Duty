@@ -3,8 +3,7 @@ package menu.choixNiveau;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JButton;
-
+import ActiveJComponent.ActiveJButton;
 import menu.menuPrincipal.GameHandler;
 import menu.menuPrincipal.GameMode;
 import utils.observer.Observable;
@@ -17,20 +16,20 @@ public abstract class AbstractModelChoixNiveau implements Observable,GameMode{
 	
 	protected String niveauSelectionne="";
 	protected List<String> listNomNiveaux = new ArrayList<String>();
-	protected List<JButton> listNiveaux = new ArrayList<JButton>();
+	protected List<ActiveJButton> listNiveaux = new ArrayList<ActiveJButton>();
 	
 	protected boolean updateListLevels=false;
 	
 	private ArrayList<Observer> listObserver = new ArrayList<Observer>();
 
-	public abstract void resetBouton(JButton bouton, String nomNiveau);
+	public abstract void resetBouton(ActiveJButton bouton, String nomNiveau);
 	public abstract void getAllNiveaux();
-	public abstract void selectLevel(JButton button);
+	public abstract void selectLevel(ActiveJButton button);
 	public abstract void playLevel();
 	//public static String getPath();
 
 	public abstract String getNiveauSelectionne();
-	public abstract List<JButton> getListBoutonNiveau();
+	public abstract List<ActiveJButton> getListBoutonNiveau();
 	
 	public AbstractModelChoixNiveau()
 	{

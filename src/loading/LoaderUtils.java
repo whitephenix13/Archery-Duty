@@ -106,15 +106,15 @@ public class LoaderUtils {
 			{
 				//Load Heros, Monstre, TirMonstre, Fleche
 				princip.imPrincipal.run();
-				partie.imBackground.run();
-				partie.imHeros.run();
-				partie.imMonstre.run();
-				partie.imTirMonstre.run();
-				partie.imFleches.run();
-				partie.imEffect.run();
-				partie.imMonde.run();
-				partie.imConditions.run();
-				partie.imFlecheIcon.run();
+				princip.imBackground.run();
+				princip.imHeros.run();
+				princip.imMonstre.run();
+				princip.imTirMonstre.run();
+				princip.imFleches.run();
+				princip.imEffect.run();
+				princip.imMonde.run();
+				princip.imConditions.run();
+				princip.imFlecheIcon.run();
 				
 				Music.me.loaderMusic.run();
 
@@ -125,15 +125,15 @@ public class LoaderUtils {
 			{
 				int res = (int) Math.round((
 						princip.imPrincipal.getProgress()+
-						partie.imBackground.getProgress()+
-						partie.imHeros.getProgress() + 
-						partie.imMonstre.getProgress() + 
-						partie.imTirMonstre.getProgress() + 
-						partie.imFleches.getProgress() + 
-						partie.imEffect.getProgress() +
-						partie.imMonde.getProgress() + 
-						partie.imConditions.getProgress() +
-						partie.imFlecheIcon.getProgress() +
+						princip.imBackground.getProgress()+
+						princip.imHeros.getProgress() + 
+						princip.imMonstre.getProgress() + 
+						princip.imTirMonstre.getProgress() + 
+						princip.imFleches.getProgress() + 
+						princip.imEffect.getProgress() +
+						princip.imMonde.getProgress() + 
+						princip.imConditions.getProgress() +
+						princip.imFlecheIcon.getProgress() +
 						Music.me.loaderMusic.getProgress() +
 						MusicBruitage.me.loaderMusicBruitage.getProgress()
 						)/12.0) ;
@@ -145,14 +145,17 @@ public class LoaderUtils {
 	public static LoaderItem load(final String media_type, final String media_categorie, final String filename, final AbstractModelPrincipal princip,final AbstractModelPartie partie )
 	{
 		return new LoaderItem("Loader single media"){
+			private int percentage;
 			private LoaderItem media;
 			@Override
 			public void run()
 			{
+				percentage=0;
 				if(media_type.equals(MT_IMAGE)){
 					if(media_categorie.equals(C_PRINCIPAL)){
 						media=princip.imPrincipal;
 						media.run();
+						percentage=100;
 					}
 					else 
 						throw new UnsupportedOperationException();
@@ -174,11 +177,13 @@ public class LoaderUtils {
 					{
 						media=Music.me.loaderMusic;
 						Music.me.loaderMusic.run(media_categorie, filename);
+						percentage=100;
 					}
 					else if(media_categorie.equals(C_BRUITAGE))
 					{
 						media=MusicBruitage.me.loaderMusicBruitage;
 						MusicBruitage.me.loaderMusicBruitage.run(media_categorie, filename);
+						percentage=100;
 					}
 				}						
 			}
@@ -188,7 +193,7 @@ public class LoaderUtils {
 				if(media==null)
 					return 0;
 				else
-					return media.getProgress();
+					return percentage; //do not use media.getProgress() as this is for global loading
 			}
 		};
 		

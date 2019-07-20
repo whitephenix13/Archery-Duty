@@ -1,6 +1,5 @@
 package partie.projectile.fleches.sprirituelle;
 
-import java.awt.Point;
 import java.awt.Polygon;
 import java.util.List;
 
@@ -16,7 +15,6 @@ import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
 import partie.projectile.Projectile;
-import partie.projectile.fleches.Fleche;
 import utils.PointHelper;
 import utils.Vitesse;
 

@@ -1,18 +1,16 @@
 package partie.effects;
 
 import java.awt.Point;
-import java.awt.geom.AffineTransform;
 import java.util.Arrays;
 
 import javax.vecmath.Vector2d;
 
-import gameConfig.TypeObject;
+import gameConfig.ObjectTypeHelper.ObjectType;
 import partie.collision.Collidable;
 import partie.collision.Collision;
 import partie.collision.Hitbox;
-import partie.conditions.Condition;
+import partie.conditions.Condition.ConditionEnum;
 import partie.deplacement.effect.Glace_idle;
-import partie.deplacement.effect.Mouvement_effect.TypeMouvEffect;
 import partie.entitie.Entity;
 import partie.modelPartie.AbstractModelPartie;
 import partie.projectile.fleches.Fleche;
@@ -28,12 +26,13 @@ public class Glace_effect extends Effect{
 	public Glace_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame,Vector2d _normalCollision,Point _pointCollision,
 			Point _correctedPointCollision,boolean groundCollision, int _damage)
 	{
-		super.init(_anim,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,groundCollision,groundCollision);
+		super(_anim,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,groundCollision,groundCollision);
 		damage = _damage;
 		isProjectile=true;
-		this.setCollideWithout(Arrays.asList(TypeObject.ELECTRIQUE_EFF,TypeObject.GLACE_EFF,TypeObject.FLECHE));
-
-		setDeplacement(new Glace_idle(groundEffect?TypeMouvEffect.GlaceGround:TypeMouvEffect.GlaceEntitie,partie.getFrame()));
+		this.setCollideWithout(Arrays.asList(ObjectType.ELECTRIQUE_EFF,ObjectType.GLACE_EFF,ObjectType.FLECHE));
+		
+		subTypeMouv = groundEffect?EffectCollisionEnum.GROUND:EffectCollisionEnum.ENTITY;
+		setDeplacement(new Glace_idle(subTypeMouv,partie.getFrame()));
 
 		partie.arrowsEffects.add(this);
 		setFirstPos(partie);
@@ -45,7 +44,7 @@ public class Glace_effect extends Effect{
 	{
 		if(!groundEffect)
 			if(Collision.testcollisionObjects(partie, this, attacher,true))
-				attacher.conditions.addNewCondition(Condition.LENTEUR, DUREE_LENTEUR,System.identityHashCode(this));
+				attacher.conditions.addNewCondition(ConditionEnum.LENTEUR, DUREE_LENTEUR,System.identityHashCode(this));
 	}
 
 	@Override
@@ -109,7 +108,7 @@ public class Glace_effect extends Effect{
 			double distance = Math.sqrt(deltaX*deltaX+deltaY*deltaY);
 			Vitesse init_vit = new Vitesse(deltaX*eject_vit_norm/distance,deltaY*eject_vit_norm/distance);
 			Entity ent = (Entity)collider;
-			ent.conditions.addNewCondition(Condition.MOTION, DUREE_EJECT,init_vit,System.identityHashCode(this));
+			ent.conditions.addNewCondition(ConditionEnum.MOTION, DUREE_EJECT,init_vit,System.identityHashCode(this));
 			ent.addLife(damage);
 			this.setCollideWithNone();
 			((Glace_idle)getDeplacement()).setDestroyAnimation(partie.getFrame());

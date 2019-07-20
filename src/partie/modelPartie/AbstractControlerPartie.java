@@ -2,7 +2,7 @@ package partie.modelPartie;
 
 import java.awt.event.MouseEvent;
 
-import javax.swing.JButton;
+import ActiveJComponent.ActiveJButton;
 
 public abstract class AbstractControlerPartie {
 	
@@ -13,6 +13,6 @@ public abstract class AbstractControlerPartie {
 	public abstract void controlMousePressed(MouseEvent e);
 	public abstract void controlMouseReleased(MouseEvent e);
 	
-	public abstract void controlBoutonsPressed(JButton button);
+	public abstract void controlBoutonsPressed(ActiveJButton button);
 
 }

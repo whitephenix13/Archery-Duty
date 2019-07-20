@@ -4,10 +4,10 @@ import java.awt.AlphaComposite;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import ActiveJComponent.ActiveJFrame;
+import ActiveJComponent.ActiveJPanel;
 import gameConfig.InterfaceConstantes;
 import menu.menuPrincipal.ModelPrincipal;
 
@@ -21,72 +21,86 @@ public abstract class Drawable {
 	 * */
 	public boolean isFading;
 
-	protected DrawablePanel mainPanel;//DO NOT OVERRIDE THE PAINT COMPONENT 
-	protected Affichage mainFrame;
+	protected ActiveJPanel mainPanel;
+	private GameRenderer gameRenderer;
 	
 	private long fadeOutTime; //milli; time before mainPanel should be fully transparent 
 	private long startFadeOutTime;//nano; start time when the fade out begun
 	
 	private final int fadingType;
 	
-	
-	public class DrawablePanel extends JPanel{
-				
-		@Override
-		public void paintComponent(Graphics g)
-		{
-			//System.out.println("draw");
-			ModelPrincipal.debugTimeAffichage.init(InterfaceConstantes.DEBUG_TIME_AFFICHAGE_PRINT_MODE,-1);
-			ModelPrincipal.debugTimeAffichage.startElapsedForVerbose();
-			//System.out.println("Repaint " + Drawable.this);
-			//Set transparency for smooth transitions
-			super.paintComponent(g);
-			ModelPrincipal.debugTimeAffichage.elapsed("Super paint component");
-			if(isFading){
-				((Graphics2D)g).setComposite(AlphaComposite.getInstance(fadingType, computeTransparency()));
-			}
-			else//Set transparency back to default
-				((Graphics2D)g).setComposite(AlphaComposite.getInstance(fadingType, 1));
-			ModelPrincipal.debugTimeAffichage.elapsed("Set composite");
-			draw(g);
-			ModelPrincipal.debugTimeAffichage.elapsed("draw");
-			ModelPrincipal.debugTimeAffichage.print();
-		}
-	}
-	
-	
 	public Drawable()
 	{
-		ModelPrincipal.debugTimeAffichage.init(InterfaceConstantes.DEBUG_TIME_AFFICHAGE_PRINT_MODE,-1);
 		fadingType = AlphaComposite.SRC_OVER;
 		isFading=false;
-		mainPanel = new DrawablePanel();
-		mainPanel.setSize(InterfaceConstantes.tailleEcran);
-		mainPanel.setLocation(0, 0);
-		mainPanel.setDoubleBuffered(true);
+		mainPanel = new ActiveJPanel();
+		resetFadingState();
+	}
+	public void resetFadingState()
+	{
+		startFadeOutTime=-1;
+	}
+	/***
+	 * Set the gameRender to finish the initialization of this drawable
+	 * @param d
+	 */
+	public void initFromGameRenderer(GameRenderer g)
+	{
+		this.gameRenderer = g;
+	}
+	/***
+	 * Use another drawable to init this one (mainly the gameRenderer)
+	 * @param d
+	 */
+	public void initFromOtherDrawable(Drawable d)
+	{
+		this.gameRenderer= d.gameRenderer;
 	}
 	
-	public JPanel getContentPane(){return mainPanel;}
-	public void setFrameReference(Affichage frame){mainFrame=frame;}
+	public ActiveJPanel getContentPane(){return mainPanel;}
+	public ActiveJFrame getActiveJFrame(){return (ActiveJFrame) SwingUtilities.getWindowAncestor(mainPanel);}
 	public void startFadeOut(float fadeOutTime_ms)
 	{
 		fadeOutTime=(long)(fadeOutTime_ms*Math.pow(10, 6));
 		startFadeOutTime= System.nanoTime();
 		isFading=true;
 	}
+	/*public void warnFadeOutCanStart()
+	{
+		gameRenderer.warnFadeOutCanStart();
+	}*/
 	
+	public float getTransparency()
+	{
+		return computeTransparency();
+	}
+
+	public void setTransparency(Graphics2D g2d)
+	{
+		g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, computeTransparency()));
+	}
+
+	public void setTransparency(Graphics2D g2d, float transparency)
+	{
+		g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, transparency));
+	}
+	public void requestBeginTransition()
+	{
+		gameRenderer.beginTransition(this);
+	}
 	private float computeTransparency()
 	{
+		if(startFadeOutTime==-1) //fading has not started
+			return 1;
 		float elapsed = System.nanoTime()-startFadeOutTime;
 		if( elapsed > fadeOutTime){
-			mainFrame.warnFadeOutEnded(this);
 			isFading=false;
 			return 0;
 		}
 		else{
-			return 1-((float)elapsed)/fadeOutTime;
+			return 1-elapsed/fadeOutTime;
 		}
 			
 	}
-	public abstract void draw(Graphics g);//what should be drawn in the mainPanel
+	public abstract void drawOnGraphics(Graphics g,boolean forceRepaint);//what should be drawn in the mainPanel
 }

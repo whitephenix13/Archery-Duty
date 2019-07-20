@@ -1,11 +1,13 @@
 package partie.conditions;
 
+import images.ImagesContainer.ImageInfo;
 import partie.modelPartie.PartieTimer;
 import utils.Vitesse;
 
 public abstract class Condition {
-	public String name;
-	public final static String BRULURE = "brulure";
+	public ConditionEnum type;
+	public static enum ConditionEnum implements ImageInfo{BRULURE,REGENERATION,LENTEUR,VITESSE,PARALYSIE,PRECISION,DEFAILLANCE,RESISTANCE,FORCE,FAIBLESSE,MOTION};
+	/*REMOVE public final static String BRULURE = "brulure";
 	public final static  String REGENERATION = "regeneration";
 
 	public final static  String LENTEUR = "lenteur";
@@ -20,7 +22,7 @@ public abstract class Condition {
 	public final static  String FORCE = "force";
 	public final static  String FAIBLESSE = "faiblesse";
 	
-	public final static  String MOTION = "motion";
+	public final static  String MOTION = "motion";*/
 	//Time during which the condition is applied 
 	protected double DUREE = 0;//in nanos
 	protected double startTime = 0;

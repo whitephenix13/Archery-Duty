@@ -5,7 +5,6 @@ import java.util.Arrays;
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
 import partie.deplacement.Mouvement;
-import partie.deplacement.TypeMouv;
 import partie.deplacement.entity.Mouvement_entity;
 import utils.Vitesse;
 
@@ -16,6 +15,7 @@ public class Idle extends Mouvement_entity{
 	public Idle(){
 		super();
 		type_mouv = TypeMouvBloc.Idle;
+		sub_type_mouv = null;
 		xtaille =  Arrays.asList(99);
 		ytaille =  Arrays.asList(99);
 		
@@ -26,7 +26,7 @@ public class Idle extends Mouvement_entity{
 	}
 
 	@Override
-	public Mouvement Copy(Object obj) {
+	public Mouvement Copy() {
 		return new Idle();
 	}
 

@@ -12,12 +12,12 @@ import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
-import Affichage.Affichage;
+import ActiveJComponent.ActiveJButton;
+import ActiveJComponent.ActiveJLabel;
+import ActiveJComponent.ActiveJPanel;
+import Affichage.GameRenderer;
 import Affichage.Drawable;
 import editeur.AffichageEditeur;
 import menu.menuPrincipal.GameHandler;
@@ -37,7 +37,7 @@ public class AffichageCredit extends Drawable implements GameMode{
 			+ "This is free software, and you are welcome to redistribute it under certain conditions.  "
 			+ "If you want to do so, contact me at: ArcheryDuty@protonmail.com");  
 
-	public JButton retour = new JButton("Retour");
+	public ActiveJButton retour = new ActiveJButton("Retour");
 	
 	private GameHandler gameHandler;
 	private boolean computationDone;
@@ -49,7 +49,7 @@ public class AffichageCredit extends Drawable implements GameMode{
 		initComposant();
 	}
 	//Utilisé pour les textes du menu option
-	public class CustomLabel extends JLabel
+	public class CustomLabel extends ActiveJLabel
 	{
 		public CustomLabel(String s)
 		{
@@ -75,7 +75,7 @@ public class AffichageCredit extends Drawable implements GameMode{
 		public void mouseReleased(MouseEvent e) 
 		{
 			AffichageCredit.this.computationDone=false; 
-			JButton button = (JButton)e.getSource();
+			ActiveJButton button = (ActiveJButton)e.getSource();
 			Rectangle r = button.getBounds();
 			//Apply pressed only if the release is on the pressed button
 			if(r.contains(new Point(r.x+e.getX(),r.y+e.getY()))){
@@ -94,14 +94,14 @@ public class AffichageCredit extends Drawable implements GameMode{
 	}
 	public void initComposant()
 	{
-		JPanel panelNorth = new JPanel();
-		JPanel panelCenter= new JPanel(new FlowLayout(FlowLayout.LEFT));
-		JPanel panelSouth= new JPanel();
+		ActiveJPanel panelNorth = new ActiveJPanel();
+		ActiveJPanel panelCenter= new ActiveJPanel(new FlowLayout(FlowLayout.LEFT));
+		ActiveJPanel panelSouth= new ActiveJPanel();
 		
-	    JPanel paneltitre = new JPanel();
-	    JPanel panelcredit = new JPanel();
-	    JPanel panelRetour = new JPanel();
-	    JPanel panelLicense= new JPanel();
+	    ActiveJPanel paneltitre = new ActiveJPanel();
+	    ActiveJPanel panelcredit = new ActiveJPanel();
+	    ActiveJPanel panelRetour = new ActiveJPanel();
+	    ActiveJPanel panelLicense= new ActiveJPanel();
 	    
 	    mainPanel.setBackground(Color.BLACK);
 
@@ -153,11 +153,11 @@ public class AffichageCredit extends Drawable implements GameMode{
 
 	}
 	
-	public void doComputations(Affichage affich){
+	public void doComputations(GameRenderer affich){
 		//As this mode is controlled by listeners, the computationDone is set to false when a listener is triggered. This function is then left empty
 	}
-	public void updateGraphics(){
-		mainFrame.repaint();
+	public void updateSwing(){
+		//REMOVE getFrame().repaint();
 	}
 	public boolean isComputationDone(){
 		return computationDone;
@@ -175,14 +175,11 @@ public class AffichageCredit extends Drawable implements GameMode{
 	}
 	
 	@Override
-	public void draw(Graphics g)
+	public void drawOnGraphics(Graphics g,boolean forceRepaint)
 	{
 		//Nothing to draw
-		mainFrame.warnFadeOutCanStart();
 	}
 	
-	public void update() {
-		mainFrame.repaint();
-	
+	public void update() {	
 	}
 }

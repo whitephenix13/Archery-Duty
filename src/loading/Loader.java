@@ -6,8 +6,9 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
 
-import Affichage.Affichage;
+import Affichage.GameRenderer;
 import gameConfig.InterfaceConstantes;
+import menu.menuPrincipal.GameHandler;
 import menu.menuPrincipal.GameMode;
 import utils.observer.Observable;
 
@@ -32,13 +33,14 @@ public class Loader implements GameMode{
 	private boolean lastRound = true;
 
 	private AffichageLoader affichageLoader;
-	
-	public Loader(Affichage mainAffich)
+	private GameHandler gameHandler;
+	public Loader(GameRenderer mainAffich,GameHandler gameHandler)
 	{
 		super();
 		callback=null;
+		this.gameHandler=gameHandler;
 		affichageLoader = new AffichageLoader(this);
-		affichageLoader.setFrameReference(mainAffich);
+		affichageLoader.initFromGameRenderer(mainAffich);
 	}
 	
 	public void setCallback(Runnable run)
@@ -47,6 +49,7 @@ public class Loader implements GameMode{
 			callback = run;
 	}
 	
+	public GameHandler getGameHandler(){return gameHandler;}
 	public AffichageLoader getAffichageLoader()
 	{
 		return affichageLoader;
@@ -107,7 +110,7 @@ public class Loader implements GameMode{
 	{
 		while(!this.loadingDone || lastRound)
 		{
-			affichageLoader.getContentPane().repaint();
+			//REMOVE affichageLoader.getContentPane().repaint();
 			if(this.loadingDone)
 				lastRound=false;
 			
@@ -150,10 +153,9 @@ public class Loader implements GameMode{
 		g2.drawString(getProgress()+"%", InterfaceConstantes.WINDOW_WIDTH/2-50, InterfaceConstantes.WINDOW_HEIGHT/2+40);
 	}
 	
-	public void doComputations(Affichage affich){
+	public void doComputations(GameRenderer affich){
 		if(this.loadingDone && !lastRound)
 		{
-			System.out.println("Callback " + callback);
 			if(callback != null){
 				callback.run();
 				callback =null;
@@ -162,7 +164,7 @@ public class Loader implements GameMode{
 		if(this.loadingDone)
 			lastRound=false;
 	}
-	public void updateGraphics(){
+	public void updateSwing(){
 		affichageLoader.onUpdateGraphics();
 	}
 	public boolean isComputationDone(){

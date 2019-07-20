@@ -1,9 +1,8 @@
 package editeur;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
+import java.awt.Component;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -12,139 +11,133 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JMenuBar;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
+import ActiveJComponent.ActiveJCheckBox;
+import ActiveJComponent.PassiveJDialog;
+import ActiveJComponent.ActiveJFrame;
+import ActiveJComponent.ActiveJLabel;
+import ActiveJComponent.ActiveJMenuBar;
+import ActiveJComponent.ActiveJOptionPane;
 import Affichage.Drawable;
 import editeur.BarreOutil.BarreOutil;
 import editeur.Menu.menuEditeur;
-import gameConfig.InterfaceConstantes;
-import menu.menuPrincipal.GameHandler;
+import images.ImagesBackground.ImBackgroundInfo;
+import images.ImagesContainer.ImageGroup;
 import utils.observer.Observer;
 
 @SuppressWarnings("serial")
 public class AffichageEditeur extends Drawable implements Observer{
-	
+
 	public AbstractControlerEditeur controlerEditeur;
-	private BufferedImage im_white =null;
-	public JMenuBar getJMenuBar()
-	{
-		return controlerEditeur.edit.menuEdit.menuBar;
-	}
+	private boolean isLayoutInit;
+
+
 	public AffichageEditeur(AbstractControlerEditeur _controlerEditeur)
 	{
 		super();
 		controlerEditeur=_controlerEditeur;
-		
-		this.getContentPane().removeAll();
-		
+		isLayoutInit=false;//wait for image to be loaded in BarreOutil to activate the layout
+		//REMOVE this.getContentPane().removeAll();
+
 		controlerEditeur.edit.barreOut= new BarreOutil(this);
-		
+
 		controlerEditeur.edit.menuEdit= new menuEditeur(this);
 		controlerEditeur.edit.menuEdit.initMenu();
-		
-		controlerEditeur.edit.init();
-		
-		im_white = new BufferedImage(InterfaceConstantes.tailleEcran.width,InterfaceConstantes.tailleEcran.height, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D    graphics = im_white.createGraphics();
-		graphics.setColor(Color.white);
-		graphics.fillRect ( 0, 0, im_white.getWidth(), im_white.getHeight() );
 
-		this.getContentPane().setLayout(new BorderLayout());
-		this.getContentPane().add(controlerEditeur.edit.barreOut.scroll,BorderLayout.NORTH);
-		this.getContentPane().setOpaque(false);
+		controlerEditeur.edit.init();
+
+		mainPanel.setLayout(new BorderLayout());
+		mainPanel.setOpaque(false);
+
 		//mainPanel.setBackground(Color.white);
-	   //REMOVE  this.getContentPane().add(dessin,BorderLayout.CENTER);
+		//REMOVE  this.getContentPane().add(dessin,BorderLayout.CENTER);
 	}
-	
-	
-	public class DeleteMonstrePopUp extends JDialog {
-		  public DeleteMonstrePopUp(JFrame parent, String title, boolean modal){
-		    //On appelle le construteur de JDialog correspondant
-		    super(parent, title, modal);
-		    //On specifie une taille
-		    this.setSize(300, 400);
-		    //La position
-		    this.setLocationRelativeTo(null);
-		    //La boite ne devra pas etre redimensionnable
-		    this.setResizable(false);
-		    JPanel affichage = new JPanel();
-		    JButton ok = new JButton("OK");	
-		    List<JLabel> listLabels = new ArrayList<JLabel>();
-		    listLabels.add(new JLabel("Listes des monstres à supprimer\n\n\n"));
-		   
-		    for(int i=0; i<controlerEditeur.edit.monstreDansCase.size();i++)
-		    {
-			    listLabels.add(new JLabel((i+1)+ " "+controlerEditeur.edit.monstreDansCase.get(i).type.toString()));
-		    }	    
-		    final List<JCheckBox> listChecks= new ArrayList<JCheckBox> (); 
-		    for(int i=0; i<listLabels.size()-1;i++)
-		    {
-			    listChecks.add(new JCheckBox());
-		    }	
-		    
-		    ok.addActionListener(new ActionListener(){
+
+	public ActiveJMenuBar getJMenuBar()
+	{
+		return controlerEditeur.edit.menuEdit.menuBar;
+	}
+	public class DeleteMonstrePopUp extends PassiveJDialog {
+		public DeleteMonstrePopUp(ActiveJFrame parent, String title, boolean modal){
+			//On appelle le construteur de JDialog correspondant
+			super(parent, title, modal);
+			super.setComponentAndShowDialog(createContent());
+		}
+		private Component createContent()
+		{
+			JPanel affichage = new JPanel();
+			JButton ok = new JButton("OK");	
+			List<JLabel> listLabels = new ArrayList<JLabel>();
+			listLabels.add(new ActiveJLabel("Listes des monstres à supprimer\n\n\n"));
+
+			for(int i=0; i<controlerEditeur.edit.monstreDansCase.size();i++)
+			{
+				listLabels.add(new ActiveJLabel((i+1)+ " "+controlerEditeur.edit.monstreDansCase.get(i).type.toString()));
+			}	    
+			final List<ActiveJCheckBox> listChecks= new ArrayList<ActiveJCheckBox> (); 
+			for(int i=0; i<listLabels.size()-1;i++)
+			{
+				listChecks.add(new ActiveJCheckBox());
+			}	
+
+			ok.addActionListener(new ActionListener(){
 				public void actionPerformed(ActionEvent arg0) {
 					AffichageEditeur.this.controlerEditeur.edit.computationDone=false; 
 					List<StockageMonstre> monstreASupprimer= new ArrayList<StockageMonstre>();
-					 for(int i=0; i<listChecks.size();i++)
-					   {
-						    if(listChecks.get(i).isSelected())
-						    {
-						    	monstreASupprimer.add(controlerEditeur.edit.monstreDansCase.get(i));
-						    }
-					   }	
+					for(int i=0; i<listChecks.size();i++)
+					{
+						if(listChecks.get(i).isSelected())
+						{
+							monstreASupprimer.add(controlerEditeur.edit.monstreDansCase.get(i));
+						}
+					}	
 					//on les supprime
-					 for(int i=0; i<monstreASupprimer.size();i++)
-					  {
-						 controlerEditeur.edit.tabEditeurMonstre.remove(monstreASupprimer.get(i));
-					  }	
+					for(int i=0; i<monstreASupprimer.size();i++)
+					{
+						controlerEditeur.edit.tabEditeurMonstre.remove(monstreASupprimer.get(i));
+					}	
 					setVisible(false);
 					AffichageEditeur.this.controlerEditeur.edit.computationDone=true; 
-					}});
-		   
-		    affichage.add(listLabels.get(0),BorderLayout.NORTH);
-		    for(int i=1; i<listLabels.size();i++)
-		    {
-			    affichage.add(listLabels.get(i),BorderLayout.WEST);
-			    affichage.add(listChecks.get(i-1),BorderLayout.EAST);
-		    }	
-			affichage.add(ok,BorderLayout.SOUTH);
-			
-			this.getContentPane().add(affichage);
-		  }
-		}
+				}});
 
-	public class ComportementSpirelPopUp extends JDialog 
+			affichage.add(listLabels.get(0),BorderLayout.NORTH);
+			for(int i=1; i<listLabels.size();i++)
+			{
+				affichage.add(listLabels.get(i),BorderLayout.WEST);
+				affichage.add(listChecks.get(i-1),BorderLayout.EAST);
+			}	
+			affichage.add(ok,BorderLayout.SOUTH);
+			return affichage;
+		}
+	}
+
+	public class ComportementSpirelPopUp extends PassiveJDialog 
 	{
-		public ComportementSpirelPopUp(JFrame parent, String title, boolean modal){
-		    //On appelle le construteur de JDialog correspondant
-		    super(parent, title, modal);
-		    //On specifie une taille
-		    this.setSize(200, 100);
-		    this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		    //La position
-		    this.setLocationRelativeTo(null);
-		    //La boite ne devra pas etre redimensionnable
-		    this.setResizable(false);
-		    JPanel affichage = new JPanel();
-		    JPanel panelStaticSpirel= new JPanel();
-		    JButton ok = new JButton("OK");	
-		    
-		    JLabel lStaticSpirel= new JLabel("Spirel immobile ");
-		    final JCheckBox checkStatic= new JCheckBox();
-		    
-		    ok.addActionListener(new ActionListener(){
+		public ComportementSpirelPopUp(ActiveJFrame parent, String title, boolean modal){
+			//On appelle le construteur de JDialog correspondant
+			super(parent, title, modal);
+			this.setDefaultCloseOperation(ActiveJFrame.DO_NOTHING_ON_CLOSE);
+			super.setComponentAndShowDialog(createContent());
+			
+		}
+		
+		private Component createContent()
+		{
+			JPanel affichage = new JPanel();
+			JPanel panelStaticSpirel= new JPanel();
+			JButton ok = new JButton("OK");	
+
+			JLabel lStaticSpirel= new JLabel("Spirel immobile ");
+			final JCheckBox checkStatic= new JCheckBox();
+
+			ok.addActionListener(new ActionListener(){
 				public void actionPerformed(ActionEvent arg0) 
 				{
 					AffichageEditeur.this.controlerEditeur.edit.computationDone=false; 
@@ -159,17 +152,17 @@ public class AffichageEditeur extends Drawable implements Observer{
 					setVisible(false);
 					AffichageEditeur.this.controlerEditeur.edit.computationDone=true; 
 				}	});
-		    affichage.setLayout(new BorderLayout());
-		    panelStaticSpirel.setLayout(new GridLayout(1,2));
-		    panelStaticSpirel.add(lStaticSpirel);
-		    panelStaticSpirel.add(checkStatic);
+			affichage.setLayout(new BorderLayout());
+			panelStaticSpirel.setLayout(new GridLayout(1,2));
+			panelStaticSpirel.add(lStaticSpirel);
+			panelStaticSpirel.add(checkStatic);
 			affichage.add(panelStaticSpirel,BorderLayout.CENTER);
-		    affichage.add(ok,BorderLayout.SOUTH);
-			this.getContentPane().add(affichage);
-		  }
+			affichage.add(ok,BorderLayout.SOUTH);
+			return affichage;
+		}
 	}
-	
-	
+
+
 	class DragListener extends MouseAdapter{
 		public void mouseDragged(MouseEvent e){
 			AffichageEditeur.this.controlerEditeur.edit.computationDone=false; 
@@ -179,18 +172,18 @@ public class AffichageEditeur extends Drawable implements Observer{
 			}
 			AffichageEditeur.this.controlerEditeur.edit.computationDone=true; 
 		}
-		
+
 		public void mouseReleased(MouseEvent e){
 			controlerEditeur.edit.releaseMoveViewport();	}
 	}
-	
+
 	class ImageListener implements MouseMotionListener {
-	
+
 		//lorsqu'on drag, on dessine sur chacune des cases sur lesquels on passe
 		public void mouseDragged(MouseEvent e) {
 			AffichageEditeur.this.controlerEditeur.edit.computationDone=false; 
 			if(!controlerEditeur.edit.drag && ((e.getModifiers() & InputEvent.BUTTON1_MASK) != 0))
-			controlerEditeur.controlDraw(e.getX(), e.getY());
+				controlerEditeur.controlDraw(e.getX(), e.getY());
 			controlerEditeur.edit.xMousePos=e.getX();
 			controlerEditeur.edit.yMousePos=e.getY();
 			AffichageEditeur.this.controlerEditeur.edit.computationDone=true; 
@@ -221,20 +214,20 @@ public class AffichageEditeur extends Drawable implements Observer{
 
 	public void addListenerEditeur()
 	{
-		
-			controlerEditeur.edit.menuEdit.addListenerMenuEditeur();
-			
-			mainPanel.addMouseListener(new DragListener());
-			mainPanel.addMouseMotionListener(new DragListener());
-			mainPanel.addMouseMotionListener(new ImageListener());
-			mainPanel.addMouseListener(new AjoutListener());
-		 	 
+
+		controlerEditeur.edit.menuEdit.addListenerMenuEditeur();
+
+		mainPanel.addMouseListener(new DragListener());
+		mainPanel.addMouseMotionListener(new DragListener());
+		mainPanel.addMouseMotionListener(new ImageListener());
+		mainPanel.addMouseListener(new AjoutListener());
+
 	}
 	public void removeListenerEditeur() 
 	{
-		
+
 		controlerEditeur.edit.menuEdit.removeListenerMenuEditeur();
-		
+
 		//remove the two last elements 
 		mainPanel.removeMouseMotionListener(mainPanel.getMouseMotionListeners()[mainPanel.getMouseMotionListeners().length-2]);
 		mainPanel.removeMouseMotionListener(mainPanel.getMouseMotionListeners()[mainPanel.getMouseMotionListeners().length-1]);
@@ -242,50 +235,54 @@ public class AffichageEditeur extends Drawable implements Observer{
 		mainPanel.removeMouseListener(mainPanel.getMouseListeners()[mainPanel.getMouseListeners().length-2]);
 		mainPanel.removeMouseListener(mainPanel.getMouseListeners()[mainPanel.getMouseListeners().length-1]);
 	}
-	
+
 
 	@Override
-	public void draw(Graphics g)
+	public void drawOnGraphics(Graphics g,boolean forceRepaint)
 	{
-		//Nothing to draw
 		//draw white background 
-		g.drawImage(im_white, 0, 0, null);
+		g.drawImage(controlerEditeur.edit.gameHandler.getImage(ImageGroup.BACKGROUND, null, ImBackgroundInfo.WHITE, null), 0, 0, null);
 		controlerEditeur.edit.draw(g, mainPanel);
-		mainFrame.warnFadeOutCanStart();
 	}
-	
-	public JFrame getMainFrame()
+
+	/*REMOVEpublic JFrame getMainFrame()
 	{
 		return mainFrame;
-	}
-	
+	}*/
+
 	public void update() 
 	{
-			if(controlerEditeur.edit.getRepaint())
+		if(!isLayoutInit)
+		{
+			mainPanel.add(controlerEditeur.edit.barreOut.scroll,BorderLayout.NORTH);
+			mainPanel.doLayout();
+			isLayoutInit=true;
+		}
+		/*REMOVE if(controlerEditeur.edit.getRepaint())
 			{
 				mainPanel.repaint();
 			}
-			
-			if(controlerEditeur.edit.getShowMonsters())
-			{
-				DeleteMonstrePopUp popUp= new DeleteMonstrePopUp(mainFrame,"test",true);
-				popUp.setVisible(true);
-			}
-			
-			if(controlerEditeur.edit.getShowStaticMonsters())
-			{
-				ComportementSpirelPopUp comportement = new ComportementSpirelPopUp(mainFrame,"Choix comportement spirel",true);
-				comportement.setVisible(true);
-			}
-			
-			if(controlerEditeur.edit.showMessageDialog)
-			{
-				JOptionPane.showMessageDialog(mainPanel, controlerEditeur.edit.textMessageDialog[0], 
-						controlerEditeur.edit.textMessageDialog[1],controlerEditeur.edit.typeMessageDialog);
-			}
-
-			
-			controlerEditeur.edit.resetVariablesAffichage();
+		 */
+		if(controlerEditeur.edit.getShowMonsters())
+		{
+			DeleteMonstrePopUp popUp= new DeleteMonstrePopUp(getActiveJFrame(),"test",true);
+			popUp.setVisible(true);
 		}
+
+		if(controlerEditeur.edit.getShowStaticMonsters())
+		{
+			ComportementSpirelPopUp comportement = new ComportementSpirelPopUp(getActiveJFrame(),"Choix comportement spirel",true);
+			comportement.setVisible(true);
+		}
+
+		if(controlerEditeur.edit.showMessageDialog)
+		{
+			ActiveJOptionPane.showMessageDialog(mainPanel, controlerEditeur.edit.textMessageDialog[0], 
+					controlerEditeur.edit.textMessageDialog[1],controlerEditeur.edit.typeMessageDialog);
+		}
+
+
+		controlerEditeur.edit.resetVariablesAffichage();
+	}
 
 }

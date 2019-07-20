@@ -4,16 +4,19 @@ import java.awt.Image;
 import java.awt.Point;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.vecmath.Vector2d;
 
+import images.ImagesContainer.ImageInfo;
+import images.ImagesContainer.ObjectSubType;
 import partie.collision.Collidable;
 import partie.collision.GJK_EPA;
 import partie.collision.Hitbox;
 import partie.deplacement.Deplace;
 import partie.deplacement.Mouvement;
+import partie.deplacement.Mouvement.SubTypeMouv;
+import partie.deplacement.Mouvement.TypeMouv;
 import partie.entitie.Entity;
 import partie.modelPartie.AbstractModelPartie;
 import partie.projectile.fleches.Fleche;
@@ -21,6 +24,12 @@ import utils.Vitesse;
 
 public abstract class Effect extends Collidable{
 	
+	//public static enum EffectEnum implements TypeMouv {Electrique,Feu,Glace,Roche,Explosive,Grappin,Lumiere,Ombre,Trou_noir,Vent};
+	public static enum EffectCollisionEnum implements SubTypeMouv{GROUND,ENTITY}
+
+	public TypeMouv typeMouv;//for now, it is not relevant as all mouv are 'idle' but it might change in the future
+	public SubTypeMouv subTypeMouv;
+
 	protected Vector2d normalCollision=null;
 	protected Point pointCollision = null;
 	protected Point correctedPointCollision = null;
@@ -42,19 +51,20 @@ public abstract class Effect extends Collidable{
 	public boolean isProjectile = false; //set to true if this object should be consider as a projectile for projectile/projectile and projectile/heros collision
 	
 	
-	public void init(int _anim,Fleche _ref_fleche)
+	public Effect(int _anim,Fleche _ref_fleche)
 	{
-		init(_anim,_ref_fleche,null,null,null,false,false);
+		this(_anim,_ref_fleche,null,null,null,false,false);
 	}
+
 	/**
 	 * 
 	 * @param _normalCollision
 	 * @param useRefArrowRotation false: compute the projected rotation to main x/y axis (angle = -Pi:Pi, -Pi/2 0 Pi/2 -
 	 */
-	public void init(int _anim,Fleche _ref_fleche,Vector2d _normalCollision,Point _pointCollision,
+	public Effect(int _anim,Fleche _ref_fleche,Vector2d _normalCollision,Point _pointCollision,
 			Point _correctedPointCollision,boolean groundEffect,boolean useProjectedRot)
 	{
-		super.init();
+		super();
 		
 		setAnim(_anim);
 		ref_fleche = _ref_fleche;
@@ -162,7 +172,7 @@ public abstract class Effect extends Collidable{
 	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
 		updatePos(partie);
 		
-		setAnim(getDeplacement().updateAnimation(this,getAnim(), partie.getFrame(), 1));
+		setAnim(getDeplacement().updateAnimation(getAnim(), partie.getFrame(), 1));
 		getDeplacement().setSpeed(this, getAnim());
 		//doit deplace, change anim
 		boolean[] res = {!getNeedDestroy(),false};

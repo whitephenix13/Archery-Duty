@@ -3,10 +3,11 @@ package partie.entitie;
 import java.util.ArrayList;
 
 import debug.Debug_stack;
-import gameConfig.TypeObject;
+import gameConfig.ObjectTypeHelper;
+import gameConfig.ObjectTypeHelper.ObjectType;
 import partie.collision.Collidable;
 import partie.conditions.ConditionHandler;
-import partie.deplacement.entity.Mouvement_entity.TypeMouvEntitie;
+import partie.deplacement.entity.Mouvement_entity.MouvEntityEnum;
 import partie.effects.Effect;
 import partie.effects.Grappin_effect;
 import partie.entitie.heros.Heros;
@@ -24,6 +25,13 @@ public abstract class Entity extends Collidable{
 
 	public abstract void onAddLife();
 	
+	public Entity()
+	{
+		super();
+		conditions= new ConditionHandler();
+		currentEffects  = new ArrayList<Effect>();
+	}
+	
 	public float getLife()
 	{
 		return(life);
@@ -39,13 +47,7 @@ public abstract class Entity extends Collidable{
 		//used to check if entitie should die
 		onAddLife();
 	}
-	@Override 
-	public void init()
-	{
-		super.init();
-		conditions= new ConditionHandler();
-		currentEffects  = new ArrayList<Effect>();
-	}
+
 	@Override
 	public void destroy(AbstractModelPartie partie,boolean destroyNow)
 	{
@@ -66,12 +68,12 @@ public abstract class Entity extends Collidable{
 		boolean applyEffects = true;
 		if(this instanceof Heros)
 		{
-			applyEffects = !((Heros)this).getDeplacement().IsDeplacement(TypeMouvEntitie.Accroche);
+			applyEffects = !((Heros)this).getDeplacement().IsDeplacement(MouvEntityEnum.ACCROCHE);
 		}
 		if(applyEffects){
 			for(Effect eff: currentEffects)
 			{
-				if(isDragged && TypeObject.isTypeOf(eff, TypeObject.GRAPPIN_EFF)){
+				if(isDragged && ObjectTypeHelper.isTypeOf(eff, ObjectType.GRAPPIN_EFF)){
 					vit = eff.getModifiedVitesse(partie, this);
 					return vit;
 				}
@@ -95,7 +97,7 @@ public abstract class Entity extends Collidable{
 	public boolean isDragged(){
 		for(Effect eff:currentEffects)
 		{
-			if(TypeObject.isTypeOf(eff, TypeObject.GRAPPIN_EFF))
+			if(ObjectTypeHelper.isTypeOf(eff, ObjectType.GRAPPIN_EFF))
 			{
 				Grappin_effect grap = (Grappin_effect)eff;
 				if(grap.shooterDragged && this == grap.shooter)

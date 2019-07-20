@@ -4,10 +4,10 @@ import java.awt.Color;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 
-import Affichage.Affichage;
+import ActiveJComponent.ActiveJSlider;
+import Affichage.GameRenderer;
 import Affichage.Drawable;
 import menu.menuPrincipal.AbstractModelPrincipal;
 import menu.menuPrincipal.GameHandler;
@@ -37,11 +37,11 @@ public class ModelOption extends AbstractModelOption{
 
 
 	public void setVolumeMusique(ChangeEvent event) {
-		Music.me.volumeControl((double)((JSlider)event.getSource()).getValue()/100);
+		Music.me.volumeControl((double)((ActiveJSlider)event.getSource()).getValue()/100);
 	}
 
 	public void setVolumeBruitage(ChangeEvent event) {
-		MusicBruitage.me.volumeControl((double)((JSlider)event.getSource()).getValue()/100);
+		MusicBruitage.me.volumeControl((double)((ActiveJSlider)event.getSource()).getValue()/100);
 	}
 
 
@@ -126,10 +126,10 @@ public class ModelOption extends AbstractModelOption{
 		notifyObserver();
 	}
 	
-	public void doComputations(Affichage affich){
+	public void doComputations(GameRenderer affich){
 		//As this mode is controlled by listeners, the computationDone is set to false when a listener is triggered. This function is then left empty
 	}
-	public void updateGraphics(){
+	public void updateSwing(){
 		this.notifyMainObserver();
 	}
 	public boolean isComputationDone(){

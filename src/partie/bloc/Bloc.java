@@ -5,6 +5,7 @@ import java.awt.geom.AffineTransform;
 
 import javax.vecmath.Vector2d;
 
+import images.ImagesContainer.ImageInfo;
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
 import partie.deplacement.Deplace;
@@ -14,7 +15,8 @@ import utils.Vitesse;
 
 public class Bloc extends Collidable{
 
-	public static enum TypeBloc {NONE,CIEL,DELETE,END,LOUPE,PERSO,SOL,SOURIS,SPIREL,START,TERRE };
+	public static enum TypeBloc implements ImageInfo{NONE,CIEL,DELETE,END,LOUPE,PERSO,SOL,SOURIS,SPIREL,START,TERRE };
+	public static enum BlocImModifier implements ImageInfo{LOUPE};
 
 	private TypeBloc type;
 	private boolean bloquer = false;
@@ -24,7 +26,7 @@ public class Bloc extends Collidable{
 		this(TypeBloc.NONE,-1,-1,false,false);
 	}
 	public Bloc(TypeBloc type, int x, int y , boolean bl, boolean back) {
-		super.init();
+		super();
 		
 		this.type=type;
 		this.setXpos_sync(x);

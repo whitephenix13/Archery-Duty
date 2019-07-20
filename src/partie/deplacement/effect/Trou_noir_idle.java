@@ -5,15 +5,15 @@ import java.util.Arrays;
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
 import partie.deplacement.Mouvement;
-import partie.deplacement.TypeMouv;
-import partie.effects.Trou_noir_effect;
+import partie.deplacement.effect.Mouvement_effect.MouvEffectEnum;
 import utils.Vitesse;
 
 public class Trou_noir_idle extends Mouvement_effect{
-	public Trou_noir_idle(TypeMouv _type_mouv, int current_frame){
+	public Trou_noir_idle(SubTypeMouv _sub_type_mouv, int current_frame){
 		super();
-		type_mouv=_type_mouv;
-
+		type_mouv = MouvEffectEnum.TROU_NOIR_IDLE;
+		sub_type_mouv=_sub_type_mouv;
+		
 		xtaille =  Arrays.asList(800,800,800,800,800);
 		ytaille =  Arrays.asList(800,800,800,800,800);
 		hitbox = Hitbox.createSquareHitboxes(0,0,800,800,5);
@@ -26,8 +26,8 @@ public class Trou_noir_idle extends Mouvement_effect{
 		vit = new Vitesse();
 	}
 	@Override
-	public Mouvement Copy(Object obj) {
-		return new Trou_noir_idle(type_mouv,animation.getStartFrame());
+	public Mouvement Copy() {
+		return new Trou_noir_idle(sub_type_mouv,animation.getStartFrame());
 	}
 
 	@Override

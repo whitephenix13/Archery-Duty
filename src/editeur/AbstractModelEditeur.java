@@ -5,12 +5,13 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JPanel;
-
+import ActiveJComponent.ActiveJPanel;
 import editeur.BarreOutil.BarreOutil;
 import editeur.Menu.menuEditeur;
 import gameConfig.InterfaceConstantes;
+import images.ImagesContainer;
 import images.ImagesMonde;
+import loading.Loader;
 import menu.menuPrincipal.GameHandler;
 import menu.menuPrincipal.GameMode;
 import partie.bloc.Bloc.TypeBloc;
@@ -21,6 +22,8 @@ import utils.observer.Observer;
 public abstract class AbstractModelEditeur implements Observable,GameMode{
 
 	public GameHandler gameHandler;
+	public Loader loaderEditeur;
+	public ImagesContainer imagesMonde;
 	
 	protected BarreOutil barreOut;
 	protected menuEditeur menuEdit;
@@ -34,7 +37,6 @@ public abstract class AbstractModelEditeur implements Observable,GameMode{
 	protected List<StockageMonstre> tabEditeurMonstre;
 	
 	//Utilisé pour charger les images 
-	public ImagesMonde imMonde;
 	protected TypeBloc texture;
 	
 	//monstres
@@ -100,7 +102,7 @@ public abstract class AbstractModelEditeur implements Observable,GameMode{
 
 	protected boolean loupe; 
 	//variables pour l'affichage 
-	protected boolean repaint;
+	//REMOVE protected boolean repaint;
 	protected boolean showMonsters;
 	protected boolean showStaticMonsters;
 	protected boolean showMessageDialog;
@@ -111,7 +113,7 @@ public abstract class AbstractModelEditeur implements Observable,GameMode{
 	
 	private ArrayList<Observer> listObserver = new ArrayList<Observer>();
 		
-	public boolean getRepaint(){return repaint;}
+	//REMOVE public boolean getRepaint(){return repaint;}
 	public boolean getShowMonsters(){return showMonsters;}
 	public boolean getShowStaticMonsters(){return showStaticMonsters;}
 	
@@ -137,8 +139,8 @@ public abstract class AbstractModelEditeur implements Observable,GameMode{
 		monde=new Monde();
 		tabEditeurMonstre= new ArrayList <StockageMonstre> ();
 				
-		if(imMonde==null)
-			imMonde= new ImagesMonde();
+		/*REMOVE if(imMonde==null)
+			imMonde= new ImagesMonde();*/
 		
 		texture=TypeBloc.NONE;
 				
@@ -211,7 +213,7 @@ public abstract class AbstractModelEditeur implements Observable,GameMode{
 		
 		resetVariablesAffichage();
 		
-		repaint=true;
+		//REMOVE repaint=true;
 		notifyObserver();
 
 	}
@@ -220,7 +222,7 @@ public abstract class AbstractModelEditeur implements Observable,GameMode{
 	public abstract void drawTerrain(int xpos, int ypos);
 	public abstract void drawMonster(int xpos, int ypos);
 	public abstract void drawSpecial(int xpos, int ypos);
-	public abstract void draw(Graphics g,JPanel pan);
+	public abstract void draw(Graphics g,ActiveJPanel pan);
 	public abstract void setTexture(TypeBloc texture);
 	
 	public abstract List<StockageMonstre> FindMonstre(Point targetPos, List<StockageMonstre> listToSearch );
@@ -234,7 +236,7 @@ public abstract class AbstractModelEditeur implements Observable,GameMode{
 	
 	public void resetVariablesAffichage()
 	{
-		repaint=false;
+		//REMOVE repaint=false;
 		showMonsters=false;
 		showStaticMonsters=false;
 		showMessageDialog=false;

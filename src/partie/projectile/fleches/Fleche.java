@@ -10,7 +10,8 @@ import java.util.List;
 import javax.vecmath.Vector2d;
 
 import gameConfig.InterfaceConstantes;
-import gameConfig.TypeObject;
+import gameConfig.ObjectTypeHelper;
+import gameConfig.ObjectTypeHelper.ObjectType;
 import menu.menuPrincipal.ModelPrincipal;
 import music.MusicBruitage;
 import partie.collision.Collidable;
@@ -20,7 +21,6 @@ import partie.deplacement.Deplace;
 import partie.deplacement.Mouvement;
 import partie.deplacement.entity.Mouvement_entity;
 import partie.deplacement.projectile.T_normal;
-import partie.deplacement.projectile.T_normal.TypeTirNormal;
 import partie.effects.Effect;
 import partie.effects.Roche_effect;
 import partie.entitie.Entity;
@@ -32,6 +32,11 @@ import utils.Vitesse;
 
 public class Fleche extends Projectile implements InterfaceConstantes{
 
+	public static ObjectType[] DESTRUCTRICE_CLASS = {ObjectType.FAUCON,ObjectType.EXPLOSIVE,ObjectType.TROU_NOIR,ObjectType.BARRAGE};
+	public static ObjectType[] MATERIELLE_CLASS = {ObjectType.FEU,ObjectType.ELECTRIQUE,ObjectType.GLACE,ObjectType.ROCHE};
+	public static ObjectType[] RUSEE_CLASS = {ObjectType.MARQUE_MORTELLE,ObjectType.ABSORPTION,ObjectType.NINJA,ObjectType.LEURRE};
+	public static ObjectType[] SPRIRITUELLE_CLASS = {ObjectType.LUMIERE,ObjectType.OMBRE,ObjectType.VENT,ObjectType.GRAPPIN};
+		
 	public Heros shooter;
 
 	public boolean doitDeplace=false;
@@ -56,7 +61,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 
 	public Fleche(List<Projectile> tabFleche,int current_frame,Heros _shooter,boolean add_to_list,float damageMultiplier,float _speedFactor)
 	{
-		super.init();
+		super();
 		shooter=_shooter;
 		setAnim(0);
 		doitDeplace=false;
@@ -66,7 +71,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 
 		speedFactor=_speedFactor;
 
-		setDeplacement(new T_normal(this,TypeTirNormal.Tir,current_frame));
+		setDeplacement(new T_normal(ObjectType.FLECHE,null,current_frame));
 
 		nulle=false;
 		encochee=true;
@@ -98,7 +103,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 		doitDeplace=true;
 		encochee=false;
 		afterDecochee=true;
-		this.setCollideWithout(Arrays.asList(TypeObject.FLECHE,TypeObject.HEROS));
+		this.setCollideWithout(Arrays.asList(ObjectType.FLECHE,ObjectType.HEROS));
 
 		Vector2d middle = Hitbox.getHitboxCenter(getDeplacementHitbox(getAnim()));
 		Point2D newpos= current_draw_tr.transform(PointHelper.VecToPoint(middle), null);
@@ -401,7 +406,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 			targetedPoint = new Point(partie.getXPositionSouris()-partie.xScreendisp,partie.getYPositionSouris()-partie.yScreendisp); 
 			//set the anim 
 			double[] anim_rot = deplace.getAnimRotationTir(partie,true);
-			int animFleche = getDeplacement().updateAnimation(this,getAnim(), partie.getFrame(),speedFactor);
+			int animFleche = getDeplacement().updateAnimation(getAnim(), partie.getFrame(),speedFactor);
 			setRotation(anim_rot[1]);
 			if(animFleche==getAnim())
 				animationChanged=false;
@@ -410,13 +415,13 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 
 		else if(doitDeplace)
 		{
-				int animFleche = getDeplacement().updateAnimation(this,getAnim(), partie.getFrame(),speedFactor);
+				int animFleche = getDeplacement().updateAnimation(getAnim(), partie.getFrame(),speedFactor);
 				if(animFleche==getAnim())
 					animationChanged=false;
 				return animFleche;
 		}
 		else
-			return getDeplacement().updateAnimation(this,getAnim(), partie.getFrame(),speedFactor);
+			return getDeplacement().updateAnimation(getAnim(), partie.getFrame(),speedFactor);
 	}
 
 	public void decallageFleche(int animSuivante, AbstractModelPartie partie)

@@ -2,22 +2,19 @@ package images;
 
 import java.awt.Image;
 import java.awt.Toolkit;
+import java.util.ArrayList;
 
-import loading.LoaderItem;
-import partie.bloc.Bloc;
+import gameConfig.ObjectTypeHelper.ObjectType;
+import partie.bloc.Bloc.BlocImModifier;
 import partie.bloc.Bloc.TypeBloc;
 
-public class ImagesMonde extends LoaderItem{
+public class ImagesMonde extends ImagesContainer{
 	public static String path ="resources/editeur/";
 	
-	Image ciel;
-	Image terre;
-	Image sol;
-	Image vide;
-	Image mainHeros;
-	Image start;
-	Image end;
-
+	//image editeur 
+	Image delete;
+	Image spirel;
+	
 	Image pciel;
 	Image pterre;
 	Image psol;
@@ -25,6 +22,22 @@ public class ImagesMonde extends LoaderItem{
 	Image pmainHeros;
 	Image pstart;
 	Image pend;
+	Image ploupe;
+	Image pdelete;
+	Image psouris;
+	Image pspirel;
+	
+	Image start;
+	Image end;
+	Image vide;
+	
+	Image ciel;
+	Image terre;
+	Image sol;
+	Image mainHeros;
+	
+
+	
 	public ImagesMonde()
 	{
 		super("Image monde");
@@ -53,6 +66,9 @@ public class ImagesMonde extends LoaderItem{
 
 		 end=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"end.png"));
 		 
+		 delete=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"delete.png"));
+		 spirel=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"spirel.png"));
+		 
 		 pciel=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"ciel_p.png"));
 		 percentage = (int)(8.0*100/14);
 
@@ -66,19 +82,23 @@ public class ImagesMonde extends LoaderItem{
 
 		 pstart=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"start_p.png"));
 		 pend=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"end_p.png"));
+		 
+		 ploupe=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"loupe_p.png"));
+		 pdelete=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"delete_p.png"));
+		 psouris=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"souris_p.png"));
+		 pspirel=Toolkit.getDefaultToolkit().getImage(getClass().getClassLoader().getResource(path+"spirel_p.png"));
+		 
 		 percentage = 100;
 		 alreadyLoaded=true;
 	}
 
-	/**
-	 * renvoie l'image correspondant au bloc 
-	 * 
-	 * @param bloc: le bloc a afficher
-	 * @param loupe: pour l'editeur, savoir si la loupe(dezoom) est activée ou non 
-	 * 
-	 * @return l'image a afficher
-	 */	
-	public Image getImages(TypeBloc type, boolean loupe)
+	/***
+	 * objType: null
+	 * info1 : {@link TypeBloc}
+	 * info2 : {@link BlocImModifier}
+	 */
+	@Override
+	public Image getImage(ObjectType objType, ImageInfo info1,ImageInfo info2)
 	{
 		/*REMOVE if(type.equals(TypeBloc.VIDE))
 		{
@@ -86,40 +106,66 @@ public class ImagesMonde extends LoaderItem{
 			return(vide);
 		}
 		else */
-		if (type.equals(TypeBloc.CIEL))
+		boolean loupe = info2!=null && info2.equals(BlocImModifier.LOUPE);
+		if (info1.equals(TypeBloc.CIEL))
 		{
 			if(loupe)return(pciel);
 			return(ciel);
 		}
-		else if (type.equals(TypeBloc.SOL))
+		else if (info1.equals(TypeBloc.SOL))
 		{
 			if(loupe)return(psol);
 			return(sol);
 		}
-		else if (type.equals(TypeBloc.TERRE))
+		else if (info1.equals(TypeBloc.TERRE))
 		{
 			if(loupe)return(pterre);
 			return(terre);
 		}
-		else if (type.equals(TypeBloc.PERSO))
+		else if (info1.equals(TypeBloc.PERSO))
 		{
 			if(loupe)return(pmainHeros);
 			return(mainHeros);
 		}
-		else if (type.equals(TypeBloc.START))
+		else if (info1.equals(TypeBloc.START))
 		{
 			if(loupe)return(pstart);
 			return(start);
 		}
-		else if (type.equals(TypeBloc.END))
+		else if (info1.equals(TypeBloc.END))
 		{
 			if(loupe)return(pend);
 			return(end);
+		}
+		else if (info1.equals(TypeBloc.LOUPE))
+		{
+			if(loupe)return(ploupe);
+			return(vide);
+		}
+		else if (info1.equals(TypeBloc.DELETE))
+		{
+			if(loupe)return(pdelete);
+			return(delete);
+		}
+		else if (info1.equals(TypeBloc.SOURIS))
+		{
+			if(loupe)return(psouris);
+			return(vide);
+		}
+		else if (info1.equals(TypeBloc.SPIREL))
+		{
+			if(loupe)return(pspirel);
+			return(spirel);
 		}
 		else
 		{
 			if(loupe)return(pvide);
 			return(vide);
 		}
+	}
+	@Override
+	public ArrayList<Image> getImages(ObjectType objType, ImageInfo info1,ImageInfo info2, int anim)
+	{
+		return null;
 	}
 }
