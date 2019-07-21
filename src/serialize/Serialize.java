@@ -59,8 +59,6 @@ public class Serialize implements InterfaceConstantes{
 
 		try
 		{
-			//REMOVEbyte[] bytes = new byte[4];
-			
 			//int,4, type of the monster 
 			is.read(byte4); 
 			stock.type = TypeBloc.values()[bytesToInt(byte4)];

@@ -52,16 +52,6 @@ public class ActiveJLayeredPane extends JLayeredPane{
 	{
 		//ignore repaint
 	}
-	/*REMOVE @Override
-	public void validate()
-	{
-		super.validate();
-	}
-	@Override
-	public void revalidate()
-	{
-		super.revalidate();
-	}*/
 	
 	@Override
 	public void setVisible(boolean b)

@@ -85,7 +85,6 @@ public class A_Star_Helper {
 
 	public boolean PointReached(AbstractModelPartie partie,Collidable objectToMove,Vector2d prevDir, Point target,Point nextTarget,double speednorm)
 	{
-		//TODO: 
 		//Case 0 When the center is at less than 10% of the max_step_size, consider that the point is reached. 
 		//This is to to handle the imprecision of the direction at short distance (ie: when arrow is shot)  
 		//Case 1: compare with the previous dir: if the new one is opposite to the previous: the object was crossed 
@@ -96,10 +95,8 @@ public class A_Star_Helper {
 		
 		if(dir.length() <= reach_distance)
 			return true;
-		/*else if(prevDir.dot(dir)>0)
-			return false;*/
 		else
-			return false;//true
+			return false;
 
 	}
 

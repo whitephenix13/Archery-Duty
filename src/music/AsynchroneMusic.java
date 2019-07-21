@@ -13,7 +13,7 @@ public abstract class AsynchroneMusic {
 	private ExecuteRequest executeRequests;//Runnable that executes all the request and then go to pause (to avoid taking too much memory)
 	private Thread t;
 	
-	//TODO: see stack overflow "how pause and then resume a thread"
+	//see stack overflow "how pause and then resume a thread"
 	private class ExecuteRequest implements Runnable
 	{
 		private volatile boolean running =true;

@@ -17,9 +17,6 @@ public abstract class Mouvement{
 	public static interface SubTypeMouv extends ImageInfo{}
 	public static enum DirSubTypeMouv implements SubTypeMouv{DROITE,GAUCHE}
 	
-	//REMOVE public static String DROITE = "DROITE";
-	//REMOVE public static String GAUCHE = "GAUCHE";
-	
 	public List<Integer> xtaille= new ArrayList<Integer>() ;
 	public List<Integer> ytaille= new ArrayList<Integer>() ;
 	
@@ -63,14 +60,10 @@ public abstract class Mouvement{
 		if(m==null)
 			return false;
 		return m.type_mouv.equals(type_mouv);
-		//REMOVE return (this.getClass().getName().equals(m.getClass().getName()));
 	}
 	public boolean IsDeplacement(TypeMouv type)
 	{
 		return type.equals(type_mouv);
-		/*REMOVE if(className ==null )
-			className = this.getClass().getName().replaceFirst("partie.deplacement.entity.", "");
-		return className.equals(type.toString());*/
 	}
 	public boolean IsDeplacement(TypeMouv type,SubTypeMouv sub)
 	{
@@ -80,9 +73,6 @@ public abstract class Mouvement{
 			return type.equals(type_mouv);
 		else
 			return type.equals(type_mouv) && sub.equals(sub_type_mouv);
-		/*REMOVEif(className ==null )
-			className = this.getClass().getName().replaceFirst("partie.deplacement.entity.", "");
-		return className.equals(type.toString());*/
 	}
 	
 	

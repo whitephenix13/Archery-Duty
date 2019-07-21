@@ -78,9 +78,7 @@ public class GameRenderer extends ActiveJFrame implements InterfaceConstantes, O
 		icons.add(getImage("64x64.gif"));
 		this.setIconImages(icons);
 
-		
-		//REMOVE AbstractModelPrincipal.changeFrame=true;
-		
+				
 		mainLayeredPane= new ActiveJLayeredPane();
 		this.setContentPane(mainLayeredPane);
 
@@ -98,7 +96,6 @@ public class GameRenderer extends ActiveJFrame implements InterfaceConstantes, O
 		graphics = null;
 		
 		this.pack();
-		//REMOVE ?? changeGameModeRendering();
 	}
 	
 	public void setAffichagePrincipal(AffichagePrincipal _affichagePrincipal)
@@ -217,24 +214,18 @@ public class GameRenderer extends ActiveJFrame implements InterfaceConstantes, O
 				componentToFadeOut.drawOnGraphics(g2d,forceRepaint);
 			}
 			ModelPrincipal.debugTimeAffichage.elapsed("draw fade out component");
-			//EXAMPLE g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, Math.max(0,1-0.005f*i)));
-			//EXAMPLE g2d.setColor(Color.blue);
-			//EXAMPLE g2d.fillRect(400, 200, 120, 120);
-			
-
-			//EXAMPLE g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, Math.min(1,0.005f*i)));
-			//EXAMPLE g2d.setColor(Color.red);
-			//EXAMPLE g2d.fillRect(400, 150, 120, 120);
 			
 			//Get graphics and translate them so that we start drawing inside the decorated window 
 			graphics = buffer.getDrawGraphics();
 			Insets insets = getInsets();
 			
+			ModelPrincipal.debugTimeAffichage.elapsed("get graphics and insets");
+			
 			//If there is a jmenu bar, translate the graphics a bit more 
 			int bar_height = getJMenuBar()!= null ? getJMenuBar().getBounds().height : 0;
 			graphics.translate(insets.left, insets.top+bar_height);
 			
-			ModelPrincipal.debugTimeAffichage.elapsed("get graphics");
+			ModelPrincipal.debugTimeAffichage.elapsed("translate graphics");
 			
 			//Draw the image from the graphics (paintComponents/non swing components)
 			graphics.drawImage( bi, 0,0, null );
@@ -265,6 +256,7 @@ public class GameRenderer extends ActiveJFrame implements InterfaceConstantes, O
 		if(getJMenuBar() != null){
 			graphics.translate(0, -bar_height);//get back to top of the screen, just below the insets 
 			((ActiveJMenuBar)getJMenuBar()).paintBar(graphics);
+			ModelPrincipal.debugTimeAffichage.elapsed("draw j menu bar");
 		}
 		
 		renderCalled=false;
@@ -274,6 +266,7 @@ public class GameRenderer extends ActiveJFrame implements InterfaceConstantes, O
 			if(!componentToFadeOut.isFading){
 				if(inTransition){
 					warnFadeOutEnded();
+					ModelPrincipal.debugTimeAffichage.elapsed("warn fade out end");
 				}
 			}
 
@@ -302,28 +295,17 @@ public class GameRenderer extends ActiveJFrame implements InterfaceConstantes, O
 			if(affichagePrincipal.getLoader() ==null){
 				return;
 			}
-			/*REMOVEif(!affichagePrincipal.getLoader().isLoadingDone())
-			{
-				if(!waitForLoading)
-					beginTransition(affichagePrincipal.getLoader().getAffichageLoader());
-				
-				forceActuAffichage=true;
-				waitForLoading=true;
-			}*/
 			beginTransition(affichagePrincipal);
-			//REMOVEthis.setContentPane(affichagePrincipal.getContentPane());
 			this.setTitle("Menu principal"); 
 		}
 		else if (gameHandler.currentGameMode().equals(GameModeType.OPTION))
 		{
 			beginTransition(affichageOption);
-			//this.setContentPane(affichageOption.getContentPane());
 			this.setTitle("Options"); 	   
 		}
 		else if (gameHandler.currentGameMode().equals(GameModeType.EDITOR))
 		{	
 			beginTransition(affichageEditeur);
-			//REMOVEthis.setContentPane(affichageEditeur.getContentPane());
 			this.setJMenuBar(affichageEditeur.getJMenuBar());
 			this.setTitle("Editeur"); 
 			this.revalidate();
@@ -332,21 +314,18 @@ public class GameRenderer extends ActiveJFrame implements InterfaceConstantes, O
 		else if (gameHandler.currentGameMode().equals(GameModeType.CREDIT))
 		{	
 			beginTransition(affichageCredit);
-			//REMOVEthis.setContentPane(affichageCredit.getContentPane());
 			this.setTitle("Credit"); 
 			this.revalidate();
 		}
 		else if (gameHandler.currentGameMode().equals(GameModeType.LEVEL_SELECTION))
 		{
 			beginTransition(affichageChoix);
-			//REMOVEthis.setContentPane(affichageChoix.getContentPane());
 			this.setTitle("Choix niveau");
 		}
 		else if (gameHandler.currentGameMode().equals(GameModeType.GAME))
 		{
 			beginTransition(affichagePartie);
 			this.setTitle("Partie rapide"); 
-			//this.revalidate();
 			affichagePartie.requestGameFocus();
 							
 		}
@@ -356,9 +335,7 @@ public class GameRenderer extends ActiveJFrame implements InterfaceConstantes, O
 			beginTransition(affichageLoader);//get affichage loader to show 
 			this.setTitle("Loading"); 
 							
-		}
-		//REMOVE this.repaint();
-	
+		}	
 	}
 
 
@@ -468,7 +445,6 @@ public class GameRenderer extends ActiveJFrame implements InterfaceConstantes, O
 				}
 				componentToFadeOut=null;
 				//move the component from Layer -1 to Layer 0
-				//REMOVEmainLayeredPane.moveToFront(mainLayeredPane.getComponent(0));//assumes there is only 1 component 
 				inTransition=false;
 			}});
 	}

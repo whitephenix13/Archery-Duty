@@ -167,10 +167,8 @@ public class AffichageOption extends Drawable implements Observer{
 		for(ActiveJPanel p : mapPanel.values())
 		{
 			MouseListener[] ml = p.getMouseListeners();
-			//KeyListener[] kl = p.getKeyListeners();
 			
 			p.removeMouseListener(ml[ml.length-1]);
-			//p.removeKeyListener(kl[kl.length-1]);
 			controler.opt.inputOption.reset(p);
 			for(Component c : p.getComponents())
 			{
@@ -178,7 +176,6 @@ public class AffichageOption extends Drawable implements Observer{
 				KeyListener[] ckl = c.getKeyListeners();
 
 				c.removeMouseListener(cml[cml.length-1]);
-				//c.removeKeyListener(ckl[ckl.length-1]);
 			}
 		}
 		CustomClickableLabel[] cls = {tDepDroit,tDepGauche,tSaut,tTir,t2Tir,tSlow,tPause};
@@ -274,7 +271,6 @@ public class AffichageOption extends Drawable implements Observer{
 		public void mousePressed(MouseEvent e) {}
 		public void mouseReleased(MouseEvent e) 
 		{
-			controler.opt.computationDone=false;
 			ActiveJButton button = (ActiveJButton)e.getSource();
 			Rectangle r = button.getBounds();
 			//Apply pressed only if the release is on the pressed button
@@ -282,7 +278,6 @@ public class AffichageOption extends Drawable implements Observer{
 				controler.opt.resetVariables();
 				controler.controlRetourMenuPrincipal();
 			}
-			controler.opt.computationDone=true;
 		}
 	}
 
@@ -292,9 +287,7 @@ public class AffichageOption extends Drawable implements Observer{
 	{
 		public void stateChanged(ChangeEvent event) 
 		{
-			controler.opt.computationDone=false;
 			controler.opt.setVolumeMusique(event);
-			controler.opt.computationDone=true;
 		}
 	}
 
@@ -303,9 +296,7 @@ public class AffichageOption extends Drawable implements Observer{
 	{
 		public void stateChanged(ChangeEvent event) 
 		{
-			controler.opt.computationDone=false;
 			controler.opt.setVolumeBruitage(event);
-			controler.opt.computationDone=true;
 		}
 	}
 
@@ -321,7 +312,6 @@ public class AffichageOption extends Drawable implements Observer{
 		public void mouseExited(MouseEvent e) {	
 		}
 		public void mousePressed(MouseEvent e) {
-			controler.opt.computationDone=false;
 			//Aucune case selectionnee
 			if(!controler.opt.getCaseFocus())
 			{
@@ -335,7 +325,6 @@ public class AffichageOption extends Drawable implements Observer{
 			}
 			//CHOIX: si l'utilisateur reclic sur la case en question, deux événements sont lancés: 
 			// inputListener et optionCliqueListener (dans cet ordre) ce qui fait que la case est reselectionnée.
-			controler.opt.computationDone=true;
 		}
 		public void mouseReleased(MouseEvent e) {	
 		}
@@ -352,7 +341,6 @@ public class AffichageOption extends Drawable implements Observer{
 		public void mouseExited(MouseEvent e) {}
 		public void mousePressed(MouseEvent e) 
 		{
-			controler.opt.computationDone=false;
 			//on vérifie que le clic de la souris est valide et qu'il y a une case selectionne
 			controler.controlMouseInput(e);
 			//Comme la touche a ete modifiée, plus aucune case n'est selectionne
@@ -361,7 +349,6 @@ public class AffichageOption extends Drawable implements Observer{
 			controler.opt.blinkCustomClickableLabel();
 			//on retire la case memorise
 			controler.controlCustomClickableLabel(null);
-			controler.opt.computationDone=true;
 		}
 		public void mouseReleased(MouseEvent e) {}
 
@@ -401,7 +388,6 @@ public class AffichageOption extends Drawable implements Observer{
 
 		//Remet à 0 les variables demandant d'updater un composant
 		controler.opt.resetVariablesAffichage();
-		//REMOVE this.getContentPane().repaint();
 	}
 
 

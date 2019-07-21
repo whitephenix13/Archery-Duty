@@ -40,8 +40,6 @@ public abstract class AbstractModelPartie  implements Observable, GameMode{
 	public void nextFrame(){frame+=1;}
 	public int getFrame(){return frame;}
 	//repaint flag 
-	public boolean computationDone=false;
-	public boolean listenersComputationDone=false;
 	public boolean isFirstFrameReady=false;
 	
 	/**Override the draw method to debug with draw*/
@@ -205,7 +203,6 @@ public abstract class AbstractModelPartie  implements Observable, GameMode{
 		xScreendisp = 0;
 		yScreendisp = 0;
 		
-		listenersComputationDone=true;
 		//Reference A_Star and A_Star_Helper for the first time to load the class once so that referencing them later is faster (~6 ms saved)
 		A_Star astar = new A_Star();
 		A_Star_Helper astarHelper = new A_Star_Helper(1,1,new Point(1,1),1,1);

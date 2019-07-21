@@ -40,11 +40,9 @@ public class AffichageCredit extends Drawable implements GameMode{
 	public ActiveJButton retour = new ActiveJButton("Retour");
 	
 	private GameHandler gameHandler;
-	private boolean computationDone;
 	public AffichageCredit(GameHandler gameHandler)
 	{
 		super();
-		computationDone=true;
 		this.gameHandler = gameHandler;
 		initComposant();
 	}
@@ -74,17 +72,12 @@ public class AffichageCredit extends Drawable implements GameMode{
 		public void mousePressed(MouseEvent e) {}
 		public void mouseReleased(MouseEvent e) 
 		{
-			AffichageCredit.this.computationDone=false; 
 			ActiveJButton button = (ActiveJButton)e.getSource();
 			Rectangle r = button.getBounds();
 			//Apply pressed only if the release is on the pressed button
 			if(r.contains(new Point(r.x+e.getX(),r.y+e.getY()))){
-				//REMOVE AbstractModelPrincipal.changeFrame=true;//REMOVE 
-				//REMOVE AbstractModelPrincipal.modeSuivant="Principal";
-				//REMOVE AbstractModelPrincipal.changeMode=true;
 				gameHandler.setGameMode(GameModeType.MAIN_MENU);
 			}
-			AffichageCredit.this.computationDone=true; 
 		}
 	}
 	public void removeListenerCredit()
@@ -149,7 +142,6 @@ public class AffichageCredit extends Drawable implements GameMode{
 	    mainPanel.add(panelNorth,BorderLayout.NORTH);
 	    mainPanel.add(panelCenter,BorderLayout.CENTER);
 	    mainPanel.add(panelSouth,BorderLayout.SOUTH);
-	    //REMOVEthis.getContentPane().add(panel);
 
 	}
 	
@@ -157,11 +149,8 @@ public class AffichageCredit extends Drawable implements GameMode{
 		//As this mode is controlled by listeners, the computationDone is set to false when a listener is triggered. This function is then left empty
 	}
 	public void updateSwing(){
-		//REMOVE getFrame().repaint();
 	}
-	public boolean isComputationDone(){
-		return computationDone;
-	}
+
 	@Override
 	public boolean isGameModeLoaded()
 	{

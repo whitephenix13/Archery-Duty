@@ -39,14 +39,7 @@ public class Bloc extends Collidable{
 		this.setCollideWithAll();
 		
 	}
-	/*REMOVE public boolean isVide()
-	{
-		if(type.equals(TypeBloc.VIDE))
-			return true;
-		else
-			return false;
-	}*/
-	
+
 	//mutateur
 	public void setType(TypeBloc type){
 		this.type=type;

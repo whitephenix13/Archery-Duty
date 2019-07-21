@@ -527,8 +527,6 @@ public class Spirel extends Monstre{
 	}
 	@Override
 	public void handleDeplacementSuccess(AbstractModelPartie partie) {
-		// TODO Auto-generated method stub
-		
 	}
 	
 	@Override

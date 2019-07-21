@@ -17,8 +17,6 @@ import utils.Vitesse;
 
 public class Attente extends Mouvement_entity{
 
-	//REMOVE public enum TypeAttente implements TypeMouv {AttenteGauche,AttenteDroite };
-
 	//constructeur des monstres 
 	public Attente(ObjectType objType,SubTypeMouv _sub_type_mouv, int current_frame){
 		super();

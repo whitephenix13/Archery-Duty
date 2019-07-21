@@ -12,7 +12,6 @@ import utils.observer.Observer;
 public abstract class AbstractModelChoixNiveau implements Observable,GameMode{
 	
 	protected GameHandler gameHandler;
-	protected boolean computationDone;
 	
 	protected String niveauSelectionne="";
 	protected List<String> listNomNiveaux = new ArrayList<String>();
@@ -33,7 +32,6 @@ public abstract class AbstractModelChoixNiveau implements Observable,GameMode{
 	
 	public AbstractModelChoixNiveau()
 	{
-		computationDone=true;
 	}
 	
 	

@@ -310,14 +310,7 @@ public class A_Star {
 		
 		//First of all, consider the case where the target is a point within the neighbors but not in the border. 
 		//Correction: always add target when found otherwise it might happen that the angle is wrong so the target is missed
-		//TODO: this case should never happen since the algo should stop if |currentPos - target| < grid_size
-		/*if(grid_scale_divider>1)
-		{
-			if( (xstart+1 <= target.x) && (target.x <= xend -1) && (ystart+1 <= target.y) && (target.y <= yend -1) )
-			{
-					AddCandidate(target,elem);
-			}
-		}*/
+		
 		//double loop to loop over border elements
 		//if the grid is empty + the indices are in the grid + the angle is correct + there is no collision : add this point as a candidate 
 		for(int x = xstart; x<=xend; x+=1 )
@@ -514,30 +507,7 @@ public class A_Star {
 			//(player mistake) than because the algo decided that there is no enough space 
 			//Point max_bounding_rect= objectToMove.deplacement.getMaxBoundingRect(objectToMove);
 		Hitbox objectUnrotatedHitbox = objectToMove.getDeplacementHitbox(0); //WARNING: this might change 
-		//The object can rotate by maximum explorationAngle. The bounding is then extended to take into account this rotation (square embedding the rotated hitbox)		
-		//      _ x      / \   
-		//   y |_|   =>  \ /
-		//				  
-		// y after rotation - y contribution to height + x contribution to height = y cos(ang) + x sin(ang) 
-		// what we want is max_(ang) ( ycos(ang) + x sin(ang) ) =(Derivation)> -y sin(ang) + x cos(ang) =0  => ang = atan(x/y)
-		//as the rotation is within [0,explorationAngle], the optimal is atan(x/y) is within interval, exploration angle otherwise  
-		// x after rotation = xcos(ang) + y sin (ang)>  => ang = atan(y/x) 
-		//TODO: y after rotation = y sin (ang) + , ycos(ang) = cos(ang)
 		
-			//assert(max_bounding_rect.x != 0);
-			//assert(max_bounding_rect.y != 0);
-			//double x_optimal_angle = Math.abs(Math.atan(max_bounding_rect.y/max_bounding_rect.x));
-			//double y_optimal_angle = Math.PI/2 - x_optimal_angle;
-		double d_exploration_angle =  params.exploration_angle.x * Math.PI/params.exploration_angle.y;
-		
-			//double x_max_angle = Math.min(x_optimal_angle, d_exploration_angle);
-			//double y_max_angle = Math.min(y_optimal_angle, d_exploration_angle);
-
-		//Point max_dist_object= new Point((int)Math.ceil(max_bounding_rect.x * Math.cos(x_max_angle)+ max_bounding_rect.y * Math.sin(x_max_angle)), 
-		//		(int)Math.ceil(max_bounding_rect.y * Math.cos(y_max_angle)+ max_bounding_rect.x * Math.sin(y_max_angle)));
-		//TODO: change to value above when all bugs are corrected. Remember to consider the oriented hitbox when evaluating whether there is a collision or not.
-			//int i_max_dist_object = (int) Math.ceil( 0.75 * objectToMove.deplacement.getMaxBoundingSquare(objectToMove));
-			//Point max_dist_object= new Point(i_max_dist_object,i_max_dist_object); //TODO: only for debugging 
 		if(params.DEBUG){
 			int max_dist = objectToMove.getDeplacement().getMaxBoundingSquare();
 			debugDraw(params,partie,new Point(max_dist,max_dist));
@@ -865,11 +835,8 @@ public class A_Star {
 							params.grid[xInd][yInd] = null;
 						}
 					}
-					params.listCandidates.clear();
-					//TODO: give an initPos so that the grid is always the same 
-					//TODO: give the next path point to reach as init pos so that you are sure that the grid is the same (ie: arrow direction is smooth and doesn't need sharp turn)
-					
-					endPath = FindPathFromUpdate(params,partie,objectToMove,dir, _target, smoothStrength,prevNextTarget,true);//TODO:prevNextTarget replaced null
+					params.listCandidates.clear();		
+					endPath = FindPathFromUpdate(params,partie,objectToMove,dir, _target, smoothStrength,prevNextTarget,true);
 				}
 
 				if(endPath==null)

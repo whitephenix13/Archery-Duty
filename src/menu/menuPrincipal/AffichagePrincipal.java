@@ -79,7 +79,6 @@ public class AffichagePrincipal extends Drawable implements Observer{
 		
 		mainPanel.setBackground(Color.black);
 		mainPanel.setOpaque(false);
-		//REMOVEthis.setContentPane(panelBoutons);
 		
 		controlerPrincipal.principal.imPrincipal.run();;
 	}
@@ -93,49 +92,31 @@ public class AffichagePrincipal extends Drawable implements Observer{
 		public void mousePressed(MouseEvent e) {}
 
 		public void mouseReleased(MouseEvent e) {
-			AffichagePrincipal.this.controlerPrincipal.principal.computationDone=false; 
 			ActiveJButton button = (ActiveJButton)e.getSource();
 			Rectangle r = button.getBounds();
 			//Apply pressed only if the release is on the pressed button
 			if(r.contains(new Point(r.x+e.getX(),r.y+e.getY()))){
 				if(button.getText().equals("Partie Rapide"))
 				{
-					//REMOVE AbstractModelPrincipal.changeFrame=true; //Remove
-					//Remove AbstractModelPrincipal.modeSuivant="ChoixNiveau"; //modeSuivant="Partie";
-					//Remove AbstractModelPrincipal.changeMode=true; 
 					controlerPrincipal.principal.setGameMode(GameModeType.LEVEL_SELECTION);
 				}
 				else if(button.getText().equals("Editeur"))
 				{
-					//REMOVE AbstractModelPrincipal.changeFrame=true;//Remove
-					//RemoveAbstractModelPrincipal.modeSuivant="Editeur";
-					//RemoveAbstractModelPrincipal.changeMode=true; 
 					controlerPrincipal.principal.setGameMode(GameModeType.EDITOR);
 				}
 				else if(button.getText().equals("Credit"))
 				{
-					//REMOVE AbstractModelPrincipal.changeFrame=true;//Remove
-					//RemoveAbstractModelPrincipal.modeSuivant="Credit";
-					//RemoveAbstractModelPrincipal.changeMode=true; 
 					controlerPrincipal.principal.setGameMode(GameModeType.CREDIT);
 				}
 				else if(button.getText().equals("Option"))
 				{
-					//REMOVE AbstractModelPrincipal.changeFrame=true;//Remove
-					//RemoveAbstractModelPrincipal.modeSuivant="Option";
-					//RemoveAbstractModelPrincipal.changeMode=true; 
 					controlerPrincipal.principal.setGameMode(GameModeType.OPTION);
 				}
 				else if(button.getText().equals("Quitter"))
 				{
-					//REMOVE AbstractModelPrincipal.changeFrame=true;//Remove 
-					//RemoveAbstractModelPrincipal.modeSuivant="Quitter";
-
-					//RemoveAbstractModelPrincipal.changeMode=true; 
 					controlerPrincipal.principal.setGameMode(GameModeType.QUIT);
 				}
 			}
-			AffichagePrincipal.this.controlerPrincipal.principal.computationDone=true; 
 		}
 
 	}
@@ -166,21 +147,6 @@ public class AffichagePrincipal extends Drawable implements Observer{
 	public void drawOnGraphics(Graphics g,boolean forceRepaint)
 	{
 		g.drawImage(controlerPrincipal.principal.imPrincipal.getImage(null,ImPrincipalInfo.BACKGROUND,null),0,0,mainPanel);		
-		/*REMOVE if(controlerPrincipal.principal.loaderMenuPrincipal ==null)
-		{
-			return;
-		}
-		if(controlerPrincipal.principal.loaderMenuPrincipal.isGameModeLoaded())
-		{
-			warnFadeOutCanStart();
-			
-			g.drawImage(controlerPrincipal.principal.imPrincipal.getImage(ImagesPrincipal.BACKGROUND),0,0,mainPanel);		
-							
-		}
-		else
-		{
-			controlerPrincipal.principal.loaderMenuPrincipal.showLoading(g);
-		}*/
 	}
 	
 	public Loader getLoader()
@@ -188,7 +154,6 @@ public class AffichagePrincipal extends Drawable implements Observer{
 		return controlerPrincipal.principal.loaderMenuPrincipal;
 	}
 	public void update() {
-		//REMOVE getFrame().repaint();
 	}
 
 }

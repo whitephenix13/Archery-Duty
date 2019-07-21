@@ -16,8 +16,6 @@ import utils.Vitesse;
 //il y a 1 animations de deux cotés 
 
 public class Accroche extends Mouvement_entity{
-
-	//REMOVE public enum TypeAccroche implements TypeMouv {AccrocheGauche,AccrocheDroite,GrimpeGauche, GrimpeDroite };
 	public static enum SubMouvAccrocheEnum implements SubTypeMouv {ACCROCHE_DROITE, ACCROCHE_GAUCHE,GRIMPE_DROITE,GRIMPE_GAUCHE};
 	
 	public Accroche(ObjectType objType,SubTypeMouv _sub_type_mouv, int current_frame){

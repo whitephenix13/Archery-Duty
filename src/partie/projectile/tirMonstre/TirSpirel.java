@@ -112,8 +112,6 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	}
 	@Override
 	public void handleDeplacementSuccess(AbstractModelPartie partie) {
-		// TODO Auto-generated method stub
-		
 	}
 	@Override
 	public void applyFriction(double minLocalspeed, double minEnvirSpeed) {

@@ -17,8 +17,6 @@ import utils.Vitesse;
 
 public class Marche extends Mouvement_entity{
 	
-	//REMOVE public enum TypeMarche implements TypeMouv {MarcheGauche,MarcheDroite };
-
 	//constructeur 
 	public Marche(ObjectType objType,SubTypeMouv _sub_type_mouv,int current_frame){
 		super();

@@ -119,9 +119,6 @@ public class ModelChoixNiveau extends AbstractModelChoixNiveau{
 	}
 
 	public void playLevel() {
-		//REMOVE AbstractModelPrincipal.changeFrame=true;//REMOVE
-		//REMOVEAbstractModelPrincipal.modeSuivant="Partie";
-		//REMOVEAbstractModelPrincipal.changeMode=true;
 		resetBoutons();
 		gameHandler.setGameMode(GameModeType.GAME);
 	}
@@ -132,9 +129,7 @@ public class ModelChoixNiveau extends AbstractModelChoixNiveau{
 	public void updateSwing(){
 		this.notifyMainObserver();
 	}
-	public boolean isComputationDone(){
-		return computationDone;
-	}
+
 	@Override
 	public boolean isGameModeLoaded()
 	{

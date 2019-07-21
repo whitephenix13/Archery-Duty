@@ -117,14 +117,12 @@ public class AffichageChoixNiveau extends Drawable implements Observer{
 		public void mousePressed(MouseEvent e) {}
 		public void mouseReleased(MouseEvent e) 
 		{
-			controlerChoix.choix.computationDone=false;
 			ActiveJButton button = (ActiveJButton)e.getSource();
 			Rectangle r = button.getBounds();
 			//Apply pressed only if the release is on the pressed button
 			if(r.contains(new Point(r.x+e.getX(),r.y+e.getY()))){
 				controlerChoix.choix.selectLevel((ActiveJButton)e.getSource());
 			}
-			controlerChoix.choix.computationDone=true;
 		}
 	}
 	
@@ -139,17 +137,12 @@ public class AffichageChoixNiveau extends Drawable implements Observer{
 		public void mousePressed(MouseEvent arg0) {}
 		public void mouseReleased(MouseEvent e) 
 		{
-			controlerChoix.choix.computationDone=false;
 			ActiveJButton button = (ActiveJButton)e.getSource();
 			Rectangle r = button.getBounds();
 			//Apply pressed only if the release is on the pressed button
 			if(r.contains(new Point(r.x+e.getX(),r.y+e.getY()))){
-				//REMOVE AbstractModelPrincipal.changeFrame=true;//REMOVE
-				//REMOVEAbstractModelPrincipal.modeSuivant="Principal";
-				//REMOVEAbstractModelPrincipal.changeMode=true;
 				controlerChoix.choix.gameHandler.setGameMode(GameModeType.MAIN_MENU);
 			}
-			controlerChoix.choix.computationDone=true;
 		}
 	}
 	
@@ -164,14 +157,12 @@ public class AffichageChoixNiveau extends Drawable implements Observer{
 		public void mousePressed(MouseEvent arg0) {}
 		public void mouseReleased(MouseEvent e) 
 		{
-			controlerChoix.choix.computationDone=false;
 			ActiveJButton button = (ActiveJButton)e.getSource();
 			Rectangle r = button.getBounds();
 			//Apply pressed only if the release is on the pressed button
 			if(r.contains(new Point(r.x+e.getX(),r.y+e.getY()))){
 				controlerChoix.controlPlayLevel();
 			}
-			controlerChoix.choix.computationDone=true;
 		}
 	}
 	
@@ -215,7 +206,6 @@ public class AffichageChoixNiveau extends Drawable implements Observer{
 			fillPanelBoutons();
 		}	
 		controlerChoix.choix.resetVariablesAffichages();
-		//REMOVE mainPanel.repaint();
 	}
 
 }

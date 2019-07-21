@@ -17,8 +17,6 @@ import utils.Vitesse;
 
 public class Course extends Mouvement_entity{
 
-	//REMOVE public enum TypeCourse implements TypeMouv {CourseGauche,CourseDroite };
-
 	//constructeur monstre
 	public Course(ObjectType objType,SubTypeMouv _sub_type_mouv,int current_frame){
 		super();

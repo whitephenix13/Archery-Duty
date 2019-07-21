@@ -105,10 +105,7 @@ public class ModelPartie extends AbstractModelPartie{
 			bloc.getHitbox(INIT_RECT, getScreenDisp());//force creation of hitbox
 		//Force creation of entity hitbox
 		for(Entity ent : Collidable.getAllEntitiesCollidable(this,heros))
-			ent.getHitbox(INIT_RECT, getScreenDisp());//force creation of hitbox
-		
-		ModelPrincipal.debugTime = new DebugTime(InterfaceConstantes.DEBUG_TIME_LOOP_TO_SLOW,InterfaceConstantes.DEBUG_TIME_ACTION_TO_SLOW,InterfaceConstantes.DEBUG_TIME_VERBOSE);
-		
+			ent.getHitbox(INIT_RECT, getScreenDisp());//force creation of hitbox		
 	}
 
 	/**
@@ -126,7 +123,6 @@ public class ModelPartie extends AbstractModelPartie{
 				inPause=true;
 				Toolkit.getDefaultToolkit().setLockingKeyState(KeyEvent.VK_CAPS_LOCK, false);
 				keyAction();
-				//REMOVE AbstractModelPrincipal.changeFrame=true;
 				affich.changeGameModeRendering();
 
 				firstNonFocused=false;
@@ -342,16 +338,7 @@ public class ModelPartie extends AbstractModelPartie{
 
 			//on test si la partie est finie 
 
-			boolean finPartieAvant= finPartie;
-
 			finPartie= (heros.getLife()==heros.MINLIFE) || (nombreMonstreRestant==0);
-
-			//on detecte la fin de la partie de la première fois : 
-			if(!finPartieAvant &&finPartie )
-			{
-				//REMOVE gameHandler.updateGraphics();
-				//REMOVE AbstractModelPrincipal.changeFrame=true;
-			}
 
 		}
 		
@@ -903,27 +890,18 @@ public class ModelPartie extends AbstractModelPartie{
 		}
 		else if(button.getText().equals("Quitter"))
 		{
-			//REMOVE AbstractModelPrincipal.changeFrame=true; //REMOVE
-			//REMOVE AbstractModelPrincipal.modeSuivant="Quitter";
-
 			if(inPause)
 			{
 				//on arrete la partie pour sortir du Thread d'affichage de partie rapide
 				finPartie=true;
 				//on choisit de ne pas afficher la fin de la partie(elle n'est en réalité pas finie
-				//REMOVE AbstractModelPrincipal.changeFrame=false;
 			}
-			//REMOVE sAbstractModelPrincipal.changeMode=true; 
 			gameHandler.setGameMode(GameModeType.QUIT);
 		}
 		else if(button.getText().equals("Rejouer"))
 		{
 			
-			//REMOVE AbstractModelPrincipal.modeSuivant="Partie";
 			finPartie=false;
-			//REMOVE AbstractModelPrincipal.changeFrame=true;
-			//REMOVE AbstractModelPrincipal.changeMode=true; 
-
 			disableBoutonsFin=true;
 			notifyObserver();
 			gameHandler.setGameMode(GameModeType.GAME);
@@ -931,11 +909,7 @@ public class ModelPartie extends AbstractModelPartie{
 		}
 		else if(button.getText().equals("Menu Principal"))
 		{
-			//REMOVE AbstractModelPrincipal.modeSuivant="Principal";
-			//REMOVE AbstractModelPrincipal.changeFrame=true;//REMOVE 
 			finPartie=true;
-			//REMOVE AbstractModelPrincipal.changeMode=true; 
-
 			disableBoutonsFin=true;
 			notifyObserver();
 			gameHandler.setGameMode(GameModeType.MAIN_MENU);
@@ -945,8 +919,6 @@ public class ModelPartie extends AbstractModelPartie{
 		else if(button.getText().equals("Reprendre"))
 		{
 			inPause=false;
-			//REMOVE gameHandler.updateGraphics();
-			//REMOVE AbstractModelPrincipal.changeFrame=true;
 		}
 	}
 
@@ -1049,7 +1021,7 @@ public class ModelPartie extends AbstractModelPartie{
 
 			for(int i =0; i<allcondis.size();++i){
 				Condition condi = allcondis.get(i); 
-				if(condi.blinkDisplay){
+				if(condi.blinkDisplay || finPartie){ //display all condis at the end of the game
 					imageDrawer.addImage(new DrawImageItem(imConditions.getImage(null,condi.type,null), xStartDrawCondi+25*i ,yStartDrawCondi ,null
 							,DrawImageHandler.MONSTRE));
 				}
@@ -1072,7 +1044,7 @@ public class ModelPartie extends AbstractModelPartie{
 		Point anchor = new Point(((Mouvement_entity)heros.getDeplacement()).x_rot_pos.get(anim),((Mouvement_entity)heros.getDeplacement()).y_rot_pos.get(anim));
 		Point returnedAnchor = new Point(heros.getXpos()+anchor.x,heros.getYpos()+anchor.y);
 		
-		AffineTransform tr = getRotatedTransform(new Point(heros.getXpos(),heros.getYpos()),anchor,heros.rotation_tir);//TODO: changed
+		AffineTransform tr = getRotatedTransform(new Point(heros.getXpos(),heros.getYpos()),anchor,heros.rotation_tir);
 
 		ArrayList<Image> l_image = imHeros.getImages(null,heros.getTypeMouv(),null,heros.getAnim());
 		for(int i=0; i<l_image.size(); ++i)
@@ -1109,7 +1081,7 @@ public class ModelPartie extends AbstractModelPartie{
 			int yStartDrawCondi = heros.conditions.getYStartDraw(heros.getYpos()-25);
 			for(int i =0; i<allcondis.size();++i){
 				Condition condi = allcondis.get(i); 
-				if(condi.blinkDisplay){
+				if(condi.blinkDisplay|| finPartie){//display all condis at the end of the game
 					imageDrawer.addImage(new DrawImageItem(imConditions.getImage(null,condi.type,null), xStartDrawCondi+25*i ,yStartDrawCondi ,null
 							,DrawImageHandler.PERSO));
 				}
@@ -1445,20 +1417,12 @@ public class ModelPartie extends AbstractModelPartie{
 		// Return the buffered image
 		return bimage;
 	}
-	@Override
-	public boolean isComputationDone(){
-		return computationDone && listenersComputationDone;
-	}
+
 	@Override
 	public void doComputations(GameRenderer affich){
 		//wait for loader to end
 		if(!isGameModeLoaded())
 			return;
-		
-		ModelPrincipal.debugTime.print();
-		ModelPrincipal.debugTime.init(InterfaceConstantes.DEBUG_TIME_PRINT_MODE,getFrame());
-
-		computationDone=false;
 		
 		ModelPrincipal.debugTime.startElapsedForVerbose();
 		play(affich);
@@ -1468,12 +1432,10 @@ public class ModelPartie extends AbstractModelPartie{
 		ModelPrincipal.debugTime.elapsed("precomute draw");
 		if(!getinPause() && (!slowDown || (slowDown && slowCount==0)))
 			nextFrame();
-		computationDone=true;
 	}
 	@Override
 	public void updateSwing(){
 		notifyObserver();
-		ModelPrincipal.debugTime.elapsed("validate affichage");
 	}
 	@Override
 	public boolean isGameModeLoaded()

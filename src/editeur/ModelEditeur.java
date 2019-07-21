@@ -61,7 +61,6 @@ public class ModelEditeur extends AbstractModelEditeur{
 			drag=true;
 			xStartDrag=xpos;
 			yStartDrag=ypos;
-			//REMOVE repaint=true;
 			notifyObserver();
 			return ;
 		}
@@ -93,7 +92,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 		}
 		xViewPort=_xViewPort;
 		yViewPort=_yViewPort;
-		//REMOVE repaint=true;
+		
 		notifyObserver();
 	}
 	public void releaseMoveViewport()
@@ -126,7 +125,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 			tempPict= new Bloc(texture,xBlocPos,yBlocPos,bloquant,background);
 		monde.niveau[xBlocPos/InterfaceConstantes.TAILLE_BLOC][yBlocPos/InterfaceConstantes.TAILLE_BLOC]=tempPict;
 
-		//REMOVE repaint=true;
+		
 		notifyObserver();
 	}
 	public void drawMonster(int xpos, int ypos) 
@@ -139,7 +138,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 			tabEditeurMonstre.add(new StockageMonstre(TypeBloc.SPIREL,new Point(xMonstrePos,yMonstrePos),staticMonstre));
 		}
 
-		//REMOVE repaint=true;
+		
 		notifyObserver();
 	}
 	public void drawSpecial(int x, int y) 
@@ -168,7 +167,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 
 		texture=TypeBloc.NONE;//on remet la souris
 
-		//REMOVE repaint=true;
+		
 		notifyObserver();
 	}
 
@@ -190,7 +189,6 @@ public class ModelEditeur extends AbstractModelEditeur{
 
 		if(monde.niveau==null){
 			monde.niveau= new Bloc[InterfaceConstantes.ABS_MAX][InterfaceConstantes.ORD_MAX];
-			//REMOVE monde.initMonde();
 		}
 		Image im;
 		Bloc tempPict;
@@ -339,10 +337,6 @@ public class ModelEditeur extends AbstractModelEditeur{
 		{
 			menuEdit.setBloquant(false);
 		}
-		/*REMOVE else if (_texture.equals(TypeBloc.VIDE))
-		{
-			menuEdit.setBloquant(false);
-		}*/
 		else if (_texture.equals(TypeBloc.SOL))
 		{
 			menuEdit.setBloquant(true);
@@ -373,7 +367,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 			showStaticMonsters=true;
 		}
 
-		//REMOVE repaint=true;
+		
 		notifyObserver();
 	}
 
@@ -441,7 +435,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 		tabEditeurMonstre=_monde.listMonstreOriginal;
 
 		monde=_monde;
-		//REMOVE repaint=true;
+		
 		notifyObserver();
 
 	}
@@ -519,7 +513,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 			tailleBloc = futurTailleBloc;
 			loupe=!loupe;
 
-			//REMOVE repaint=true;
+			
 			notifyObserver();
 		}
 		else 
@@ -529,7 +523,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 			yViewPort+=deltaYViewPort;
 			tailleBloc=futurTailleBloc;
 			loupe=!loupe;
-			//REMOVE repaint=true;
+			
 			notifyObserver();
 		}
 
@@ -548,10 +542,7 @@ public class ModelEditeur extends AbstractModelEditeur{
 	public void updateSwing(){
 		this.notifyMainObserver();
 	}
-	@Override
-	public boolean isComputationDone(){
-		return computationDone;
-	}
+
 	@Override
 	public boolean isGameModeLoaded()
 	{

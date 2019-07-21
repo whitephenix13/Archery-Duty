@@ -28,11 +28,7 @@ public class ModelOption extends AbstractModelOption{
 		inputPartie=_inputPartie;
 	}
 	public void retourMenuPrincipal() {
-		
-		//REMOVE AbstractModelPrincipal.changeFrame=true; //REMOVE
 		gameHandler.setGameMode(GameModeType.MAIN_MENU);
-		/*REMOVE AbstractModelPrincipal.modeSuivant="Principal";
-		AbstractModelPrincipal.changeMode=true;*/
 	}
 
 
@@ -132,9 +128,7 @@ public class ModelOption extends AbstractModelOption{
 	public void updateSwing(){
 		this.notifyMainObserver();
 	}
-	public boolean isComputationDone(){
-		return computationDone;
-	}
+
 	@Override
 	public boolean isGameModeLoaded()
 	{

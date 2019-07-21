@@ -110,7 +110,6 @@ public class Loader implements GameMode{
 	{
 		while(!this.loadingDone || lastRound)
 		{
-			//REMOVE affichageLoader.getContentPane().repaint();
 			if(this.loadingDone)
 				lastRound=false;
 			
@@ -118,7 +117,6 @@ public class Loader implements GameMode{
 			try {
 				Thread.sleep(10);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
@@ -167,9 +165,7 @@ public class Loader implements GameMode{
 	public void updateSwing(){
 		affichageLoader.onUpdateGraphics();
 	}
-	public boolean isComputationDone(){
-		return true; //computation is done in a different thread
-	}
+
 	@Override
 	public boolean isGameModeLoaded()
 	{

@@ -68,20 +68,6 @@ public class ActiveJPanel extends JPanel{
 	{
 		//ignore repaint
 	}
-	/*REMOVE @Override
-	public void validate()
-	{
-		if(!GameRenderer.isRenderCalled())
-			return;
-		super.validate();
-	}
-	@Override
-	public void revalidate()
-	{
-		if(!GameRenderer.isRenderCalled())
-			return;
-		super.revalidate();
-	}*/
 	
 	@Override
 	public void setVisible(boolean b)

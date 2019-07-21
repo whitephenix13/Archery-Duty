@@ -19,8 +19,6 @@ import partie.entitie.monstre.Spirel;
 import utils.Vitesse;
 
 public class Saut extends Mouvement_entity{
-
-	//REMOVE public enum TypeSaut implements TypeMouv {JumpGauche,FallGauche,LandGauche,JumpDroite,FallDroite,LandDroite };
 	public static enum SubMouvSautEnum implements SubTypeMouv {JUMP_GAUCHE, FALL_GAUCHE,LAND_GAUCHE,JUMP_DROITE,FALL_DROITE,LAND_DROITE};
 
 

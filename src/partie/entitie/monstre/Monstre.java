@@ -90,7 +90,6 @@ public abstract class Monstre extends Entity implements InterfaceConstantes, Ser
 	 */
 	public abstract void alignHitbox(int animActu,Mouvement depSuiv, int animSuiv, AbstractModelPartie partie,Deplace deplace);
 	
-	//TODO: DELETE
 	@Override
 	public void registerEffect(Effect eff)
 	{

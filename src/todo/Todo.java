@@ -1,27 +1,13 @@
 package todo;
 
 public class Todo {
-	
-	//remove sting DROITE/GAUCHE from movement
-	//corrected bug in model principal percentage 
-	
-	//TODo: try accelerate clear Rect by actually calling draw image (on buffered image) instead :https://bytes.com/topic/java/answers/16052-fast-rectangle-filling
-	//TODO: => actually what really slows down an image is whether it is ARGB (transparent) or not. Try using opaque image as much as possible to speed up drawing 
-	
-	//TODO: The screen still flashes in black sometimes => improve draw ! 
-	
-	//TODO: Now that ScheduledExecutorService is used, iscomputationdone is not needed as the timer will do its best to honor the contract if executing the runnable
-	//TODO: every 17ms or execute it as fast as possible
-	//TODO: can still move when the game ends => make it spawn in the ground sometimes
-	//TODO: chec that it works : debug time 
-	
-	
-	//TODO: test fade out with roche+effect (growing) + go back from option + others
-	
-	//TODO: refactor main loop for the game. Especially create an easy way to wait for affichage when loading is there. Also see if static variables can be removed 
-	//TODO: avoid while true in the modelPrincipal. Instead wake up thread when change mode? 
-	//TODO: clean todo/remove
 		
+	// conditions starts blinking even when games ended => corrected 
+	// clean todo/remove
+	
+	//TODO: create a fps conter (for better debugging purposes)
+	//TODO: add random start time for spirel so that all spirel don't update at the same time (do that only when optimisation is done)
+	
 	//TODO: Spirel chang mouv: falling: 3.5339229999999997ms / 24.015653ms
 	//TODO: 5: Time: get all collidable effect: 7.418347ms / 12.601457ms (for heros in deplace)
 	//TODO: 5: Time: got all collidable effects: 0.860737ms / 18.309613ms (for heros in collision)
@@ -90,6 +76,7 @@ public class Todo {
 	//TODO: affichage des niveaux avec preview et difficulté? 
 	//TODO: laisser l'ecran de chargement jusqu'a ce que l'affichage soit pret lors d'un changement de fenetre (permet d'éviter les flash)
 	//TODO: Améliorer slider option (ne se déplace pas à l'endroit où on clique)
+	//TODO: Switch game mode to option when partie/pause/option? (allow smooth transitions)
 	
 	//TODO: GRAPHISME:
 	//TODO: effet ralentissement: taille en fonction de la fenetre
@@ -114,6 +101,13 @@ public class Todo {
 	//TODO: ajouter des plugins angel chore, ou celesta
 
 	//TODO: EDITEUR
+	//TODO: improve how blocs are handled: transform world to a matrix of list of blocs. C
+	//Create bloc as big as desired. If bloc falls inside subdivision of matrix, add it to corresponding array list (used for fast access to whic bloc can collide-
+	//In order to draw, create a function to get all unique objects: for each bloc and each item in list: if !item.added: {item.added=true; ret_list.add(item)}
+	//for each item in ret_list: item.added=false; return ret_list;
+	
+	//TODO: use affineTransform to make imahe shorter (avoid to create _p images)
+	//TODO: create an object editor (panel to the left/right of the screen). Can also indicates the num of objects in editor cell to show all overlappng objects
 	//TODO mettre à jour deplaceEcran editeur par rapport a celui de AbstractModelPartie
 	//TODO: editeur: Split bloc class used for editeur and bloc used for partie and split TypeBloc (type monstre,...) or rename it (type Object)
 	//TODO: editeur: refactor the code + use correct image loader (create loader for image editeur instead of image monde) + add option to convert all world to new version 

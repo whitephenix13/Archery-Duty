@@ -70,23 +70,28 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		public void run()
 		{
 			try{
-			double deltaTime;
-			//Change game mode if needed 
-			if(nextGameMode !=null){
-				changeGameMode(nextGameMode);
-				nextGameMode=null;
-			}
-			deltaTime=(System.nanoTime()-last_update)/Math.pow(10, 6);//delta time in ms
+				//double deltaTime;
+				//deltaTime=(System.nanoTime()-last_update)/Math.pow(10, 6);//delta time in ms
+				//last_update=System.nanoTime();
+				ModelPrincipal.debugTime.print();
+				ModelPrincipal.debugTime.init(InterfaceConstantes.DEBUG_TIME_PRINT_MODE,0);
+				
+				ModelPrincipal.debugTime.startElapsedForVerbose();
+				//Change game mode if needed 
+				if(nextGameMode !=null){
+					changeGameMode(nextGameMode);
+					nextGameMode=null;
+				}
+				ModelPrincipal.debugTime.elapsed("change game mode");
 
-			//if((deltaTime>Config.getDeltaFrame(true)) &&currentGameMode.isComputationDone()){ 
-			last_update=System.nanoTime();
-			currentGameMode.doComputations(gameRenderer);//main game mode logic
-			gameRenderer.render(false);
-				//REMOVEcurrentGameMode.updateGraphics(); //update the screen based on the new computations
-			//}
+				currentGameMode.doComputations(gameRenderer);//main game mode logic
+				ModelPrincipal.debugTime.elapsed("do computations");
+				gameRenderer.render(false);
+				ModelPrincipal.debugTime.elapsed("renders");
+
 			}
 			catch(Exception e){e.printStackTrace();}
-			
+
 		}
 	}
 	
@@ -123,30 +128,15 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		
 		principal = this;
 		controlerPrincipal = new ControlerPrincipal(principal);
-		affichagePrincipal = new AffichagePrincipal(controlerPrincipal);//TODO: remove this behaviour in AffichagePrincipal/Init? Load the required media (background image)
+		affichagePrincipal = new AffichagePrincipal(controlerPrincipal);
 		principal.addObserver(affichagePrincipal);
 
 		
 		gameRenderer.setAffichagePrincipal(affichagePrincipal);
-		//on met en place le conteneur 
-		//REMOVE gameRenderer.setResizable(false);
-
-		//REMOVE gameRenderer.getContentPane().setFocusable(true);
-		//REMOVE gameRenderer.getContentPane().requestFocus();
-
-		//REMOVE gameRenderer.setSize(new Dimension(InterfaceConstantes.WINDOW_WIDTH,InterfaceConstantes.WINDOW_HEIGHT));
-		//REMOVE gameRenderer.setLocationRelativeTo(null);
-		//REMOVE gameRenderer.setTitle("Menu principal");
-		//REMOVE gameRenderer.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-		//REMOVE gameRenderer.setVisible(true);	
-		
 
 		//add main observer used to ask for global screen update ie: when loading 
-
 		principal.addMainObserver(gameRenderer);
 		
-		//TODO: show loading screen here => first instantiate affichage, then give references to other affichages 
 		LoaderItem mainObjectsCreation = new LoaderItem("Main objects creation"){
 			@Override
 			public void run()
@@ -205,7 +195,6 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		loaderMenuPrincipal.waitToEnd(principal);
 		
 		affichagePrincipal.setButtons();
-		//REMOVE gameRenderer.repaint();
 
 		//start music 
 		Music.me.startNewMusic(InterfaceConstantes.musiquePrincipal);
@@ -302,8 +291,6 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 			currentGameModeType=newMode;
 			currentGameMode = option;
 
-			//affichage
-			//REMOVE changeFrame=true;
 			gameRenderer.changeGameModeRendering();
 
 			//listener
@@ -351,7 +338,6 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 				gameRenderer.addListener(currentGameModeType);
 	
 				//affichage
-				//REMOVE changeFrame=true;
 				gameRenderer.changeGameModeRendering();
 			}
 		}
@@ -374,7 +360,6 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 			gameRenderer.addListener(currentGameModeType);
 
 			//affichage
-			//REMOVE changeFrame=true;
 			gameRenderer.changeGameModeRendering();
 		}
 		else if (newMode.equals(GameModeType.LEVEL_SELECTION))
@@ -392,7 +377,6 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 			currentGameModeType=newMode;
 			currentGameMode = choix;
 			//affichage
-			//REMOVE changeFrame=true;
 
 			gameRenderer.changeGameModeRendering();
 
@@ -402,16 +386,13 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		}
 		else if (newMode.equals(GameModeType.GAME))
 		{
-			//not drawing at first 
-			partie.computationDone=false;
-			
+			//not drawing at first 			
 			//If we come from the partie loader, don't init the partie again 
 			if(!currentGameModeType.equals(GameModeType.LOADER)){
 				//listener
 				gameRenderer.removeListener(currentGameModeType);
 	
 				//on reinitialiser les variables pour pouvoir rejouer plusieurs fois
-	
 				partie.init();
 	
 				//on lance la partie rapide si elle n'est pas deja en cours ie: le jeu n'est pas en pause
@@ -449,70 +430,16 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 					Music.me.endSlowDownMusic();
 				
 				//affichage
-				//REMOVE changeFrame=true;
 				gameRenderer.changeGameModeRendering();
 				
-				//REMOVE partie.loaderPartie.wait(partie);
 				//make sure that all other media are loaded correctly
 				loaderAllMedia.waitToEnd(partie);
 				if(InterfaceConstantes.DEBUG_OBJECT_CREATION)
 					DebugObjectCreation.start();
-				
-				//LoaderUtils.waitForGarbageCollectorToEnd();//REMOVE ? collect the loading thread to avoid a major GC of 3000ms at the start of the game
-		
+						
 				//listener
 				gameRenderer.addListener(currentGameModeType);
 	
-				//définition du thread d'affichage qui fait tourner partie rapide.play() en continue 
-				/*REMOVE class ThreadAffichage implements Runnable
-				{
-					public void run() 
-					{
-						debugTime = new DebugTime();
-						do
-						{
-							double deltaTime= (System.nanoTime()-last_update)/Math.pow(10, 6);//delta time in ms
-							if((deltaTime>Config.getDeltaFrame(true)) &&partie.computationDone){ //TODO: only execute the loop if the previous iteration (partie + draw) was done? If partie done alone ?
-								//TODO: currently computationDone is used as an indicator that the screen can be drawn
-								//TODO: -> split that between "Calculation done" and "Can be drawn" 
-								//TODO: only enter a new loop if the calculation is done (not the drawing so that the in game time is respected and player can 
-								//still anticipate dodge/actions. Otherwise everything is slow down)
-								//TODO: make sure that physics is not impacted if deltaTime is twice bigger than usual (should be "fixed in game time" between two graphics update)
-								debugTime.print();
-								debugTime.init(InterfaceConstantes.DEBUG_TIME_PRINT_MODE,partie.getFrame());
-	
-								partie.computationDone=false;
-								
-								ModelPrincipal.debugTime.startElapsedForVerbose();
-							
-								last_update=System.nanoTime();
-	
-								partie.play(affich);
-								debugTime.elapsed("partie");
-								
-								affichagePartie.repaintPartie();
-								debugTime.elapsed("repaint");
-	
-	
-								affichagePartie.validateAffichagePartie(affich);
-								if(!partie.getinPause() && (!partie.slowDown || (partie.slowDown && partie.slowCount==0)))
-									partie.nextFrame();
-								debugTime.elapsed("validate affichage");
-	
-							}
-						}
-						while(!partie.getFinPartie());//condition de fin
-						//last draw when partie ends
-						partie.computationDone=true;
-					}
-	
-				}
-				Thread t2= new Thread(new ThreadAffichage());*/
-	
-				//on lance la partie
-				partie.computationDone=true;
-				//REMOVE t2.start();
-				//affich.actuAffichage();
 			}
 
 		}
@@ -536,21 +463,12 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 
 
 			//affichage
-			//REMOVE changeFrame=true;
 			gameRenderer.changeGameModeRendering();
 
 
 		}
-		//REMOVE gameRenderer.repaint();
 		gameRenderer.validate();
 	}
-	
-
-	
-	/*remove public void updateGraphics()
-	{
-		affich.actuAffichage();
-	}*/
 	
 	public static double r_ceil(double val, int dec)
 	{
@@ -566,12 +484,8 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		//As this mode is controlled by listeners, the computationDone is set to false when a listener is triggered. This function is then left empty
 	}
 	public void updateSwing(){
-		//REMOVE gameRenderer.repaint();
 	}
-	public boolean isComputationDone(){
-		return computationDone;
-	}
-	
+
 	@Override
 	public boolean isGameModeLoaded()
 	{
@@ -630,7 +544,6 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		
 		ModelPrincipal principal = new ModelPrincipal();
 		principal.Init();
-		//REMOVEprincipal.StartBoucleJeu();
 
 		//test();
 		//Convertisseur conv = new Convertisseur();

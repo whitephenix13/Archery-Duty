@@ -8,6 +8,7 @@ import debug.DebugTime;
 import editeur.AbstractControlerEditeur;
 import editeur.AbstractModelEditeur;
 import editeur.AffichageEditeur;
+import gameConfig.InterfaceConstantes;
 import images.ImagesBackground;
 import images.ImagesCondition;
 import images.ImagesEffect;
@@ -56,9 +57,6 @@ public abstract class AbstractModelPrincipal implements Observable,GameHandler,G
 	public ImagesFlecheIcon imFlecheIcon = new ImagesFlecheIcon();
 	
 	public GameModeType currentGameModeType;
-	//public static String modeSuivant=""; //REMOVE
-	//public static boolean changeMode=false;//REMOVE
-	//public static boolean changeFrame =false;//REMOVE
 	public static boolean test =false;
 	public static DebugTime debugTime;
 	public static DebugTime debugTimeAffichage;
@@ -93,7 +91,6 @@ public abstract class AbstractModelPrincipal implements Observable,GameHandler,G
 	
 	protected GameMode currentGameMode; 
 	protected GameModeType nextGameMode;
-	protected boolean computationDone;
 	
 	//protected boolean gameInit;
 	private ArrayList<Observer> listObserver = new ArrayList<Observer>();
@@ -102,13 +99,12 @@ public abstract class AbstractModelPrincipal implements Observable,GameHandler,G
 		currentGameModeType = GameModeType.MAIN_MENU;
 		//nextGameMode=GameModeType.MAIN_MENU;
 		currentGameMode = this;
-		computationDone=true;//set to false via listeners 
+		ModelPrincipal.debugTime = new DebugTime(InterfaceConstantes.DEBUG_TIME_LOOP_TO_SLOW,InterfaceConstantes.DEBUG_TIME_ACTION_TO_SLOW,InterfaceConstantes.DEBUG_TIME_VERBOSE);
+
 	}
 	
 	
 	protected abstract void Init();
-	//REMOVE protected abstract void ChangementMode();
-	//REMOVE protected abstract void StartBoucleJeu();
 	//Implémentation du pattern observer
 
 	  public void addObserver(Observer obs) {

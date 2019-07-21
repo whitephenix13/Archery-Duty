@@ -16,13 +16,13 @@ public interface InterfaceConstantes {
 	
 	static int DEBUG_TIME_LOOP_TO_SLOW = 15;//ms
 	static int DEBUG_TIME_ACTION_TO_SLOW = 2;//ms
-	static int DEBUG_TIME_VERBOSE=1;
-	static PrintMode DEBUG_TIME_PRINT_MODE = PrintMode.NONE;
+	static int DEBUG_TIME_VERBOSE=3;
+	static PrintMode DEBUG_TIME_PRINT_MODE = PrintMode.PRINT_ALL;
 	
 	static int DEBUG_TIME_AFFICHAGE_LOOP_TO_SLOW = 4;//ms
 	static int DEBUG_TIME_AFFICHAGE_ACTION_TO_SLOW = 1;//ms
-	static int DEBUG_TIME_AFFICHAGE_VERBOSE=1;
-	static PrintMode DEBUG_TIME_AFFICHAGE_PRINT_MODE = PrintMode.NONE;
+	static int DEBUG_TIME_AFFICHAGE_VERBOSE=2;
+	static PrintMode DEBUG_TIME_AFFICHAGE_PRINT_MODE = PrintMode.PRINT_ALL;
 	
 	//taille maximum de la matrice 
 	static int ABS_MAX = 1000;

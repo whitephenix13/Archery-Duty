@@ -120,6 +120,6 @@ public class Fleche_vent extends Spirituelle{
 	@Override
 	public void beforeFlecheDestroyed(AbstractModelPartie partie)
 	{
-		//nothing todo with ref_fleche before destruction
+		//nothing to do with ref_fleche before destruction
 	}
 }

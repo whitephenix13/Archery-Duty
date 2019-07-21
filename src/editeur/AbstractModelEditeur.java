@@ -62,58 +62,16 @@ public abstract class AbstractModelEditeur implements Observable,GameMode{
 	protected int xMousePos;
 	protected int yMousePos;
 
-	/*//REMOVE creation des J Menu
-	protected JMenuBar menuBar = new JMenuBar();
-	protected JMenu m_fichier = new JMenu(" Fichier   ");
-	protected JMenu m_objet = new JMenu(" Objet   ");
-	protected JMenu m_texture = new JMenu(" Texture ");
-	protected JMenu m_bloc = new JMenu("Objet Bloquant");
-	protected JMenu m_back = new JMenu("Objet en Background");
-	
-	protected JMenuItem m_charger = new JMenuItem("Charger");
-	protected JMenuItem m_sauvegarder= new JMenuItem("Sauvegarder");
-	
-	protected JMenuItem m_informations = new JMenuItem(" Informations ");
-	
-	protected JMenuItem m_nouv = new JMenuItem("Nouveau monde");
-	protected JMenuItem m_menuP = new JMenuItem("Menu principal");
-	protected JMenuItem m_quit = new JMenuItem("Quitter");
-	
-	protected JMenuItem m_loupe= new JMenuItem("Loupe");
-	protected JMenuItem m_souris= new JMenuItem("Souris");
-	protected JMenuItem m_deleteItem= new JMenuItem("Delete");
-	protected JMenuItem m_vide = new JMenuItem("Vide");
-	protected JMenuItem m_sol = new JMenuItem("Sol");
-	protected JMenuItem m_terre = new JMenuItem("Terre");
-	protected JMenuItem m_ciel = new JMenuItem("Ciel");
-	protected JMenuItem m_perso= new JMenuItem("Perso");
-	protected JMenuItem m_start= new JMenuItem("Start");
-	protected JMenuItem m_end= new JMenuItem("End");
-	protected JMenuItem m_spirel= new JMenuItem("Spirel");
-	
-	protected JRadioButtonMenuItem r_bloquant =new JRadioButtonMenuItem("Objet bloquant");
-	protected JRadioButtonMenuItem r_nonBloquant =new JRadioButtonMenuItem("Objet non bloquant");
-	protected ButtonGroup gp1 =new ButtonGroup();
-	
-	
-	protected JRadioButtonMenuItem r_isBackground =new JRadioButtonMenuItem("Objet a afficher en arriere plan");
-	protected JRadioButtonMenuItem r_nonIsBackground =new JRadioButtonMenuItem("Objet a ne pas afficher en arriere plan");
-	protected ButtonGroup gp2 =new ButtonGroup();*/
-
 	protected boolean loupe; 
 	//variables pour l'affichage 
-	//REMOVE protected boolean repaint;
 	protected boolean showMonsters;
 	protected boolean showStaticMonsters;
 	protected boolean showMessageDialog;
 	protected String[] textMessageDialog ={"",""};
 	protected int typeMessageDialog=-1;
-	
-	protected boolean computationDone;
-	
+		
 	private ArrayList<Observer> listObserver = new ArrayList<Observer>();
 		
-	//REMOVE public boolean getRepaint(){return repaint;}
 	public boolean getShowMonsters(){return showMonsters;}
 	public boolean getShowStaticMonsters(){return showStaticMonsters;}
 	
@@ -126,7 +84,6 @@ public abstract class AbstractModelEditeur implements Observable,GameMode{
 	
 	public AbstractModelEditeur()
 	{
-		computationDone=true;
 	}
 	
 	public void init ()
@@ -138,9 +95,6 @@ public abstract class AbstractModelEditeur implements Observable,GameMode{
 
 		monde=new Monde();
 		tabEditeurMonstre= new ArrayList <StockageMonstre> ();
-				
-		/*REMOVE if(imMonde==null)
-			imMonde= new ImagesMonde();*/
 		
 		texture=TypeBloc.NONE;
 				
@@ -169,51 +123,11 @@ public abstract class AbstractModelEditeur implements Observable,GameMode{
 		yStartDrag=0;
 		xMousePos=0;
 		yMousePos=0;
-		//on ne réinitialise pas les éléments du menu parce que sinon on perd tous les listeners 
-
-		/*
-		menuBar = new JMenuBar();
-		m_fichier = new JMenu(" Fichier   ");
-		m_objet = new JMenu(" Objet   ");
-		m_texture = new JMenu(" Texture ");
-		m_bloc = new JMenu("Objet Bloquant");
-		m_back = new JMenu("Objet en Background");
-		
-		m_charger = new JMenuItem("Charger");
-		m_sauvegarder= new JMenuItem("Sauvegarder");
-		
-		m_informations = new JMenuItem(" Informations ");
-		
-		m_nouv = new JMenuItem("Nouveau monde");
-		m_menuP = new JMenuItem("Menu principal");
-		m_quit = new JMenuItem("Quitter");
-		
-		m_loupe= new JMenuItem("Loupe");
-		m_souris= new JMenuItem("Souris");
-		m_deleteItem= new JMenuItem("Delete");
-		m_vide = new JMenuItem("Vide");
-		m_sol = new JMenuItem("Sol");
-		m_terre = new JMenuItem("Terre");
-		m_ciel = new JMenuItem("Ciel");
-		m_perso= new JMenuItem("Perso");
-		m_start= new JMenuItem("Start");
-		m_end= new JMenuItem("End");
-		m_spirel= new JMenuItem("Spirel");
-		
-		r_bloquant =new JRadioButtonMenuItem("Objet bloquant");
-		r_nonBloquant =new JRadioButtonMenuItem("Objet non bloquant");
-		gp1 =new ButtonGroup();
-		
-		
-		r_isBackground =new JRadioButtonMenuItem("Objet a afficher en arriere plan");
-		r_nonIsBackground =new JRadioButtonMenuItem("Objet a ne pas afficher en arriere plan");
-		gp2 =new ButtonGroup();*/
 
 		loupe= false; 
 		
 		resetVariablesAffichage();
 		
-		//REMOVE repaint=true;
 		notifyObserver();
 
 	}
@@ -236,7 +150,6 @@ public abstract class AbstractModelEditeur implements Observable,GameMode{
 	
 	public void resetVariablesAffichage()
 	{
-		//REMOVE repaint=false;
 		showMonsters=false;
 		showStaticMonsters=false;
 		showMessageDialog=false;

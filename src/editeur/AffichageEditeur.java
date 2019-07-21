@@ -44,7 +44,6 @@ public class AffichageEditeur extends Drawable implements Observer{
 		super();
 		controlerEditeur=_controlerEditeur;
 		isLayoutInit=false;//wait for image to be loaded in BarreOutil to activate the layout
-		//REMOVE this.getContentPane().removeAll();
 
 		controlerEditeur.edit.barreOut= new BarreOutil(this);
 
@@ -56,8 +55,6 @@ public class AffichageEditeur extends Drawable implements Observer{
 		mainPanel.setLayout(new BorderLayout());
 		mainPanel.setOpaque(false);
 
-		//mainPanel.setBackground(Color.white);
-		//REMOVE  this.getContentPane().add(dessin,BorderLayout.CENTER);
 	}
 
 	public ActiveJMenuBar getJMenuBar()
@@ -89,7 +86,6 @@ public class AffichageEditeur extends Drawable implements Observer{
 
 			ok.addActionListener(new ActionListener(){
 				public void actionPerformed(ActionEvent arg0) {
-					AffichageEditeur.this.controlerEditeur.edit.computationDone=false; 
 					List<StockageMonstre> monstreASupprimer= new ArrayList<StockageMonstre>();
 					for(int i=0; i<listChecks.size();i++)
 					{
@@ -104,7 +100,6 @@ public class AffichageEditeur extends Drawable implements Observer{
 						controlerEditeur.edit.tabEditeurMonstre.remove(monstreASupprimer.get(i));
 					}	
 					setVisible(false);
-					AffichageEditeur.this.controlerEditeur.edit.computationDone=true; 
 				}});
 
 			affichage.add(listLabels.get(0),BorderLayout.NORTH);
@@ -140,7 +135,6 @@ public class AffichageEditeur extends Drawable implements Observer{
 			ok.addActionListener(new ActionListener(){
 				public void actionPerformed(ActionEvent arg0) 
 				{
-					AffichageEditeur.this.controlerEditeur.edit.computationDone=false; 
 					if(checkStatic.isSelected())
 					{
 						controlerEditeur.edit.staticMonstre=true;
@@ -150,7 +144,6 @@ public class AffichageEditeur extends Drawable implements Observer{
 						controlerEditeur.edit.staticMonstre=false;
 					}
 					setVisible(false);
-					AffichageEditeur.this.controlerEditeur.edit.computationDone=true; 
 				}	});
 			affichage.setLayout(new BorderLayout());
 			panelStaticSpirel.setLayout(new GridLayout(1,2));
@@ -165,12 +158,10 @@ public class AffichageEditeur extends Drawable implements Observer{
 
 	class DragListener extends MouseAdapter{
 		public void mouseDragged(MouseEvent e){
-			AffichageEditeur.this.controlerEditeur.edit.computationDone=false; 
 			if ((e.getModifiers() & InputEvent.BUTTON3_MASK) != 0)
 			{
 				controlerEditeur.edit.moveViewPort(e.getX(),e.getY());
 			}
-			AffichageEditeur.this.controlerEditeur.edit.computationDone=true; 
 		}
 
 		public void mouseReleased(MouseEvent e){
@@ -181,21 +172,15 @@ public class AffichageEditeur extends Drawable implements Observer{
 
 		//lorsqu'on drag, on dessine sur chacune des cases sur lesquels on passe
 		public void mouseDragged(MouseEvent e) {
-			AffichageEditeur.this.controlerEditeur.edit.computationDone=false; 
 			if(!controlerEditeur.edit.drag && ((e.getModifiers() & InputEvent.BUTTON1_MASK) != 0))
 				controlerEditeur.controlDraw(e.getX(), e.getY());
 			controlerEditeur.edit.xMousePos=e.getX();
 			controlerEditeur.edit.yMousePos=e.getY();
-			AffichageEditeur.this.controlerEditeur.edit.computationDone=true; 
-			//REMOVE mainPanel.repaint();
 		}
 		public void mouseMoved(MouseEvent e) 
 		{
-			AffichageEditeur.this.controlerEditeur.edit.computationDone=false; 
 			controlerEditeur.edit.xMousePos=e.getX();
 			controlerEditeur.edit.yMousePos=e.getY();
-			AffichageEditeur.this.controlerEditeur.edit.computationDone=true; 
-			//REMOVE mainPanel.repaint();
 		}
 	}
 
@@ -204,10 +189,8 @@ public class AffichageEditeur extends Drawable implements Observer{
 		public void mouseEntered(MouseEvent e) {}
 		public void mouseExited(MouseEvent e) {}
 		public void mousePressed(MouseEvent e) {
-			AffichageEditeur.this.controlerEditeur.edit.computationDone=false; 
 			if(!controlerEditeur.edit.drag && ((e.getModifiers() & InputEvent.BUTTON1_MASK)!=0) )
 				controlerEditeur.controlDraw(e.getX(), e.getY());
-			AffichageEditeur.this.controlerEditeur.edit.computationDone=true; 
 		}
 		public void mouseReleased(MouseEvent e) {}
 	}
@@ -245,11 +228,6 @@ public class AffichageEditeur extends Drawable implements Observer{
 		controlerEditeur.edit.draw(g, mainPanel);
 	}
 
-	/*REMOVEpublic JFrame getMainFrame()
-	{
-		return mainFrame;
-	}*/
-
 	public void update() 
 	{
 		if(!isLayoutInit)
@@ -258,11 +236,6 @@ public class AffichageEditeur extends Drawable implements Observer{
 			mainPanel.doLayout();
 			isLayoutInit=true;
 		}
-		/*REMOVE if(controlerEditeur.edit.getRepaint())
-			{
-				mainPanel.repaint();
-			}
-		 */
 		if(controlerEditeur.edit.getShowMonsters())
 		{
 			DeleteMonstrePopUp popUp= new DeleteMonstrePopUp(getActiveJFrame(),"test",true);

@@ -24,13 +24,10 @@ public class AffichageLoader extends Drawable{
 		
 		//show loading 
 		loader.showLoading(g);
-		
-		//mainFrame.repaint();REMOVE
 	}
 	
 	public void onUpdateGraphics()
 	{
-		//REMOVE getFrame().repaint();
 	}
 	
 }

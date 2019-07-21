@@ -37,7 +37,7 @@ public abstract class Effect extends Collidable{
 	public boolean groundEffect = false;
 
 	public Fleche ref_fleche=null;
-	public void onRemoveRefFleche(AbstractModelPartie partie,boolean destroyNow){this.onUpdate(partie,true);ref_fleche=null;};//TODO: changed to not destroy effect this.destroy(partie, destroyNow);
+	public void onRemoveRefFleche(AbstractModelPartie partie,boolean destroyNow){this.onUpdate(partie,true);ref_fleche=null;};
 	
 	public int xplace=1;	//Determine what is the key point defining the draw position 0 left 1 center 2 right
 	public int yplace=1;	//Determine what is the key point defining the draw position 0 up 1 center 2 down

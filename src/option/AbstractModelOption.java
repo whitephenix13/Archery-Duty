@@ -29,13 +29,11 @@ public abstract class AbstractModelOption implements Observable,GameMode{
 	//variables pour l'affichage 
 	protected boolean showInputError=false;
 	protected boolean updateInputText=false;
-	protected boolean computationDone;
 	
 	private ArrayList<Observer> listObserver = new ArrayList<Observer>();
 
 	public AbstractModelOption()
 	{
-		computationDone=true;
 	}
 	
 	public void setCaseFocus(boolean _caseFocus){caseFocus=_caseFocus;}

@@ -15,8 +15,6 @@ import utils.Vitesse;
 
 public class Glissade extends Mouvement_entity
 {
-	//REMOVE public enum TypeGlissade implements TypeMouv {GlissadeGauche,GlissadeDroite};
-
 	//constructeur monstre
 	public Glissade(ObjectType objType,SubTypeMouv _sub_type_mouv,int current_frame) 
 	{

@@ -7,22 +7,6 @@ import utils.Vitesse;
 public abstract class Condition {
 	public ConditionEnum type;
 	public static enum ConditionEnum implements ImageInfo{BRULURE,REGENERATION,LENTEUR,VITESSE,PARALYSIE,PRECISION,DEFAILLANCE,RESISTANCE,FORCE,FAIBLESSE,MOTION};
-	/*REMOVE public final static String BRULURE = "brulure";
-	public final static  String REGENERATION = "regeneration";
-
-	public final static  String LENTEUR = "lenteur";
-	public final static  String VITESSE="vitesse";
-
-	public final static  String PARALYSIE = "paralysie";
-	public final static  String PRECISION = "precision";
-
-	public final static  String DEFAILLANCE = "defaillance";
-	public final static  String RESISTANCE = "resistance";
-
-	public final static  String FORCE = "force";
-	public final static  String FAIBLESSE = "faiblesse";
-	
-	public final static  String MOTION = "motion";*/
 	//Time during which the condition is applied 
 	protected double DUREE = 0;//in nanos
 	protected double startTime = 0;

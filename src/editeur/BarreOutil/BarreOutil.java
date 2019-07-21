@@ -47,7 +47,6 @@ public class BarreOutil{
 	{
 		souris_p = new ActiveJButton(new ImageIcon(affich.controlerEditeur.edit.imagesMonde.getImage(null, TypeBloc.SOURIS, BlocImModifier.LOUPE)));
 		loupe_p = new ActiveJButton(new ImageIcon(affich.controlerEditeur.edit.imagesMonde.getImage(null, TypeBloc.LOUPE, BlocImModifier.LOUPE)));
-		//REMOVE vide_p = new ActiveJButton(new ImageIcon(getClass().getClassLoader().getResource("resources/Editeur/vide_p.png")));
 		sol_p = new ActiveJButton(new ImageIcon(affich.controlerEditeur.edit.imagesMonde.getImage(null, TypeBloc.SOL, BlocImModifier.LOUPE)));
 		terre_p = new ActiveJButton(new ImageIcon(affich.controlerEditeur.edit.imagesMonde.getImage(null, TypeBloc.TERRE, BlocImModifier.LOUPE)));
 		ciel_p = new ActiveJButton(new ImageIcon(affich.controlerEditeur.edit.imagesMonde.getImage(null, TypeBloc.CIEL, BlocImModifier.LOUPE)));

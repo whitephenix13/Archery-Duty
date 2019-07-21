@@ -667,7 +667,7 @@ public class Heros extends Entity{
 			Mouvement mouvSuivant = new Tir(ObjectType.HEROS,null,partie.getFrame());
 			alignHitbox(animHeros,mouvSuivant,animSuivante ,partie,deplace,blocGaucheGlisse);
 			setDeplacement(mouvSuivant);
-			getDeplacement().setSpeed(this, animSuivante);//TODO;: anim
+			getDeplacement().setSpeed(this, animSuivante);
 			if(!falling)
 			{
 				finSaut=false;
@@ -1129,13 +1129,13 @@ public class Heros extends Entity{
 
 		//MATERIEL
 		if(tir_type_.equals(ObjectType.FEU))
-			fleche =new Fleche_feu(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_feu(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type_.equals(ObjectType.ELECTRIQUE))
-			fleche =new Fleche_electrique(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_electrique(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type_.equals(ObjectType.GLACE))
-			fleche =new Fleche_glace(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_glace(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type_.equals(ObjectType.ROCHE))
-			fleche =new Fleche_roche(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_roche(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 
 		//SPIRITUELLE
 		else if(tir_type_.equals(ObjectType.LUMIERE))
@@ -1151,21 +1151,21 @@ public class Heros extends Entity{
 		else if(tir_type_.equals(ObjectType.BARRAGE))
 			fleche =new Fleche_barrage(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type_.equals(ObjectType.FAUCON))
-			fleche =new Fleche_faucon(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_faucon(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type_.equals(ObjectType.EXPLOSIVE))
-			fleche =new Fleche_explosive(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_explosive(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type_.equals(ObjectType.TROU_NOIR))
-			fleche =new Fleche_trou_noir(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_trou_noir(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 
 		//RUSE
 		else if(tir_type_.equals(ObjectType.MARQUE_MORTELLE))
-			fleche =new Fleche_marque_mortelle(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_marque_mortelle(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type_.equals(ObjectType.ABSORPTION))
-			fleche =new Fleche_absorption(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_absorption(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type_.equals(ObjectType.LEURRE))
-			fleche =new Fleche_leurre(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_leurre(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type_.equals(ObjectType.NINJA))
-			fleche =new Fleche_ninja(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());//TODO
+			fleche =new Fleche_ninja(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 
 		else if(tir_type_.equals(ObjectType.FLECHE))
 			fleche =new Fleche(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());

@@ -15,8 +15,6 @@ import utils.Vitesse;
 
 public class Tir extends Mouvement_entity
 {
-	//REMOVE public enum TypeTirPerso implements TypeMouv {Tir};
-
 	public Tir(ObjectType objType, SubTypeMouv _sub_type_mouv,int current_frame) 
     {
 		super();

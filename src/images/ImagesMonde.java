@@ -100,12 +100,6 @@ public class ImagesMonde extends ImagesContainer{
 	@Override
 	public Image getImage(ObjectType objType, ImageInfo info1,ImageInfo info2)
 	{
-		/*REMOVE if(type.equals(TypeBloc.VIDE))
-		{
-			if(loupe)return(pvide);
-			return(vide);
-		}
-		else */
 		boolean loupe = info2!=null && info2.equals(BlocImModifier.LOUPE);
 		if (info1.equals(TypeBloc.CIEL))
 		{

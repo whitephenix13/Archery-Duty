@@ -179,11 +179,6 @@ public class AffichagePartie extends Drawable implements Observer{
 	
 	@Override
 	public void drawOnGraphics(Graphics g,boolean forceRepaint){
-
-		if(!controlerPartie.partie.isComputationDone()  && !controlerPartie.partie.getFinPartie() && !forceRepaint ){
-			return;
-		}
-		
 		//draw main game
 		controlerPartie.partie.drawPartie(g);
 	}
@@ -203,9 +198,6 @@ public class AffichagePartie extends Drawable implements Observer{
 	public void updateSwingPartie()
 	{
 		
-		/**
-		 * Is showing 
-		 */
 		//End game 
 		if(controlerPartie.partie.finPartie && !firstTimePause)
 		{
@@ -297,10 +289,6 @@ public class AffichagePartie extends Drawable implements Observer{
 				{
 					if(allpanelSlot[i].getComponentCount()>0){
 						allpanelSlot[i].remove(0);
-						/*REMOVE ArrowSlotButton firstButton = (ArrowSlotButton)allpanelSlot[i].getComponents()[i==0?1:0];
-						if(firstButton != null){
-							firstButton.AddBorderSize(-SHIFT_VAL,0,0,0);
-						}*/
 					}
 				}
 				if(controlerPartie.partie.heros.current_slot == i)
@@ -317,7 +305,6 @@ public class AffichagePartie extends Drawable implements Observer{
 		}
 
 		mainPanel.requestFocus();
-		//REMOVE repaint();
 
 
 	}
@@ -467,15 +454,15 @@ public class AffichagePartie extends Drawable implements Observer{
 		public void mouseExited(MouseEvent e) {	
 		}
 		public void mousePressed(MouseEvent e) {
-			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=false;
+			
 			CloseAllSlots();
 			controlerPartie.controlMousePressed(e);
-			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=true;
+			
 		}
 		public void mouseReleased(MouseEvent e) {
-			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=false;
+			
 			controlerPartie.controlMouseReleased(e);
-			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=true;
+			
 		}
 
 	}
@@ -484,17 +471,17 @@ public class AffichagePartie extends Drawable implements Observer{
 	{
 		public void mouseDragged(MouseEvent e) 
 		{
-			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=false;
+			
 			controlerPartie.partie.xPositionSouris=e.getX();
 			controlerPartie.partie.yPositionSouris=e.getY();
-			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=true;
+			
 		}
 		public void mouseMoved(MouseEvent e) 
 		{
-			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=false;
+			
 			controlerPartie.partie.xPositionSouris=e.getX();
 			controlerPartie.partie.yPositionSouris=e.getY();
-			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=true;
+			
 
 		}
 	}
@@ -515,14 +502,14 @@ public class AffichagePartie extends Drawable implements Observer{
 
 		public void mouseReleased(MouseEvent e) 
 		{
-			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=false;
+			
 			ActiveJButton button = (ActiveJButton)e.getSource();
 			Rectangle r = button.getBounds();
 			//Apply pressed only if the release is on the pressed button
 			if(r.contains(new Point(r.x+e.getX(),r.y+e.getY()))){
 				controlerPartie.controlBoutonsPressed(((ActiveJButton)e.getSource()));
 			}
-			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=true;
+			
 		}
 
 	}
@@ -547,7 +534,7 @@ public class AffichagePartie extends Drawable implements Observer{
 			if( (controlerPartie.partie.finPartie) || (!controlerPartie.partie.finPartie &&controlerPartie.partie.inPause))
 				return;
 
-			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=false;
+			
 			ArrowSlotButton[][] allSlots = {bSlot1,bSlot2,bSlot3,bSlot4};
 			ArrowSlotButton source_but = (ArrowSlotButton)e.getSource();
 
@@ -599,7 +586,7 @@ public class AffichagePartie extends Drawable implements Observer{
 			}
 			AffichagePartie.this.getActiveJFrame().pack();
 			mainPanel.validate();
-			AffichagePartie.this.controlerPartie.partie.listenersComputationDone=true;
+			
 		}
 
 		@Override
@@ -621,7 +608,6 @@ public class AffichagePartie extends Drawable implements Observer{
 		final Component[] components =this.getContentPane().getComponents();
 
 		//this.getContentPane().removeAll();
-		//REMOVEthis.getContentPane().add(affichageOption.getContentPane());
 		affichageOption.requestBeginTransition();//manually force the begin transition as we don't want to unload the active game 
 		affichageOption.retour.addMouseListener(new MouseListener()
 		{
@@ -632,7 +618,6 @@ public class AffichagePartie extends Drawable implements Observer{
 			{
 			}
 			public void mouseReleased(MouseEvent e) {
-				//REMOVE AffichagePartie.this.controlerPartie.partie.listenersComputationDone=false;
 				ActiveJButton button = (ActiveJButton)e.getSource();
 				Rectangle r = button.getBounds();
 				//Apply pressed only if the release is on the pressed button
@@ -643,16 +628,9 @@ public class AffichagePartie extends Drawable implements Observer{
 						(AffichagePartie.this).getContentPane().add(c);
 					}
 					AffichagePartie.this.requestBeginTransition();
-					//REMOVE(AffichagePartie.this).mainFrame.repaint();
-					//REMOVE(AffichagePartie.this).mainFrame.revalidate();
-					//doitRevalidate=true;
 				}
-				//REMOVE AffichagePartie.this.controlerPartie.partie.listenersComputationDone=true;
 			}
 		});
-
-		//REMOVE this.mainFrame.repaint();
-		//REMOVE this.mainFrame.revalidate();
 		doitRevalidate=true;
 	}
 
