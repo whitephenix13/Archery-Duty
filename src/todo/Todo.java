@@ -2,18 +2,8 @@ package todo;
 
 public class Todo {
 	
-	//Moved image container to model principal and created proper enum to access image using gameHandler
-	//Switched to active rendering 
-	//Corrected pb in which partie loader did not wait for all media to end 
-	//Corrected broken spirel behaviour (due to changed in cached hitbox) & updated its AI 
-	//Corrected fin partie
-	//Corrected transition between game modes
-	
-	//TODO: change droite_gauche in anim and __getUncheckedSpeed : remove the object as argument
-	//TODO: remove all reference to object as argument of constructor/function. Use enum instead
-	//TODO: remove sting DROITE/GAUCHE from movement
-						
-	//TODO: try active rendering https://www.gamedev.net/articles/programming/general-and-gameplay-programming/java-games-active-rendering-r2418
+	//remove sting DROITE/GAUCHE from movement
+	//corrected bug in model principal percentage 
 	
 	//TODo: try accelerate clear Rect by actually calling draw image (on buffered image) instead :https://bytes.com/topic/java/answers/16052-fast-rectangle-filling
 	//TODO: => actually what really slows down an image is whether it is ARGB (transparent) or not. Try using opaque image as much as possible to speed up drawing 

@@ -18,6 +18,7 @@ import partie.collision.Collidable;
 import partie.collision.Hitbox;
 import partie.deplacement.Deplace;
 import partie.deplacement.Mouvement;
+import partie.deplacement.Mouvement.DirSubTypeMouv;
 import partie.deplacement.entity.Mouvement_entity;
 import partie.effects.Effect;
 import partie.entitie.Entity;
@@ -62,7 +63,7 @@ public abstract class Monstre extends Entity implements InterfaceConstantes, Ser
 	 * 
 	 * @return String , Mouvement.DROITE ou Mouvement.GAUCHE, direction dans laquelle le monstre est tourné
 	 */
-	public abstract String droite_gauche (int anim);  
+	public abstract DirSubTypeMouv droite_gauche (int anim);  
 
 	/**
 	 * IA pour le deplacement du monstre 
@@ -120,12 +121,12 @@ public abstract class Monstre extends Entity implements InterfaceConstantes, Ser
 	@Override
 	public int getMaxBoundingSquare()
 	{
-		return getDeplacement().getMaxBoundingSquare(this);
+		return getDeplacement().getMaxBoundingSquare();
 	}
 	@Override
 	public Point getMaxBoundingRect()
 	{
-		return getDeplacement().getMaxBoundingRect(this);
+		return getDeplacement().getMaxBoundingRect();
 	}
 	@Override
 	public AffineTransform computeDrawTr(Point screenDisp)

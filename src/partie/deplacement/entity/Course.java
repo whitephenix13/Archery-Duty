@@ -46,8 +46,8 @@ public class Course extends Mouvement_entity{
 			hitboxCreation.add(Hitbox.asListPoint(xg,yb));
 
 			hitbox = Hitbox.createHitbox(hitboxCreation);
-			int start_index =sub_type_mouv.equals(SubMouvEntityEnum.GAUCHE) ? 0 : 4;
-			int end_index =sub_type_mouv.equals(SubMouvEntityEnum.GAUCHE) ? 4 : 8;
+			int start_index =sub_type_mouv.equals(DirSubTypeMouv.GAUCHE) ? 0 : 4;
+			int end_index =sub_type_mouv.equals(DirSubTypeMouv.GAUCHE) ? 4 : 8;
 			//animation frame, current_frame, start_index, end_index
 			animation.start(Arrays.asList(6,12,18,24,6,12,18,24), current_frame, start_index, end_index);
 
@@ -76,7 +76,7 @@ public class Course extends Mouvement_entity{
 			assert (anim>=0 && anim <8);
 
 			int speed_norm = (int)(8.0 / Config.ratio_fps());
-			if(object.getDeplacement().droite_gauche(object, object.getAnim()).equals(Mouvement.GAUCHE))
+			if(object.getDeplacement().droite_gauche(object.getAnim(),object.getRotation()).equals(DirSubTypeMouv.GAUCHE))
 			{if(object.last_colli_left){speed_norm = 0;}}
 			else
 			{if(object.last_colli_right){speed_norm = 0;}}
@@ -85,15 +85,15 @@ public class Course extends Mouvement_entity{
 		return null;
 	}
 	@Override
-	public String droite_gauche(Object obj,int anim) {
-		if(ObjectTypeHelper.isTypeOf(obj, ObjectType.HEROS))
+	public DirSubTypeMouv droite_gauche(int anim,double rotation) {
+		if(objType.equals(ObjectType.HEROS))
 			if(anim<4)
-				return (Mouvement.GAUCHE);
+				return (DirSubTypeMouv.GAUCHE);
 			else 
-				return(Mouvement.DROITE);
+				return(DirSubTypeMouv.DROITE);
 		else{
 			try {throw new Exception("String droite gauche: type unknown");} catch (Exception e) {e.printStackTrace();}
-			return ("");
+			return DirSubTypeMouv.GAUCHE;
 		}
 	}
 }

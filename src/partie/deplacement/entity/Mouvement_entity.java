@@ -7,7 +7,6 @@ import partie.deplacement.Mouvement;
 
 public abstract class Mouvement_entity extends Mouvement{
 
-	public static enum SubMouvEntityEnum implements SubTypeMouv {DROITE, GAUCHE};
 	public static enum MouvEntityEnum implements TypeMouv {ATTENTE,MARCHE,COURSE,GLISSADE,ACCROCHE,SAUT,TIR};
 	//protected MouvEntityEnum mouvType;
 	public List<Integer> x_center_tir = new ArrayList<Integer>();

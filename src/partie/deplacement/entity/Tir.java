@@ -88,15 +88,15 @@ public class Tir extends Mouvement_entity
 		return null;
 	}
 	@Override
-	public String droite_gauche(Object obj,int anim) {
-		if(ObjectTypeHelper.isTypeOf(obj, ObjectType.HEROS))
+	public DirSubTypeMouv droite_gauche(int anim,double rotation) {
+		if(objType.equals(ObjectType.HEROS))
 			if(anim>=3 && anim <= 7 )
-				return (Mouvement.GAUCHE);
+				return (DirSubTypeMouv.GAUCHE);
 			else 
-				return(Mouvement.DROITE);
+				return(DirSubTypeMouv.DROITE);
 		else{
 			try {throw new Exception("String droite gauche: type unknown");} catch (Exception e) {e.printStackTrace();}
-			return ("");
+			return DirSubTypeMouv.GAUCHE;
 		}
 	}
 	@Override

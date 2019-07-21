@@ -247,11 +247,11 @@ public abstract class Effect extends Collidable{
 	@Override
 	public int getMaxBoundingSquare()
 	{
-		return getDeplacement().getMaxBoundingSquare(this);
+		return getDeplacement().getMaxBoundingSquare();
 	}
 	@Override
 	public Point getMaxBoundingRect() {
-		return getDeplacement().getMaxBoundingRect(this);
+		return getDeplacement().getMaxBoundingRect();
 	}
 
 }

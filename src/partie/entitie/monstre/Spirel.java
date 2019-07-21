@@ -16,11 +16,11 @@ import partie.collision.Collision;
 import partie.collision.Hitbox;
 import partie.deplacement.Deplace;
 import partie.deplacement.Mouvement;
+import partie.deplacement.Mouvement.DirSubTypeMouv;
 import partie.deplacement.entity.Attente;
 import partie.deplacement.entity.Marche;
 import partie.deplacement.entity.Mouvement_entity;
 import partie.deplacement.entity.Mouvement_entity.MouvEntityEnum;
-import partie.deplacement.entity.Mouvement_entity.SubMouvEntityEnum;
 import partie.deplacement.entity.Saut;
 import partie.deplacement.entity.Saut.SubMouvSautEnum;
 import partie.entitie.heros.Heros;
@@ -67,7 +67,7 @@ public class Spirel extends Monstre{
 		setXpos_sync(xPo);
 		setYpos_sync(yPo); 
 		localVit= new Vitesse(0,0);
-		setDeplacement(new Attente(ObjectType.SPIREL,SubMouvEntityEnum.GAUCHE,current_frame));
+		setDeplacement(new Attente(ObjectType.SPIREL,DirSubTypeMouv.GAUCHE,current_frame));
 		setAnim(1);
 		tempsAncienMouv= PartieTimer.me.getElapsedNano();
 		actionReussite=false;
@@ -103,31 +103,33 @@ public class Spirel extends Monstre{
 		last_shoot_time -= deltaShoot;
 		last_update_shoot_time=System.nanoTime();
 	}
-	public String droite_gauche (int anim)
+	
+	@Override
+	public DirSubTypeMouv droite_gauche (int anim)
 	{
 		if(getDeplacement().IsDeplacement(MouvEntityEnum.MARCHE))
 		{
 			if(anim <2)
 			{
-				return (Mouvement.GAUCHE);
+				return (DirSubTypeMouv.GAUCHE);
 			}
-			else return(Mouvement.DROITE);
+			else return(DirSubTypeMouv.DROITE);
 		}
 		else if(getDeplacement().IsDeplacement(MouvEntityEnum.ATTENTE))
 		{
 			if(anim <1)
 			{
-				return (Mouvement.GAUCHE);
+				return (DirSubTypeMouv.GAUCHE);
 			}
-			else return(Mouvement.DROITE);
+			else return(DirSubTypeMouv.DROITE);
 		}
 		else if(getDeplacement().IsDeplacement(MouvEntityEnum.SAUT))
 		{
 			if(anim <1)
 			{
-				return (Mouvement.GAUCHE);
+				return (DirSubTypeMouv.GAUCHE);
 			}
-			else return(Mouvement.DROITE);
+			else return(DirSubTypeMouv.DROITE);
 		}
 
 		else 
@@ -218,10 +220,10 @@ public class Spirel extends Monstre{
 					doitChangMouv= !((getDeplacement().IsDeplacement(MouvEntityEnum.ATTENTE)) 
 							&& (herosAGauche? getAnim()==0 : getAnim()==1));
 					nouvAnim=herosAGauche? 0 : 1;
-					nouvMouv= new Attente(ObjectType.SPIREL,herosAGauche?SubMouvEntityEnum.GAUCHE:SubMouvEntityEnum.DROITE,partie.getFrame());
+					nouvMouv= new Attente(ObjectType.SPIREL,herosAGauche?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
 	
 					//shoot projectile
-					double tir1_rotation = droite_gauche(getAnim()).equals(Mouvement.GAUCHE)?Math.PI : 0;
+					double tir1_rotation = droite_gauche(getAnim()).equals(DirSubTypeMouv.GAUCHE)?Math.PI : 0;
 					double tir2_rotation = 3*Math.PI/2;
 					
 					//middle of the spirel hitbox
@@ -251,10 +253,10 @@ public class Spirel extends Monstre{
 				boolean blocRightUp= nearObstacle(partie,1,jumpHeight);
 				boolean blocLeftUp= nearObstacle(partie,-1,jumpHeight);
 				
-				boolean jumpAbove= (droite_gauche(getAnim()).equals(Mouvement.GAUCHE)? (blocLeft && !blocLeftUp) : (blocRight && !blocRightUp) ) && peutSauter;
+				boolean jumpAbove= (droite_gauche(getAnim()).equals(DirSubTypeMouv.GAUCHE)? (blocLeft && !blocLeftUp) : (blocRight && !blocRightUp) ) && peutSauter;
 				boolean inAir= getDeplacement().IsDeplacement(MouvEntityEnum.SAUT);
-				boolean moveInAir=droite_gauche(getAnim()).equals(Mouvement.GAUCHE)?(!blocLeft) :(!blocRight); 
-				boolean holeClose= (droite_gauche(getAnim()).equals(Mouvement.GAUCHE)? (!blocGaucheBas) : (!blocDroitBas) );
+				boolean moveInAir=droite_gauche(getAnim()).equals(DirSubTypeMouv.GAUCHE)?(!blocLeft) :(!blocRight); 
+				boolean holeClose= (droite_gauche(getAnim()).equals(DirSubTypeMouv.GAUCHE)? (!blocGaucheBas) : (!blocDroitBas) );
 
 				//on saute au dessus d'un obstacle si possible
 				if( jumpAbove)
@@ -301,7 +303,7 @@ public class Spirel extends Monstre{
 						doitChangMouv= !((getDeplacement().IsDeplacement(MouvEntityEnum.ATTENTE)) 
 								&& (herosAGauche? getAnim()==0 : getAnim()==1));
 						nouvAnim=herosAGauche? 0 : 1;
-						nouvMouv= new Attente(ObjectType.SPIREL,herosAGauche?SubMouvEntityEnum.GAUCHE:SubMouvEntityEnum.DROITE,partie.getFrame());
+						nouvMouv= new Attente(ObjectType.SPIREL,herosAGauche?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
 
 					}
 					//on se deplace dans l'autre direction
@@ -310,7 +312,7 @@ public class Spirel extends Monstre{
 						doitChangMouv=true;
 						//on change de direction
 						nouvAnim=(herosAGauche? 2 : 0);
-						nouvMouv= new Marche(ObjectType.SPIREL,herosAGauche?SubMouvEntityEnum.DROITE:SubMouvEntityEnum.GAUCHE,partie.getFrame());
+						nouvMouv= new Marche(ObjectType.SPIREL,herosAGauche?DirSubTypeMouv.DROITE:DirSubTypeMouv.GAUCHE,partie.getFrame());
 					}
 					//le monstre tombe en marchant
 					else 
@@ -318,7 +320,7 @@ public class Spirel extends Monstre{
 						doitChangMouv=!((getDeplacement().IsDeplacement(MouvEntityEnum.MARCHE)) 
 								&& (herosAGauche? getAnim()<2 : getAnim()>=2));
 						nouvAnim=(herosAGauche? 0 : 2);
-						nouvMouv= new Marche(ObjectType.SPIREL,herosAGauche?SubMouvEntityEnum.GAUCHE:SubMouvEntityEnum.DROITE,partie.getFrame());
+						nouvMouv= new Marche(ObjectType.SPIREL,herosAGauche?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
 					}
 				}
 				//sinon on se deplace
@@ -332,7 +334,7 @@ public class Spirel extends Monstre{
 						doitChangMouv=!((getDeplacement().IsDeplacement(MouvEntityEnum.MARCHE)) 
 								&& (herosAGauche? getAnim()<2 : getAnim()>=2));
 						nouvAnim=(herosAGauche? 0 : 2);
-						nouvMouv= new Marche(ObjectType.SPIREL,herosAGauche?SubMouvEntityEnum.GAUCHE:SubMouvEntityEnum.DROITE,partie.getFrame());
+						nouvMouv= new Marche(ObjectType.SPIREL,herosAGauche?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
 					}
 					//attente
 					else
@@ -341,7 +343,7 @@ public class Spirel extends Monstre{
 						doitChangMouv= !((getDeplacement().IsDeplacement(MouvEntityEnum.ATTENTE)) 
 								&& (herosAGauche? getAnim()==0 : getAnim()==1));
 						nouvAnim=herosAGauche? 0 : 1;
-						nouvMouv= new Attente(ObjectType.SPIREL,herosAGauche?SubMouvEntityEnum.GAUCHE:SubMouvEntityEnum.DROITE,partie.getFrame());
+						nouvMouv= new Attente(ObjectType.SPIREL,herosAGauche?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
 					}
 				}
 
@@ -352,7 +354,7 @@ public class Spirel extends Monstre{
 				doitChangMouv= !((getDeplacement().IsDeplacement(MouvEntityEnum.ATTENTE)) 
 						&& (herosAGauche? getAnim()==0 : getAnim()==1));
 				nouvAnim=herosAGauche? 0 : 1;
-				nouvMouv= new Attente(ObjectType.SPIREL,herosAGauche?SubMouvEntityEnum.GAUCHE:SubMouvEntityEnum.DROITE,partie.getFrame());
+				nouvMouv= new Attente(ObjectType.SPIREL,herosAGauche?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
 			}	
 
 			tempsAncienMouv=PartieTimer.me.getElapsedNano();
@@ -405,7 +407,7 @@ public class Spirel extends Monstre{
 		if(landing)
 		{
 			int animSuiv = herosAGauche? 0 : 1;
-			Mouvement_entity depSuiv=new Attente(ObjectType.SPIREL,herosAGauche?SubMouvEntityEnum.GAUCHE:SubMouvEntityEnum.DROITE,partie.getFrame());
+			Mouvement_entity depSuiv=new Attente(ObjectType.SPIREL,herosAGauche?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
 			alignHitbox(getAnim(),depSuiv,animSuiv,partie,deplace);
 			setAnim(animSuiv);
 			setDeplacement(depSuiv);
@@ -456,8 +458,8 @@ public class Spirel extends Monstre{
 	public void alignHitbox(int animActu,Mouvement depSuiv, int animSuiv, AbstractModelPartie partie, Deplace deplace)
 	{
 		boolean going_left = getGlobalVit(partie).x<0;
-		boolean facing_left_still= getGlobalVit(partie).x==0 &&(droite_gauche(animActu).equals(Mouvement.GAUCHE)|| last_colli_left);
-		boolean sliding_left_wall = (droite_gauche(animActu).equals(Mouvement.DROITE)) ;
+		boolean facing_left_still= getGlobalVit(partie).x==0 &&(droite_gauche(animActu).equals(DirSubTypeMouv.GAUCHE)|| last_colli_left);
+		boolean sliding_left_wall = (droite_gauche(animActu).equals(DirSubTypeMouv.DROITE)) ;
 		boolean left = ( going_left|| facing_left_still ||sliding_left_wall) ; 
 		boolean down = getGlobalVit(partie).y>=0; 
 

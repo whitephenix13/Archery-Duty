@@ -17,8 +17,8 @@ public abstract class Mouvement{
 	public static interface SubTypeMouv extends ImageInfo{}
 	public static enum DirSubTypeMouv implements SubTypeMouv{DROITE,GAUCHE}
 	
-	public static String DROITE = "DROITE";
-	public static String GAUCHE = "GAUCHE";
+	//REMOVE public static String DROITE = "DROITE";
+	//REMOVE public static String GAUCHE = "GAUCHE";
 	
 	public List<Integer> xtaille= new ArrayList<Integer>() ;
 	public List<Integer> ytaille= new ArrayList<Integer>() ;
@@ -86,12 +86,12 @@ public abstract class Mouvement{
 	}
 	
 	
-	public int getMaxBoundingSquare(Object obj)
+	public int getMaxBoundingSquare()
 	{
 		return Math.max(Collections.max(xtaille), Collections.max(ytaille));
 	}
 
-	public Point getMaxBoundingRect(Object obj)
+	public Point getMaxBoundingRect()
 	{
 		return new Point(Collections.max(xtaille), Collections.max(ytaille));
 	}
@@ -112,7 +112,7 @@ public abstract class Mouvement{
 		object.setLocalVit(vit);
 	};
 	
-	public abstract String droite_gauche(Object obj,int anim);
+	public abstract DirSubTypeMouv droite_gauche(int anim,double rotation);
 	public int updateAnimation(int anim,int current_frame,double speedFactor) {
 		return updateAnimation(anim,current_frame,speedFactor,false);
 	}

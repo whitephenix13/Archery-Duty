@@ -57,7 +57,7 @@ public class Loader implements GameMode{
 	public int getProgress()
 	{
 		if(mainLoader==null)
-			return 100;
+			return 0; //main loader hasn't started yet:display 0
 		else
 			return mainLoader.getProgress();
 	}

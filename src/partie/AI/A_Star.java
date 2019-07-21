@@ -539,7 +539,7 @@ public class A_Star {
 			//int i_max_dist_object = (int) Math.ceil( 0.75 * objectToMove.deplacement.getMaxBoundingSquare(objectToMove));
 			//Point max_dist_object= new Point(i_max_dist_object,i_max_dist_object); //TODO: only for debugging 
 		if(params.DEBUG){
-			int max_dist = objectToMove.getDeplacement().getMaxBoundingSquare(objectToMove);
+			int max_dist = objectToMove.getDeplacement().getMaxBoundingSquare();
 			debugDraw(params,partie,new Point(max_dist,max_dist));
 		}
 		//Only happen when generating the path for the first time. Shouldn't trigger when recomputing path 

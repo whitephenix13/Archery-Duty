@@ -18,6 +18,7 @@ import partie.collision.Hitbox;
 import partie.conditions.Condition.ConditionEnum;
 import partie.deplacement.Deplace;
 import partie.deplacement.Mouvement;
+import partie.deplacement.Mouvement.DirSubTypeMouv;
 import partie.deplacement.effect.Roche_idle;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
@@ -209,7 +210,7 @@ public class Roche_effect extends Effect{
 		for(Collidable col : accrochedCol)
 		{
 			Vector2d xydir_effect = Deplace.angleToVector(getRotation()-Math.PI/2); 
-			Vector2d xydir_col = Deplace.angleToVector(col.getDeplacement().droite_gauche(col, col.getAnim()).equals(Mouvement.GAUCHE) ? 5.0*Math.PI/4: 7.0*Math.PI/4);
+			Vector2d xydir_col = Deplace.angleToVector(col.getDeplacement().droite_gauche(col.getAnim(),col.getRotation()).equals(DirSubTypeMouv.GAUCHE) ? 5.0*Math.PI/4: 7.0*Math.PI/4);
 
 			Vector2d effect_sp = Hitbox.supportPoint(xydir_effect, getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon);
 			Vector2d col_sp = Hitbox.supportPoint(xydir_col, col.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon);

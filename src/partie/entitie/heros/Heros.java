@@ -23,6 +23,7 @@ import partie.collision.GJK_EPA;
 import partie.collision.Hitbox;
 import partie.deplacement.Deplace;
 import partie.deplacement.Mouvement;
+import partie.deplacement.Mouvement.DirSubTypeMouv;
 import partie.deplacement.Mouvement.SubTypeMouv;
 import partie.deplacement.entity.Accroche;
 import partie.deplacement.entity.Accroche.SubMouvAccrocheEnum;
@@ -31,7 +32,6 @@ import partie.deplacement.entity.Course;
 import partie.deplacement.entity.Glissade;
 import partie.deplacement.entity.Mouvement_entity;
 import partie.deplacement.entity.Mouvement_entity.MouvEntityEnum;
-import partie.deplacement.entity.Mouvement_entity.SubMouvEntityEnum;
 import partie.deplacement.entity.Saut;
 import partie.deplacement.entity.Saut.SubMouvSautEnum;
 import partie.deplacement.entity.Tir;
@@ -182,10 +182,10 @@ public class Heros extends Entity{
 		setYpos_sync(yPo); 
 		localVit= new Vitesse(0,0);
 		fixedWhenScreenMoves=true;
-		setDeplacement(new Attente(ObjectType.HEROS,SubMouvEntityEnum.GAUCHE,current_frame));
+		setDeplacement(new Attente(ObjectType.HEROS,DirSubTypeMouv.GAUCHE,current_frame));
 		this.setAnim(_anim);
 		nouvAnim= 0;
-		nouvMouv = new Attente(ObjectType.HEROS,SubMouvEntityEnum.GAUCHE,current_frame);
+		nouvMouv = new Attente(ObjectType.HEROS,DirSubTypeMouv.GAUCHE,current_frame);
 		tempsTouche=PartieTimer.me.getElapsedNano();
 		controlScreenMotion=true;
 		last_update_shoot_time=-1;
@@ -195,8 +195,8 @@ public class Heros extends Entity{
 
 	public void onAddLife(){};
 
-	public String droite_gauche (int anim){
-		return getDeplacement().droite_gauche(this, anim);
+	public DirSubTypeMouv droite_gauche (int anim){
+		return getDeplacement().droite_gauche(anim,this.getRotation());
 	}
 
 	public void touche (float degat) 
@@ -307,12 +307,12 @@ public class Heros extends Entity{
 	@Override
 	public int getMaxBoundingSquare()
 	{
-		return getDeplacement().getMaxBoundingSquare(this);
+		return getDeplacement().getMaxBoundingSquare();
 	}
 	@Override
 	public Point getMaxBoundingRect()
 	{
-		return getDeplacement().getMaxBoundingRect(this);
+		return getDeplacement().getMaxBoundingRect();
 	}
 	@Override
 	public AffineTransform computeDrawTr(Point screenDisp)
@@ -631,13 +631,13 @@ public class Heros extends Entity{
 
 		//special case, dealing with stop of accroche 
 		boolean stopAccrocheD = getDeplacement().IsDeplacement(MouvEntityEnum.ACCROCHE) && !(blocDroitGlisse && blocDroitAccroche) 
-				&& (droite_gauche(animHeros).equals(Mouvement.DROITE)) && (getAnim() != 1) && (getAnim() != 3);
+				&& (droite_gauche(animHeros).equals(DirSubTypeMouv.DROITE)) && (getAnim() != 1) && (getAnim() != 3);
 		boolean stopAccrocheG = getDeplacement().IsDeplacement(MouvEntityEnum.ACCROCHE) && !(blocGaucheGlisse && blocGaucheAccroche) 
-				&& (droite_gauche(animHeros).equals(Mouvement.GAUCHE))&& (getAnim() != 1) && (getAnim() != 3);
+				&& (droite_gauche(animHeros).equals(DirSubTypeMouv.GAUCHE))&& (getAnim() != 1) && (getAnim() != 3);
 		if(stopAccrocheD || stopAccrocheG)
 		{
-			Mouvement nextMouv = new Attente(ObjectType.HEROS,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?SubMouvEntityEnum.GAUCHE: SubMouvEntityEnum.DROITE,partie.getFrame());
-			int nextAnim = (droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? 0 : 2 );
+			Mouvement nextMouv = new Attente(ObjectType.HEROS,droite_gauche(animHeros),partie.getFrame());
+			int nextAnim = (droite_gauche(animHeros).equals(DirSubTypeMouv.GAUCHE) ? 0 : 2 );
 			alignHitbox(animHeros,nextMouv,nextAnim,partie ,deplace,blocGaucheGlisse);
 			//on ajuste la position du personnage pour qu'il soit centrÃ© 
 			setDeplacement(nextMouv);
@@ -651,8 +651,8 @@ public class Heros extends Entity{
 
 		//le heros d�croche du mur
 		boolean endSliding = getDeplacement().IsDeplacement(MouvEntityEnum.GLISSADE) && 
-				((!blocDroitGlisse && droite_gauche(animHeros).equals(Mouvement.GAUCHE)) ||
-						(!blocGaucheGlisse && droite_gauche(animHeros)==(Mouvement.DROITE)) || !falling) ;
+				((!blocDroitGlisse && droite_gauche(animHeros).equals(DirSubTypeMouv.GAUCHE)) ||
+						(!blocGaucheGlisse && droite_gauche(animHeros)==(DirSubTypeMouv.DROITE)) || !falling) ;
 		
 		int anim=animHeros;
 
@@ -682,7 +682,7 @@ public class Heros extends Entity{
 		//SPECIAL CASE that comes from computation on the current Mouvement 
 		if( (beginSliding_r||beginSliding_l) && !getDeplacement().IsDeplacement(MouvEntityEnum.GLISSADE))
 		{
-			Mouvement nextMouv = new Glissade(ObjectType.HEROS,beginSliding_l?SubMouvEntityEnum.GAUCHE:SubMouvEntityEnum.DROITE,partie.getFrame());
+			Mouvement nextMouv = new Glissade(ObjectType.HEROS,beginSliding_l?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
 			int nextAnim = (beginSliding_l ? 0 :1);
 
 			alignHitbox(animHeros,nextMouv,nextAnim,partie ,deplace,blocGaucheGlisse);
@@ -772,10 +772,10 @@ public class Heros extends Entity{
 					||getDeplacement().IsDeplacement(MouvEntityEnum.ACCROCHE)))
 			{
 				int up = getGlobalVit(partie).y>=0 ? 1 : 0;
-				SubTypeMouv sub_type_mouv = droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? (up==0?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.FALL_GAUCHE) :
+				SubTypeMouv sub_type_mouv = droite_gauche(animHeros).equals(DirSubTypeMouv.GAUCHE) ? (up==0?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.FALL_GAUCHE) :
 					(up==0?SubMouvSautEnum.JUMP_DROITE:SubMouvSautEnum.FALL_DROITE);
 				Mouvement mouvSuivant = new Saut(ObjectType.HEROS,sub_type_mouv,partie.getFrame());
-				int animSuivant = (droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? 0+up :3+up);
+				int animSuivant = (droite_gauche(animHeros).equals(DirSubTypeMouv.GAUCHE) ? 0+up :3+up);
 				alignHitbox(animHeros,mouvSuivant,animSuivant,partie,deplace,blocGaucheGlisse );		
 				animHeros = animSuivant;
 				anim=animSuivant;
@@ -789,8 +789,8 @@ public class Heros extends Entity{
 		{			
 			if( (anim == 1 || anim == 3) && getDeplacement().animEndedOnce())
 			{
-				int next_anim = (droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? 0 :2);
-				Mouvement nextMouv = new Attente(ObjectType.HEROS,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?SubMouvEntityEnum.GAUCHE: SubMouvEntityEnum.DROITE,partie.getFrame());
+				int next_anim = (droite_gauche(animHeros).equals(DirSubTypeMouv.GAUCHE) ? 0 :2);
+				Mouvement nextMouv = new Attente(ObjectType.HEROS,droite_gauche(animHeros),partie.getFrame());
 
 				alignHitbox(animHeros,nextMouv,next_anim,partie,deplace,blocGaucheGlisse);
 				anim= next_anim;
@@ -811,8 +811,8 @@ public class Heros extends Entity{
 		}
 		else if(landing) //atterrissage: accroupi 
 		{
-			Mouvement mouvSuiv = new Saut(ObjectType.HEROS,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?SubMouvSautEnum.LAND_GAUCHE:SubMouvSautEnum.LAND_DROITE,partie.getFrame());
-			int animSuiv = (droite_gauche(animHeros).equals(Mouvement.GAUCHE)? 2 : 5 );
+			Mouvement mouvSuiv = new Saut(ObjectType.HEROS,droite_gauche(animHeros).equals(DirSubTypeMouv.GAUCHE) ?SubMouvSautEnum.LAND_GAUCHE:SubMouvSautEnum.LAND_DROITE,partie.getFrame());
+			int animSuiv = (droite_gauche(animHeros).equals(DirSubTypeMouv.GAUCHE)? 2 : 5 );
 			//on ajuste la position du personnage pour qu'il soit centr� 
 			alignHitbox(animHeros,mouvSuiv,animSuiv,partie,deplace,blocGaucheGlisse );
 			finSaut=false;//set landing to false
@@ -827,9 +827,9 @@ public class Heros extends Entity{
 		else if(standup)//atterissage: se rel�ve
 		{
 
-			int nextAnim = runBeforeJump? (droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? 0 : 4 ) : (droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? 0 : 2 );
-			Mouvement_entity nextDep=  runBeforeJump? new Course(ObjectType.HEROS,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?SubMouvEntityEnum.GAUCHE:SubMouvEntityEnum.DROITE,partie.getFrame()) 
-					: new Attente(ObjectType.HEROS,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?SubMouvEntityEnum.GAUCHE:SubMouvEntityEnum.DROITE,partie.getFrame());
+			int nextAnim = runBeforeJump? (droite_gauche(animHeros).equals(DirSubTypeMouv.GAUCHE) ? 0 : 4 ) : (droite_gauche(animHeros).equals(DirSubTypeMouv.GAUCHE) ? 0 : 2 );
+			Mouvement_entity nextDep=  runBeforeJump? new Course(ObjectType.HEROS,droite_gauche(animHeros),partie.getFrame()) 
+					: new Attente(ObjectType.HEROS,droite_gauche(animHeros),partie.getFrame());
 			//on ajuste la position du personnage pour qu'il soit centr� 
 			alignHitbox(animHeros,nextDep,nextAnim,partie,deplace,blocGaucheGlisse);
 			//on choisit la direction d'attente			
@@ -845,8 +845,8 @@ public class Heros extends Entity{
 		else if(landSliding)
 		{
 
-			Mouvement nextMouv = new Attente(ObjectType.HEROS,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?SubMouvEntityEnum.GAUCHE: SubMouvEntityEnum.DROITE,partie.getFrame());
-			int nextAnim = (droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? 0 : 2 );
+			Mouvement nextMouv = new Attente(ObjectType.HEROS,droite_gauche(animHeros),partie.getFrame());
+			int nextAnim = (droite_gauche(animHeros).equals(DirSubTypeMouv.GAUCHE) ? 0 : 2 );
 			alignHitbox(animHeros,nextMouv,nextAnim,partie ,deplace,blocGaucheGlisse);
 			finSaut=false;
 			//on ajuste la position du personnage pour qu'il soit centr� 
@@ -860,8 +860,8 @@ public class Heros extends Entity{
 		else if(endSliding)
 		{
 
-			int nextAnim= (droite_gauche(animHeros).equals(Mouvement.GAUCHE) ? 1 :4);
-			Mouvement nextMouv = new Saut(ObjectType.HEROS,droite_gauche(animHeros).equals(Mouvement.GAUCHE) ?SubMouvSautEnum.FALL_GAUCHE: SubMouvSautEnum.FALL_DROITE,partie.getFrame());
+			int nextAnim= (droite_gauche(animHeros).equals(DirSubTypeMouv.GAUCHE) ? 1 :4);
+			Mouvement nextMouv = new Saut(ObjectType.HEROS,droite_gauche(animHeros).equals(DirSubTypeMouv.GAUCHE) ?SubMouvSautEnum.FALL_GAUCHE: SubMouvSautEnum.FALL_DROITE,partie.getFrame());
 			alignHitbox(animHeros,nextMouv,nextAnim,partie,deplace,blocGaucheGlisse);
 			anim = nextAnim;
 			setDeplacement(nextMouv);
@@ -902,9 +902,8 @@ public class Heros extends Entity{
 				double dy= ycurrentup -next_y_bottom;
 
 				//Variables to test  if the heros would have enough space to stand up
-				Mouvement nextMouv_space = new Attente(ObjectType.HEROS,droite_gauche(nouvAnim).equals(Mouvement.GAUCHE) ?SubMouvEntityEnum.GAUCHE: SubMouvEntityEnum.DROITE,
-						partie.getFrame());
-				int nextAnim_space = (droite_gauche(nouvAnim).equals(Mouvement.GAUCHE) ? 0 : 2 );
+				Mouvement nextMouv_space = new Attente(ObjectType.HEROS,droite_gauche(nouvAnim),partie.getFrame());
+				int nextAnim_space = (droite_gauche(nouvAnim).equals(DirSubTypeMouv.GAUCHE) ? 0 : 2 );
 				double x_space= Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouv_space, nextAnim_space).polygon).x;
 				double y_bottom_space= Hitbox.supportPoint(new Vector2d(0,ydir_down), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouv_space, nextAnim_space).polygon).y;
 
@@ -1043,12 +1042,12 @@ public class Heros extends Entity{
 		boolean isGlissade = getDeplacement().IsDeplacement(MouvEntityEnum.GLISSADE);
 		boolean going_left = getGlobalVit(partie).x<0;
 
-		boolean facing_left_still= getGlobalVit(partie).x==0 &&(droite_gauche(animActu).equals(Mouvement.GAUCHE)|| last_colli_left)&& !isGlissade;
-		boolean sliding_left_wall = (droite_gauche(animActu)==Mouvement.DROITE) && isGlissade;
+		boolean facing_left_still= getGlobalVit(partie).x==0 &&(droite_gauche(animActu).equals(DirSubTypeMouv.GAUCHE)|| last_colli_left)&& !isGlissade;
+		boolean sliding_left_wall = (droite_gauche(animActu)==DirSubTypeMouv.DROITE) && isGlissade;
 		boolean start_falling_face_right = (!getDeplacement().IsDeplacement(MouvEntityEnum.SAUT) && depSuiv.IsDeplacement(MouvEntityEnum.SAUT)) 
-				&& (droite_gauche(animActu).equals(Mouvement.DROITE));
+				&& (droite_gauche(animActu).equals(DirSubTypeMouv.DROITE));
 		boolean start_falling_face_left = (!getDeplacement().IsDeplacement(MouvEntityEnum.SAUT) && depSuiv.IsDeplacement(MouvEntityEnum.SAUT)) 
-				&& (droite_gauche(animActu).equals(Mouvement.GAUCHE));
+				&& (droite_gauche(animActu).equals(DirSubTypeMouv.GAUCHE));
 		boolean left = ! start_falling_face_left && ( going_left|| facing_left_still ||sliding_left_wall || blocGaucheGlisse || start_falling_face_right) ; 
 		boolean down = getGlobalVit(partie).y>=0; 
 

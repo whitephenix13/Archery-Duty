@@ -17,11 +17,11 @@ public abstract class Mouvement_effect extends Mouvement{
 	}
 
 	@Override
-	public String droite_gauche(Object obj, int anim) {
-		if( (((Effect)obj).getRotation() <= Math.PI/2) && (((Effect)obj).getRotation() >= 3*Math.PI/2) )
-			return Mouvement.GAUCHE; 
+	public DirSubTypeMouv droite_gauche(int anim,double rotation) {
+		if( rotation <= Math.PI/2 && (rotation >= 3*Math.PI/2) )
+			return DirSubTypeMouv.GAUCHE; 
 		else
-			return Mouvement.DROITE;
+			return DirSubTypeMouv.DROITE;
 	}
 
 }

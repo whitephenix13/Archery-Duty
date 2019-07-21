@@ -85,12 +85,12 @@ public class Bloc extends Collidable{
 	@Override
 	public int getMaxBoundingSquare()
 	{
-		return getDeplacement().getMaxBoundingSquare(this);
+		return getDeplacement().getMaxBoundingSquare();
 	}
 	@Override
 	public Point getMaxBoundingRect()
 	{
-		return getDeplacement().getMaxBoundingRect(this);
+		return getDeplacement().getMaxBoundingRect();
 	}
 	@Override
 	public AffineTransform computeDrawTr(Point screendisp)

@@ -112,22 +112,22 @@ public class T_normal extends Mouvement_projectile{
 			return null;}
 	}
 	@Override
-	public String droite_gauche(Object obj,int anim) {
-		if(ObjectTypeHelper.isTypeOf(obj, ObjectType.FLECHE))
+	public DirSubTypeMouv droite_gauche(int anim,double rotation) {
+		if(objType.equals(ObjectType.FLECHE))
 		{
-			if( (((Fleche)obj).getRotation() <= Math.PI/2) && (((Fleche)obj).getRotation() >= 3*Math.PI/2) )
-				return Mouvement.GAUCHE; 
+			if( (rotation <= Math.PI/2) && (rotation >= 3*Math.PI/2) )
+				return DirSubTypeMouv.GAUCHE; 
 			else
-				return Mouvement.DROITE;
+				return DirSubTypeMouv.DROITE;
 		}
-		else if(ObjectTypeHelper.isTypeOf(obj, ObjectType.TIR_SPIREL))
+		else if(objType.equals(ObjectType.TIR_SPIREL))
 			if(anim<2)
-				return (Mouvement.GAUCHE);
+				return (DirSubTypeMouv.GAUCHE);
 			else 
-				return(Mouvement.DROITE);
+				return(DirSubTypeMouv.DROITE);
 		else{
 			try {throw new Exception("String droite gauche: type unknown");} catch (Exception e) {e.printStackTrace();}
-			return ("");
+			return DirSubTypeMouv.GAUCHE;
 		}
 	}
 	@Override

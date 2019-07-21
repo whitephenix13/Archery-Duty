@@ -45,8 +45,8 @@ public class Glissade extends Mouvement_entity
 
 
 			//animation frame, current_frame, start_index, end_index
-			int start_index =sub_type_mouv.equals(SubMouvEntityEnum.GAUCHE) ? 0 : 1;
-			int end_index =sub_type_mouv.equals(SubMouvEntityEnum.GAUCHE) ? 1 : 2;
+			int start_index =sub_type_mouv.equals(DirSubTypeMouv.GAUCHE) ? 0 : 1;
+			int end_index =sub_type_mouv.equals(DirSubTypeMouv.GAUCHE) ? 1 : 2;
 			animation.start(Arrays.asList(2,2), current_frame, start_index, end_index);
 
 		}
@@ -72,15 +72,15 @@ public class Glissade extends Mouvement_entity
 		return null;
 	}
 	@Override
-	public String droite_gauche(Object obj,int anim) {
-		if(ObjectTypeHelper.isTypeOf(obj, ObjectType.HEROS))
+	public DirSubTypeMouv droite_gauche(int anim,double rotation) {
+		if(objType.equals(ObjectType.HEROS))
 			if(anim<1)
-				return (Mouvement.GAUCHE);
+				return (DirSubTypeMouv.GAUCHE);
 			else 
-				return(Mouvement.DROITE);
+				return(DirSubTypeMouv.DROITE);
 		else{
 			try {throw new Exception("String droite gauche: type unknown");} catch (Exception e) {e.printStackTrace();}
-			return ("");
+			return DirSubTypeMouv.GAUCHE;
 		}
 	}
 }

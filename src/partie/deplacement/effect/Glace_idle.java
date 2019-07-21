@@ -86,11 +86,11 @@ public class Glace_idle extends Mouvement_effect{
 	}
 	
 	@Override
-	public String droite_gauche(Object obj, int anim) {
+	public DirSubTypeMouv droite_gauche(int anim,double rotation) {
 		//Watch out, the direction are reversed since the stalactite moves the other way 
-		if( (((Effect)obj).getRotation() <= Math.PI/2) && (((Effect)obj).getRotation() >= 3*Math.PI/2) )
-			return Mouvement.DROITE; 
+		if( rotation <= Math.PI/2 && (rotation >= 3*Math.PI/2) )
+			return DirSubTypeMouv.DROITE; 
 		else
-			return Mouvement.GAUCHE;
+			return DirSubTypeMouv.GAUCHE;
 	}
 }

@@ -44,6 +44,7 @@ import partie.collision.CustomBoundingSquare;
 import partie.collision.Hitbox;
 import partie.conditions.Condition;
 import partie.deplacement.Mouvement;
+import partie.deplacement.Mouvement.DirSubTypeMouv;
 import partie.deplacement.Mouvement.SubTypeMouv;
 import partie.deplacement.entity.Accroche;
 import partie.deplacement.entity.Accroche.SubMouvAccrocheEnum;
@@ -52,7 +53,6 @@ import partie.deplacement.entity.Course;
 import partie.deplacement.entity.Marche;
 import partie.deplacement.entity.Mouvement_entity;
 import partie.deplacement.entity.Mouvement_entity.MouvEntityEnum;
-import partie.deplacement.entity.Mouvement_entity.SubMouvEntityEnum;
 import partie.deplacement.entity.Saut;
 import partie.deplacement.entity.Saut.SubMouvSautEnum;
 import partie.deplacement.entity.Tir;
@@ -519,7 +519,7 @@ public class ModelPartie extends AbstractModelPartie{
 						{
 							changeMouv=true;
 							heros.nouvAnim= 4; 
-							heros.nouvMouv= new Course(ObjectType.HEROS,SubMouvEntityEnum.DROITE,frame); 
+							heros.nouvMouv= new Course(ObjectType.HEROS,DirSubTypeMouv.DROITE,frame); 
 						}
 					}
 				}
@@ -568,7 +568,7 @@ public class ModelPartie extends AbstractModelPartie{
 					{
 						changeMouv=true;
 						heros.nouvAnim= 4; 
-						heros.nouvMouv=new Marche(ObjectType.HEROS,SubMouvEntityEnum.DROITE,frame);
+						heros.nouvMouv=new Marche(ObjectType.HEROS,DirSubTypeMouv.DROITE,frame);
 					}
 
 					//si on veut marcher en l'air (donc vers la droite) 
@@ -607,7 +607,7 @@ public class ModelPartie extends AbstractModelPartie{
 						{
 							changeMouv=true;
 							heros.nouvAnim=0;
-							heros.nouvMouv= new Course(ObjectType.HEROS,SubMouvEntityEnum.GAUCHE,frame);
+							heros.nouvMouv= new Course(ObjectType.HEROS,DirSubTypeMouv.GAUCHE,frame);
 						}
 					}
 				}
@@ -658,7 +658,7 @@ public class ModelPartie extends AbstractModelPartie{
 						changeMouv=true;
 
 						heros.nouvAnim=0;
-						heros.nouvMouv= new Marche(ObjectType.HEROS,SubMouvEntityEnum.GAUCHE,frame);
+						heros.nouvMouv= new Marche(ObjectType.HEROS,DirSubTypeMouv.GAUCHE,frame);
 					}
 
 					//si on veut marcher en l'air (donc vers la gauche) 
@@ -713,7 +713,7 @@ public class ModelPartie extends AbstractModelPartie{
 						changeMouv=true;	
 						heros.sautGlisse=true;
 
-						heros.nouvAnim= (heros.droite_gauche(heros.getAnim()).equals(Mouvement.GAUCHE)? 0 : 3);
+						heros.nouvAnim= (heros.droite_gauche(heros.getAnim()).equals(DirSubTypeMouv.GAUCHE)? 0 : 3);
 						heros.nouvMouv=new Saut(ObjectType.HEROS,heros.nouvAnim==0?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE,frame );
 						heros.last_wall_jump_time=PartieTimer.me.getElapsedNano();
 					}
@@ -738,7 +738,7 @@ public class ModelPartie extends AbstractModelPartie{
 						heros.debutSaut=true;
 						heros.finSaut=false;
 
-						heros.nouvAnim=heros.droite_gauche(heros.getAnim()).equals(Mouvement.GAUCHE) ? 0 : 3 ;
+						heros.nouvAnim=heros.droite_gauche(heros.getAnim()).equals(DirSubTypeMouv.GAUCHE) ? 0 : 3 ;
 						heros.nouvMouv= new Saut(ObjectType.HEROS,heros.nouvAnim==0?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE,frame );
 					}
 				}
@@ -784,8 +784,8 @@ public class ModelPartie extends AbstractModelPartie{
 				}
 
 
-				heros.nouvAnim= (heros.droite_gauche(heros.getAnim()).equals(Mouvement.GAUCHE) ? 0 : 2) ;
-				heros.nouvMouv= new Attente(ObjectType.HEROS,heros.nouvAnim==0? SubMouvEntityEnum.GAUCHE:SubMouvEntityEnum.DROITE,frame);
+				heros.nouvAnim= (heros.droite_gauche(heros.getAnim()).equals(DirSubTypeMouv.GAUCHE) ? 0 : 2) ;
+				heros.nouvMouv= new Attente(ObjectType.HEROS,heros.nouvAnim==0? DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,frame);
 				if(normal_2tir_R)
 				{}
 				heros.last_shoot_time= System.nanoTime();
@@ -831,8 +831,8 @@ public class ModelPartie extends AbstractModelPartie{
 					changeMouv=true;
 					//on variablesPartieRapide.affiche l'animation d'attente
 
-					heros.nouvAnim= (heros.droite_gauche(heros.getAnim()).equals(Mouvement.DROITE) ? 2: 0 );
-					heros.nouvMouv= new Attente(ObjectType.HEROS,heros.nouvAnim==0? SubMouvEntityEnum.GAUCHE:SubMouvEntityEnum.DROITE,frame);
+					heros.nouvAnim= (heros.droite_gauche(heros.getAnim()).equals(DirSubTypeMouv.DROITE) ? 2: 0 );
+					heros.nouvMouv= new Attente(ObjectType.HEROS,heros.nouvAnim==0? DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,frame);
 
 					//on met sa vitesse à 0:  
 					heros.localVit.x=0;
@@ -845,8 +845,8 @@ public class ModelPartie extends AbstractModelPartie{
 					changeMouv=true;
 					//on variablesPartieRapide.affiche l'animation d'attente
 
-					heros.nouvAnim= heros.droite_gauche(heros.getAnim()).equals(Mouvement.DROITE) ? 2: 0 ;
-					heros.nouvMouv= new Attente(ObjectType.HEROS,heros.nouvAnim==0? SubMouvEntityEnum.GAUCHE:SubMouvEntityEnum.DROITE,frame);
+					heros.nouvAnim= heros.droite_gauche(heros.getAnim()).equals(DirSubTypeMouv.DROITE) ? 2: 0 ;
+					heros.nouvMouv= new Attente(ObjectType.HEROS,heros.nouvAnim==0? DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,frame);
 
 					//on met sa vitesse à 0:  
 					heros.localVit.x=0;
@@ -860,10 +860,10 @@ public class ModelPartie extends AbstractModelPartie{
 					// tout dépend si le heros tombe ou non 
 
 					if (heros.getGlobalVit(this).y<0)//il ne tombe pas donc on met les premières animations de saut
-						heros.nouvAnim= heros.droite_gauche(heros.getAnim()).equals(Mouvement.GAUCHE) ? 0: 3 ;
+						heros.nouvAnim= heros.droite_gauche(heros.getAnim()).equals(DirSubTypeMouv.GAUCHE) ? 0: 3 ;
 
 					else // le heros tombe 
-						heros.nouvAnim=heros.droite_gauche(heros.getAnim()).equals(Mouvement.GAUCHE) ? 1: 4 ;
+						heros.nouvAnim=heros.droite_gauche(heros.getAnim()).equals(DirSubTypeMouv.GAUCHE) ? 1: 4 ;
 
 					SubTypeMouv type_mouv=heros.nouvAnim==0? SubMouvSautEnum.JUMP_GAUCHE: (heros.nouvAnim==3?SubMouvSautEnum.JUMP_DROITE:  (heros.nouvAnim==1?SubMouvSautEnum.FALL_GAUCHE:SubMouvSautEnum.FALL_DROITE));
 					heros.nouvMouv=new Saut(ObjectType.HEROS,type_mouv,frame);

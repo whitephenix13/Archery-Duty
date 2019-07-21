@@ -44,8 +44,8 @@ public class Attente extends Mouvement_entity{
 
 			hitbox = Hitbox.createHitbox(hitboxCreation);
 			//animation frame, current_frame, start_index, end_index
-			int start_index =sub_type_mouv.equals(SubMouvEntityEnum.GAUCHE) ? 0 : 2;
-			int end_index =sub_type_mouv.equals(SubMouvEntityEnum.GAUCHE) ? 2 : 4;
+			int start_index =sub_type_mouv.equals(DirSubTypeMouv.GAUCHE) ? 0 : 2;
+			int end_index =sub_type_mouv.equals(DirSubTypeMouv.GAUCHE) ? 2 : 4;
 			animation.start(Arrays.asList(80,160,80,160), current_frame, start_index, end_index);
 		}
 		else if(objType.equals(ObjectType.SPIREL))
@@ -66,8 +66,8 @@ public class Attente extends Mouvement_entity{
 			hitboxCreation.add(Hitbox.asListPoint(xg,yb));
 
 			hitbox = Hitbox.createHitbox(hitboxCreation);
-			int start_index =sub_type_mouv.equals(SubMouvEntityEnum.GAUCHE) ? 0 : 1;
-			int end_index =sub_type_mouv.equals(SubMouvEntityEnum.GAUCHE) ? 1 : 2;
+			int start_index =sub_type_mouv.equals(DirSubTypeMouv.GAUCHE) ? 0 : 1;
+			int end_index =sub_type_mouv.equals(DirSubTypeMouv.GAUCHE) ? 1 : 2;
 			//animation frame, current_frame, start_index, end_index
 			animation.start(Arrays.asList(20,20), current_frame, start_index, end_index);
 
@@ -104,20 +104,20 @@ public class Attente extends Mouvement_entity{
 	}
 
 	@Override
-	public String droite_gauche(Object obj,int anim) {
-		if(ObjectTypeHelper.isTypeOf(obj, ObjectType.HEROS))
+	public DirSubTypeMouv droite_gauche(int anim,double rotation) {
+		if(objType.equals(ObjectType.HEROS))
 			if(anim<2)
-				return (Mouvement.GAUCHE);
+				return (DirSubTypeMouv.GAUCHE);
 			else 
-				return(Mouvement.DROITE);
-		else if(ObjectTypeHelper.isTypeOf(obj, ObjectType.SPIREL))
+				return(DirSubTypeMouv.DROITE);
+		else if(objType.equals(ObjectType.SPIREL))
 			if(anim<1)
-				return (Mouvement.GAUCHE);
+				return (DirSubTypeMouv.GAUCHE);
 			else 
-				return(Mouvement.DROITE);
+				return(DirSubTypeMouv.DROITE);
 		else{
 			try {throw new Exception("String droite gauche: type unknown");} catch (Exception e) {e.printStackTrace();}
-			return ("");
+			return DirSubTypeMouv.GAUCHE;
 		}
 	}
 

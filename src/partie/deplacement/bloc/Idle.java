@@ -36,7 +36,7 @@ public class Idle extends Mouvement_entity{
 	}
 
 	@Override
-	public String droite_gauche(Object obj, int anim) {
-		return Mouvement.GAUCHE;//default 
+	public DirSubTypeMouv droite_gauche(int anim,double rotation) {
+		return DirSubTypeMouv.GAUCHE;//default 
 	}
 }

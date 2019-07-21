@@ -46,8 +46,8 @@ public class Marche extends Mouvement_entity{
 
 			hitbox = Hitbox.createHitbox(hitboxCreation);
 			//animation frame, current_frame, start_index, end_index
-			int start_index =sub_type_mouv.equals(SubMouvEntityEnum.GAUCHE) ? 0 : 4;
-			int end_index =sub_type_mouv.equals(SubMouvEntityEnum.GAUCHE)? 4 : 8;
+			int start_index =sub_type_mouv.equals(DirSubTypeMouv.GAUCHE) ? 0 : 4;
+			int end_index =sub_type_mouv.equals(DirSubTypeMouv.GAUCHE)? 4 : 8;
 			animation.start(Arrays.asList(10,20,30,40,10,20,30,40), current_frame, start_index, end_index);
 
 		}
@@ -71,8 +71,8 @@ public class Marche extends Mouvement_entity{
 			hitbox = Hitbox.createHitbox(hitboxCreation);
 			
 			//animation frame, current_frame, start_index, end_index
-			int start_index =sub_type_mouv.equals(SubMouvEntityEnum.GAUCHE) ? 0 : 2;
-			int end_index =sub_type_mouv.equals(SubMouvEntityEnum.GAUCHE)? 2 : 4;
+			int start_index =sub_type_mouv.equals(DirSubTypeMouv.GAUCHE) ? 0 : 2;
+			int end_index =sub_type_mouv.equals(DirSubTypeMouv.GAUCHE)? 2 : 4;
 			animation.start(Arrays.asList(5,10,5,10), current_frame, start_index, end_index);
 		}
 	}
@@ -115,20 +115,20 @@ public class Marche extends Mouvement_entity{
 		return null;
 	}
 	@Override
-	public String droite_gauche(Object obj,int anim) {
-		if(ObjectTypeHelper.isTypeOf(obj, ObjectType.HEROS))
+	public DirSubTypeMouv droite_gauche(int anim,double rotation) {
+		if(objType.equals(ObjectType.HEROS))
 			if(anim<4)
-				return (Mouvement.GAUCHE);
+				return (DirSubTypeMouv.GAUCHE);
 			else 
-				return(Mouvement.DROITE);
-		else if(ObjectTypeHelper.isTypeOf(obj, ObjectType.SPIREL))
+				return(DirSubTypeMouv.DROITE);
+		else if(objType.equals(ObjectType.SPIREL))
 			if(anim<2)
-				return (Mouvement.GAUCHE);
+				return (DirSubTypeMouv.GAUCHE);
 			else 
-				return(Mouvement.DROITE);
+				return(DirSubTypeMouv.DROITE);
 		else{
 			try {throw new Exception("String droite gauche: type unknown");} catch (Exception e) {e.printStackTrace();}
-			return ("");
+			return DirSubTypeMouv.GAUCHE;
 		}
 	}
 }

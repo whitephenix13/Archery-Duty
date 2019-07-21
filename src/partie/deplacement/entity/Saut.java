@@ -176,7 +176,7 @@ public class Saut extends Mouvement_entity{
 			final double vitSaut = (Config.i_ratio_fps()*(-11) + Config.i_ratio_fps()*(Config.i_ratio_fps()+1)/2 * Gravite.gravity_norm ); //-16 normalement 
 			
 			if(heros.sautGlisse)
-				return new Vitesse((varVit * (heros.droite_gauche(anim).equals(Mouvement.GAUCHE) ? -1 : 1)),vitSaut);
+				return new Vitesse((varVit * (heros.droite_gauche(anim).equals(DirSubTypeMouv.GAUCHE) ? -1 : 1)),vitSaut);
 			
 			else if(heros.sautAccroche)
 				return new Vitesse(object.localVit.x,vitSaut);
@@ -226,20 +226,20 @@ public class Saut extends Mouvement_entity{
 		return null;
 	}
 	@Override
-	public String droite_gauche(Object obj,int anim) {
-		if(ObjectTypeHelper.isTypeOf(obj, ObjectType.HEROS))
+	public DirSubTypeMouv droite_gauche(int anim,double rotation) {
+		if(objType.equals(ObjectType.HEROS))
 			if(anim<3)
-				return (Mouvement.GAUCHE);
+				return (DirSubTypeMouv.GAUCHE);
 			else 
-				return(Mouvement.DROITE);
-		else if(ObjectTypeHelper.isTypeOf(obj, ObjectType.SPIREL))
+				return(DirSubTypeMouv.DROITE);
+		else if(objType.equals(ObjectType.SPIREL))
 			if(anim<1)
-				return (Mouvement.GAUCHE);
+				return (DirSubTypeMouv.GAUCHE);
 			else 
-				return(Mouvement.DROITE);
+				return(DirSubTypeMouv.DROITE);
 		else{
 			try {throw new Exception("String droite gauche: type unknown");} catch (Exception e) {e.printStackTrace();}
-			return ("");
+			return DirSubTypeMouv.GAUCHE;
 		}
 	}
 	
