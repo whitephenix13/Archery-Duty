@@ -29,54 +29,13 @@ public class A_Star_Helper {
 	 * @param _explorationAngle Maximum value by which the object can turn as a fraction of Math.Pi
 	 * @param redirection_l This value should be equal to the estimated distance that the target can move within REEVALUATION_TIME
 	 */
-	public A_Star_Helper(double _reevaluation_time,int _max_step_size, Point _explorationAngle, int redirection_l,float _smoothStrength)
+	public A_Star_Helper(double reevaluation_time,int max_step_size, Point exploration_angle, int redirection_length,float _smoothStrength)
 	{
-		initAStarParameters(_reevaluation_time, redirection_l, _explorationAngle, _max_step_size);
+		params = new A_Star_Parameters(reevaluation_time, redirection_length, exploration_angle, max_step_size);
 		smoothStrength=_smoothStrength;
 	}
 	
-	public void initAStarParameters(double reevaluation_time, int redirection_length, Point exploration_angle, int max_step_size)
-	{
-		params = new A_Star_Parameters(reevaluation_time, redirection_length, exploration_angle, max_step_size);
-		
-		if(params.DEBUG)
-		{
-			params.debugInvalidCandidates= new ArrayList<Point>();
-			params.debugSlidedHitbox = new ArrayList<Hitbox>(); 
-		}
-		params.last_reevaluation_time=-1; 
 
-		//if we consider that the direction is (1,0), we want the point above in the grid (and below) to be within the correct angle hence 
-		//let grid_scale_divider = n , we search n such that  (100,100/n).normalize().dot((1,0)) >= limCosAngle 
-		//(100,100/n).normalize() =( 1/Norm, 1/(n * Norm) ) with Norm = sqrt(1 + 1/n^2} )
-		//Solving 1/sqrt(1 + 1/n^2 ) >= lim 
-		//always true if lim<=0 hence angle >= Pi/2 
-		// 1 >= lim^2 (1+ 1/(n^2) )
-		// 1/lim^2 -1 >= 1/(n^2)
-		//n^2 >= lim^2 / (1-lim^2 )
-		// with lim = cos(angle) 
-		//n^2 >= cotan^2(angle)
-		//n >= cotan(angle))
-		//We take n as the next int that is a multiple of 2 to ensure that the direction left right top down is still possible 
-		double limAngle = params.exploration_angle.x * Math.PI/params.exploration_angle.y;
-		params.grid_scale_divider = limAngle>=Math.PI/2? 1 : nextEven(1.0/Math.tan(limAngle)); 
-		params.grid_size = max_step_size / params.grid_scale_divider;
-		params.grid_max_index= (int)(params.grid_scale_divider*1.5* A_Star.MAX_DISTANCE/params.grid_size+1);//*1.5 since we need to be able to go at least 0.75 * to the left
-		params.limCosAngle = Math.cos(Math.min(limAngle + Math.PI/180,2*Math.PI));
-		params.MAX_NUMBER_EXPLORED_CELLS= (int) (0.25 * params.grid_max_index*params.grid_max_index);
-		
-		params.debugInvalidCandidates = new ArrayList<Point>();
-		params.debugSlidedHitbox = new ArrayList<Hitbox>();
-	}
-	
-	int nextEven(double x)
-	{
-		int topInt = (int) Math.ceil(x);
-		if(topInt%2 == 0)
-			return topInt;
-		else
-			return topInt+1;
-	}
 	public void setDebug(boolean val)
 	{
 		if(params!=null)

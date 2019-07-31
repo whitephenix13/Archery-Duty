@@ -1,20 +1,17 @@
 package partie.AI;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.concurrent.TimeUnit;
 
 import javax.vecmath.Vector2d;
-
-import org.junit.Test;
 
 import debug.DebugBreak;
 import debug.DebugDraw;
 import gameConfig.InterfaceConstantes;
-import partie.AI.A_Star.A_Star_Parameters;
 import partie.collision.Collidable;
 import partie.collision.Collision;
 import partie.collision.Hitbox;
@@ -32,39 +29,80 @@ public class A_Star {
 	public static class A_Star_Parameters
 	{
 		protected boolean DEBUG = false;
-		public void setDebug(boolean val){DEBUG=val;}
+		public void setDebug(boolean val)
+		{
+			DEBUG=val;
+			if(DEBUG){
+				this.debugInvalidCandidates = new ArrayList<Point>();
+				this.debugSlidedHitbox = new ArrayList<Hitbox>();
+			}
+		}
 
 		protected boolean LOG = false; //Manually set to true to get the logs 
 
 		private ERROR lastError = ERROR.NONE;
 		public ERROR getLastError(){return lastError;}
 		
-		protected double REEVALUATION_TIME;
-		protected int REDIRECTION_LENGTH; //This is used to delete the last x points when Updating the path
+		protected final double REEVALUATION_TIME;
+		protected final int REDIRECTION_LENGTH; //This is used to delete the last x points when Updating the path
 		//This value should be equal to the estimated distance that the target can move within REEVALUATION_TIME
-		protected Point exploration_angle; //Maximum value by which the object can turn as a fraction of Math.Pi
-		protected int max_step_size; //maximum value by which the object can move at each iteration
+		protected final Point exploration_angle; //Maximum value by which the object can turn as a fraction of Math.Pi
+		protected final int max_step_size; //maximum value by which the object can move at each iteration
 		public A_Star_Parameters()
 		{
 			this(0.05*Math.pow(10, 9), 2* InterfaceConstantes.TAILLE_BLOC, new Point(1,4), InterfaceConstantes.TAILLE_BLOC);
 		}
+		/*public A_Star_Parameters(double reevaluation_time, int redirection_length, Point exploration_angle, int max_step_size)
+		{
+			REEVALUATION_TIME = reevaluation_time; //default  0.05*Math.pow(10, 9);
+			REDIRECTION_LENGTH = redirection_length;//default 2* InterfaceConstantes.TAILLE_BLOC;
+			this.exploration_angle = exploration_angle;//default new Point(1,4); 
+			this.max_step_size = max_step_size;//default InterfaceConstantes.TAILLE_BLOC;
+		}*/
 		public A_Star_Parameters(double reevaluation_time, int redirection_length, Point exploration_angle, int max_step_size)
 		{
 			REEVALUATION_TIME = reevaluation_time; //default  0.05*Math.pow(10, 9);
 			REDIRECTION_LENGTH = redirection_length;//default 2* InterfaceConstantes.TAILLE_BLOC;
 			this.exploration_angle = exploration_angle;//default new Point(1,4); 
 			this.max_step_size = max_step_size;//default InterfaceConstantes.TAILLE_BLOC;
+			
+			//if we consider that the direction is (1,0), we want the point above in the grid (and below) to be within the correct angle hence 
+			//let grid_scale_divider = n , we search n such that  (100,100/n).normalize().dot((1,0)) >= limCosAngle 
+			//(100,100/n).normalize() =( 1/Norm, 1/(n * Norm) ) with Norm = sqrt(1 + 1/n^2} )
+			//Solving 1/sqrt(1 + 1/n^2 ) >= lim 
+			//always true if lim<=0 hence angle >= Pi/2 
+			// 1 >= lim^2 (1+ 1/(n^2) )
+			// 1/lim^2 -1 >= 1/(n^2)
+			//n^2 >= lim^2 / (1-lim^2 )
+			// with lim = cos(angle) 
+			//n^2 >= cotan^2(angle)
+			//n >= cotan(angle))
+			//We take n as the next int that is a multiple of 2 to ensure that the direction left right top down is still possible 
+			double limAngle = exploration_angle.x * Math.PI/exploration_angle.y;
+			grid_scale_divider = limAngle>=Math.PI/2? 1 : nextEven(1.0/Math.tan(limAngle)); 
+			grid_size = max_step_size / grid_scale_divider;
+			grid_max_index= (int)(grid_scale_divider*1.5* A_Star.MAX_DISTANCE/grid_size+1);//*1.5 since we need to be able to go at least 0.75 * to the left
+			limCosAngle = Math.cos(Math.min(limAngle + Math.PI/180,2*Math.PI));
+			MAX_NUMBER_EXPLORED_CELLS= (int) (0.25 * grid_max_index*grid_max_index);
 		}
 		
+		int nextEven(double x)
+		{
+			int topInt = (int) Math.ceil(x);
+			if(topInt%2 == 0)
+				return topInt;
+			else
+				return topInt+1;
+		}
 		//Set only once
-		protected double last_reevaluation_time=-1; //last time that the path was reevaluated 
-		protected int grid_scale_divider = 1;// set 2 to have half distance between grid cells for more accuracy (1=> angle = Pi/4, 0, -Pi/4, 2=> -Pi/8, 0, Pi/8)) 
-		protected int grid_max_index =-1;
-		protected int grid_size = InterfaceConstantes.TAILLE_BLOC; 
-		protected double limCosAngle = 0; //the maximum value of the cos. if val<limCosAngle then the point in not in the correct angle 
-		protected int MAX_NUMBER_EXPLORED_CELLS = 0; //if the number of cells explored is greater than this, stop the algorithm 
+		final protected int grid_scale_divider;// set 2 to have half distance between grid cells for more accuracy (1=> angle = Pi/4, 0, -Pi/4, 2=> -Pi/8, 0, Pi/8)) 
+		final protected int grid_max_index;
+		final protected int grid_size; 
+		final protected double limCosAngle; //the maximum value of the cos. if val<limCosAngle then the point in not in the correct angle 
+		final protected int MAX_NUMBER_EXPLORED_CELLS; //if the number of cells explored is greater than this, stop the algorithm 
 		
 		//local variables
+		protected double last_reevaluation_time=-1; //last time that the path was reevaluated 
 		protected Point initialPos = new Point(); //position at which the object start moving. it determines the 0,0 of the grid
 		protected Vector2d worldTarget = new Vector2d();
 		protected A_Star_Candidate[][] grid = null; //0 if empty, 1 if visited 
@@ -74,7 +112,7 @@ public class A_Star {
 		//Debug variables
 		protected ArrayList<Point> debugInvalidCandidates; // list of candidates that where invalid 
 		protected ArrayList<Hitbox> debugSlidedHitbox ; //list of slided hitboxes that does not collide
-		protected  DEBUG_INVALID_CANDIDATES debug_invalid = DEBUG_INVALID_CANDIDATES.ANGLE;
+		protected DEBUG_INVALID_CANDIDATES debug_invalid = DEBUG_INVALID_CANDIDATES.ANGLE;
 		
 	}
 	
@@ -85,7 +123,7 @@ public class A_Star {
 	//PARAMETERS: Re-evaluation time, grid_size 
 	//OUTPUT: list of Points 
 
-	/*boolean DEBUG = false;
+	/*REMOVE boolean DEBUG = false;
 	boolean LOG = false;
 
 	public void setDebug(boolean val){DEBUG=val;}
@@ -457,7 +495,7 @@ public class A_Star {
 					{
 						g.setColor(Color.DARK_GRAY);
 						Hitbox hit = params.debugSlidedHitbox.get(i);
-						Hitbox temp_hit = Hitbox.plusPoint(hit, partie.getScreenDisp(), true);
+						Hitbox temp_hit = hit.copy().translate(partie.getScreenDisp());
 						for(int n=1; n<temp_hit.polygon.npoints+1; ++n){
 							int n1 = n-1;
 							int n2 = n;
@@ -923,7 +961,7 @@ public class A_Star {
 		// Remove X3
 		// Expect: X1-O2-O3
 		A_Star_Parameters params = new A_Star_Parameters();
-		A_Star_Candidate[][]  grid = new A_Star_Candidate[10][10] ;
+		params.grid = new A_Star_Candidate[10][10] ;
 		int grid_scale_divider=1;
 		
 		Point p1 = new Point(0,0); Point p2 = new Point(0,1); Point p3 = new Point(0,2);Point p4 = new Point(0,3);
@@ -931,17 +969,17 @@ public class A_Star {
 		AddCandidate(params,p1,null);
 		SelectCandidate(params,p1);
 		
-		AddCandidate(params,p2,grid[p1.x][p1.x]);
+		AddCandidate(params,p2,params.grid[p1.x][p1.x]);
 		SelectCandidate(params,p2);
 
-		AddCandidate(params,p3,grid[p2.x][p2.y]);
+		AddCandidate(params,p3,params.grid[p2.x][p2.y]);
 		SelectCandidate(params,p3);
 		
-		AddCandidate(params,p4,grid[p3.x][p3.y]);
+		AddCandidate(params,p4,params.grid[p3.x][p3.y]);
 
 		OnRemovePathPoint(params,p3,null);
 		
-		boolean neighborAsDesired = (grid[p1.x][p1.y].prevNeighbor == null) && (grid[p2.x][p2.y].prevNeighbor.cellIndex.equals(p1)) && (grid[p3.x][p3.y].prevNeighbor.cellIndex.equals(p2));
+		boolean neighborAsDesired = (params.grid[p1.x][p1.y].prevNeighbor == null) && (params.grid[p2.x][p2.y].prevNeighbor.cellIndex.equals(p1)) && (params.grid[p3.x][p3.y].prevNeighbor.cellIndex.equals(p2));
 		return neighborAsDesired;
 	}
 	
@@ -953,7 +991,7 @@ public class A_Star {
 		// Expect: X1-O2-.
 		
 		A_Star_Parameters params = new A_Star_Parameters();
-		A_Star_Candidate[][]  grid = new A_Star_Candidate[10][10] ;
+		params.grid = new A_Star_Candidate[10][10] ;
 		int grid_scale_divider=1;
 		
 		Point p1 = new Point(0,0); Point p2 = new Point(0,1); Point p3 = new Point(0,2);
@@ -961,15 +999,15 @@ public class A_Star {
 		AddCandidate(params,p1,null);
 		SelectCandidate(params,p1);
 		
-		AddCandidate(params,p2,grid[p1.x][p1.x]);
+		AddCandidate(params,p2,params.grid[p1.x][p1.x]);
 		SelectCandidate(params,p2);
 
-		AddCandidate(params,p3,grid[p2.x][p2.y]);
+		AddCandidate(params,p3,params.grid[p2.x][p2.y]);
 		
 		OnRemovePathPoint(params,p2,null);
 		
-		boolean gridAsDesired = (!grid[p1.x][p1.y].isCandidate) && (grid[p2.x][p2.y].isCandidate)  && (grid[p3.x][p3.y]== null);
-		boolean neighborAsDesired = (grid[p1.x][p1.y].prevNeighbor == null) && (grid[p2.x][p2.y].prevNeighbor.cellIndex.equals(p1));
+		boolean gridAsDesired = (!params.grid[p1.x][p1.y].isCandidate) && (params.grid[p2.x][p2.y].isCandidate)  && (params.grid[p3.x][p3.y]== null);
+		boolean neighborAsDesired = (params.grid[p1.x][p1.y].prevNeighbor == null) && (params.grid[p2.x][p2.y].prevNeighbor.cellIndex.equals(p1));
 		return gridAsDesired && neighborAsDesired;
 	}
 	protected boolean TEST_RemovePathPoint_removeTConfig()
@@ -984,7 +1022,7 @@ public class A_Star {
 		//				 ^x6
 		
 		A_Star_Parameters params = new A_Star_Parameters();
-		A_Star_Candidate[][]  grid = new A_Star_Candidate[10][10] ;
+		params.grid = new A_Star_Candidate[10][10] ;
 		int grid_scale_divider=1;
 		
 		Point p1 = new Point(0,2); Point p2 = new Point(1,2); Point p3 = new Point(2,2); Point p4 = new Point(3,2); Point p5 = new Point(1,1); Point p6 = new Point(1,0);
@@ -992,22 +1030,22 @@ public class A_Star {
 		AddCandidate(params,p6,null);
 		SelectCandidate(params,p6);
 		
-		AddCandidate(params,p5,grid[p6.x][p6.y]);
+		AddCandidate(params,p5,params.grid[p6.x][p6.y]);
 		SelectCandidate(params,p5);
 		
-		AddCandidate(params,p2,grid[p5.x][p5.y]);
+		AddCandidate(params,p2,params.grid[p5.x][p5.y]);
 		SelectCandidate(params,p2);
 
-		AddCandidate(params,p3,grid[p2.x][p2.y]);
+		AddCandidate(params,p3,params.grid[p2.x][p2.y]);
 		SelectCandidate(params,p3);
 		
-		AddCandidate(params,p1,grid[p2.x][p2.y]);
-		AddCandidate(params,p4,grid[p3.x][p3.y]);
+		AddCandidate(params,p1,params.grid[p2.x][p2.y]);
+		AddCandidate(params,p4,params.grid[p3.x][p3.y]);
 		
 		OnRemovePathPoint(params,p5,null);
 		
-		boolean gridAsDesired = (!grid[p6.x][p6.y].isCandidate) && (grid[p5.x][p5.y].isCandidate) && (grid[p2.x][p2.y]==null)  && (grid[p1.x][p1.y]== null) && (grid[p3.x][p3.y]== null) && (grid[p4.x][p4.y]== null);
-		boolean neighborAsDesired = grid[p5.x][p5.y].prevNeighbor.cellIndex.equals(p6);
+		boolean gridAsDesired = (!params.grid[p6.x][p6.y].isCandidate) && (params.grid[p5.x][p5.y].isCandidate) && (params.grid[p2.x][p2.y]==null)  && (params.grid[p1.x][p1.y]== null) && (params.grid[p3.x][p3.y]== null) && (params.grid[p4.x][p4.y]== null);
+		boolean neighborAsDesired = params.grid[p5.x][p5.y].prevNeighbor.cellIndex.equals(p6);
 		return gridAsDesired && neighborAsDesired;
 	}
 	protected boolean TEST_RemovePathPoint_removeSquareConfig()
@@ -1022,7 +1060,7 @@ public class A_Star {
 		//			  ^x7<-x8<^x9
 		
 		A_Star_Parameters params = new A_Star_Parameters();
-		A_Star_Candidate[][] grid = new A_Star_Candidate[10][10] ;
+		params.grid = new A_Star_Candidate[10][10] ;
 		int grid_scale_divider=1;
 		
 		Point p1 = new Point(0,2); Point p2 = new Point(1,2); Point p3 = new Point(2,2); Point p4 = new Point(3,2); Point p5 = new Point(1,1);
@@ -1031,39 +1069,39 @@ public class A_Star {
 		AddCandidate(params,p9,null);
 		SelectCandidate(params,p9);
 		
-		AddCandidate(params,p6,grid[p9.x][p9.y]);
+		AddCandidate(params,p6,params.grid[p9.x][p9.y]);
 		SelectCandidate(params,p6);
 		
-		AddCandidate(params,p4,grid[p6.x][p6.y]);
+		AddCandidate(params,p4,params.grid[p6.x][p6.y]);
 		SelectCandidate(params,p4);
 		
-		AddCandidate(params,p3,grid[p4.x][p4.y]);
+		AddCandidate(params,p3,params.grid[p4.x][p4.y]);
 		SelectCandidate(params,p3);
 		
-		AddCandidate(params,p2,grid[p3.x][p3.y]);
+		AddCandidate(params,p2,params.grid[p3.x][p3.y]);
 		SelectCandidate(params,p2);
 		
-		AddCandidate(params,p1,grid[p2.x][p2.y]);		
-		AddCandidate(params,p8,grid[p9.x][p9.y]);
+		AddCandidate(params,p1,params.grid[p2.x][p2.y]);		
+		AddCandidate(params,p8,params.grid[p9.x][p9.y]);
 		SelectCandidate(params,p8);
 
-		AddCandidate(params,p7,grid[p8.x][p8.y]);
+		AddCandidate(params,p7,params.grid[p8.x][p8.y]);
 		SelectCandidate(params,p7);
 		
-		AddCandidate(params,p5,grid[p7.x][p7.y]);
+		AddCandidate(params,p5,params.grid[p7.x][p7.y]);
 		SelectCandidate(params,p5);
 		
 		OnRemovePathPoint(params,p6,null);
 		
 		
 
-		boolean gridAsDesired = (grid[p1.x][p1.y].isCandidate) && (grid[p2.x][p2.y].isCandidate) && (grid[p3.x][p3.y].isCandidate) && (grid[p4.x][p4.y]==null)  
-				&& (!grid[p5.x][p5.y].isCandidate) && (grid[p6.x][p6.y].isCandidate) && (!grid[p7.x][p7.y].isCandidate) && (!grid[p8.x][p8.y].isCandidate)
-				&& (!grid[p9.x][p9.y].isCandidate);
+		boolean gridAsDesired = (params.grid[p1.x][p1.y].isCandidate) && (params.grid[p2.x][p2.y].isCandidate) && (params.grid[p3.x][p3.y].isCandidate) && (params.grid[p4.x][p4.y]==null)  
+				&& (!params.grid[p5.x][p5.y].isCandidate) && (params.grid[p6.x][p6.y].isCandidate) && (!params.grid[p7.x][p7.y].isCandidate) && (!params.grid[p8.x][p8.y].isCandidate)
+				&& (!params.grid[p9.x][p9.y].isCandidate);
 				
-		boolean neighborAsDesired = (grid[p1.x][p1.y].prevNeighbor.cellIndex.equals(p5)) && (grid[p2.x][p2.y].prevNeighbor.cellIndex.equals(p5))
-				&& (grid[p3.x][p3.y].prevNeighbor.cellIndex.equals(p5)) && (grid[p5.x][p5.y].prevNeighbor.cellIndex.equals(p7)) 
-				&& (grid[p7.x][p7.y].prevNeighbor.cellIndex.equals(p8)) && (grid[p8.x][p8.y].prevNeighbor.cellIndex.equals(p9));
+		boolean neighborAsDesired = (params.grid[p1.x][p1.y].prevNeighbor.cellIndex.equals(p5)) && (params.grid[p2.x][p2.y].prevNeighbor.cellIndex.equals(p5))
+				&& (params.grid[p3.x][p3.y].prevNeighbor.cellIndex.equals(p5)) && (params.grid[p5.x][p5.y].prevNeighbor.cellIndex.equals(p7)) 
+				&& (params.grid[p7.x][p7.y].prevNeighbor.cellIndex.equals(p8)) && (params.grid[p8.x][p8.y].prevNeighbor.cellIndex.equals(p9));
 
 		return gridAsDesired && neighborAsDesired;
 	}

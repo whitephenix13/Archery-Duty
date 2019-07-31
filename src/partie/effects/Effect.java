@@ -8,8 +8,6 @@ import java.util.List;
 
 import javax.vecmath.Vector2d;
 
-import images.ImagesContainer.ImageInfo;
-import images.ImagesContainer.ObjectSubType;
 import partie.collision.Collidable;
 import partie.collision.GJK_EPA;
 import partie.collision.Hitbox;
@@ -160,10 +158,10 @@ public abstract class Effect extends Collidable{
 	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp) {
 		AffineTransform tr = computeDrawTr(screenDisp);
 		if(tr==null)
-			return Hitbox.plusPoint(this.getDeplacementHitbox(getAnim()).copy(),new Point(getXpos(),getYpos()),true);
+			return this.getDeplacementHitbox(getAnim()).copy().translate(getXpos(),getYpos());
 		else{
-			Hitbox rotatedHitbox = Hitbox.convertHitbox(getDeplacementHitbox(getAnim()), tr,new Point(getXpos(),getYpos()), screenDisp); 
-			return Hitbox.plusPoint(rotatedHitbox,new Point(getXpos(),getYpos()),true);
+			Hitbox rotatedHitbox = Hitbox.convertHitbox(getDeplacementHitbox(getAnim()), tr,new Point(getXpos(),getYpos()), screenDisp); //new hitbox
+			return rotatedHitbox.translate(getXpos(),getYpos());
 		}	
 	}
 
@@ -178,7 +176,13 @@ public abstract class Effect extends Collidable{
 		boolean[] res = {!getNeedDestroy(),false};
 		return res;
 	}
-	
+	@Override 
+	public void deplaceOutOfScreen(AbstractModelPartie partie)
+	{
+		//destroy itself
+		System.out.println("Out of screen " + this +" "+ this.getPos() +" fixed "+fixedWhenScreenMoves +" screen disp "+ partie.getScreenDisp());
+		this.destroy(partie, true);
+	}
 	
 	public Image applyFilter(AbstractModelPartie partie, Image im) {
 		return im;

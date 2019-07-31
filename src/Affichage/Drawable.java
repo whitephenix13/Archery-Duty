@@ -28,7 +28,7 @@ public abstract class Drawable {
 	private long startFadeOutTime;//nano; start time when the fade out begun
 	
 	private final int fadingType;
-	
+	protected boolean isSelfClearingBackBuffer = false;
 	public Drawable()
 	{
 		fadingType = AlphaComposite.SRC_OVER;
@@ -56,6 +56,8 @@ public abstract class Drawable {
 	{
 		this.gameRenderer= d.gameRenderer;
 	}
+	
+	public boolean isSelfClearingBackBuffer(){return this.isSelfClearingBackBuffer;}
 	
 	public ActiveJPanel getContentPane(){return mainPanel;}
 	public ActiveJFrame getActiveJFrame(){return (ActiveJFrame) SwingUtilities.getWindowAncestor(mainPanel);}

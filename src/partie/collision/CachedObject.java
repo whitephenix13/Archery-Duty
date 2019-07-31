@@ -22,13 +22,17 @@ public abstract class CachedObject<T> {
 
 	protected T cachedObject; // cached tranformation used to draw the object on screen. This is not the same as the on used to compute hitbox (it is translated by screendisp)
 	
-	public CachedObject(Collidable _parent)
+	protected CachedObject()
 	{
-		this.parent=_parent;
 		valueChanged = new boolean[5];
 		cachedObject=null; //force computation on first time 
 		
 		//WARNING : initialize cachedParametersStrategy when heriting from that class
+	}
+	public CachedObject(Collidable _parent)
+	{
+		this();
+		this.parent=_parent;
 	}
 	public CachedObject(CachedObject<T> obj)
 	{

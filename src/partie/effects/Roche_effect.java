@@ -475,7 +475,7 @@ public class Roche_effect extends Effect{
 
 			Vector2d opposNormal = new Vector2d();
 			opposNormal.negate(normalCollision);
-			List<Vector2d> collidedPoints = Hitbox.supportsPoint(opposNormal, fHitbox.polygon);
+			List<Vector2d> collidedPoints = Hitbox.supportPoints(opposNormal, fHitbox.polygon);
 			Vector2d computedPointCollision = new Vector2d();
 			int size = collidedPoints.size();
 

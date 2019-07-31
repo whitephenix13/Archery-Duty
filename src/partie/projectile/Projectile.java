@@ -17,6 +17,11 @@ public abstract class Projectile extends Collidable{
 		super();
 	}
 	
+	@Override 
+	public void deplaceOutOfScreen(AbstractModelPartie partie)
+	{
+		destroy(partie,true);
+	}
 	@Override
 	public AffineTransform computeDrawTr(Point screenDisp)
 	{

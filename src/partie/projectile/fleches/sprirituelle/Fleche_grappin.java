@@ -64,7 +64,6 @@ public class Fleche_grappin extends Spirituelle {
 				if(this.tempsDetruit<=0)
 				{
 					eff.reached_max_length=true;
-					//eff.destroy(partie, false);
 					destroy(partie,false);
 					doitDeplace=false;
 				}

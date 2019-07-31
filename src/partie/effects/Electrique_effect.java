@@ -8,6 +8,7 @@ import javax.vecmath.Vector2d;
 import gameConfig.ObjectTypeHelper.ObjectType;
 import partie.collision.Collidable;
 import partie.collision.Collision;
+import partie.collision.Hitbox;
 import partie.conditions.Condition.ConditionEnum;
 import partie.deplacement.Mouvement.SubTypeMouv;
 import partie.deplacement.effect.Electrique_idle;
@@ -45,10 +46,28 @@ public class Electrique_effect extends Effect{
 		setDeplacement(new Electrique_idle(subTypeMouv,partie.getFrame()));
 		
 		partie.arrowsEffects.add(this);
-		if(!groundEffect)
-			setRotation(Math.random() * 2* Math.PI);
-		setFirstPos(partie);
-		this.onUpdate(partie, false); //update rotated hitbox and drawtr
+		if(!groundEffect){
+			//Try random rotation at most 10 times to avoid this effect to be created in the ground 
+			boolean isStuck =true;
+			for(int i=0; i<10; ++i){
+				if(!isStuck)
+					break;
+				
+				//Is Stuck 
+				setRotation(Math.random() * 2* Math.PI);
+				setFirstPos(partie);
+				onUpdate(partie, false); //update rotated hitbox and drawtr
+				
+				//extend the hitbox in the movement direction 
+				Hitbox extendedHit = Hitbox.directionalExtend(this.getHitbox(partie.INIT_RECT, partie.getScreenDisp()),getRotation(),getDeplacement().getMaxBoundingSquare());
+				isStuck = Collision.isWorldCollision(partie,extendedHit , false);
+			}
+			
+			
+		}else{
+			setFirstPos(partie);
+			this.onUpdate(partie, false); //update rotated hitbox and drawtr
+		}
 	}
 
 	@Override

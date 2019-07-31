@@ -4,8 +4,6 @@ import java.awt.Image;
 import java.awt.Point;
 import java.awt.geom.AffineTransform;
 import java.io.Serializable;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -134,13 +132,13 @@ public abstract class Monstre extends Entity implements InterfaceConstantes, Ser
 	}
 	@Override
 	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp) {
-		return  Hitbox.plusPoint(getDeplacementHitbox(getAnim()), new Point(getXpos(),getYpos()),true);
+		return getDeplacementHitbox(getAnim()).copy().translate(getXpos(),getYpos());
 	}
 
 	@Override
 	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp,Mouvement _dep, int _anim) {
 		Mouvement temp = _dep.Copy(); //create the mouvement
-		return Hitbox.plusPoint(temp.getHitbox().get(_anim), new Point(getXpos(),getYpos()),true);	
+		return temp.getHitbox().get(_anim).translate(getXpos(),getYpos());//no need to copy hitbox as it comes from a copied mouvement 
 	}
 	
 	@Override

@@ -23,7 +23,7 @@ public class Deplace implements InterfaceConstantes{
 	{
 	}
 
-	public void DeplaceObject(Collidable object, Mouvement nouvMouv, AbstractModelPartie partie)
+	public void deplaceObject(Collidable object, Mouvement nouvMouv, AbstractModelPartie partie)
 	{
 		ModelPrincipal.debugTime.startElapsedForVerbose();
 		boolean isHeros = object instanceof Heros;
@@ -120,7 +120,10 @@ public class Deplace implements InterfaceConstantes{
 	
 	}
 
-
+	public void deplaceObjectOutOfScreen(AbstractModelPartie partie, Collidable object)
+	{
+		object.deplaceOutOfScreen(partie);
+	}
 
 	/**
 	 * Recentre l'ecran autour du heros
@@ -131,52 +134,59 @@ public class Deplace implements InterfaceConstantes{
 	 */	
 	public static Point getdeplaceEcran(AbstractModelPartie partie, Collidable object,boolean force) //{{
 	{
-		int xdelta=0;
-		int ydelta=0;
-
-		int largeur_fenetre=0;
-		int hauteur_fenetre=0;
-
-		//Add partie.getScreenDisp() to get the relative position with respect to the screen 
-		int left_xpos_hit = (int) Hitbox.supportPoint(new Vector2d(-1,0), object.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon).x+partie.xScreendisp;
-		int right_xpos_hit = (int) Hitbox.supportPoint(new Vector2d(1,0), object.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon).x+partie.xScreendisp;
-		int up_ypos_hit = (int) Hitbox.supportPoint(new Vector2d(0,-1), object.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon).y+partie.yScreendisp;
-		int down_ypos_hit = (int) Hitbox.supportPoint(new Vector2d(0,1), object.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon).y+partie.yScreendisp;
-		int xpos_hit=0;
-		int ypos_hit=0;
-
-		//les conditions limites sont aux 3/7
-		//trop à gauche de l'ecran
-		if(left_xpos_hit<2*InterfaceConstantes.WINDOW_WIDTH/7){
-			xpos_hit=left_xpos_hit;
-			largeur_fenetre=(object.getGlobalVit(partie).x<0|| force)? 2*InterfaceConstantes.WINDOW_WIDTH/7 :0;
+		if(MOVE_SCREEN_WHEN_HEROS_MOVES)
+		{
+			Vector2d cent = Hitbox.getHitboxCenter(object.getHitbox(partie.INIT_RECT,partie.getScreenDisp()));
+			return new Point(InterfaceConstantes.WINDOW_WIDTH/2-(int)Math.round(cent.x)-partie.xScreendisp,InterfaceConstantes.WINDOW_HEIGHT/2-(int)Math.round(cent.y)-partie.yScreendisp);
 		}
-		//trop à droite 
-		else if(right_xpos_hit>5*InterfaceConstantes.WINDOW_WIDTH/7){
-			xpos_hit=right_xpos_hit;
-			largeur_fenetre=(object.getGlobalVit(partie).x>0||force) ? 5*InterfaceConstantes.WINDOW_WIDTH/7:0;
-		}
+		else{
+			int xdelta=0;
+			int ydelta=0;
 
-		//trop en haut
-		if(up_ypos_hit<2*InterfaceConstantes.WINDOW_HEIGHT/5){
-			ypos_hit= up_ypos_hit;
-			hauteur_fenetre=(object.getGlobalVit(partie).y<=0||force)? 2*InterfaceConstantes.WINDOW_HEIGHT/5:0;
-		}
+			int largeur_fenetre=0;
+			int hauteur_fenetre=0;
 
-		//trop bas
-		else if(down_ypos_hit>3*InterfaceConstantes.WINDOW_HEIGHT/5){
-			ypos_hit =down_ypos_hit;
-			hauteur_fenetre=(object.getGlobalVit(partie).y>=0||force)? 3*InterfaceConstantes.WINDOW_HEIGHT/5:0;
-		}
+			//Add partie.getScreenDisp() to get the relative position with respect to the screen 
+			int left_xpos_hit = (int) Hitbox.supportPoint(new Vector2d(-1,0), object.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon).x+partie.xScreendisp;
+			int right_xpos_hit = (int) Hitbox.supportPoint(new Vector2d(1,0), object.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon).x+partie.xScreendisp;
+			int up_ypos_hit = (int) Hitbox.supportPoint(new Vector2d(0,-1), object.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon).y+partie.yScreendisp;
+			int down_ypos_hit = (int) Hitbox.supportPoint(new Vector2d(0,1), object.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon).y+partie.yScreendisp;
+			int xpos_hit=0;
+			int ypos_hit=0;
 
-		if(largeur_fenetre != 0 ){
-			xdelta= largeur_fenetre-xpos_hit;
-		}
-		if(hauteur_fenetre!=0){
-			ydelta= hauteur_fenetre-ypos_hit;
-		}
+			//les conditions limites sont aux 3/7
+			//trop à gauche de l'ecran
+			if(left_xpos_hit<2*InterfaceConstantes.WINDOW_WIDTH/7){
+				xpos_hit=left_xpos_hit;
+				largeur_fenetre=(object.getGlobalVit(partie).x<0|| force)? 2*InterfaceConstantes.WINDOW_WIDTH/7 :0;
+			}
+			//trop à droite 
+			else if(right_xpos_hit>5*InterfaceConstantes.WINDOW_WIDTH/7){
+				xpos_hit=right_xpos_hit;
+				largeur_fenetre=(object.getGlobalVit(partie).x>0||force) ? 5*InterfaceConstantes.WINDOW_WIDTH/7:0;
+			}
 
-		return new Point(xdelta,ydelta);
+			//trop en haut
+			if(up_ypos_hit<2*InterfaceConstantes.WINDOW_HEIGHT/5){
+				ypos_hit= up_ypos_hit;
+				hauteur_fenetre=(object.getGlobalVit(partie).y<=0||force)? 2*InterfaceConstantes.WINDOW_HEIGHT/5:0;
+			}
+
+			//trop bas
+			else if(down_ypos_hit>3*InterfaceConstantes.WINDOW_HEIGHT/5){
+				ypos_hit =down_ypos_hit;
+				hauteur_fenetre=(object.getGlobalVit(partie).y>=0||force)? 3*InterfaceConstantes.WINDOW_HEIGHT/5:0;
+			}
+
+			if(largeur_fenetre != 0 ){
+				xdelta= largeur_fenetre-xpos_hit;
+			}
+			if(hauteur_fenetre!=0){
+				ydelta= hauteur_fenetre-ypos_hit;
+			}
+
+			return new Point(xdelta,ydelta);
+		}
 	}
 	public static void deplaceEcran(Point delta,  AbstractModelPartie partie, Collidable object)
 	{

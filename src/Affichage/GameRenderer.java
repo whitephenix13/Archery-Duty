@@ -2,6 +2,7 @@
 package Affichage;
 import java.awt.Color;
 import java.awt.EventQueue;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GraphicsConfiguration;
@@ -21,6 +22,7 @@ import javax.swing.SwingUtilities;
 import ActiveJComponent.ActiveJFrame;
 import ActiveJComponent.ActiveJLayeredPane;
 import ActiveJComponent.ActiveJMenuBar;
+import debug.DebugStack;
 import editeur.AffichageEditeur;
 import gameConfig.InterfaceConstantes;
 import menu.choixNiveau.AffichageChoixNiveau;
@@ -55,6 +57,8 @@ public class GameRenderer extends ActiveJFrame implements InterfaceConstantes, O
 	private Graphics graphics;
 	private Graphics2D g2d;
 
+	private Font fpsFont=null;
+	
 	AffichageOption affichageOption;
 	AffichagePrincipal affichagePrincipal;
 	AffichageChoixNiveau affichageChoix;
@@ -90,7 +94,7 @@ public class GameRenderer extends ActiveJFrame implements InterfaceConstantes, O
 		GraphicsDevice gd = ge.getDefaultScreenDevice();
 		GraphicsConfiguration gc = gd.getDefaultConfiguration();
 		// Create off-screen drawing surface
-		bi =  gc.createCompatibleImage( InterfaceConstantes.tailleEcran.width, InterfaceConstantes.tailleEcran.height );
+		bi =  gc.createCompatibleImage( InterfaceConstantes.screenSize.width, InterfaceConstantes.screenSize.height );
 
 		// Objects needed for rendering...
 		graphics = null;
@@ -195,8 +199,10 @@ public class GameRenderer extends ActiveJFrame implements InterfaceConstantes, O
 		// clear back buffer...
 		g2d = bi.createGraphics();
 		ModelPrincipal.debugTimeAffichage.elapsed("create graphics");
-		g2d.setColor( Color.black );
-		g2d.fillRect( 0, 0, InterfaceConstantes.tailleEcran.width, InterfaceConstantes.tailleEcran.height );
+		if(currentMainComponent== null || !currentMainComponent.isSelfClearingBackBuffer){
+			g2d.setColor( Color.black );
+			g2d.fillRect( 0, 0, InterfaceConstantes.screenSize.width, InterfaceConstantes.screenSize.height );
+		}
 		ModelPrincipal.debugTimeAffichage.elapsed("cleared buffer");
 		
 		
@@ -214,6 +220,16 @@ public class GameRenderer extends ActiveJFrame implements InterfaceConstantes, O
 				componentToFadeOut.drawOnGraphics(g2d,forceRepaint);
 			}
 			ModelPrincipal.debugTimeAffichage.elapsed("draw fade out component");
+			
+			if(SHOW_FPS)
+			{
+				if(fpsFont==null)
+					fpsFont = new Font(g2d.getFont().getFontName(),Font.BOLD, 15 );
+				g2d.setColor(Color.red);
+				g2d.setFont(fpsFont);
+				g2d.drawString("FPS: "+gameHandler.getFps(), 10, 20);
+				ModelPrincipal.debugTimeAffichage.elapsed("show fps");
+			}
 			
 			//Get graphics and translate them so that we start drawing inside the decorated window 
 			graphics = buffer.getDrawGraphics();
@@ -260,6 +276,8 @@ public class GameRenderer extends ActiveJFrame implements InterfaceConstantes, O
 		}
 		
 		renderCalled=false;
+		
+		
 		//WARNING: do not forget to call warnFadeOutEnded/startFadeOut if the componentToFadeOut is not longer fading
 		//This is called after the render phase to avoid any flash
 		if(componentToFadeOut!=null)
@@ -269,7 +287,7 @@ public class GameRenderer extends ActiveJFrame implements InterfaceConstantes, O
 					ModelPrincipal.debugTimeAffichage.elapsed("warn fade out end");
 				}
 			}
-
+		
 	}
 	
 	/**
@@ -435,54 +453,46 @@ public class GameRenderer extends ActiveJFrame implements InterfaceConstantes, O
 	 */
 	private void warnFadeOutEnded()
 	{
-		executeInEDT(new Runnable(){
-			@Override
-			public void run() {
-				//See the comment next to layeredPane variable definition
-				if(componentToFadeOut!=null){
-					componentToFadeOut.resetFadingState();//Reset the fading for future use 
-					mainLayeredPane.remove(componentToFadeOut.mainPanel);//remove the component at Position 0 (front)
-				}
-				componentToFadeOut=null;
-				//move the component from Layer -1 to Layer 0
-				inTransition=false;
-			}});
+			//See the comment next to layeredPane variable definition
+			if(componentToFadeOut!=null){
+				componentToFadeOut.resetFadingState();//Reset the fading for future use 
+				mainLayeredPane.remove(componentToFadeOut.mainPanel);//remove the component at Position 0 (front)
+			}
+			componentToFadeOut=null;
+			//move the component from Layer -1 to Layer 0
+			inTransition=false;
 	}
 	
 
 	public void beginTransition(final Drawable newDrawable)
 	{
-		executeInEDT(new Runnable(){
-			@Override
-			public void run() {
-				//Handle case where we transition to itself => directly return
-				if(currentMainComponent!= null && currentMainComponent.equals(newDrawable))
-				{
-					warnFadeOutEnded();//also moves currentMainComponent from layer -1 to 0
-					return;
-				}
+			//Handle case where we transition to itself => directly return
+			if(currentMainComponent!= null && currentMainComponent.equals(newDrawable))
+			{
+				warnFadeOutEnded();//also moves currentMainComponent from layer -1 to 0
+				return;
+			}
 
-				//Handle the case where we are in the middle of a transition
-				if(componentToFadeOut!=null)
-				{
-					//force the transition to end
-					warnFadeOutEnded();//also moves currentMainComponent from layer -1 to 0
-				}
-				//At this point, layeredPane should only have one component
-				componentToFadeOut = currentMainComponent;
-				mainLayeredPane.add(newDrawable.mainPanel); 
-				currentMainComponent=newDrawable; //the current main component is newDrawable as it is the latest to be drawn 
+			//Handle the case where we are in the middle of a transition
+			if(componentToFadeOut!=null)
+			{
+				//force the transition to end
+				warnFadeOutEnded();//also moves currentMainComponent from layer -1 to 0
+			}
+			//At this point, layeredPane should only have one component
+			componentToFadeOut = currentMainComponent;
+			mainLayeredPane.add(newDrawable.mainPanel); 
+			currentMainComponent=newDrawable; //the current main component is newDrawable as it is the latest to be drawn 
 
-				//Special case when there are no previous elements to fade => directly call warnFadeOutEnded()
-				if(componentToFadeOut==null){
-					warnFadeOutEnded();
-					return;
-				}
-				
-				//Start fading out 
-				componentToFadeOut.startFadeOut(InterfaceConstantes.SCREEN_FADE_OUT_TIME);
-				inTransition=true;
-			}});
+			//Special case when there are no previous elements to fade => directly call warnFadeOutEnded()
+			if(componentToFadeOut==null){
+				warnFadeOutEnded();
+				return;
+			}
+			
+			//Start fading out 
+			componentToFadeOut.startFadeOut(InterfaceConstantes.SCREEN_FADE_OUT_TIME);
+			inTransition=true;
 	}
 	
 	protected Image getImage(String name)

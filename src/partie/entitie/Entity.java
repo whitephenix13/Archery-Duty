@@ -2,7 +2,7 @@ package partie.entitie;
 
 import java.util.ArrayList;
 
-import debug.Debug_stack;
+import debug.DebugStack;
 import gameConfig.ObjectTypeHelper;
 import gameConfig.ObjectTypeHelper.ObjectType;
 import partie.collision.Collidable;
@@ -60,6 +60,13 @@ public abstract class Entity extends Collidable{
 		}
 
 	}
+	
+	@Override 
+	public void deplaceOutOfScreen(AbstractModelPartie partie)
+	{
+		//do nothing
+	}
+	
 	@Override
 	public Vitesse getGlobalVit(AbstractModelPartie partie){
 		Vitesse vit = localVit.Copy().times(conditions.getSpeedFactor());

@@ -95,12 +95,7 @@ public class Bloc extends Collidable{
 		if(!bloquer)
 			return null;
 
-		int xposlocal = (getXpos()-INIT_RECT.x);
-		int yposlocal = (getYpos()-INIT_RECT.y);
-		Hitbox hit = this.getDeplacementHitbox(0);
-		hit = Hitbox.plusPoint(hit, new Point(xposlocal,yposlocal), true);
-		return hit;
-
+		return this.getDeplacementHitbox(0).copy().translate(getXpos()-INIT_RECT.x,getYpos()-INIT_RECT.y);
 	}
 	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp, Mouvement mouv, int _anim) {
 		return computeHitbox(INIT_RECT,screenDisp);
@@ -128,6 +123,11 @@ public class Bloc extends Collidable{
 		//Do nothing
 		boolean[] res = {false,false};
 		return res;
+	}
+	@Override 
+	public void deplaceOutOfScreen(AbstractModelPartie partie)
+	{
+		//do nothing
 	}
 	@Override
 	public void applyFriction(double minLocalspeed, double minEnvirSpeed) {

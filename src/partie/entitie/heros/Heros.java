@@ -116,7 +116,7 @@ public class Heros extends Entity{
 	public ObjectType tir_type = ObjectType.FLECHE;
 
 	//In order to determine affinity: 1=Materiel, 2=Spirituel, 3=Destructeur 4=Ruse
-	public int current_slot = 0;
+	//public int current_slot = 0;
 	//Which arrows are equiped per affinity
 	private ObjectType[] slots = {ObjectType.ROCHE,ObjectType.BARRAGE,ObjectType.OMBRE,ObjectType.MARQUE_MORTELLE};
 
@@ -131,23 +131,13 @@ public class Heros extends Entity{
 	 * 
 	 * @param special is the arrow special or regular
 	 */
-	public void set_tir_type(boolean special){
-		if(special)
-			tir_type=slots[current_slot];
+	public void set_tir_type(int tir_index){
+		if(tir_index ==0)
+			tir_type= ObjectType.FLECHE;
 		else
-			tir_type=ObjectType.FLECHE;
+			tir_type= slots[tir_index-1];
 	} 
-	/**
-	 * 
-	 * @param special: true to return the special arrow name 
-	 * @return
-	 */
-	public ObjectType get_tir_type(boolean special){
-		if(special)
-			return slots[current_slot];
-		else
-			return ObjectType.FLECHE;
-	} 
+
 	//last time an arrow was shot
 	public long last_shoot_time = -1;
 	private long last_update_shoot_time=-1;
@@ -324,7 +314,8 @@ public class Heros extends Entity{
 	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp) {
 		try{
 			//As the heros is fixed when the screen move (position relative to screen), need to substract ScreenDisp
-			return  Hitbox.plusPoint(getDeplacementHitbox(getAnim()), new Point(getXpos()-screenDisp.x,getYpos()-screenDisp.y),true);}
+			return getDeplacementHitbox(getAnim()).copy().translate(getXpos()-screenDisp.x,getYpos()-screenDisp.y);
+		}
 		catch(IndexOutOfBoundsException e)
 		{
 			return new Hitbox();
@@ -334,7 +325,7 @@ public class Heros extends Entity{
 	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp, Mouvement _dep, int _anim) {
 		try{
 			Mouvement_entity temp = (Mouvement_entity) _dep.Copy(); //create the mouvement
-			return Hitbox.plusPoint(temp.getHitbox().get(_anim), new Point(getXpos()-screenDisp.x,getYpos()-screenDisp.y),true);
+			return temp.getHitbox().get(_anim).translate(getXpos()-screenDisp.x,getYpos()-screenDisp.y);//no need to copy hitbox as it comes from a copied mouvement
 		}
 		catch(IndexOutOfBoundsException e)
 		{
@@ -361,10 +352,10 @@ public class Heros extends Entity{
 		//WARNING assume the Heros hitbox is a square/rectangle not rotated 
 		Hitbox herosHit = this.getHitbox(partie.getScreenDisp(),partie.getScreenDisp());
 
-		List<Vector2d> upLeftP = Hitbox.supportsPoint(new Vector2d(-1,-1), herosHit.polygon);
-		List<Vector2d> downLeftP = Hitbox.supportsPoint(new Vector2d(-1,1), herosHit.polygon);
-		List<Vector2d> downRightP = Hitbox.supportsPoint(new Vector2d(1,1), herosHit.polygon);
-		List<Vector2d> upRightP = Hitbox.supportsPoint(new Vector2d(1,-1), herosHit.polygon);
+		List<Vector2d> upLeftP = Hitbox.supportPoints(new Vector2d(-1,-1), herosHit.polygon);
+		List<Vector2d> downLeftP = Hitbox.supportPoints(new Vector2d(-1,1), herosHit.polygon);
+		List<Vector2d> downRightP = Hitbox.supportPoints(new Vector2d(1,1), herosHit.polygon);
+		List<Vector2d> upRightP = Hitbox.supportPoints(new Vector2d(1,-1), herosHit.polygon);
 
 		Polygon p = new Polygon();
 
@@ -551,7 +542,7 @@ public class Heros extends Entity{
 		List<Collidable> mondeBlocs = Collision.getMondeBlocs(partie.monde,herosHitbox, partie.INIT_RECT,partie.getScreenDisp(),partie.TAILLE_BLOC);
 		ModelPrincipal.debugTime.elapsed("monde bloc");
 
-		List<Collidable> effectColl = Collidable.getAllCollidableEffect(partie, CustomBoundingSquare.getScreen());
+		List<Collidable> effectColl = Collidable.getAllCollidableEffectOnScreen(partie);
 		ModelPrincipal.debugTime.elapsed("get all collidable effect");
 
 		List<Collidable> allColli = new ArrayList<Collidable>();
@@ -1124,50 +1115,49 @@ public class Heros extends Entity{
 	public Fleche getArrowInstance(AbstractModelPartie partie, boolean special,boolean add_to_list)
 	{
 		Fleche fleche = null;
-		ObjectType tir_type_ =get_tir_type(special);
+		//ObjectType tir_type_ =get_tir_type(special);
 		//Only give the shooter information in the fleche constructor if it is needed 
-
 		//MATERIEL
-		if(tir_type_.equals(ObjectType.FEU))
+		if(tir_type.equals(ObjectType.FEU))
 			fleche =new Fleche_feu(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
-		else if(tir_type_.equals(ObjectType.ELECTRIQUE))
+		else if(tir_type.equals(ObjectType.ELECTRIQUE))
 			fleche =new Fleche_electrique(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
-		else if(tir_type_.equals(ObjectType.GLACE))
+		else if(tir_type.equals(ObjectType.GLACE))
 			fleche =new Fleche_glace(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
-		else if(tir_type_.equals(ObjectType.ROCHE))
+		else if(tir_type.equals(ObjectType.ROCHE))
 			fleche =new Fleche_roche(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 
 		//SPIRITUELLE
-		else if(tir_type_.equals(ObjectType.LUMIERE))
+		else if(tir_type.equals(ObjectType.LUMIERE))
 			fleche =new Fleche_lumiere(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
-		else if(tir_type_.equals(ObjectType.GRAPPIN))
+		else if(tir_type.equals(ObjectType.GRAPPIN))
 			fleche =new Fleche_grappin(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
-		else if(tir_type_.equals(ObjectType.OMBRE))
+		else if(tir_type.equals(ObjectType.OMBRE))
 			fleche =new Fleche_ombre(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
-		else if(tir_type_.equals(ObjectType.VENT))
+		else if(tir_type.equals(ObjectType.VENT))
 			fleche =new Fleche_vent(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 
 		//DESTRUCTEUR
-		else if(tir_type_.equals(ObjectType.BARRAGE))
+		else if(tir_type.equals(ObjectType.BARRAGE))
 			fleche =new Fleche_barrage(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
-		else if(tir_type_.equals(ObjectType.FAUCON))
+		else if(tir_type.equals(ObjectType.FAUCON))
 			fleche =new Fleche_faucon(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
-		else if(tir_type_.equals(ObjectType.EXPLOSIVE))
+		else if(tir_type.equals(ObjectType.EXPLOSIVE))
 			fleche =new Fleche_explosive(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
-		else if(tir_type_.equals(ObjectType.TROU_NOIR))
+		else if(tir_type.equals(ObjectType.TROU_NOIR))
 			fleche =new Fleche_trou_noir(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 
 		//RUSE
-		else if(tir_type_.equals(ObjectType.MARQUE_MORTELLE))
+		else if(tir_type.equals(ObjectType.MARQUE_MORTELLE))
 			fleche =new Fleche_marque_mortelle(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
-		else if(tir_type_.equals(ObjectType.ABSORPTION))
+		else if(tir_type.equals(ObjectType.ABSORPTION))
 			fleche =new Fleche_absorption(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
-		else if(tir_type_.equals(ObjectType.LEURRE))
+		else if(tir_type.equals(ObjectType.LEURRE))
 			fleche =new Fleche_leurre(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
-		else if(tir_type_.equals(ObjectType.NINJA))
+		else if(tir_type.equals(ObjectType.NINJA))
 			fleche =new Fleche_ninja(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 
-		else if(tir_type_.equals(ObjectType.FLECHE))
+		else if(tir_type.equals(ObjectType.FLECHE))
 			fleche =new Fleche(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 
 		return fleche;

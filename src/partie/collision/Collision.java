@@ -20,43 +20,31 @@ import gameConfig.InterfaceConstantes;
 import menu.menuPrincipal.ModelPrincipal;
 import partie.bloc.Bloc;
 import partie.bloc.Monde;
-import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
-import partie.projectile.fleches.Fleche;
-import partie.projectile.fleches.materielle.Fleche_feu;
 import utils.PointHelper;
 import utils.Vitesse;
 
 public abstract class Collision implements InterfaceConstantes{
 
-	public static List<Collidable> getMondeBlocs(Monde monde,Hitbox objectHitbox, Point INIT_RECT,Point screenDisp, int TAILLE_BLOC)
+	private final static double ROUND_TOLERANCE = Math.pow(10, -9);
+	
+	public static List<Collidable> getMondeBlocs(final Monde monde,final Hitbox objectHitbox,final Point INIT_RECT,final Point screenDisp,final int TAILLE_BLOC)
 	{
-		List<Collidable> mondeBlocs = new ArrayList<Collidable>();
-		Polygon poly = objectHitbox.polygon;
-
-		assert (poly.npoints>0);
-		Point p0 = new Point(poly.xpoints[0],poly.ypoints[0]);
-		Point min = p0;
-		Point max = p0;
-
-		for(int i=0; i< poly.npoints; ++i)
-		{
-			Point p = new Point(poly.xpoints[i],poly.ypoints[i]);
-			min= new Point ( Math.min(min.x, p.x),Math.min(min.y, p.y) );
-			max= new Point ( Math.max(max.x, p.x),Math.max(max.y, p.y) );
-		}
-		min.x-=2;//deal with case of touching objects
-		min.y-=2;//deal with case of touching objects
-		max.x+=2;//deal with case of touching objects
-		max.y+=2;//deal with case of touching objects
-		for(int x = min.x; x<(max.x+TAILLE_BLOC) ; x+=TAILLE_BLOC)
-			for(int y = min.y; y<(max.y+TAILLE_BLOC); y+=TAILLE_BLOC)
+		List<Collidable> mondeBlocs = new ArrayList<Collidable>();//default capacity is 10. 
+		int xmin = objectHitbox.getXmin()-2;//-2: deal with case of touching objects
+		int ymin = objectHitbox.getYmin()-2;//-2: deal with case of touching objects
+		int xmax = objectHitbox.getXmax()+2;//-2: deal with case of touching objects
+		int ymax = objectHitbox.getYmax()+2;//-2: deal with case of touching objects
+		
+		Bloc bloc;
+		for(int x = xmin; x<(xmax+TAILLE_BLOC) ; x+=TAILLE_BLOC)
+			for(int y = ymin; y<(ymax+TAILLE_BLOC); y+=TAILLE_BLOC)
 			{
 				int xIndex = (x + INIT_RECT.x)/TAILLE_BLOC;
 				int yIndex = (y + INIT_RECT.y)/TAILLE_BLOC;
 				if(xIndex>=0 && (yIndex>=0) && (xIndex<monde.niveau.length) && (yIndex<monde.niveau[0].length) )
 				{
-					Bloc bloc = monde.niveau[xIndex][yIndex];
+					bloc= monde.niveau[xIndex][yIndex];
 					if(bloc != null && bloc.getHitbox(INIT_RECT,screenDisp)!=null)
 					{
 						mondeBlocs.add(bloc);
@@ -64,14 +52,12 @@ public abstract class Collision implements InterfaceConstantes{
 				}
 
 			}
-
 		return mondeBlocs;
 	}
 
 	public static double round(double val)
 	{
-		double tolerance = Math.pow(10, -9);
-		return Math.round(val/tolerance)*tolerance;
+		return Math.round(val/ROUND_TOLERANCE)*ROUND_TOLERANCE;
 	}
 
 	/**The eject vector is such that the object are still touching, this function return a point such that the object is correctly ejected 
@@ -277,7 +263,7 @@ public abstract class Collision implements InterfaceConstantes{
 
 		mondeBlocs = getMondeBlocs(partie.monde,objectHitbox, partie.INIT_RECT,partie.getScreenDisp(),
 				partie.TAILLE_BLOC);
-		List<Collidable> effectColli = Collidable.getAllCollidableEffect(partie, CustomBoundingSquare.getScreen());
+		List<Collidable> effectColli = Collidable.getAllCollidableEffectOnScreen(partie);
 		List<Collidable> allColli = new ArrayList<Collidable>();
 		allColli.addAll(mondeBlocs);
 		if((object == null || object.checkCollideWithEffect()) && considerEffects)
@@ -473,7 +459,6 @@ public abstract class Collision implements InterfaceConstantes{
 
 		//variables pour connaitre la direction d'intersection
 		Collidable intersectedCol=null; // hitbox intersectée par l'objet mobile
-		Hitbox intersectedHit = null; //same as above but because the method is generic, computing the hitbox from the collidable would need computation that was already done
 		Point ejectFromCollisionPoint = null; //value to use to eject an object from the collision point
 
 		Point intersectedCollision = null; //eject coordinate of collision 
@@ -481,7 +466,7 @@ public abstract class Collision implements InterfaceConstantes{
 
 		List<Collidable> collidableEffects = null;
 		if(computeWorld && considerEffects)
-			collidableEffects=Collidable.getAllCollidableEffect(partie,CustomBoundingSquare.getScreen());
+			collidableEffects=Collidable.getAllCollidableEffectOnScreen(partie);
 		
 		ModelPrincipal.debugTime.elapsed("got all collidable effects");
 		Point prevtotalInterDist = new Point(-1,-1);
@@ -510,7 +495,7 @@ public abstract class Collision implements InterfaceConstantes{
 			else
 				p = new Point(); //do not substract x deplacement as usual because we assumed the object already moved by ejectDeplacement
 
-			object1Hitbox= Hitbox.plusPoint(object1.getHitbox(partie.INIT_RECT,partie.getScreenDisp()),p,true);
+			object1Hitbox=  object1.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).copy().translate(p);
 			ModelPrincipal.debugTime.elapsed("While: objectHitbox");
 			//WARNING: SPECIAL BREAK HERE Break here if lim exceed so that the hitbox 1 is computed correctly 
 			if(xlimExceeded || ylimExceeded)
@@ -545,7 +530,6 @@ public abstract class Collision implements InterfaceConstantes{
 			{
 				if(computeWorld)
 					object2Hitbox = col.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).copy();
-
 				Vector2d supp1 = GJK_EPA.support(object2Hitbox.polygon,minEjectDeplacement );//fixed one
 				Vector2d supp2 = GJK_EPA.support(object1Hitbox.polygon, ejectDeplacement);//mobile one
 				Vector2d firstDir = new Vector2d(supp1.x-supp2.x, supp1.y-supp2.y);
@@ -597,7 +581,6 @@ public abstract class Collision implements InterfaceConstantes{
 						if(computeWorld)
 						{
 							intersectedCol=col;
-							intersectedHit=object2Hitbox.copy();
 							Point[] res = computeCollisionPoint(new Vector2d(ejectDeplacement.x,ejectDeplacement.y),dInter,object1Hitbox,object2Hitbox);
 							try{intersectedCollision= res[0];}
 							catch(Exception e){e.printStackTrace(); 
@@ -694,7 +677,7 @@ public abstract class Collision implements InterfaceConstantes{
 	 */
 	public static boolean testcollisionHitbox(AbstractModelPartie partie, Hitbox objectHitbox1,Hitbox objectHitbox2)
 	{
-		return  collisionObjects(partie, null,null,objectHitbox1,objectHitbox2,false,false);
+		return collisionObjects(partie, null,null,objectHitbox1,objectHitbox2,false,false);
 	}
 	/**
 	 * 
@@ -796,7 +779,7 @@ public abstract class Collision implements InterfaceConstantes{
 		//EFFECT COLLISION
 		if(object.checkCollideWithEffect())
 		{
-			allCollidables.addAll(Collidable.getAllCollidableEffect(partie,CustomBoundingSquare.getScreen()));
+			allCollidables.addAll(Collidable.getAllCollidableEffectOnScreen(partie));
 		}
 
 		//ENTITIE COLLISION

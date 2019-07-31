@@ -92,8 +92,13 @@ public abstract class AbstractModelPrincipal implements Observable,GameHandler,G
 	protected GameMode currentGameMode; 
 	protected GameModeType nextGameMode;
 	
+	protected int frame;
+	protected int fps;
+	protected long last_fps_update_time;
+	protected int num_frame_since_last_fps;
 	//protected boolean gameInit;
 	private ArrayList<Observer> listObserver = new ArrayList<Observer>();
+
 	public AbstractModelPrincipal()
 	{
 		currentGameModeType = GameModeType.MAIN_MENU;

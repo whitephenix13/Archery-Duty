@@ -21,6 +21,7 @@ import partie.effects.Effect;
 import partie.entitie.Entity;
 import partie.modelPartie.AbstractModelPartie;
 import partie.projectile.Projectile;
+import partie.projectile.fleches.Fleche;
 import utils.Vitesse;
 
 //Specify that an object can enter in collision. 
@@ -67,6 +68,10 @@ public abstract class Collidable extends Destroyable{
 	//protected boolean[] cachedParametersForHitbox;
 	private CachedHitbox cachedHitbox;
 	private CachedAffineTransform cachedDrawTr;
+	
+	//static cached hitbox for the screen used in isObjectOnScreen
+	private final static CachedScreenHitbox cachedScreenHitbox = new CachedScreenHitbox();
+	
 	//Class used for memorizeCurrentValue
 
 	public CachedHitbox getCacheHitboxCopy(){if(cachedHitbox==null) return null;return cachedHitbox.copy();}
@@ -319,6 +324,7 @@ public abstract class Collidable extends Destroyable{
 	 * changedAnimation : if the animation changed due to a change of movement or a change in droite_gauche
 	 */
 	public abstract boolean[] deplace(AbstractModelPartie partie, Deplace deplace);
+	public abstract void deplaceOutOfScreen(AbstractModelPartie partie);
 	//Use the function trick to memorize the reset values
 	protected class CurrentValue{public void res(){};}
 	public abstract void applyFriction(double minlocalSpeed, double minEnvirSpeed);
@@ -500,16 +506,36 @@ public abstract class Collidable extends Destroyable{
 		p.addPoint(center.x-half_L, center.y+half_L);
 		return p;
 	}
-	public static boolean objectInBoundingSquare(AbstractModelPartie partie,Collidable col, Collidable refObject) 
+	private static Polygon bounding_pol; //avoid creating object in memory every time
+	private static Point getCollidableCenter(final AbstractModelPartie partie,final Collidable col,final boolean screenReferential)
+	{
+		if(col.fixedWhenScreenMoves)
+			return new Point(col.getXpos() +(screenReferential?0:-partie.xScreendisp), col.getYpos()+(screenReferential?0: -partie.yScreendisp));
+		else
+			return new Point(col.getXpos() +(screenReferential?partie.xScreendisp:0), col.getYpos()+(screenReferential?partie.yScreendisp:0));
+	}
+	public static boolean isObjectInBoundingSquare(final AbstractModelPartie partie,final Collidable col,final Collidable refObject) 
 	{
 		if(refObject==null)
 			return true;
-		Point col_pos = new Point(col.getXpos() + (col.fixedWhenScreenMoves? -partie.xScreendisp:0), col.getYpos() + (col.fixedWhenScreenMoves? -partie.yScreendisp:0));
-		Point ref_center = new Point(refObject.getXpos() + (refObject.fixedWhenScreenMoves? -partie.xScreendisp:0), refObject.getYpos() + (refObject.fixedWhenScreenMoves? -partie.yScreendisp:0));
-		Polygon bounding_pol = polygonFromBoundingSquare(ref_center,col.getMaxBoundingSquare(),refObject.getMaxBoundingSquare());
+		bounding_pol = polygonFromBoundingSquare(getCollidableCenter(partie,refObject,false),col.getMaxBoundingSquare(),refObject.getMaxBoundingSquare());
 		//The condition is that the x,y of col is in the polygon centered in the x,y of the ref Object of size 3*(sum of max bouding square)
-		return Hitbox.contains(bounding_pol, col_pos);
+		return Hitbox.contains(bounding_pol, getCollidableCenter(partie,col,false));
 	}
+	
+	/***
+	 * returns true if the object is on the screen (plus/minus threshold)
+	 */
+	public static boolean isObjectOnScreen(final AbstractModelPartie partie,final Collidable c)
+	{
+		if(c instanceof Fleche && ((Fleche)c).encochee)//specific case for fleche encochee that are at the same location as the heros but have no pos
+			return true;
+		else{
+			return Collision.testcollisionHitbox(partie, cachedScreenHitbox.getObject(partie.getScreenDisp()), c.getHitbox(partie.INIT_RECT, partie.getScreenDisp()));
+			//return Hitbox.contains(InterfaceConstantes.SCREEN.polygon, getCollidableCenter(partie,c,true));
+		}
+	}
+	
 	public static ArrayList<Entity> getAllEntitiesCollidable(AbstractModelPartie partie)
 	{
 		return getAllEntitiesCollidable(partie,null);
@@ -524,11 +550,11 @@ public abstract class Collidable extends Destroyable{
 	public static ArrayList<Entity> getAllEntitiesCollidable(AbstractModelPartie partie,Collidable ref_object)
 	{
 		ArrayList<Entity> objects = new ArrayList<Entity>();
-		if(objectInBoundingSquare(partie,partie.heros,ref_object))
+		if(isObjectInBoundingSquare(partie,partie.heros,ref_object))
 			objects.add(partie.heros);
 		
 		for(Entity m : partie.tabMonstre){
-			if(objectInBoundingSquare(partie,m,ref_object))
+			if(isObjectInBoundingSquare(partie,m,ref_object))
 				objects.add(m);
 		}
 		return objects;
@@ -542,7 +568,7 @@ public abstract class Collidable extends Destroyable{
 	{
 		List<List<Entity>> objects = new ArrayList<List<Entity>>();
 		List<Entity> herosList = new ArrayList<Entity>();
-		if(objectInBoundingSquare(partie,partie.heros,ref_object)){
+		if(isObjectInBoundingSquare(partie,partie.heros,ref_object)){
 			herosList.add(partie.heros);
 			objects.add(herosList);
 		}
@@ -552,7 +578,7 @@ public abstract class Collidable extends Destroyable{
 		{
 			List<Entity> monstreList = new ArrayList<Entity>();
 			for(Entity m : partie.tabMonstre){
-				if(objectInBoundingSquare(partie,m,ref_object))
+				if(isObjectInBoundingSquare(partie,m,ref_object))
 					monstreList.add(m);
 			}
 			objects.add(monstreList);
@@ -567,11 +593,11 @@ public abstract class Collidable extends Destroyable{
 	{
 		ArrayList<Projectile> objects = new ArrayList<Projectile>();
 		for(Projectile f : partie.tabFleche){
-			if(objectInBoundingSquare(partie,f,ref_object))
+			if(isObjectInBoundingSquare(partie,f,ref_object))
 				objects.add(f);
 		}
 		for(Projectile tirM : partie.tabTirMonstre){
-			if(objectInBoundingSquare(partie,tirM,ref_object))
+			if(isObjectInBoundingSquare(partie,tirM,ref_object))
 				objects.add(tirM);
 		}
 		return objects;
@@ -597,7 +623,7 @@ public abstract class Collidable extends Destroyable{
 		{
 			List<Collidable> flecheList = new ArrayList<Collidable>();
 			for(Collidable f : partie.tabFleche){
-				if(objectInBoundingSquare(partie,f,ref_object))
+				if(isObjectInBoundingSquare(partie,f,ref_object))
 					flecheList.add(f);
 			}
 			objects.add(flecheList);
@@ -609,7 +635,7 @@ public abstract class Collidable extends Destroyable{
 		{
 			List<Collidable> tirMList = new ArrayList<Collidable>();
 			for(Collidable tirM : partie.tabTirMonstre){
-				if(objectInBoundingSquare(partie,tirM,ref_object))
+				if(isObjectInBoundingSquare(partie,tirM,ref_object))
 					tirMList.add(tirM);
 			}
 			objects.add(tirMList);
@@ -641,7 +667,7 @@ public abstract class Collidable extends Destroyable{
 					list.add(col);
 				else
 				{
-					if(objectInBoundingSquare(partie,col,ref_object))
+					if(isObjectInBoundingSquare(partie,col,ref_object))
 					{
 						list.add(col);
 					}
@@ -655,15 +681,18 @@ public abstract class Collidable extends Destroyable{
 	/**Get all effects that are collidable (such as bloc)*/
 	public static List<Collidable> getAllCollidableEffect(AbstractModelPartie partie)
 	{
-		return getAllCollidableEffect(partie,null);
+		return getAllCollidableEffect(partie,null,false);
 	}
-	/**
-	 * 
-	 * @param partie
-	 * @param ref_object: for Screen test, use CustomBoundingSquare.getScreen()
-	 * @return
-	 */
-	public static List<Collidable> getAllCollidableEffect(AbstractModelPartie partie,Collidable ref_object)
+	public static List<Collidable> getAllCollidableEffectOnScreen(AbstractModelPartie partie)
+	{
+		return getAllCollidableEffect(partie,null,true);
+	}
+
+	public static List<Collidable> getAllCollidableEffect(final AbstractModelPartie partie,final Collidable ref_object)
+	{
+		return getAllCollidableEffect(partie,ref_object,false);
+	}
+	private static List<Collidable> getAllCollidableEffect(final AbstractModelPartie partie,final Collidable ref_object,final boolean checkOnScreen)
 	{
 		List<Collidable> list = new ArrayList<Collidable>();
 		for(Collidable col : partie.arrowsEffects)
@@ -671,20 +700,22 @@ public abstract class Collidable extends Destroyable{
 			Effect eff = (Effect) col;
 			if(eff.isWorldCollider && !eff.checkCollideWithNone())
 			{
-				if(ref_object==null)
+				if(ref_object==null && !checkOnScreen)
 					list.add(col);
-				else
-				{
-					
-					if(objectInBoundingSquare(partie,col,ref_object))
-					{
+				else if(ref_object!=null){
+					if(isObjectInBoundingSquare(partie,col,ref_object)){
 						list.add(col);
 					}
+				}
+				else{ //checkOnScreen
+					if(isObjectOnScreen(partie, col))
+						list.add(col);				
 				}
 			}
 
 		}
 		return list;
 	}
+
 	
 }

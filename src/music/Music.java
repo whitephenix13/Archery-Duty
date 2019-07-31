@@ -33,6 +33,8 @@ public class Music extends AsynchroneMusic implements InterfaceConstantes{
 
 	public void startNewMusic(final String newMusic)
 	{
+		if(InterfaceConstantes.IGNORE_SOUND)
+			return;
 		this.requests.add(new Request(){
 			@Override
 			public void run() {

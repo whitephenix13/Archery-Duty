@@ -69,7 +69,6 @@ public class Spirel extends Monstre{
 		localVit= new Vitesse(0,0);
 		setDeplacement(new Attente(ObjectType.SPIREL,DirSubTypeMouv.GAUCHE,current_frame));
 		setAnim(1);
-		tempsAncienMouv= PartieTimer.me.getElapsedNano();
 		actionReussite=false;
 
 		finSaut=false;
@@ -82,6 +81,11 @@ public class Spirel extends Monstre{
 		MAXLIFE = 100;
 		MINLIFE = 0;
 		life= MAXLIFE;
+		
+		//add randomness to the update time of the spirel so that they don't all update at the same time
+		double rand = Math.random();
+		tempsAncienMouv = PartieTimer.me.getElapsedNano() - rand*delaiMouv*Math.pow(10, 6);
+		last_shoot_time = PartieTimer.me.getElapsedNano() - Math.random()*delaiTir *Math.pow(10, 6);
 	}
 	
 
@@ -98,9 +102,7 @@ public class Spirel extends Monstre{
 	
 	private void updateShootTime()
 	{
-		double mult = conditions.getSpeedFactor();
-		double deltaShoot = (System.nanoTime() - last_update_shoot_time) * (mult-1);	
-		last_shoot_time -= deltaShoot;
+		last_shoot_time -= (System.nanoTime() - last_update_shoot_time) * (conditions.getSpeedFactor()-1); //speed influences the shoot speed
 		last_update_shoot_time=System.nanoTime();
 	}
 	

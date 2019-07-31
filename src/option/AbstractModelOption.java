@@ -7,6 +7,7 @@ import java.util.Timer;
 import javax.swing.event.ChangeEvent;
 
 import menu.menuPrincipal.GameHandler;
+import menu.menuPrincipal.GameHandler.GameModeType;
 import menu.menuPrincipal.GameMode;
 import option.AffichageOption.CustomClickableLabel;
 import partie.modelPartie.InputPartie;
@@ -31,11 +32,13 @@ public abstract class AbstractModelOption implements Observable,GameMode{
 	protected boolean updateInputText=false;
 	
 	private ArrayList<Observer> listObserver = new ArrayList<Observer>();
-
+	protected GameModeType specificReturn =null;
+	
 	public AbstractModelOption()
 	{
 	}
 	
+	public void setSpecificReturn(GameModeType type){specificReturn = type;}
 	public void setCaseFocus(boolean _caseFocus){caseFocus=_caseFocus;}
 	public void setShowInputError(boolean value){showInputError=value;}
 	public void setMemCustomClickableLabel(CustomClickableLabel _mem)

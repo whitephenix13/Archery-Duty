@@ -1,5 +1,6 @@
 package option;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 
 public class Touches {
@@ -12,17 +13,31 @@ public class Touches {
 	public String t_droite = "D";
 	public String t_gauche = "Q";
 	public String t_saut ="SPACE";
-	public String t_tir =LEFT_MOUSE;
-	public String t_2tir =RIGHT_MOUSE;
+	public String t_dash = RIGHT_MOUSE;
+	public String[] t_tir ={LEFT_MOUSE,"E","R","X","C"} ;
 	public String t_slow="Z";
 	public String t_pause= "ESCAPE";
-	public String t_arrow0= "1";
-	public String t_arrow1= "2";
-	public String t_arrow2= "3";
-	public String t_arrow3= "4";
+	public String[] t_slot = {"1","2","3","4"};
 
 	public LinkedHashMap<String,String> mapMouse = new LinkedHashMap<String,String>();
-
+	
+	
+	public static <T> boolean inArray(T t, T[]arr)
+	{
+		for(int i=0; i<arr.length;++i)
+			if(t.equals(arr[i]))
+				return true;
+		return false;
+	}	
+	public static <T> int indexOf(T t,T[] arr)
+	{
+		for(int i=0; i<arr.length;++i)
+			if(t.equals(arr[i]))
+				return i;
+		return -1;
+	}
+	
+	
 	public String ToString(String _touche)
 	{
 		String[] touche_decomposed = _touche.split(" ");
@@ -80,5 +95,6 @@ public class Touches {
 			res+=touche_decomposed[0];
 		return res;
 	}
+
 
 }

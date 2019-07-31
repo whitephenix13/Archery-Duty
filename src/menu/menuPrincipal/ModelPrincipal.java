@@ -65,16 +65,68 @@ import utils.TypeApplication;
 public class ModelPrincipal extends AbstractModelPrincipal{
 	
 	
+	private ModelPrincipal()
+	{
+		super();
+	}
+	
+	//TO GET NOTIFICATION FROM GARABGE COLLECTOR 
+	static
+	{
+		if(InterfaceConstantes.DEBUG_GC_VERBOSE>0){
+			// notification listener. is notified whenever a gc finishes.
+			NotificationListener notificationListener = new NotificationListener()
+			{
+				@Override
+				public void handleNotification(Notification notification,Object handback)
+				{
+					if (notification.getType().equals(GarbageCollectionNotificationInfo.GARBAGE_COLLECTION_NOTIFICATION))
+					{
+						// extract garbage collection information from notification.
+						final GarbageCollectionNotificationInfo gcInfo = GarbageCollectionNotificationInfo.from((CompositeData) notification.getUserData());
+	
+						// access garbage collection information...
+						//beautiful print: 
+						String memPrint ="";
+						if(InterfaceConstantes.DEBUG_GC_VERBOSE>1){
+							memPrint ="\n\t";
+							for(String key : gcInfo.getGcInfo().getMemoryUsageBeforeGc().keySet())
+							{
+								memPrint+=key+":init "+gcInfo.getGcInfo().getMemoryUsageBeforeGc().get(key).getInit()+" -> "+ gcInfo.getGcInfo().getMemoryUsageAfterGc().get(key).getInit()
+											+ " used "+gcInfo.getGcInfo().getMemoryUsageBeforeGc().get(key).getUsed()+" -> "+ gcInfo.getGcInfo().getMemoryUsageAfterGc().get(key).getUsed()
+											+ " commited "+gcInfo.getGcInfo().getMemoryUsageBeforeGc().get(key).getCommitted()+" -> "+ gcInfo.getGcInfo().getMemoryUsageAfterGc().get(key).getCommitted()
+								+ " max "+gcInfo.getGcInfo().getMemoryUsageBeforeGc().get(key).getMax()+" -> "+ gcInfo.getGcInfo().getMemoryUsageAfterGc().get(key).getMax()+"\n\t";
+							}
+							memPrint.substring(0, memPrint.length()-4);//remove last \n\t 
+						}
+						System.out.println("*************"+gcInfo.getGcAction()+" because of "+ gcInfo.getGcCause() +" : "+gcInfo.getGcInfo().getDuration()+
+								"ms."+memPrint+"**********");
+					}
+				}
+			};
+	
+			// register our listener with all gc beans
+			for (GarbageCollectorMXBean gcBean : ManagementFactory.getGarbageCollectorMXBeans())
+			{
+				NotificationEmitter emitter = (NotificationEmitter) gcBean;
+				emitter.addNotificationListener(notificationListener,null,null);
+			}
+		}
+	}
+	
 	public class MainLoop implements Runnable{
 		@Override
 		public void run()
 		{
 			try{
-				//double deltaTime;
-				//deltaTime=(System.nanoTime()-last_update)/Math.pow(10, 6);//delta time in ms
-				//last_update=System.nanoTime();
+				if((System.nanoTime()-last_fps_update_time)>=1000000000) //more than 1 sec: update fps
+				{
+					fps = num_frame_since_last_fps;
+					num_frame_since_last_fps=0;
+					last_fps_update_time=System.nanoTime();
+				}
 				ModelPrincipal.debugTime.print();
-				ModelPrincipal.debugTime.init(InterfaceConstantes.DEBUG_TIME_PRINT_MODE,0);
+				ModelPrincipal.debugTime.init(InterfaceConstantes.DEBUG_TIME_PRINT_MODE,frame);
 				
 				ModelPrincipal.debugTime.startElapsedForVerbose();
 				//Change game mode if needed 
@@ -88,16 +140,14 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 				ModelPrincipal.debugTime.elapsed("do computations");
 				gameRenderer.render(false);
 				ModelPrincipal.debugTime.elapsed("renders");
+				
+				num_frame_since_last_fps+=1;
+				frame+=1;
 
 			}
 			catch(Exception e){e.printStackTrace();}
 
 		}
-	}
-	
-	private ModelPrincipal()
-	{
-		super();
 	}
 	protected void Init() {
 		
@@ -189,7 +239,8 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		
 		loaderMenuPrincipal.addItem(mainObjectsCreation);
 		loaderMenuPrincipal.addItem(LoaderUtils.load(LoaderUtils.MT_IMAGE, LoaderUtils.C_PRINCIPAL, null, this, partie));
-		loaderMenuPrincipal.addItem(LoaderUtils.load(LoaderUtils.MT_SOUND, LoaderUtils.C_MUSIC, InterfaceConstantes.musiquePrincipal, this, partie));
+		if(!InterfaceConstantes.IGNORE_SOUND)
+			loaderMenuPrincipal.addItem(LoaderUtils.load(LoaderUtils.MT_SOUND, LoaderUtils.C_MUSIC, InterfaceConstantes.musiquePrincipal, this, partie));
 		loaderMenuPrincipal.start();
 
 		loaderMenuPrincipal.waitToEnd(principal);
@@ -204,49 +255,10 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		loaderAllMedia.addItem(LoaderUtils.loadAllImagesAndSounds(this, partie));
 		loaderAllMedia.start();
 	}
-
-	//TO GET NOTIFICATION FROM GARABGE COLLECTOR 
-	static
+	
+	public int getFps()
 	{
-		if(InterfaceConstantes.DEBUG_GC_VERBOSE>0){
-			// notification listener. is notified whenever a gc finishes.
-			NotificationListener notificationListener = new NotificationListener()
-			{
-				@Override
-				public void handleNotification(Notification notification,Object handback)
-				{
-					if (notification.getType().equals(GarbageCollectionNotificationInfo.GARBAGE_COLLECTION_NOTIFICATION))
-					{
-						// extract garbage collection information from notification.
-						final GarbageCollectionNotificationInfo gcInfo = GarbageCollectionNotificationInfo.from((CompositeData) notification.getUserData());
-	
-						// access garbage collection information...
-						//beautiful print: 
-						String memPrint ="";
-						if(InterfaceConstantes.DEBUG_GC_VERBOSE>1){
-							memPrint ="\n\t";
-							for(String key : gcInfo.getGcInfo().getMemoryUsageBeforeGc().keySet())
-							{
-								memPrint+=key+":init "+gcInfo.getGcInfo().getMemoryUsageBeforeGc().get(key).getInit()+" -> "+ gcInfo.getGcInfo().getMemoryUsageAfterGc().get(key).getInit()
-											+ " used "+gcInfo.getGcInfo().getMemoryUsageBeforeGc().get(key).getUsed()+" -> "+ gcInfo.getGcInfo().getMemoryUsageAfterGc().get(key).getUsed()
-											+ " commited "+gcInfo.getGcInfo().getMemoryUsageBeforeGc().get(key).getCommitted()+" -> "+ gcInfo.getGcInfo().getMemoryUsageAfterGc().get(key).getCommitted()
-								+ " max "+gcInfo.getGcInfo().getMemoryUsageBeforeGc().get(key).getMax()+" -> "+ gcInfo.getGcInfo().getMemoryUsageAfterGc().get(key).getMax()+"\n\t";
-							}
-							memPrint.substring(0, memPrint.length()-4);//remove last \n\t 
-						}
-						System.out.println("*************"+gcInfo.getGcAction()+" because of "+ gcInfo.getGcCause() +" : "+gcInfo.getGcInfo().getDuration()+
-								"ms."+memPrint+"**********");
-					}
-				}
-			};
-	
-			// register our listener with all gc beans
-			for (GarbageCollectorMXBean gcBean : ManagementFactory.getGarbageCollectorMXBeans())
-			{
-				NotificationEmitter emitter = (NotificationEmitter) gcBean;
-				emitter.addNotificationListener(notificationListener,null,null);
-			}
-		}
+		return fps;
 	}
 	
 	public void startGame()
@@ -277,13 +289,18 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 			System.exit(0);
 		}
 		else if (newMode.equals(GameModeType.OPTION))
-		{			
-			//musique 
-			String nextMusic = InterfaceConstantes.musiqueOption;
-			if(!Music.musiqueEnCours.equals(nextMusic))
-			{
-				Music.me.startNewMusic(nextMusic);
+		{	
+			boolean comesFromPartie = (partie != null && partie.shoudResumeGame());
+			if(!comesFromPartie){
+				//musique 
+				String nextMusic = InterfaceConstantes.musiqueOption;
+				if(!Music.musiqueEnCours.equals(nextMusic))
+				{
+					Music.me.startNewMusic(nextMusic);
+				}
 			}
+			else
+				option.setSpecificReturn(GameModeType.GAME);
 			//listener 
 			gameRenderer.removeListener(currentGameModeType);
 
@@ -388,7 +405,9 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		{
 			//not drawing at first 			
 			//If we come from the partie loader, don't init the partie again 
-			if(!currentGameModeType.equals(GameModeType.LOADER)){
+			if(partie.shoudResumeGame())
+				gameRenderer.removeListener(currentGameModeType);
+			else if(!currentGameModeType.equals(GameModeType.LOADER)){
 				//listener
 				gameRenderer.removeListener(currentGameModeType);
 	
@@ -420,21 +439,22 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 				currentGameMode = partie;
 				
 				//musique 
-				int numMus = (int) (Math.random()*InterfaceConstantes.musiquePartie.length);
-				String nextMusic = InterfaceConstantes.musiquePartie[numMus];
-
-				if(!Music.musiqueEnCours.equals(nextMusic))
-					Music.me.startNewMusic(nextMusic);			
-				else
-					//make sure that we start with the non slow version
-					Music.me.endSlowDownMusic();
+				if(!partie.shoudResumeGame()){
+					int numMus = (int) (Math.random()*InterfaceConstantes.musiquePartie.length);
+					String nextMusic = InterfaceConstantes.musiquePartie[numMus];
+	
+					if(!Music.musiqueEnCours.equals(nextMusic))
+						Music.me.startNewMusic(nextMusic);			
+					else
+						//make sure that we start with the non slow version
+						Music.me.endSlowDownMusic();
+				}
 				
 				//affichage
 				gameRenderer.changeGameModeRendering();
 				
 				//make sure that all other media are loaded correctly
-				loaderAllMedia.waitToEnd(partie);
-				if(InterfaceConstantes.DEBUG_OBJECT_CREATION)
+				if(InterfaceConstantes.DEBUG_OBJECT_CREATION && !partie.shoudResumeGame())
 					DebugObjectCreation.start();
 						
 				//listener
@@ -541,6 +561,9 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		TypeApplication.isJar= new TypeApplication().isJar();
 		/*if(InterfaceConstantes.DEBUG_OBJECT_CREATION)
 			DebugObjectCreation.start();*/
+		
+		if(InterfaceConstantes.IGNORE_SOUND)
+			System.out.println("/!\\ START GAME WITHOUT SOUND /!\\");
 		
 		ModelPrincipal principal = new ModelPrincipal();
 		principal.Init();

@@ -7,6 +7,7 @@ public class Config {
 	private static int default_fps = 60;
 	private static int fps = 60; // 60 update every 17ms
 	public static boolean pauseWhenLooseFocus = false;
+	public static boolean showHotkeyWhenPlaying = false;
 	public static int fps(){return fps;}
 	/**
 	 * return fps/default_fps

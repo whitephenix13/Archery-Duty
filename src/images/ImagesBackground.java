@@ -29,12 +29,12 @@ public class ImagesBackground extends ImagesContainer{
 			return;
 		}
 		int buffered_image_type = BufferedImage.TYPE_INT_RGB;//use RGB instead of ARGB for performance reasons (full screen image takes 0.7 ms instead of 2ms)
-		im_white = new BufferedImage(InterfaceConstantes.tailleEcran.width,InterfaceConstantes.tailleEcran.height, buffered_image_type);
+		im_white = new BufferedImage(InterfaceConstantes.screenSize.width,InterfaceConstantes.screenSize.height, buffered_image_type);
 		Graphics2D    graphics = im_white.createGraphics();
 		graphics.setColor(Color.white);
 		graphics.fillRect ( 0, 0, im_white.getWidth(), im_white.getHeight() );
 		
-		im_black = new BufferedImage(InterfaceConstantes.tailleEcran.width,InterfaceConstantes.tailleEcran.height, buffered_image_type);
+		im_black = new BufferedImage(InterfaceConstantes.screenSize.width,InterfaceConstantes.screenSize.height, buffered_image_type);
 		graphics = im_black.createGraphics();
 		graphics.setColor(Color.black);
 		graphics.fillRect ( 0, 0, im_black.getWidth(), im_black.getHeight() );

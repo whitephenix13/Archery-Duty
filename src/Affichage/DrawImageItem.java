@@ -1,6 +1,5 @@
 package Affichage;
 
-import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -61,7 +60,7 @@ public class DrawImageItem {
 	//g.drawHitbox(poly)
 	public DrawImageItem(Hitbox _hit, Point screenDisp,Color _newColor, Color _originalColor, int _layerIndex)
 	{
-		poly=Hitbox.plusPoint(_hit,screenDisp,true).polygon;
+		poly=_hit.copy().translate(screenDisp).polygon;
 		newColor=_newColor;
 		originalColor =_originalColor;
 		layerIndex=_layerIndex;

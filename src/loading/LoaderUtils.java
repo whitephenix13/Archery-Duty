@@ -72,7 +72,6 @@ public class LoaderUtils {
 		Object obj = new Object();
 		WeakReference<Object> ref = new WeakReference<Object>(obj);
 		obj = null;
-		System.out.println("wait for object destruction 1");
 		while(ref.get() != null)
 		{
 			System.gc();
@@ -116,9 +115,11 @@ public class LoaderUtils {
 				princip.imConditions.run();
 				princip.imFlecheIcon.run();
 				
-				Music.me.loaderMusic.run();
-
-				MusicBruitage.me.loaderMusicBruitage.run();
+				if(!InterfaceConstantes.IGNORE_SOUND){
+					Music.me.loaderMusic.run();
+	
+					MusicBruitage.me.loaderMusicBruitage.run();
+				}
 			}
 			@Override
 			public int getProgress()
@@ -134,9 +135,8 @@ public class LoaderUtils {
 						princip.imMonde.getProgress() + 
 						princip.imConditions.getProgress() +
 						princip.imFlecheIcon.getProgress() +
-						Music.me.loaderMusic.getProgress() +
-						MusicBruitage.me.loaderMusicBruitage.getProgress()
-						)/12.0) ;
+						(InterfaceConstantes.IGNORE_SOUND?0:(Music.me.loaderMusic.getProgress() +MusicBruitage.me.loaderMusicBruitage.getProgress()))
+						)/(InterfaceConstantes.IGNORE_SOUND?10.0:12.0)) ;
 				return res;
 			}
 		};

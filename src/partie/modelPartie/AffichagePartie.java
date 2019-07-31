@@ -25,6 +25,7 @@ import Affichage.Drawable;
 import gameConfig.InterfaceConstantes;
 import gameConfig.ObjectTypeHelper.ObjectType;
 import menu.menuPrincipal.ModelPrincipal;
+import menu.menuPrincipal.GameHandler.GameModeType;
 import option.AbstractControlerOption;
 import option.AbstractModelOption;
 import option.AffichageOption;
@@ -69,14 +70,24 @@ public class AffichagePartie extends Drawable implements Observer{
 
 	protected int SHIFT_VAL = 10; //value by which the slotPanel has to be lower to indicate that it was selected 
 	protected int last_shifted = -1; //index of the selected slot 
-
+	private int slotOpened = -1;
+	
 	protected boolean doitRevalidate=false;
+	private ArrowSlotListener arrowSlotListener;
+	private SourisListener sourisListener;
+	private SourisMotionListener sourisMotionListener;
+	private BoutonsPrincipalListener boutonPrincipalListener;
 	AbstractControlerPartie controlerPartie;
 
 	public AffichagePartie(AbstractControlerPartie _controlerPartie)
 	{
 		super();
+		isSelfClearingBackBuffer=true;
 		controlerPartie=_controlerPartie;
+		arrowSlotListener = new ArrowSlotListener();
+		sourisListener = new SourisListener();
+		sourisMotionListener = new SourisMotionListener();
+		boutonPrincipalListener = new BoutonsPrincipalListener();
 		initAffichage();
 	}
 
@@ -92,7 +103,7 @@ public class AffichagePartie extends Drawable implements Observer{
 		panelSlots.setLayout(new BoxLayout(panelSlots,BoxLayout.X_AXIS));
 
 		ActiveJPanel[] allpanelSlot = {panelSlot1,panelSlot2,panelSlot3,panelSlot4};
-		
+
 		int alignWithBar =10;
 
 		for(int i=0; i<4;++i)
@@ -136,13 +147,14 @@ public class AffichagePartie extends Drawable implements Observer{
 		mainPanel.setLayout(new BoxLayout(mainPanel,BoxLayout.X_AXIS));
 
 		ArrowSlotButton[][] allbSlots = {bSlot1,bSlot2,bSlot3,bSlot4};
-		
+
 		for(int num=0; num<4; ++num)
 			for(int i=0; i<bSlot1.length; ++i)
 			{
-				allbSlots[num][i] = new ArrowSlotButton(num);
+				allbSlots[num][i] = new ArrowSlotButton(controlerPartie.partie.touches,num);
 				if(i>0)
 				{
+					allbSlots[num][i].removeMouseListener(arrowSlotListener);
 					allbSlots[num][i].setEnabled(false);
 					allbSlots[num][i].setVisible(false);
 				}
@@ -166,17 +178,17 @@ public class AffichagePartie extends Drawable implements Observer{
 		mainPanel.setFocusable(true);
 		mainPanel.requestFocusInWindow();
 		mainPanel.setOpaque(false);
-		
+
 		//initialize input in order for them to be modifier by option
 		controlerPartie.partie.inputPartie.init(mainPanel);
 
 	}
-	
+
 	public int getFrame()
 	{
 		return controlerPartie.partie.getFrame();
 	}
-	
+
 	@Override
 	public void drawOnGraphics(Graphics g,boolean forceRepaint){
 		//draw main game
@@ -197,7 +209,7 @@ public class AffichagePartie extends Drawable implements Observer{
 
 	public void updateSwingPartie()
 	{
-		
+
 		//End game 
 		if(controlerPartie.partie.finPartie && !firstTimePause)
 		{
@@ -207,7 +219,7 @@ public class AffichagePartie extends Drawable implements Observer{
 			EnableBoutonsFin(true);
 
 			mainPanel.removeAll();
-			
+
 			ActiveJPanel layerPan = new ActiveJPanel();
 			layerPan.setOpaque(false);
 			layerPan.setLayout(null);		
@@ -226,7 +238,7 @@ public class AffichagePartie extends Drawable implements Observer{
 			EnableBoutonsPause(true);
 
 			mainPanel.removeAll();
-			
+
 			ActiveJPanel layerPan = new ActiveJPanel();
 			layerPan.setOpaque(false);
 			layerPan.setLayout(null);		
@@ -234,7 +246,7 @@ public class AffichagePartie extends Drawable implements Observer{
 			layerPan.add(panelPauseX);//panelPauseX
 			layerPan.add(panelSlots);
 
-			DisableAllSlotButton(true);
+			disableOrEnableAllSlotButton(true);
 			mainPanel.add(layerPan);
 
 		}
@@ -257,7 +269,7 @@ public class AffichagePartie extends Drawable implements Observer{
 			mainPanel.removeAll();
 			mainPanel.add(panelSlots);
 
-			DisableAllSlotButton(false);
+			disableOrEnableAllSlotButton(false);
 		}
 
 		//if icon changed 
@@ -273,42 +285,20 @@ public class AffichagePartie extends Drawable implements Observer{
 				bSlot2=ArrowSlotButton.setIcons(bSlot2, controlerPartie.partie.imFlecheIcon.getAllImagesOfSameClass(controlerPartie.partie.heros.getSlots()[1],arrowsType2));
 				bSlot3=ArrowSlotButton.setIcons(bSlot3, controlerPartie.partie.imFlecheIcon.getAllImagesOfSameClass(controlerPartie.partie.heros.getSlots()[2],arrowsType3));
 				bSlot4=ArrowSlotButton.setIcons(bSlot4, controlerPartie.partie.imFlecheIcon.getAllImagesOfSameClass(controlerPartie.partie.heros.getSlots()[3],arrowsType4));
-				
+
 				ArrowSlotButton.setArrowType(bSlot1, arrowsType1);
 				ArrowSlotButton.setArrowType(bSlot2, arrowsType2);
 				ArrowSlotButton.setArrowType(bSlot3, arrowsType3);
 				ArrowSlotButton.setArrowType(bSlot4, arrowsType4);
 				initFlecheIcon=false;
 			}
-
-			ActiveJPanel[] allpanelSlot = {panelSlot1,panelSlot2,panelSlot3,panelSlot4};
-			int new_last_shited = -1;
-			for(int i=0;i<4;i++)
-			{
-				if(last_shifted >=0 && (i==last_shifted))
-				{
-					if(allpanelSlot[i].getComponentCount()>0){
-						allpanelSlot[i].remove(0);
-					}
-				}
-				if(controlerPartie.partie.heros.current_slot == i)
-				{
-					if(allpanelSlot[i].getComponentCount()>0){
-						allpanelSlot[i].add(Box.createRigidArea(new Dimension(0,SHIFT_VAL)),0);
-						new_last_shited=i;
-					}
-				}
-			}
-			last_shifted = new_last_shited;
-			controlerPartie.partie.arrowSlotIconChanged=false;
-			//mainPanel.getLayout().layoutContainer(mainPanel);
 		}
 
 		mainPanel.requestFocus();
 
 
 	}
-	
+
 	public boolean isLoadingDone()
 	{
 		return controlerPartie.partie.loaderPartie.isGameModeLoaded();
@@ -317,7 +307,7 @@ public class AffichagePartie extends Drawable implements Observer{
 	{
 		return controlerPartie.partie.loaderPartie.getAffichageLoader();
 	}
-	
+
 	public void requestGameFocus()
 	{
 		mainPanel.requestFocusInWindow();
@@ -354,18 +344,30 @@ public class AffichagePartie extends Drawable implements Observer{
 		bMenuPrincipal2.setVisible(enable);
 	}
 
+	private void showOrHideSlotButton(boolean show,ArrowSlotButton button)
+	{
+		if(show!=button.isEnabled())
+			if(show){
+				button.addMouseListener(arrowSlotListener);
+			}
+			else{
+				button.removeMouseListener(arrowSlotListener);
+			}
+		button.setEnabled(show);				
+		button.setVisible(show);
+	}
+
 	/**
 	 * 
 	 * @param enable
 	 * @param button
 	 * Used to open or close a slot 
 	 */
-	public void EnableSlotButton(boolean enable,ArrowSlotButton button)
+	public void showOrHideSlot(boolean show,ArrowSlotButton button)
 	{
 		ArrowSlotButton[][] allbSlots = {bSlot1,bSlot2,bSlot3,bSlot4};
 		for(int i =1; i<4; ++i){
-			allbSlots[button.slot][i].setEnabled(enable);
-			allbSlots[button.slot][i].setVisible(enable);
+			showOrHideSlotButton(show,allbSlots[button.slot][i]);
 		}		
 	}
 
@@ -374,15 +376,17 @@ public class AffichagePartie extends Drawable implements Observer{
 	 */
 	public void CloseAllSlots()
 	{
+		boolean choosingArrow = slotOpened != -1;
 		ArrowSlotButton[][] allbSlots = {bSlot1,bSlot2,bSlot3,bSlot4};
-		for(int j=0; j<4;j++)
-			if(allbSlots[j][0].choosingArrow){
-				allbSlots[j][0].choosingArrow=false;
-				for(int i =1; i<4; ++i){
-					allbSlots[j][i].setEnabled(false);
-					allbSlots[j][i].setVisible(false);
-				}	
-			}
+		if(choosingArrow){
+			//set the chose arrow at pos 0 equippedArrowInSlot
+			ArrowSlotButton.switchButtonType(allbSlots[slotOpened][equippedArrowInSlot(slotOpened)],allbSlots[slotOpened][0]);
+			for(int i =1; i<4; ++i){
+				allbSlots[slotOpened][i].setEnabled(false);
+				allbSlots[slotOpened][i].setVisible(false);
+			}	
+		}
+		slotOpened=-1;
 	}
 
 	/**
@@ -390,7 +394,7 @@ public class AffichagePartie extends Drawable implements Observer{
 	 * @param disable
 	 * Used when in pause
 	 */
-	public void DisableAllSlotButton(boolean disable)
+	public void disableOrEnableAllSlotButton(boolean disable)
 	{
 		ArrowSlotButton[][] allbSlots = {bSlot1,bSlot2,bSlot3,bSlot4};
 		for(int i =0; i<4; ++i){
@@ -410,38 +414,33 @@ public class AffichagePartie extends Drawable implements Observer{
 	public void addListenerPartie()
 	{
 		controlerPartie.partie.inputPartie.init(mainPanel);
-		mainPanel.addMouseListener(new SourisListener());
-		mainPanel.addMouseMotionListener(new SourisMotionListener());
+		mainPanel.addMouseListener(sourisListener);
+		mainPanel.addMouseMotionListener(sourisMotionListener);
 
 		MenuJButton[] addMouse = {bRejouer,bOption,bReprendre,bQuitter,bMenuPrincipal,bMenuPrincipal2};
 		for(MenuJButton mjb : addMouse)
-			mjb.addMouseListener(new boutonsPrincipalListener());
+			mjb.addMouseListener(boutonPrincipalListener);
 
 		ArrowSlotButton[][] addSlots = {bSlot1,bSlot2,bSlot3,bSlot4};
 		for(int i = 0; i< addSlots.length;++i)
-			for(int j = 0; j<addSlots[0].length;++j)
-			{
-				addSlots[i][j].addMouseListener(new ArrowSlotListener());
-			}
+			addSlots[i][0].addMouseListener(arrowSlotListener);
 	}
 	public void removeListenerPartie()
 	{
 		controlerPartie.partie.inputPartie.reset();
-		mainPanel.removeMouseListener(mainPanel.getMouseListeners()[0]);
-		mainPanel.removeMouseMotionListener(mainPanel.getMouseMotionListeners()[0]);
+		mainPanel.removeMouseListener(sourisListener);
+		mainPanel.removeMouseMotionListener(sourisMotionListener);
 
 		MenuJButton[] removeMouse = {bRejouer,bOption,bReprendre,bQuitter,bMenuPrincipal,bMenuPrincipal2};
 		for(MenuJButton mjb : removeMouse){
-			MouseListener[] listeners = mjb.getMouseListeners();
-			mjb.removeMouseListener(listeners[listeners.length-1]);
+			mjb.removeMouseListener(boutonPrincipalListener);
 		}
 
 		ArrowSlotButton[][] addSlots = {bSlot1,bSlot2,bSlot3,bSlot4};
 		for(int i = 0; i< addSlots.length;++i)
 			for(int j = 0; j<addSlots[0].length;++j)
 			{
-				MouseListener[] listeners = addSlots[i][j].getMouseListeners();
-				addSlots[i][j].removeMouseListener(listeners[listeners.length-1]);
+				addSlots[i][j].removeMouseListener(arrowSlotListener);
 			}
 	}
 
@@ -454,15 +453,15 @@ public class AffichagePartie extends Drawable implements Observer{
 		public void mouseExited(MouseEvent e) {	
 		}
 		public void mousePressed(MouseEvent e) {
-			
+
 			CloseAllSlots();
 			controlerPartie.controlMousePressed(e);
-			
+
 		}
 		public void mouseReleased(MouseEvent e) {
-			
+
 			controlerPartie.controlMouseReleased(e);
-			
+
 		}
 
 	}
@@ -471,22 +470,22 @@ public class AffichagePartie extends Drawable implements Observer{
 	{
 		public void mouseDragged(MouseEvent e) 
 		{
-			
+
 			controlerPartie.partie.xPositionSouris=e.getX();
 			controlerPartie.partie.yPositionSouris=e.getY();
-			
+
 		}
 		public void mouseMoved(MouseEvent e) 
 		{
-			
+
 			controlerPartie.partie.xPositionSouris=e.getX();
 			controlerPartie.partie.yPositionSouris=e.getY();
-			
+
 
 		}
 	}
 
-	public class boutonsPrincipalListener implements MouseListener 
+	public class BoutonsPrincipalListener implements MouseListener 
 	{
 
 		public void mouseClicked(MouseEvent e) {
@@ -502,18 +501,84 @@ public class AffichagePartie extends Drawable implements Observer{
 
 		public void mouseReleased(MouseEvent e) 
 		{
-			
+
 			ActiveJButton button = (ActiveJButton)e.getSource();
 			Rectangle r = button.getBounds();
 			//Apply pressed only if the release is on the pressed button
 			if(r.contains(new Point(r.x+e.getX(),r.y+e.getY()))){
 				controlerPartie.controlBoutonsPressed(((ActiveJButton)e.getSource()));
 			}
-			
+
 		}
 
 	}
+	
+	private int equippedArrowInSlot(int slotIndex)
+	{
+		ArrowSlotButton[][] allSlots = {bSlot1,bSlot2,bSlot3,bSlot4};
+		ObjectType targetArrowType = controlerPartie.partie.heros.getSlots()[slotIndex];
+		for(int i=0; i<allSlots[slotIndex].length;++i){
+			if(allSlots[slotIndex][i].arrowType.equals(targetArrowType))
+				return i;
+		}
+		return -1;
+	}
+	
+	private void changeArrowSlot(ArrowSlotButton source_but)
+	{
+		if( (controlerPartie.partie.finPartie) || (!controlerPartie.partie.finPartie &&controlerPartie.partie.inPause))
+			return;
 
+		ArrowSlotButton[][] allSlots = {bSlot1,bSlot2,bSlot3,bSlot4};
+		int clickedSlot = source_but.slot;
+
+		boolean isSlotOpened = slotOpened != -1;
+		//case 1: no slot opened and clicked on button corresponding to equippedArrow in slot i. If the slot is closed, equipped arrow should be in position 0
+		if(!isSlotOpened)
+		{
+			//open slot 
+			showOrHideSlot(true,source_but);
+			//Reorganize the list so that the icons always show in the same order when opened
+			for(int i=0; i<allSlots[clickedSlot].length;++i){
+				int but_original_position = allSlots[clickedSlot][i].original_position;
+				if( but_original_position!= i)
+					ArrowSlotButton.switchButtonType(allSlots[clickedSlot][i],allSlots[clickedSlot][but_original_position]);
+			}
+			
+			slotOpened=clickedSlot;
+		}
+		//case 2: slot i opened and clicked on button corresponding to equippedArrow in slot i
+		else if(isSlotOpened && clickedSlot==slotOpened)
+		{			
+			//Only change the arrow of the hero if it is different 
+			int equippedArrowInSlot = equippedArrowInSlot(clickedSlot);
+			if(allSlots[clickedSlot][equippedArrowInSlot]!=source_but){
+				//change the arrow for the heros
+				controlerPartie.partie.heros.changeSlot(controlerPartie.partie, clickedSlot, source_but.arrowType);
+				allSlots[clickedSlot][equippedArrowInSlot].isSelected=false;
+				source_but.isSelected=true;
+			}
+			//Put back the correct icon (it was switch to show consistent list )
+			ArrowSlotButton.switchButtonType(allSlots[clickedSlot][0],source_but);
+			//hide the slot
+			showOrHideSlot(false,source_but);
+			
+			slotOpened=-1;
+		}
+		//case 3: slot i opened and clicked on button from other slot 
+		else{
+			//close current slot
+			showOrHideSlot(false,allSlots[slotOpened][0]);
+			//open other slot
+			showOrHideSlot(true,source_but);
+			
+			slotOpened=clickedSlot;
+		}
+	
+		AffichagePartie.this.getActiveJFrame().pack();
+		mainPanel.validate();
+	}
+	
 	public class ArrowSlotListener implements MouseListener
 	{
 
@@ -531,143 +596,71 @@ public class AffichagePartie extends Drawable implements Observer{
 
 		@Override
 		public void mousePressed(MouseEvent e) {
-			if( (controlerPartie.partie.finPartie) || (!controlerPartie.partie.finPartie &&controlerPartie.partie.inPause))
-				return;
 
-			
-			ArrowSlotButton[][] allSlots = {bSlot1,bSlot2,bSlot3,bSlot4};
 			ArrowSlotButton source_but = (ArrowSlotButton)e.getSource();
-
-			int clickedSlot = source_but.slot;
-			//If an arrow was clicked, switch it in the slot 
-			//if not cliked on arrow 0 
-			if(allSlots[clickedSlot][0] != source_but)
-			{
-				int source_but_index = -1; 
-				for(int i=1; i<4;i++)
-				{
-					if(allSlots[clickedSlot][i] == source_but){
-						source_but_index=i;
-						break;
-					}
-				}
-
-				//switch buttons properties
-				ArrowSlotButton.switchButtonType(allSlots[clickedSlot][0],allSlots[clickedSlot][source_but_index]);
-
-				//switch arrow for heros
-				controlerPartie.partie.heros.changeSlot(controlerPartie.partie, clickedSlot, allSlots[clickedSlot][0].arrowType);
+			if(!source_but.isEnabled()){ //apparently something broke the default behaviour of JButton in ArrowSlotButton so we have to check for enabled
+				//dispatch the event to the main panel 
+				mainPanel.dispatchEvent(e);
+				return;
 			}
-
-			//if arrow i, set arrow i in the slot and then switch 0 and i in bSlot
-
-
-			//Always consider the first arrow of the slot 
-			ArrowSlotButton but = allSlots[clickedSlot][0];
-
-			but.choosingArrow=!but.choosingArrow;
-			EnableSlotButton(but.choosingArrow,but);
-
-
-			//close all the other opened ones 
-			if(but.choosingArrow)
-			{
-				for(int i=0;i<4;++i)
-				{
-					if(i != but.slot)
-					{
-						if(allSlots[i][0].choosingArrow)
-						{
-							allSlots[i][0].choosingArrow=false;
-							EnableSlotButton(false,allSlots[i][0]);
-						}
-					}
-				}
-			}
-			AffichagePartie.this.getActiveJFrame().pack();
-			mainPanel.validate();
 			
+			changeArrowSlot(source_but);
 		}
 
 		@Override
-		public void mouseReleased(MouseEvent arg0) {
+		public void mouseReleased(MouseEvent e) {
+			ArrowSlotButton source_but = (ArrowSlotButton)e.getSource();
+			if(!source_but.isEnabled()){ //apparently something broke the default behaviour of JButton in ArrowSlotButton so we have to check for enabled
+				//dispatch the event to the main panel 
+				mainPanel.dispatchEvent(e);
+				return;
+			}
 		}
 
 	}
 
-	public void createOption(Touches _touches)
-	{
-		AbstractModelOption option = new ModelOption(_touches,controlerPartie.partie.inputPartie,controlerPartie.partie.gameHandler);
-		AbstractControlerOption controlerOption = new ControlerOption(option);
-		final AffichageOption affichageOption = new AffichageOption(controlerOption);
-		affichageOption.addListenerOption();
-		affichageOption.retour.setContentAreaFilled(false);
-		affichageOption.retour.removeMouseListener( affichageOption.retour.getMouseListeners()[1]);
-		affichageOption.initFromOtherDrawable(this);
-		option.addObserver(affichageOption);
-		final Component[] components =this.getContentPane().getComponents();
-
-		//this.getContentPane().removeAll();
-		affichageOption.requestBeginTransition();//manually force the begin transition as we don't want to unload the active game 
-		affichageOption.retour.addMouseListener(new MouseListener()
-		{
-			public void mouseClicked(MouseEvent arg0) {}			
-			public void mouseEntered(MouseEvent e) {}
-			public void mouseExited(MouseEvent e) {}
-			public void mousePressed(MouseEvent e) 
-			{
-			}
-			public void mouseReleased(MouseEvent e) {
-				ActiveJButton button = (ActiveJButton)e.getSource();
-				Rectangle r = button.getBounds();
-				//Apply pressed only if the release is on the pressed button
-				if(r.contains(new Point(r.x+e.getX(),r.y+e.getY()))){
-					(AffichagePartie.this).getContentPane().removeAll();
-					for(Component c : components)
-					{
-						(AffichagePartie.this).getContentPane().add(c);
-					}
-					AffichagePartie.this.requestBeginTransition();
-				}
-			}
-		});
-		doitRevalidate=true;
-	}
 
 	private void onGameRestart()
 	{
 		mainPanel.removeAll();
 		mainPanel.add(panelSlots);
-		DisableAllSlotButton(false);
+		CloseAllSlots();
+		disableOrEnableAllSlotButton(false);
 		initFlecheIcon=true;
 	}
 
 	public void update() {	
-
-		boolean specialCase =false;
-		if(controlerPartie.partie.getDisableBoutonsFin()){
-			specialCase=true;
+		if(controlerPartie.partie.arrowSlotKey != -1)
+		{
+			ArrowSlotButton source_but;
+			ArrowSlotButton[][] allSlots = {bSlot1,bSlot2,bSlot3,bSlot4};
+			//slot opened 
+			if(slotOpened!=-1)
+				source_but = allSlots[slotOpened][controlerPartie.partie.arrowSlotKey];
+			//slot closed => get first button of the slot 
+			else
+				source_but = allSlots[controlerPartie.partie.arrowSlotKey][0];
+			changeArrowSlot(source_but);
+			controlerPartie.partie.arrowSlotKey=-1;
+		}
+		
+		else if(controlerPartie.partie.getDisableBoutonsFin()){
 			EnableBoutonsFin(false);
 			onGameRestart();
-		}
-
-		if(controlerPartie.partie.setAffichageOption)
-		{
-			specialCase=true;
-			createOption(controlerPartie.partie.touches);
-
-		}
-		if(specialCase)
 			controlerPartie.partie.resetVariablesAffichage();
-		else
-		{
+		}
+		else{
+			if(controlerPartie.partie.setAffichageOption)
+			{
+				controlerPartie.partie.shoudResumeGame=true;
+				controlerPartie.partie.gameHandler.setGameMode(GameModeType.OPTION);
+				controlerPartie.partie.setAffichageOption=false;
+
+			}
 			//Main update 
 			updateSwingPartie();
 			ModelPrincipal.debugTime.elapsed("repaint");
 
-
-			//validateAffichagePartie(getFrame());
-			
 		}
 	}
 }

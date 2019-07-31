@@ -2,6 +2,7 @@ package partie.modelPartie;
 
 import java.awt.Graphics;
 import java.awt.Image;
+import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
@@ -53,7 +54,15 @@ public abstract class AbstractModelPartie  implements Observable, GameMode{
 	//Action speciale pour ralentir le temps 
 	public boolean slowDown=false;
 	public int slowCount=0;
+	
+	//Index of the slot that was clicked using the hotkeys
+	public int arrowSlotKey = -1;
 
+	//Mouse position when the shoot key was pressed/released
+	public Point lastMousePosWhenClicked = null;
+	public Point lastMousePosWhenReleased = null;
+
+	
 	public List<Projectile> tabFleche= new ArrayList<Projectile>();
 	public List<Projectile> tabTirMonstre = new ArrayList<Projectile>();
 	public List<Entity> tabMonstre= new ArrayList <Entity> ();
@@ -81,8 +90,9 @@ public abstract class AbstractModelPartie  implements Observable, GameMode{
 	protected boolean finPartie =false;
 	protected boolean inPause=false;
 	public boolean getinPause(){return inPause;}
-
-
+	protected boolean shoudResumeGame = false; //true when we go to the options from partie and we want to resume the partie when exiting the option 
+	public boolean shoudResumeGame(){return shoudResumeGame;}
+	
 	protected boolean firstNonFocused=true;
 
 
@@ -190,7 +200,7 @@ public abstract class AbstractModelPartie  implements Observable, GameMode{
 		
 		finPartie =false;
 		inPause=false;
-
+		shoudResumeGame=false;
 
 		firstNonFocused=true;
 

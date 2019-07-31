@@ -20,11 +20,10 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import ActiveJComponent.ActiveJCheckBox;
-import ActiveJComponent.PassiveJDialog;
 import ActiveJComponent.ActiveJFrame;
-import ActiveJComponent.ActiveJLabel;
 import ActiveJComponent.ActiveJMenuBar;
 import ActiveJComponent.ActiveJOptionPane;
+import ActiveJComponent.PassiveJDialog;
 import Affichage.Drawable;
 import editeur.BarreOutil.BarreOutil;
 import editeur.Menu.menuEditeur;
@@ -72,16 +71,16 @@ public class AffichageEditeur extends Drawable implements Observer{
 			JPanel affichage = new JPanel();
 			JButton ok = new JButton("OK");	
 			List<JLabel> listLabels = new ArrayList<JLabel>();
-			listLabels.add(new ActiveJLabel("Listes des monstres à supprimer\n\n\n"));
+			listLabels.add(new JLabel("Listes des monstres à supprimer\n\n\n"));
 
 			for(int i=0; i<controlerEditeur.edit.monstreDansCase.size();i++)
 			{
-				listLabels.add(new ActiveJLabel((i+1)+ " "+controlerEditeur.edit.monstreDansCase.get(i).type.toString()));
+				listLabels.add(new JLabel((i+1)+ " "+controlerEditeur.edit.monstreDansCase.get(i).type.toString()));
 			}	    
-			final List<ActiveJCheckBox> listChecks= new ArrayList<ActiveJCheckBox> (); 
+			final List<JCheckBox> listChecks= new ArrayList<JCheckBox> (); 
 			for(int i=0; i<listLabels.size()-1;i++)
 			{
-				listChecks.add(new ActiveJCheckBox());
+				listChecks.add(new JCheckBox());
 			}	
 
 			ok.addActionListener(new ActionListener(){

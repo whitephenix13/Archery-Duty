@@ -2,7 +2,7 @@ package debug;
 
 import java.util.Map;
 
-public class Debug_stack {
+public class DebugStack {
 	/**
 	 * 
 	 * @param ind: -1 for all 
@@ -40,7 +40,7 @@ public class Debug_stack {
 			return res;
 		else return "";
 	}
-	public void print(int ind)
+	public static void print(int ind)
 	{
 		StackTraceElement[] stacks = Thread.currentThread().getStackTrace();
 		if(ind == -1)

@@ -17,7 +17,7 @@ public class ActiveJFrame extends JFrame{
 		activeVisible=true;
 		setIgnoreRepaint(true);
 		setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
-		setPreferredSize(new Dimension(InterfaceConstantes.tailleEcran.width,InterfaceConstantes.tailleEcran.height));
+		setPreferredSize(new Dimension(InterfaceConstantes.screenSize.width,InterfaceConstantes.screenSize.height));
 		setFocusable(true);
 		requestFocus();
 		setJMenuBar(null);

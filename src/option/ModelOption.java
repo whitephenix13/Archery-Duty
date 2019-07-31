@@ -28,7 +28,12 @@ public class ModelOption extends AbstractModelOption{
 		inputPartie=_inputPartie;
 	}
 	public void retourMenuPrincipal() {
-		gameHandler.setGameMode(GameModeType.MAIN_MENU);
+		if(specificReturn!= null){
+			gameHandler.setGameMode(specificReturn);
+			specificReturn=null;
+		}
+		else
+			gameHandler.setGameMode(GameModeType.MAIN_MENU);
 	}
 
 
@@ -78,44 +83,52 @@ public class ModelOption extends AbstractModelOption{
 	{
 		if(memCustomClickableLabel == null)
 			return;
-		if(memCustomClickableLabel.getName().equals("droite"))
+		String labelName = memCustomClickableLabel.getName();
+		if(labelName.equals("droite"))
 		{
 			inpPartie.rebindKey(touch, touches.t_droite);
 			touches.t_droite=touch;
 		}
-		else if(memCustomClickableLabel.getName().equals("gauche"))
+		else if(labelName.equals("gauche"))
 		{
 			inpPartie.rebindKey(touch, touches.t_gauche);
 			touches.t_gauche=touch;
 		}
-		else if(memCustomClickableLabel.getName().equals("saut"))
+		else if(labelName.equals("saut"))
 		{
 			inpPartie.rebindKey(touch, touches.t_saut);
 			touches.t_saut=touch;
 		}
-		else if(memCustomClickableLabel.getName().equals("tir"))
+		else if(labelName.contains("tir"))
 		{
-			inpPartie.rebindKey(touch, touches.t_tir);
-			touches.t_tir=touch;
+			int i = labelName.contains("special")?(Integer.parseInt(labelName.substring(labelName.length()-1,labelName.length()))) :0;
+			inpPartie.rebindKey(touch, touches.t_tir[i]);
+			touches.t_tir[i]=touch;
 		}
-		else if(memCustomClickableLabel.getName().equals("tir secondaire"))
+		else if(labelName.contains("slot"))
 		{
-			inpPartie.rebindKey(touch, touches.t_2tir);
-			touches.t_2tir=touch;
+			int i = Integer.parseInt(labelName.substring(labelName.length()-1,labelName.length()));
+			inpPartie.rebindKey(touch, touches.t_slot[i]);
+			touches.t_slot[i]=touch;
 		}
-		else if(memCustomClickableLabel.getName().equals("slow"))
+		else if(labelName.equals("dash"))
+		{
+			inpPartie.rebindKey(touch, touches.t_dash);
+			touches.t_dash=touch;
+		}
+		else if(labelName.equals("slow"))
 		{
 			inpPartie.rebindKey(touch, touches.t_slow);
 			touches.t_slow=touch;
 		}
-		else if(memCustomClickableLabel.getName().equals("pause"))
+		else if(labelName.equals("pause"))
 		{
 			inpPartie.rebindKey(touch, touches.t_pause);
 			touches.t_pause=touch;
 		}
 		else 
 		{
-			throw new IllegalArgumentException("nom JTextField inconnu");
+			throw new IllegalArgumentException("nom JTextField inconnu: "+labelName);
 		}
 		
 		updateInputText=true;

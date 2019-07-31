@@ -28,6 +28,8 @@ import utils.Vitesse;
 
 public class Fleche_marque_mortelle extends Rusee{
 	
+	//IMPROVEMENT: A_Star can be threaded (using a pool list) and return result when it ends to allow parallel A_star running without too much lag
+	
 	// WARNING : effect moves with 
 	//	-colliding entity        			NO 
 	//  -colliding ground (ie roche_effect) NO
@@ -49,8 +51,8 @@ public class Fleche_marque_mortelle extends Rusee{
 	private double trail_width = 5; 
 
 	public A_Star_Helper pathAlgo = null;
-	private Point target;
-	public Point getTarget(){return target;}
+	private Collidable objTargeted;
+	private boolean firstTarget;
 	private int MAX_NUMBER_TARGET = 3;//Number of target to consider to smooth the direction towards next target when moving the arrow 
 	//A Star algorithm variables 
 	double reevaluation_time= 0.20*Math.pow(10, 9); // 0.05 sec (200ms)
@@ -61,16 +63,15 @@ public class Fleche_marque_mortelle extends Rusee{
 	float smoothStrength = 0.0f;
 
 	boolean stopTargeting = false;
-
 	//Maximum number of trails (life duration of a trail)
 	private int MAX_NUMBER_TRAIL = 5;
-	public Fleche_marque_mortelle(List<Projectile> tabFleche, int current_frame,Heros _shooter,boolean add_to_list,float damageMult,float speedFactor) {
+	public Fleche_marque_mortelle(List<Projectile> tabFleche, int current_frame,Heros _shooter, boolean add_to_list,float damageMult,float speedFactor) {
 		super(tabFleche, current_frame,_shooter,add_to_list,damageMult,speedFactor);
 		TEMPS_DESTRUCTION= (long) (2* Math.pow(10,8));//in nano sec = 0.2 sec 
 		//damage=-35*damageMult;
 		damage=0;
 		seyeri_cost=0; //-35
-		
+		firstTarget=true;
 		pathAlgo = new A_Star_Helper(reevaluation_time,max_step_size, explorationAngle, redirection_l,smoothStrength);
 
 	}
@@ -143,19 +144,34 @@ public class Fleche_marque_mortelle extends Rusee{
 		}
 	}
 
-	Vector2d FindTarget(AbstractModelPartie partie,Vector2d thisMid)
+	Collidable FindTarget(AbstractModelPartie partie,Vector2d thisMid,Point mousePos)
 	{
-		//TODO: anticipate position of the target based on its previous movement 
-		float minDist = -1;
-		Vector2d target = new Vector2d();
-		for(Entity ent: partie.tabMonstre)
+		double minDist = -1;
+		Entity target = null;
+		Point worldMousePos = new Point(mousePos.x-partie.getScreenDisp().x,mousePos.y-partie.getScreenDisp().y);
+		for(Entity ent: partie.tabMonstre) //only take enemies visible on screen 
 		{
-			Vector2d objMid = Hitbox.getHitboxCenter(ent.getHitbox(partie.INIT_RECT, partie.getScreenDisp()));
-			float dist = (float) Math.sqrt(Math.pow(thisMid.x-objMid.x, 2) + Math.pow(thisMid.y-objMid.y, 2) );
-			if(dist<minDist || minDist<0)
-			{
-				minDist = dist;
-				target= objMid;
+			if(Collidable.isObjectOnScreen(partie, ent)){
+				Vector2d objMid = Hitbox.getHitboxCenter(ent.getHitbox(partie.INIT_RECT, partie.getScreenDisp()));
+				//Consider scalar product of vector : fleche/mouse fleche/montre as fleche pos = heros pos at the start.
+				//The target should minimize the angle and the distance to the mouse and be >0
+				Vector2d thisToMouse = new Vector2d(worldMousePos.x-thisMid.x,worldMousePos.y-thisMid.y);
+				thisToMouse.normalize();
+				Vector2d thisToObj = new Vector2d(objMid.x-thisMid.x,objMid.y-thisMid.y);
+				thisToObj.normalize();
+				double cosAngle = thisToMouse.x*thisToObj.x+ thisToMouse.y*thisToObj.y;
+				double distObjMouse = Math.sqrt(Math.pow(worldMousePos.x-objMid.x, 2) + Math.pow(worldMousePos.y-objMid.y, 2) );
+				//Assume that the angle can have an imprecision of 10° (cosAngle = 0.984) 
+				//Assume that the mouse click can have an imprecision of 500 (staying on the line fleche/click is more important)
+				//Therefore we want 10° error <=> 500 dist error 
+				//We consider the cosEquivalentDistance to be (1-cosAngle) * equivDist = 500 => equivDist ~ 33000 
+				
+				double dist = (1-cosAngle) *33000 + distObjMouse;
+				if(dist<minDist || minDist<0)
+				{
+					minDist = dist;
+					target= ent;
+				}
 			}
 		}
 		return target;
@@ -176,7 +192,27 @@ public class Fleche_marque_mortelle extends Rusee{
 			if(!stopTargeting){
 				Vector2d dir = Deplace.angleToVector(getRotation());
 				Vector2d thisMid = Hitbox.getHitboxCenter(getHitbox(partie.INIT_RECT, partie.getScreenDisp()));
-				Vector2d target = FindTarget(partie,thisMid);
+				Vector2d target;
+				
+				//If we have not found the first target => find closest target to mouse
+				if(firstTarget)
+				{
+					objTargeted = FindTarget(partie,thisMid,partie.lastMousePosWhenReleased);
+					target = Hitbox.getHitboxCenter(objTargeted.getHitbox(partie.INIT_RECT, partie.getScreenDisp()));
+					firstTarget=false;
+				}
+				//Else if we found first target and it is not destroyed yet  
+				else if(objTargeted!= null && !objTargeted.getNeedDestroy())
+				{
+					target = Hitbox.getHitboxCenter(objTargeted.getHitbox(partie.INIT_RECT, partie.getScreenDisp()));
+				}
+				//target destroyed => move straight
+				else
+				{
+					stopTargeting =true;
+					target = null;
+				}
+
 				ModelPrincipal.debugTime.elapsed("find target");
 				if(target!=null){
 					ArrayList<Point> nextPathPoints = pathAlgo.GetNextTargets(partie, this, dir, target,MAX_NUMBER_TARGET);

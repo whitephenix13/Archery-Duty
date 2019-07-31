@@ -21,7 +21,7 @@ public class ActiveJPanel extends JPanel{
 		activeVisible=true;
 		setOpaque(false);
 		this.setDoubleBuffered(false);
-		this.setBounds(0,0,InterfaceConstantes.tailleEcran.width,InterfaceConstantes.tailleEcran.height);//Set bounds as LayeredPane has null layout and that the structure of rendering is: frame/LayeredPane/(1)JPanel/(2)JPanel
+		this.setBounds(0,0,InterfaceConstantes.screenSize.width,InterfaceConstantes.screenSize.height);//Set bounds as LayeredPane has null layout and that the structure of rendering is: frame/LayeredPane/(1)JPanel/(2)JPanel
 	}
 	public ActiveJPanel(LayoutManager layout)
 	{
@@ -31,7 +31,7 @@ public class ActiveJPanel extends JPanel{
 		activeVisible=true;
 		setOpaque(false);
 		this.setDoubleBuffered(false);
-		this.setBounds(0,0,InterfaceConstantes.tailleEcran.width,InterfaceConstantes.tailleEcran.height);//Set bounds as LayeredPane has null layout and that the structure of rendering is: frame/LayeredPane/(1)JPanel/(2)JPanel
+		this.setBounds(0,0,InterfaceConstantes.screenSize.width,InterfaceConstantes.screenSize.height);//Set bounds as LayeredPane has null layout and that the structure of rendering is: frame/LayeredPane/(1)JPanel/(2)JPanel
 	}
 	@Override
 	public void paintComponents(Graphics g)

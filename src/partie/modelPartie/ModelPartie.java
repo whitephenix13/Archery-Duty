@@ -19,7 +19,6 @@ import ActiveJComponent.ActiveJButton;
 import Affichage.DrawImageHandler;
 import Affichage.DrawImageItem;
 import Affichage.GameRenderer;
-import debug.DebugTime;
 import gameConfig.Destroyable;
 import gameConfig.InterfaceConstantes;
 import gameConfig.ObjectTypeHelper;
@@ -40,7 +39,6 @@ import partie.bloc.Bloc;
 import partie.bloc.Bloc.TypeBloc;
 import partie.collision.Collidable;
 import partie.collision.Collision;
-import partie.collision.CustomBoundingSquare;
 import partie.collision.Hitbox;
 import partie.conditions.Condition;
 import partie.deplacement.Mouvement;
@@ -70,6 +68,7 @@ public class ModelPartie extends AbstractModelPartie{
 
 	public ModelPartie(Touches _touches,GameHandler gameHandler)
 	{
+		super();
 		this.gameHandler=gameHandler;
 		touches = _touches;
 		
@@ -177,10 +176,13 @@ public class ModelPartie extends AbstractModelPartie{
 					mouv=h.nouvMouv;
 				}
 				boolean shouldBeDestroyed = ent.getNeedDestroy() || ((PartieTimer.me.getElapsedNano()-ent.tempsDetruit) > ent.TEMPS_DESTRUCTION) && ent.tempsDetruit>0;
-				if(!shouldBeDestroyed)
-					deplace.DeplaceObject(ent, mouv, this);
-				//Handle case where deplace set need destroy to true 
-				if(shouldBeDestroyed )
+				if(!shouldBeDestroyed){
+					if(Collidable.isObjectOnScreen(this, ent))
+						deplace.deplaceObject(ent, mouv, this);
+					else
+						deplace.deplaceObjectOutOfScreen(this, ent);
+				}
+				else
 					ent.destroy(this, true);
 				ModelPrincipal.debugTime.elapsed("deplace entitie: ", ent.toString());
 			}
@@ -193,13 +195,15 @@ public class ModelPartie extends AbstractModelPartie{
 				ModelPrincipal.debugTime.startElapsedForVerbose();
 				//Pos is incorrect for Fleche when encochee hence never destroy it in that case.
 				//Otherwise destroy projectile if too far out of screen 
-				boolean destroyTooFar = (proj instanceof Fleche? !((Fleche)proj).encochee : true) &&
-						!Collidable.objectInBoundingSquare(this,proj,CustomBoundingSquare.getScreen()); 
-				boolean shouldBeDestroyed =  destroyTooFar || proj.getNeedDestroy() || ((PartieTimer.me.getElapsedNano()-proj.tempsDetruit) > proj.TEMPS_DESTRUCTION) && proj.tempsDetruit>0;
-				if(!shouldBeDestroyed)
-					deplace.DeplaceObject(proj, proj.getDeplacement(), this);
-				//Handle case where deplace set need destroy to true 
-				if(shouldBeDestroyed )
+				boolean isObjectOnScreen = Collidable.isObjectOnScreen(this,proj);
+				boolean shouldBeDestroyed =  proj.getNeedDestroy() || ((PartieTimer.me.getElapsedNano()-proj.tempsDetruit) > proj.TEMPS_DESTRUCTION) && proj.tempsDetruit>0;
+				if(!shouldBeDestroyed) {
+					if(isObjectOnScreen)
+						deplace.deplaceObject(proj, proj.getDeplacement(), this);
+					else
+						deplace.deplaceObjectOutOfScreen(this, proj);
+				}
+				else
 					proj.destroy(this, true);
 				ModelPrincipal.debugTime.elapsed("deplace projectile: "+ proj.toString());
 			}
@@ -213,11 +217,16 @@ public class ModelPartie extends AbstractModelPartie{
 				Effect eff = (Effect) col;
 				boolean shouldBeDestroyed = eff.getNeedDestroy() || (((PartieTimer.me.getElapsedNano()-eff.tempsDetruit) > eff.TEMPS_DESTRUCTION) && eff.tempsDetruit>0);
 				boolean ended = eff.isEnded();
-				if(!shouldBeDestroyed && !ended){
-					deplace.DeplaceObject(eff, eff.getDeplacement(), this);
-					eff.onUpdate(this, false);
+				boolean isObjectOnScreen = Collidable.isObjectOnScreen(this,eff);
+				if(!shouldBeDestroyed && !ended ){
+					if(isObjectOnScreen){
+						deplace.deplaceObject(eff, eff.getDeplacement(), this);
+						eff.onUpdate(this, false);
+					}
+					else
+						deplace.deplaceObjectOutOfScreen(this, eff);
 				}
-				else
+				else if(shouldBeDestroyed ||ended )
 					eff.destroy(this, true);
 				ModelPrincipal.debugTime.elapsed("deplace and update effects: "+ col.toString() );
 			}
@@ -454,33 +463,27 @@ public class ModelPartie extends AbstractModelPartie{
 			}
 			if(!inPause )
 			{
-				if(inputPartie.arrowDown>-1)
-				{
-					if(heros.current_slot != inputPartie.arrowDown)
-						arrowSlotIconChanged=true;
-
-					heros.current_slot=inputPartie.arrowDown;
-				}
+				
 				boolean isDragged = this.heros.isDragged();
 				//TIR 
-				if( (inputPartie.toucheTirDown|| inputPartie.touche2TirDown) && !heros.flecheEncochee && !heros.doitEncocherFleche 
+				if( Touches.inArray(new Boolean(true), inputPartie.tirDown) && !heros.flecheEncochee && !heros.doitEncocherFleche 
 						&& ((System.nanoTime()-heros.last_shoot_time)>InterfaceConstantes.FLECHE_TIR_COOLDOWN))
 				{
-					//if not just wall jump 
+					//if not wall jump recently
 					if(!(heros.getDeplacement().IsDeplacement(MouvEntityEnum.SAUT) && ((PartieTimer.me.getElapsedNano()-heros.last_wall_jump_time)<=InterfaceConstantes.WALL_JUMP_DISABLE_TIME)))
 					{
-						//Normal tir 
-						if(inputPartie.toucheTirDown)
+						//If multiple input pressed => prioritize regular shoot
+						for(int i=0; i<inputPartie.tirDown.length;++i)
 						{
-							inputPartie.toucheTirDown=false;
-							heros.set_tir_type(false);
+							if(inputPartie.tirDown[i])
+							{
+								inputPartie.tirDown[i]=false;
+								heros.set_tir_type(i);
+								lastMousePosWhenClicked =inputPartie.mousePosWhenClicked;
+								break; //consider the smallest index only
+							}
 						}
-						//Special tir
-						else
-						{
-							inputPartie.touche2TirDown=false;
-							heros.set_tir_type(true);
-						}
+						
 						boolean can_shoot_arrow = heros.canShootArrow(this);
 						if(can_shoot_arrow){
 							changeMouv=true;
@@ -733,6 +736,13 @@ public class ModelPartie extends AbstractModelPartie{
 				//touches pour lesquels maintenir appuyé ne change rien
 				inputPartie.sautDown =false;
 			}
+			
+			int indexSlotDown = Touches.indexOf(new Boolean(true),inputPartie.slotDown);
+			if(indexSlotDown >=0)
+			{
+				inputPartie.slotDown[indexSlotDown] = false;
+				arrowSlotKey = indexSlotDown;
+			}
 		}
 	}
 
@@ -742,22 +752,21 @@ public class ModelPartie extends AbstractModelPartie{
 		{
 			inputPartie.pauseReleased=false;
 		}
-		//on arrete de deplacer le heros qui saute: 
 		//TIR 
-		final boolean normal_tir_R= inputPartie.toucheTirReleased;//left click
-		final boolean normal_2tir_R= inputPartie.touche2TirReleased; //right click
-
-		if( (normal_tir_R|| normal_2tir_R) && ((System.nanoTime()-heros.last_armed_time)>InterfaceConstantes.ARMED_MIN_TIME))
+		if( Touches.inArray(new Boolean(true),inputPartie.tirReleased) && ((System.nanoTime()-heros.last_armed_time)>InterfaceConstantes.ARMED_MIN_TIME))
 		{
-			if(normal_tir_R){
-				inputPartie.toucheTirDown=false;
-				inputPartie.toucheTirReleased=false;
+			for(int i=0; i<inputPartie.tirReleased.length;++i)
+			{
+				if(inputPartie.tirReleased[i])
+				{
+					inputPartie.tirDown[i]=false;
+					inputPartie.tirReleased[i]=false;
+					lastMousePosWhenReleased = inputPartie.mousePosWhenReleased;
+					break;
+				}
+				
 			}
-			else{
-				inputPartie.touche2TirDown=false;
-				inputPartie.touche2TirReleased=false;
-			}
-
+			
 			if(heros.flecheEncochee)
 			{
 				heros.flecheEncochee=false;
@@ -773,8 +782,6 @@ public class ModelPartie extends AbstractModelPartie{
 
 				heros.nouvAnim= (heros.droite_gauche(heros.getAnim()).equals(DirSubTypeMouv.GAUCHE) ? 0 : 2) ;
 				heros.nouvMouv= new Attente(ObjectType.HEROS,heros.nouvAnim==0? DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,frame);
-				if(normal_2tir_R)
-				{}
 				heros.last_shoot_time= System.nanoTime();
 
 			}
@@ -869,10 +876,20 @@ public class ModelPartie extends AbstractModelPartie{
 			inputPartie.sautDown=false;
 			inputPartie.sautReleased=false;
 		}
-
-		//SWITCH ARROW 
-		if(inputPartie.arrowReleased>-1)
-			inputPartie.arrowReleased=-1;
+		//DASH
+		if(inputPartie.dashReleased)
+		{
+			inputPartie.dashDown = false;
+			inputPartie.dashReleased = false;
+		}
+		
+		int indexSlotReleased = Touches.indexOf(new Boolean(true),inputPartie.slotReleased);
+		if(indexSlotReleased >=0)
+		{
+			inputPartie.slotDown[indexSlotReleased] = false;
+			inputPartie.slotReleased[indexSlotReleased] = false;
+			arrowSlotKey = -1;
+		}
 	}
 
 	public void keyAction()
@@ -930,12 +947,12 @@ public class ModelPartie extends AbstractModelPartie{
 	{
 		imageDrawer.clearImages();
 		drawBackground();
-		drawMonde(false);
-		drawMonstres(true);
-		drawPerso(false);
-		drawFleches(true);
-		drawTirMonstres(false);
-		drawEffects(false);
+		drawMonde(InterfaceConstantes.DRAW_HITBOX_MONDE);
+		drawMonstres(InterfaceConstantes.DRAW_HITBOX_MONSTRES);
+		drawPerso(InterfaceConstantes.DRAW_HITBOX_PERSO);
+		drawFleches(InterfaceConstantes.DRAW_HITBOX_FLECHES);
+		drawTirMonstres(InterfaceConstantes.DRAW_HITBOX_TIR_MONSTRES);
+		drawEffects(InterfaceConstantes.DRAW_HITBOX_EFFECTS);
 		drawInterface();
 		imageDrawer.sortImages();
 		
@@ -960,11 +977,13 @@ public class ModelPartie extends AbstractModelPartie{
 		int xviewport = getXYViewport(true);
 		int yviewport = getXYViewport(false);
 
-		int xStartAff = xviewport/TAILLE_BLOC-2;
-		int xEndAff = (InterfaceConstantes.WINDOW_WIDTH/TAILLE_BLOC+xviewport/TAILLE_BLOC)+2;
+		final int extraBloc = 1; //draw more blocs to make sure that there is always one visible when the hero moves
+		
+		int xStartAff = xviewport/TAILLE_BLOC-extraBloc;
+		int xEndAff = (InterfaceConstantes.WINDOW_WIDTH/TAILLE_BLOC+xviewport/TAILLE_BLOC)+extraBloc+1;
 
-		int yStartAff = yviewport/TAILLE_BLOC-2;
-		int yEndAff = (InterfaceConstantes.WINDOW_HEIGHT/TAILLE_BLOC+yviewport/TAILLE_BLOC)+2;
+		int yStartAff = yviewport/TAILLE_BLOC-extraBloc;
+		int yEndAff = (InterfaceConstantes.WINDOW_HEIGHT/TAILLE_BLOC+yviewport/TAILLE_BLOC)+extraBloc+1;
 		
 		int xDraw;
 		int yDraw;

@@ -1,5 +1,7 @@
 package partie.modelPartie;
 
+import java.awt.MouseInfo;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -9,6 +11,7 @@ import javax.swing.JComponent;
 import javax.swing.KeyStroke;
 
 import gameConfig.InterfaceConstantes;
+import option.Touches;
 
 public class InputPartie {
 	//input : modifiers := shift | control | ctrl | meta | alt | altGraph +++ pressedReleasedID := (pressed | released) key +++key := KeyEvent key code name, i.e. the name following "VK_".
@@ -19,91 +22,94 @@ public class InputPartie {
 	protected boolean marcheDroiteDown ;
 	protected boolean marcheGaucheDown ;
 	protected boolean sautDown ;
-	protected boolean toucheTirDown ;
-	protected boolean touche2TirDown ;
+	protected Boolean[] tirDown = new Boolean[5];  //use Boolean so that generic method in touche works with it 
+	protected Boolean[] slotDown = new Boolean[4];  //use Boolean so that generic method in touche works with it 
 	protected boolean courseDroiteDown;
 	protected boolean courseGaucheDown;
+	protected boolean dashDown;
 	protected boolean toucheSlowDown;
 	protected boolean pauseDown;
-	protected int arrowDown; //-1 for none 0->3 otherwise 
+
 	//release
 	protected boolean marcheDroiteReleased ;
 	protected boolean marcheGaucheReleased ;
 	protected boolean sautReleased ;
-	protected boolean toucheTirReleased ;
-	protected boolean touche2TirReleased ;
+	protected Boolean[] tirReleased = new Boolean[5]; 
+	protected Boolean[] slotReleased = new Boolean[5]; 
 	protected boolean courseDroiteReleased;
 	protected boolean courseGaucheReleased;
+	protected boolean dashReleased;
 	protected boolean toucheSlowReleased;
 	protected boolean pauseReleased;
-	protected int arrowReleased;//-1 for none 0->3 otherwise 
 
+	protected Point mousePosWhenClicked;
+	protected Point mousePosWhenReleased;
 
 	protected float clickTime1;
 	protected float clickTime2;
 
 	protected boolean clickRight = false;
 	protected boolean clickLeft=false;
-
-	public void resetTouchesFocus()
+	
+	public InputPartie(AbstractModelPartie _part)
 	{
-
-		if (marcheDroiteDown) { marcheDroiteReleased=true;};
-		if (marcheGaucheDown) { marcheGaucheReleased=true;};
-		if (sautDown) { sautReleased=true;};
-		if (toucheTirDown) { toucheTirReleased=true;};
-		if (touche2TirDown) { touche2TirReleased=true;};
-		if (courseDroiteDown) {courseDroiteReleased=true;};
-		if (courseGaucheDown) { courseGaucheReleased=true;};
-		if (toucheSlowDown) { toucheSlowReleased=true;};
-		if (pauseDown) { pauseReleased=true;};
-		if(arrowDown>-1) {arrowReleased=arrowDown;}
-
-
-		marcheDroiteDown= false;
-		marcheGaucheDown = false;
-		sautDown = false;
-		toucheTirDown = false;
-		touche2TirDown = false;
-		courseDroiteDown= false;
-		courseGaucheDown= false;
-		toucheSlowDown= false;
-		pauseDown= false;
-		arrowDown=-1;
-
+		partie=_part;
+		for(int i= 0; i<tirDown.length;++i)
+		{
+			tirDown[i]= false;
+			tirReleased[i]=false;
+		}
+		
+		for(int i= 0; i<slotDown.length;++i)
+		{
+			slotDown[i]= false;
+			slotReleased[i]=false;
+		}
 	}
+
+	
+	
 	//actionmap
 	//pressed
 	private static final String MOVE_RIGHT = "move right";
 	private static final String MOVE_LEFT = "move left";
+	private static final String DASH = "dash";
 	private static final String SLOW = "slow";
-	private static final String SHOOT = "shoot";
-	private static final String SPE_SHOOT = "special shoot";
+	private static final String[] SHOOT = {"normal shot","spe1 shot","spe2 shot","spe3 shot","spe4 shot"};
+	private static final String[] SLOT= {"slot 0","slot 1","slot 2","slot 3"};
+	//private static final String SHOOT = "shoot";
+	/*private static final String SPE1_SHOOT = "spe1 shoot";
+	private static final String SPE2_SHOOT = "spe2 shoot";
+	private static final String SPE3_SHOOT = "spe3 shoot";
+	private static final String SPE4_SHOOT = "spe4 shoot";*/
+	//private static final String SPE_SHOOT = "special shoot";
 	private static final String JUMP = "jump";
 	private static final String PAUSE = "pause";
-	private static final String ARROW0 = "arrow0";
+	/*private static final String ARROW0 = "arrow0";
 	private static final String ARROW1 = "arrow1";
 	private static final String ARROW2 = "arrow2";
-	private static final String ARROW3 = "arrow3";
+	private static final String ARROW3 = "arrow3";*/
 
 	//released
 	private static final String R_MOVE_RIGHT = "released move right";
 	private static final String R_MOVE_LEFT = "released move left";
+	private static final String R_DASH = "released dash";
 	private static final String R_SLOW = "released slow";
-	private static final String R_SHOOT = "released shoot";
-	private static final String R_SPE_SHOOT = "released special shoot";
+	//private static final String R_SHOOT = "released shoot";
+	private static final String[] R_SHOOT = {"released normal shot","released spe1 shot","released spe2 shot","released spe3 shot","released spe4 shot"};
+	private static final String[] R_SLOT= {"released slot 1","released slot 2","released slot 3","released slot 4"};
+	//private static final String R_SPE_SHOOT = "released special shoot";
 	private static final String R_JUMP = "released jump";
 	private static final String R_PAUSE = "released pause";
-	private static final String R_ARROW0 = "released arrow0";
+	/*private static final String R_ARROW0 = "released arrow0";
 	private static final String R_ARROW1 = "released arrow1";
 	private static final String R_ARROW2 = "released arrow2";
-	private static final String R_ARROW3 = "released arrow3";
+	private static final String R_ARROW3 = "released arrow3";*/
 
 	AbstractModelPartie partie;
 	JComponent comp;
 
-	public InputPartie(AbstractModelPartie _part)
-	{partie=_part;}
+
 	public void init(JComponent _comp)
 	{
 		comp=_comp;
@@ -113,33 +119,29 @@ public class InputPartie {
 
 		inputMapPut(partie.touches.t_gauche,MOVE_LEFT);
 		actionMapPut(MOVE_LEFT);
+		
+		inputMapPut(partie.touches.t_dash,DASH);
+		actionMapPut(DASH);
 
 		inputMapPut(partie.touches.t_slow,SLOW);
 		actionMapPut(SLOW);
 
-		inputMapPut(partie.touches.t_tir,SHOOT);
-		actionMapPut(SHOOT);
-
-		inputMapPut(partie.touches.t_2tir,SPE_SHOOT);
-		actionMapPut(SPE_SHOOT);
+		for(int i=0; i<SHOOT.length;++i)
+		{
+			inputMapPut(partie.touches.t_tir[i],SHOOT[i]);
+			actionMapPut(SHOOT[i]);
+		}
+		for(int i=0; i<SLOT.length;++i)
+		{
+			inputMapPut(partie.touches.t_slot[i],SLOT[i]);
+			actionMapPut(SLOT[i]);
+		}
 
 		inputMapPut(partie.touches.t_saut,JUMP);
 		actionMapPut(JUMP);
 
 		inputMapPut(partie.touches.t_pause,PAUSE);
 		actionMapPut(PAUSE);
-		
-		inputMapPut(partie.touches.t_arrow0,ARROW0);
-		actionMapPut(ARROW0);
-		
-		inputMapPut(partie.touches.t_arrow1,ARROW1);
-		actionMapPut(ARROW1);
-		
-		inputMapPut(partie.touches.t_arrow2,ARROW2);
-		actionMapPut(ARROW2);
-
-		inputMapPut(partie.touches.t_arrow3,ARROW3);
-		actionMapPut(ARROW3);
 
 		//RELEASED
 		inputMapPut(buildReleaseKeyStroke(partie.touches.t_droite),R_MOVE_RIGHT);
@@ -150,32 +152,22 @@ public class InputPartie {
 
 		inputMapPut(buildReleaseKeyStroke(partie.touches.t_slow),R_SLOW);
 		actionMapPut(R_SLOW);
-
-		inputMapPut(buildReleaseKeyStroke(partie.touches.t_tir),R_SHOOT);
-		actionMapPut(R_SHOOT);
-
-		inputMapPut(buildReleaseKeyStroke(partie.touches.t_2tir),R_SPE_SHOOT);
-		actionMapPut(R_SPE_SHOOT);
+		
+		for(int i=0; i<R_SHOOT.length;++i){
+			inputMapPut(buildReleaseKeyStroke(partie.touches.t_tir[i]),R_SHOOT[i]);
+			actionMapPut(R_SHOOT[i]);
+		}
+		
+		for(int i=0; i<R_SLOT.length;++i){
+			inputMapPut(buildReleaseKeyStroke(partie.touches.t_slot[i]),R_SLOT[i]);
+			actionMapPut(R_SLOT[i]);
+		}
 
 		inputMapPut(buildReleaseKeyStroke(partie.touches.t_saut),R_JUMP);
 		actionMapPut(R_JUMP);
 
 		inputMapPut(buildReleaseKeyStroke(partie.touches.t_pause),R_PAUSE);
 		actionMapPut(R_PAUSE);
-
-		inputMapPut(buildReleaseKeyStroke(partie.touches.t_arrow0),R_ARROW0);
-		actionMapPut(R_ARROW0);
-		
-		inputMapPut(buildReleaseKeyStroke(partie.touches.t_arrow1),R_ARROW1);
-		actionMapPut(R_ARROW1);
-
-		inputMapPut(buildReleaseKeyStroke(partie.touches.t_arrow2),R_ARROW2);
-		actionMapPut(R_ARROW2);
-
-		inputMapPut(buildReleaseKeyStroke(partie.touches.t_arrow3),R_ARROW3);
-		actionMapPut(R_ARROW3);
-
-
 
 		this.resetTouchesFocus();
 	}
@@ -193,7 +185,40 @@ public class InputPartie {
 		}
 		this.resetTouchesFocus();
 	}
+	public void resetTouchesFocus()
+	{
 
+		if (marcheDroiteDown) { marcheDroiteReleased=true;};
+		if (marcheGaucheDown) { marcheGaucheReleased=true;};
+		if (sautDown) { sautReleased=true;};
+		for(int i =0; i<tirDown.length; ++i)
+			if(tirDown[i])
+				tirReleased[i] = true;
+		for(int i=0; i<slotDown.length;++i)
+			if(slotDown[i])
+				slotReleased[i] = true;
+		if (courseDroiteDown) {courseDroiteReleased=true;};
+		if (courseGaucheDown) { courseGaucheReleased=true;};
+		if(dashDown){dashReleased = true;}
+		if (toucheSlowDown) { toucheSlowReleased=true;};
+		if (pauseDown) { pauseReleased=true;};
+
+
+		marcheDroiteDown= false;
+		marcheGaucheDown = false;
+		sautDown = false;
+		for(int i =0; i<tirDown.length; ++i)
+			tirDown[i] = false;
+		for(int i =0; i<slotDown.length; ++i)
+			slotDown[i] = false;
+		
+		courseDroiteDown= false;
+		courseGaucheDown= false;
+		dashDown=false;
+		toucheSlowDown= false;
+		pauseDown= false;		
+
+	}
 	public void inputMapPut(String ks, String a)
 	{
 		boolean isMouseInput = ks.equals(partie.touches.LEFT_MOUSE) || ks.equals(partie.touches.MIDDLE_MOUSE) || ks.equals(partie.touches.RIGHT_MOUSE) ;
@@ -204,32 +229,27 @@ public class InputPartie {
 		else
 			comp.getInputMap(IFW).put(KeyStroke.getKeyStroke(ks), a);
 	}
+	
 	public void actionMapPut(String a)
 	{
-		if(a == MOVE_RIGHT ) {comp.getActionMap().put(a, new MoveAction(1));}
-		else if(a == MOVE_LEFT){comp.getActionMap().put(a, new MoveAction(-1));}
-		else if(a == SLOW){comp.getActionMap().put(a, new SlowAction());}
-		else if(a == SHOOT){comp.getActionMap().put(a, new ShootAction(1));}
-		else if(a == SPE_SHOOT){comp.getActionMap().put(a, new ShootAction(2));}
-		else if(a == JUMP){comp.getActionMap().put(a, new JumpAction());}
-		else if(a == PAUSE){comp.getActionMap().put(a, new PauseAction());}
-		else if(a == ARROW0){comp.getActionMap().put(a, new ArrowAction(0));}
-		else if(a == ARROW1){comp.getActionMap().put(a, new ArrowAction(1));}
-		else if(a == ARROW2){comp.getActionMap().put(a, new ArrowAction(2));}
-		else if(a == ARROW3){comp.getActionMap().put(a, new ArrowAction(3));}
+		if(a.equals(MOVE_RIGHT )) {comp.getActionMap().put(a, new MoveAction(1));}
+		else if(a.equals(MOVE_LEFT)) {comp.getActionMap().put(a, new MoveAction(-1));}
+		else if(a.equals(DASH)) {comp.getActionMap().put(a, new DashAction());}
+		else if(a.equals(SLOW)) {comp.getActionMap().put(a, new SlowAction());}
+		else if(Touches.inArray(a,SHOOT)) {comp.getActionMap().put(a, new ShootAction(Touches.indexOf(a,SHOOT)));}
+		else if(Touches.inArray(a,SLOT)) {comp.getActionMap().put(a, new SlotAction(Touches.indexOf(a,SLOT)));}
+		else if(a.equals(JUMP)) {comp.getActionMap().put(a, new JumpAction());}
+		else if(a.equals(PAUSE)) {comp.getActionMap().put(a, new PauseAction());}
 
 
-		else if(a == R_MOVE_RIGHT ) {comp.getActionMap().put(a, new R_MoveAction(1));}
-		else if(a == R_MOVE_LEFT){comp.getActionMap().put(a, new R_MoveAction(-1));}
-		else if(a == R_SLOW){comp.getActionMap().put(a, new R_SlowAction());}
-		else if(a == R_SHOOT){comp.getActionMap().put(a, new R_ShootAction(1));}
-		else if(a == R_SPE_SHOOT){comp.getActionMap().put(a, new R_ShootAction(2));}
-		else if(a == R_JUMP){comp.getActionMap().put(a, new R_JumpAction());}
-		else if(a == R_PAUSE){comp.getActionMap().put(a, new R_PauseAction());}
-		else if(a == R_ARROW0){comp.getActionMap().put(a, new R_ArrowAction(0));}
-		else if(a == R_ARROW1){comp.getActionMap().put(a, new R_ArrowAction(1));}
-		else if(a == R_ARROW2){comp.getActionMap().put(a, new R_ArrowAction(2));}
-		else if(a == R_ARROW3){comp.getActionMap().put(a, new R_ArrowAction(3));}
+		else if(a.equals(R_MOVE_RIGHT )){comp.getActionMap().put(a, new R_MoveAction(1));}
+		else if(a.equals(R_MOVE_LEFT)) {comp.getActionMap().put(a, new R_MoveAction(-1));}
+		else if(a.equals(R_DASH)) {comp.getActionMap().put(a, new R_DashAction());}
+		else if(a.equals(R_SLOW)) {comp.getActionMap().put(a, new R_SlowAction());}
+		else if(Touches.inArray(a,R_SHOOT)) {comp.getActionMap().put(a, new R_ShootAction(Touches.indexOf(a,R_SHOOT)));}
+		else if(Touches.inArray(a,R_SLOT)) {comp.getActionMap().put(a, new R_SlotAction(Touches.indexOf(a,R_SLOT)));}
+		else if(a.equals(R_JUMP)) {comp.getActionMap().put(a, new R_JumpAction());}
+		else if(a.equals(R_PAUSE)) {comp.getActionMap().put(a, new R_PauseAction());}
 
 		else
 		{
@@ -334,6 +354,14 @@ public class InputPartie {
 
 		}
 	}
+	private class DashAction extends AbstractAction{
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			dashDown=true;
+		}
+		
+	}
 	private class SlowAction extends AbstractAction{
 
 		/**
@@ -350,14 +378,18 @@ public class InputPartie {
 		 * 
 		 */
 		private static final long serialVersionUID = 1L;
-		private int type_tir=0;//1 normal, 2 special
+		private int type_tir=-1;//0 normal, 1-4 special
 		ShootAction(int _type){type_tir=_type;};
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			if(type_tir==1)
-				toucheTirDown=true;
-			else if(type_tir==2)
-				touche2TirDown=true;
+			tirDown[type_tir] = true;
+			mousePosWhenClicked = MouseInfo.getPointerInfo().getLocation();
+		}}
+	private class SlotAction extends AbstractAction{
+		private int type =-1; //0->3 
+		SlotAction(int _type){type = _type;}
+		public void actionPerformed(ActionEvent arg0) {
+			slotDown[type] = true;
 		}}
 	private class JumpAction extends AbstractAction{
 		/**
@@ -379,17 +411,6 @@ public class InputPartie {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			pauseDown=true;
-		}}
-	private class ArrowAction extends AbstractAction{
-		/**
-		 * 
-		 */
-		int slotnum=0;
-		private static final long serialVersionUID = 1L;
-		ArrowAction(int _slotnum){slotnum=_slotnum;};
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			arrowDown = slotnum;
 		}}
 
 	private class R_MoveAction extends AbstractAction {
@@ -438,6 +459,15 @@ public class InputPartie {
 			}
 		}
 	}
+	private class R_DashAction extends AbstractAction{
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			dashDown=false;
+			dashReleased = true;
+		}
+		
+	}
 	private class R_SlowAction extends AbstractAction{
 
 		/**
@@ -455,20 +485,22 @@ public class InputPartie {
 		 * 
 		 */
 		private static final long serialVersionUID = 1L;
-		private int type_tir = 0; //1 for regular, 2 for special
+		private int type_tir = -1; //0 for normal, 1-4 for special
 		R_ShootAction(int _type){type_tir=_type;};
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			if(type_tir==1)
-			{
-				toucheTirDown=false;
-				toucheTirReleased=true;
-			}
-			else if(type_tir==2)
-			{
-				touche2TirDown=false;
-				touche2TirReleased=true;
-			}
+			tirDown[type_tir] = false;
+			tirReleased[type_tir] = true;
+			mousePosWhenReleased = MouseInfo.getPointerInfo().getLocation();
+		}}
+	private class R_SlotAction extends AbstractAction{
+		private static final long serialVersionUID = 1L;
+		private int type = -1; //0 for normal, 1-4 for special
+		R_SlotAction(int _type){type=_type;};
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			slotDown[type] = false;
+			slotReleased[type] = true;
 		}}
 	private class R_JumpAction extends AbstractAction{
 		/**
@@ -491,18 +523,7 @@ public class InputPartie {
 			pauseDown=false;
 			pauseReleased=true;
 		}}
-	private class R_ArrowAction extends AbstractAction{
-		/**
-		 * 
-		 */
-		int slotnum=0;
-		private static final long serialVersionUID = 1L;
-		R_ArrowAction(int _slotnum){slotnum=_slotnum;};
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			arrowReleased = slotnum;
-			arrowDown = -1;
-		}}
+
 	public String buildReleaseKeyStroke(String ks)
 	{
 		String[] ks_split = ks.split(" ");

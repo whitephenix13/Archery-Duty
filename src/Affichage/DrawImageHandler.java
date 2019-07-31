@@ -7,17 +7,37 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+import gameConfig.InterfaceConstantes;
+import menu.menuPrincipal.ModelPrincipal;
+
 public class DrawImageHandler {
 	
-	public static int BACKGROUND = 0;
-	public static int MONDE = 1;
-	public static int MONSTRE = 2;
-	public static int PERSO = 3;
-	public static int FLECHE = 4;
-	public static int TIRMONSTRE = 5;
-	public static int EFFECT = 6;
-	public static int EFFECT_FRONT = 7;//for fleche trou_noir
-	public static int INTERFACE = 8;
+	public final static int BACKGROUND = 0;
+	public final static int MONDE = 1;
+	public final static int MONSTRE = 2;
+	public final static int PERSO = 3;
+	public final static int FLECHE = 4;
+	public final static int TIRMONSTRE = 5;
+	public final static int EFFECT = 6;
+	public final static int EFFECT_FRONT = 7;//for fleche trou_noir
+	public final static int INTERFACE = 8;
+	
+	private static String layerToString(final int layout)
+	{
+		switch(layout){
+			case BACKGROUND: return "BACKGROUND";
+			case MONDE: return "MONDE";
+			case MONSTRE: return "MONSTRE";
+			case PERSO: return "PERSO";
+			case FLECHE: return "FLECHE";
+			case TIRMONSTRE: return "TIRMONSTRE";
+			case EFFECT: return "EFFECT";
+			case EFFECT_FRONT: return "EFFECT_FRONT";
+			case INTERFACE: return "INTERFACE";
+			default : return "Unknown "+layout;
+		}
+		
+	}
 	
 	
 	boolean ordered = false;
@@ -50,10 +70,14 @@ public class DrawImageHandler {
 	}
 	public void drawAll(Graphics g)
 	{
-		for(int i=0; i<listImage.size();++i)
+		//ModelPrincipal.debugTimeAffichage.print();
+		//ModelPrincipal.debugTimeAffichage.init(InterfaceConstantes.DEBUG_TIME_AFFICHAGE_PRINT_MODE,-1);
+		ModelPrincipal.debugTimeAffichage.startElapsedForVerbose();
+		for(DrawImageItem imageItem : listImage)
 		{
 			//bloc behind hero =78; heros = 140 ; 
-			listImage.get(i).draw(g);
+			imageItem.draw(g);
+			ModelPrincipal.debugTimeAffichage.elapsed(imageItem.item.name()+" "+layerToString(imageItem.layerIndex));
 		}
 		
 	}

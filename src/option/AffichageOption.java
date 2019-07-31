@@ -2,18 +2,22 @@ package option;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Graphics;
-import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.JComponent;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -21,6 +25,7 @@ import ActiveJComponent.ActiveJButton;
 import ActiveJComponent.ActiveJLabel;
 import ActiveJComponent.ActiveJOptionPane;
 import ActiveJComponent.ActiveJPanel;
+import ActiveJComponent.ActiveJScrollPane;
 import ActiveJComponent.ActiveJSlider;
 import Affichage.Drawable;
 import gameConfig.InterfaceConstantes;
@@ -39,6 +44,9 @@ public class AffichageOption extends Drawable implements Observer{
 	public CustomLabel lReglageBruitage = new CustomLabel("Reglage bruitage: ");  
 	public ActiveJSlider lBruitageSlider =new ActiveJSlider();
 
+	protected ActiveJScrollPane keysScrollPane;
+	protected ActiveJPanel keysPanel;
+
 	public CustomLabel lControle = new CustomLabel("CONTROLE"); 
 
 	public CustomLabel lDepDroit = new CustomLabel("Droite: ") ; 
@@ -50,12 +58,17 @@ public class AffichageOption extends Drawable implements Observer{
 	public CustomLabel lSaut = new CustomLabel("Saut: ") ; 
 	public CustomClickableLabel tSaut;
 
-	public CustomLabel lTir = new CustomLabel("Tir: ") ; 
-	public CustomClickableLabel tTir;
+	public CustomLabel[] lTir = {new CustomLabel("Tir: "),new CustomLabel("Special tir 1: "),new CustomLabel("Special tir 2: "),
+			new CustomLabel("Special tir 3: "),new CustomLabel("Special tir 4: ")}; 
+	public CustomClickableLabel[] tTir;
 
-	public CustomLabel l2Tir = new CustomLabel("Tir secondaire: ") ; 
-	public CustomClickableLabel t2Tir;
+	public CustomLabel[] lSlot = {new CustomLabel("Slot 1: "),new CustomLabel("Slot 2: "),
+			new CustomLabel("Slot 3: "),new CustomLabel("Slot 4: ")}; 
+	public CustomClickableLabel[] tSlot;
 	
+	public CustomLabel lDash = new CustomLabel("Dash: ") ; 
+	public CustomClickableLabel tDash;
+
 	public CustomLabel lSlow = new CustomLabel("Slow: ") ; 
 	public CustomClickableLabel tSlow;
 
@@ -65,9 +78,8 @@ public class AffichageOption extends Drawable implements Observer{
 
 	public ActiveJButton retour = new ActiveJButton("Retour");
 
-	public LinkedHashMap<String,ActiveJPanel> mapPanel = new LinkedHashMap<String,ActiveJPanel>();
-	String[] nomMapPanel = {"SON","son","CONTROLE","droite","gauche","saut","tir","tir secondaire","slow","pause","retour"};
-
+	public LinkedHashMap<String,JComponent> mapPanel = new LinkedHashMap<String,JComponent>();
+	String[] keysMapName = {"SON","son","CONTROLE","keys","retour"};
 	private AbstractControlerOption controler;
 
 	//Utilisé pour les textes du menu option
@@ -124,8 +136,11 @@ public class AffichageOption extends Drawable implements Observer{
 		tDepDroit.setText(touch.ToString(touch.t_droite));
 		tDepGauche.setText(touch.ToString(touch.t_gauche));
 		tSaut.setText(touch.ToString(touch.t_saut));
-		tTir.setText(touch.ToString(touch.t_tir));
-		t2Tir.setText(touch.ToString(touch.t_2tir));
+		for(int i=0;i<tTir.length;++i)
+			tTir[i].setText(touch.ToString(touch.t_tir[i]));
+		for(int i=0;i<tSlot.length;++i)
+			tSlot[i].setText(touch.ToString(touch.t_slot[i]));
+		tDash.setText(touch.ToString(touch.t_dash));
 		tSlow.setText(touch.ToString(touch.t_slow));
 		tPause.setText(touch.ToString(touch.t_pause));
 	}
@@ -138,7 +153,7 @@ public class AffichageOption extends Drawable implements Observer{
 
 		//On ajoute les listeners pour changer les touches 
 		inputListeners in = new inputListeners();
-		for(ActiveJPanel p : mapPanel.values())
+		for(JComponent p : mapPanel.values())
 		{
 			p.addMouseListener(in);
 			controler.opt.inputOption.init(p);
@@ -152,7 +167,12 @@ public class AffichageOption extends Drawable implements Observer{
 		}
 
 		//On ajoute les listeners pour selectionner la touche à changer
-		CustomClickableLabel[] cls = {tDepDroit,tDepGauche,tSaut,tTir,t2Tir,tSlow,tPause};
+		ArrayList<CustomClickableLabel> cls = new ArrayList<CustomClickableLabel>();
+		cls.addAll(Arrays.asList(new CustomClickableLabel[]{tDepDroit,tDepGauche,tSaut,tDash}));
+		cls.addAll(Arrays.asList(tTir));
+		cls.addAll(Arrays.asList(tSlot));
+		cls.addAll(Arrays.asList(new CustomClickableLabel[]{tSlow,tPause}));
+		
 		for(CustomClickableLabel cl : cls ){
 			cl.addMouseListener(new optionCliqueListener());
 		}
@@ -164,7 +184,7 @@ public class AffichageOption extends Drawable implements Observer{
 		lSonSlider.removeChangeListener(lSonSlider.getChangeListeners()[lSonSlider.getChangeListeners().length-1]);
 		lBruitageSlider.removeChangeListener(lBruitageSlider.getChangeListeners()[lBruitageSlider.getChangeListeners().length-1]);
 
-		for(ActiveJPanel p : mapPanel.values())
+		for(JComponent p : mapPanel.values())
 		{
 			MouseListener[] ml = p.getMouseListeners();
 			
@@ -178,13 +198,29 @@ public class AffichageOption extends Drawable implements Observer{
 				c.removeMouseListener(cml[cml.length-1]);
 			}
 		}
-		CustomClickableLabel[] cls = {tDepDroit,tDepGauche,tSaut,tTir,t2Tir,tSlow,tPause};
+		ArrayList<CustomClickableLabel> cls = new ArrayList<CustomClickableLabel>();
+		cls.addAll(Arrays.asList(new CustomClickableLabel[]{tDepDroit,tDepGauche,tSaut,tDash}));
+		cls.addAll(Arrays.asList(tTir));
+		cls.addAll(Arrays.asList(tSlot));
+		cls.addAll(Arrays.asList(new CustomClickableLabel[]{tSlow,tPause}));
 		for(CustomClickableLabel cl : cls ){
 			MouseListener[] mls = cl.getMouseListeners();
 			cl.removeMouseListener(mls[mls.length-1]);
 		}
 	}		
-
+	
+	private ActiveJPanel createComponentPanel()
+	{
+		return createComponentPanel("");
+	}
+	private ActiveJPanel createComponentPanel(String s)
+	{
+		ActiveJPanel pan = new ActiveJPanel();
+		pan.setName(s);
+		pan.setBackground(Color.BLACK);
+		return pan;
+	}
+	
 	public void initComposant()
 	{
 		Touches touch = controler.opt.touches;
@@ -192,8 +228,13 @@ public class AffichageOption extends Drawable implements Observer{
 		tDepDroit= new CustomClickableLabel(touch.ToString(touch.t_droite),"droite");
 		tDepGauche= new CustomClickableLabel(touch.ToString(touch.t_gauche),"gauche");
 		tSaut= new CustomClickableLabel(touch.ToString(touch.t_saut),"saut");
-		tTir= new CustomClickableLabel(touch.ToString(touch.t_tir),"tir");
-		t2Tir= new CustomClickableLabel(touch.ToString(touch.t_2tir),"tir secondaire");
+		tTir = new CustomClickableLabel[5];
+		for(int i=0; i<lTir.length;++i)
+			tTir[i]= new CustomClickableLabel(touch.ToString(touch.t_tir[i]),i==0?"tir":("special tir "+i));
+		tSlot = new CustomClickableLabel[4];
+		for(int i=0; i<lSlot.length;++i)
+			tSlot[i]= new CustomClickableLabel(touch.ToString(touch.t_slot[i]),"slot "+i);
+		tDash= new CustomClickableLabel(touch.ToString(touch.t_dash),"dash");
 		tSlow= new CustomClickableLabel(touch.ToString(touch.t_slow),"slow");
 		tPause= new CustomClickableLabel(touch.ToString(touch.t_pause),"pause");
 
@@ -204,59 +245,59 @@ public class AffichageOption extends Drawable implements Observer{
 		setSlider(lBruitageSlider,"bruitage slider",(int) (Config.bruitageVolume*100));
 
 		//on rempli les panels pour option
-		for(String s : nomMapPanel)
+		for(String s : keysMapName)
 		{
-			ActiveJPanel pan = new ActiveJPanel();
-			pan.setName(s);
-			pan.setBackground(Color.BLACK);
-			mapPanel.put(s, pan);
+			if(s.equals("keys")){
+				keysPanel = new ActiveJPanel();
+				keysPanel.setLayout(new BoxLayout(keysPanel,BoxLayout.Y_AXIS));
+				keysPanel.setBackground(Color.black);
+				keysScrollPane = new ActiveJScrollPane(keysPanel);
+				keysScrollPane.setName(s);
+				mapPanel.put(s, keysScrollPane);
+			}
+			else{
+				mapPanel.put(s, createComponentPanel(s));
+			}
 		}
 
 		mapPanel.get("SON").add(lSon);
 
-		ActiveJPanel panelSon = mapPanel.get("son");
+		ActiveJPanel panelSon = (ActiveJPanel)mapPanel.get("son");
 		panelSon.add(lReglageSon);
 		panelSon.add(lSonSlider);
 		panelSon.add(lReglageBruitage);
 		panelSon.add(lBruitageSlider);
 
 		mapPanel.get("CONTROLE").add(lControle);
-
-		ActiveJPanel panelDroit = mapPanel.get("droite");
-		panelDroit.add(lDepDroit);
-		panelDroit.add(tDepDroit);
-
-		ActiveJPanel panelGauche = mapPanel.get("gauche");
-		panelGauche.add(lDepGauche);
-		panelGauche.add(tDepGauche);
-
-		ActiveJPanel panelSaut = mapPanel.get("saut");
-		panelSaut.add(lSaut);
-		panelSaut.add(tSaut);
-
-		ActiveJPanel panelTir = mapPanel.get("tir");
-		panelTir.add(lTir);
-		panelTir.add(tTir);
 		
-		ActiveJPanel panel2Tir = mapPanel.get("tir secondaire");
-		panel2Tir.add(l2Tir);
-		panel2Tir.add(t2Tir);
-		
-		ActiveJPanel panelSlow = mapPanel.get("slow");
-		panelSlow.add(lSlow);
-		panelSlow.add(tSlow);
+		ArrayList<CustomLabel> keysLabel = new ArrayList<CustomLabel>();
+		keysLabel.addAll(Arrays.asList(new CustomLabel[]{lDepDroit,lDepGauche,lSaut,lDash}));
+		keysLabel.addAll(Arrays.asList(lTir));
+		keysLabel.addAll(Arrays.asList(lSlot));
+		keysLabel.addAll(Arrays.asList(new CustomLabel[]{lSlow,lPause}));
 
-		ActiveJPanel panelPause = mapPanel.get("pause");
-		panelPause.add(lPause);
-		panelPause.add(tPause);
+		ArrayList<CustomClickableLabel> keysClickableLabel = new ArrayList<CustomClickableLabel>();
+		keysClickableLabel.addAll(Arrays.asList(new CustomClickableLabel[]{tDepDroit,tDepGauche,tSaut,tDash}));
+		keysClickableLabel.addAll(Arrays.asList(tTir));
+		keysClickableLabel.addAll(Arrays.asList(tSlot));
+		keysClickableLabel.addAll(Arrays.asList(new CustomClickableLabel[]{tSlow,tPause}));
+		
+		for(int i=0; i< keysLabel.size(); ++i)
+		{
+			ActiveJPanel panelKey = createComponentPanel();
+			panelKey.add(keysLabel.get(i));
+			panelKey.add(keysClickableLabel.get(i));
+			keysPanel.add(panelKey);
+		}
+		
 
 		retour.setForeground(Color.white);
 		mapPanel.get("retour").add(retour);
 
-		this.getContentPane().setLayout(new GridLayout(11,1));
+		this.getContentPane().setLayout(new BoxLayout(this.getContentPane(),BoxLayout.Y_AXIS));
 		this.getContentPane().setBackground(InterfaceConstantes.BACKGROUND_COLOR);
 		this.getContentPane().setOpaque(false);
-		for(ActiveJPanel pan : mapPanel.values())
+		for(Container pan : mapPanel.values())
 		{
 			this.getContentPane().add(pan);
 		}

@@ -164,9 +164,9 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	@Override
 	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp, Mouvement _dep, int _anim) {
 		Mouvement_projectile dep_copy = (Mouvement_projectile) _dep.Copy(); //create the mouvement
-		Hitbox rotatedTempHit = computeRotatedHitbox(screenDisp,dep_copy,_anim);
-
-		return Hitbox.plusPoint(rotatedTempHit, new Point(getXpos(),getYpos()),true);
+		Hitbox rotatedTempHit = computeRotatedHitbox(screenDisp,dep_copy,_anim); //new hibox 
+		
+		return rotatedTempHit.translate(getXpos(),getYpos());
 	}
 	
 	@Override

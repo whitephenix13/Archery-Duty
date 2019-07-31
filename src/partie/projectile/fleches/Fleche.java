@@ -30,12 +30,12 @@ import partie.projectile.Projectile;
 import utils.PointHelper;
 import utils.Vitesse;
 
-public class Fleche extends Projectile implements InterfaceConstantes{
+public class Fleche extends Projectile implements InterfaceConstantes{ 
 
-	public static ObjectType[] DESTRUCTRICE_CLASS = {ObjectType.FAUCON,ObjectType.EXPLOSIVE,ObjectType.TROU_NOIR,ObjectType.BARRAGE};
-	public static ObjectType[] MATERIELLE_CLASS = {ObjectType.FEU,ObjectType.ELECTRIQUE,ObjectType.GLACE,ObjectType.ROCHE};
-	public static ObjectType[] RUSEE_CLASS = {ObjectType.MARQUE_MORTELLE,ObjectType.ABSORPTION,ObjectType.NINJA,ObjectType.LEURRE};
-	public static ObjectType[] SPRIRITUELLE_CLASS = {ObjectType.LUMIERE,ObjectType.OMBRE,ObjectType.VENT,ObjectType.GRAPPIN};
+	public static ObjectType[] DESTRUCTRICE_CLASS = {ObjectType.BARRAGE,ObjectType.FAUCON,ObjectType.EXPLOSIVE,ObjectType.TROU_NOIR};
+	public static ObjectType[] MATERIELLE_CLASS = {ObjectType.FEU,ObjectType.GLACE,ObjectType.ELECTRIQUE,ObjectType.ROCHE};
+	public static ObjectType[] RUSEE_CLASS = {ObjectType.ABSORPTION,ObjectType.MARQUE_MORTELLE,ObjectType.NINJA,ObjectType.LEURRE};
+	public static ObjectType[] SPRIRITUELLE_CLASS = {ObjectType.GRAPPIN,ObjectType.VENT,ObjectType.LUMIERE,ObjectType.OMBRE};
 		
 	public Heros shooter;
 
@@ -294,14 +294,14 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 	}	
 	@Override
 	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp) {
-		Hitbox rotatedHit = computeRotatedHitbox(screenDisp,getDeplacement(),getAnim());
-		return  Hitbox.plusPoint(rotatedHit, new Point(getXpos(),getYpos()),true);	
+		Hitbox rotatedHit = computeRotatedHitbox(screenDisp,getDeplacement(),getAnim()); //this is a new hitbox 
+		return rotatedHit.translate(getXpos(),getYpos());
 	}
 
 	@Override
 	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp, Mouvement _dep, int _anim) {
-		Hitbox rotatedHit = computeRotatedHitbox(screenDisp,_dep,_anim);
-		return Hitbox.plusPoint(rotatedHit, new Point(getXpos(),getYpos()),true);
+		Hitbox rotatedHit = computeRotatedHitbox(screenDisp,_dep,_anim);//this is a new hitbox 
+		return rotatedHit.translate(getXpos(),getYpos());
 	}
 
 
@@ -485,7 +485,7 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 		setRotation(newRotation,true);
 		Vitesse vit = getDeplacement().getSpeed(this, anim);
 		setRotation(oldRota,true);
-		return Hitbox.plusPoint(lHit.get(anim),getGlobalVit(partie,vit).point(),false);
+		return lHit.get(anim).translate(getGlobalVit(partie,vit).point());
 	}
 	
 	public Point centreBasFleche(Hitbox flecheHit,int anim)

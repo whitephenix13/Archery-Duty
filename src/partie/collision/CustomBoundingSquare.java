@@ -31,18 +31,18 @@ public class CustomBoundingSquare extends Collidable{
 		fixedWhenScreenMoves = relative;
 		maxBound=_maxBound;
 	}
-	public static CustomBoundingSquare getScreen()
+	/*public static CustomBoundingSquare getScreen()
 	{
 		return getScreen(new Point(0,0));
-	}
-	public static CustomBoundingSquare getScreen(Point screenDisp)
+	}*/
+	/*public static CustomBoundingSquare getScreen(Point screenDisp)
 	{
 		return new CustomBoundingSquare(
 				new Point( screenDisp.x+(InterfaceConstantes.BD_FENETRE.x + InterfaceConstantes.HG_FENETRE.x)/2, 
 						screenDisp.y+(InterfaceConstantes.BD_FENETRE.y + InterfaceConstantes.HG_FENETRE.y)/2 ),
 				true, 
 				 ((InterfaceConstantes.BD_FENETRE.x - InterfaceConstantes.HG_FENETRE.x)/2));
-	}
+	}*/
 	@Override
 	public Vitesse getGlobalVit(AbstractModelPartie partie) {
 		
@@ -113,7 +113,11 @@ public class CustomBoundingSquare extends Collidable{
 		
 		return null;
 	}
-
+	@Override 
+	public void deplaceOutOfScreen(AbstractModelPartie partie)
+	{
+		//do nothing
+	}
 	@Override
 	public void applyFriction(double minlocalSpeed, double minEnvirSpeed) {
 		

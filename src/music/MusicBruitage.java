@@ -45,6 +45,8 @@ public class MusicBruitage extends AsynchroneMusic implements InterfaceConstante
 
 	public void startBruitage(final String typeBruitage)
 	{
+		if(InterfaceConstantes.IGNORE_SOUND)
+			return;
 		ModelPrincipal.debugTime.startElapsedForVerbose();
 		this.requests.add(new Request(){
 			@Override

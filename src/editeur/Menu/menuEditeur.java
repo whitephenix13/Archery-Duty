@@ -241,17 +241,11 @@ public class menuEditeur {
 		public void actionPerformed(ActionEvent e) {
 			//on reset les variables 
 			affichageEditeur.controlerEditeur.edit.init();
-			//REMOVE affichageEditeur.getContentPane().repaint();
 			}
 		}
 	public class retourMenuListener implements ActionListener{
 
 			public void actionPerformed(ActionEvent e) {
-				
-				//REMOVE AbstractModelPrincipal.modeSuivant="Principal";
-				//REMOVE AbstractModelPrincipal.changeMode=true;				
-
-				//REMOVE AbstractModelPrincipal.changeFrame=true; //REMOVE? 
 				menuEditeur.this.affichageEditeur.controlerEditeur.edit.gameHandler.setGameMode(GameModeType.MAIN_MENU);
 			}
 			

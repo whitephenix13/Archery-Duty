@@ -33,7 +33,7 @@ public class LoaderItem implements Runnable {
 	 *	@Override
 	 *	public void run()
 	 *	{
-	 *		//TODO: some code with local variables from the class
+	 *		//some code with local variables from the class
 	 *		percentage = 100;
 	 *	}
 	 *};
