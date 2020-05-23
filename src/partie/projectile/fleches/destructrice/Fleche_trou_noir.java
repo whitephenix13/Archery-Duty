@@ -47,7 +47,7 @@ public class Fleche_trou_noir extends Destructrice {
 					eff.addSynchroSpeed(flecheEffect);
 				}
 			}
-			this.isVisible=false;
+			this.simulateDestroy();
 		}
 
 	}

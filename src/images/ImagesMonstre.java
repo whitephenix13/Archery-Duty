@@ -4,7 +4,7 @@ import java.awt.Image;
 import java.util.ArrayList;
 
 import gameConfig.ObjectTypeHelper.ObjectType;
-import partie.deplacement.entity.Mouvement_entity.MouvEntityEnum;
+import partie.mouvement.entity.Mouvement_entity.EntityTypeMouv;
 
 public class ImagesMonstre extends ImagesContainer{
 
@@ -12,7 +12,7 @@ public class ImagesMonstre extends ImagesContainer{
 	ArrayList<Image> im_SP_attente= new ArrayList<Image>();
 	ArrayList<Image> im_SP_marche= new ArrayList<Image>();
 	ArrayList<Image> im_SP_saut= new ArrayList<Image>();
-	
+	ArrayList<Image> im_SP_tir= new ArrayList<Image>();
 	public ImagesMonstre()
 	{
 		super("Image monstre");
@@ -37,6 +37,8 @@ public class ImagesMonstre extends ImagesContainer{
 				
 		for(int i=0; i<2; ++i)
 			im_SP_saut.add(getIm(path+"spirel/attente/"+i+".gif",true));
+		for(int i=0; i<2; ++i)
+			im_SP_tir.add(getIm(path+"spirel/tir/"+i+".gif",true));
 		percentage =100;
 		alreadyLoaded=true;
 		
@@ -49,23 +51,25 @@ public class ImagesMonstre extends ImagesContainer{
 	
 	/***
 	 * objType: {@link ObjectType#SPIREL}
-	 * info1 : {@link MouvEntityEnum}
+	 * info1 : {@link EntityTypeMouv}
 	 * info2 : null
 	 */
 	@Override
-	public ArrayList<Image> getImages(ObjectType objType, ImageInfo info1,ImageInfo info2, int anim)
+	public ArrayList<Image> getImages(ObjectType objType, ImageInfo info1,ImageInfo info2, int mouv_index)
 	{
 		ArrayList<Image> im = new ArrayList<Image>();
-//				im.add(this.im_electrique_aura.get(fleche.anim));
+//				im.add(this.im_electrique_aura.get(fleche.mouv_index));
 
 		if (objType.equals(ObjectType.SPIREL))
 		{
-			if(info1.equals(MouvEntityEnum.ATTENTE))
-				im.add(im_SP_attente.get(anim));
-			else if (info1.equals(MouvEntityEnum.MARCHE))
-				im.add(im_SP_marche.get(anim));
-			else if(info1.equals(MouvEntityEnum.SAUT))
-				im.add(im_SP_saut.get(anim));
+			if(info1.equals(EntityTypeMouv.ATTENTE))
+				im.add(im_SP_attente.get(mouv_index));
+			else if (info1.equals(EntityTypeMouv.MARCHE))
+				im.add(im_SP_marche.get(mouv_index));
+			else if(info1.equals(EntityTypeMouv.SAUT))
+				im.add(im_SP_saut.get(mouv_index));
+			else if(info1.equals(EntityTypeMouv.TIR))
+				im.add(im_SP_tir.get(mouv_index));
 		}
 		return im;
 	}

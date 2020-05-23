@@ -48,7 +48,7 @@ public class Fleche_vent extends Spirituelle{
 		if(!generatedEffect){
 			generatedEffect=true;
 
-			flecheEffect=new Vent_effect(partie,this,0,partie.getFrame(),normCollision,pointCollision,correctedPointCollision,false);
+			flecheEffect=new Vent_effect(partie,this,0,partie.getFrame(),normCollision,pointCollision,correctedPointCollision);
 			MusicBruitage.me.startBruitage("vent_effect");
 		}
 		/*for(Entitie obj : objects)
@@ -59,9 +59,7 @@ public class Fleche_vent extends Spirituelle{
 
 		Roche_effect.synchroniseMovementWithRocheEffectMovement(collidedObject, new Collidable[] {this,flecheEffect});
 
-		this.doitDeplace=false;
-		this.setCollideWithNone();
-		this.isVisible=false;
+		this.simulateDestroy();
 		arrowExploded=true;
 	}
 
@@ -83,22 +81,22 @@ public class Fleche_vent extends Spirituelle{
 		for(int i=0; i<arrowPol.npoints;++i)
 		{
 			Vector2d p = new Vector2d(arrowPol.xpoints[i],arrowPol.ypoints[i]);
-			intersectPoint = Hitbox.projectOnHitbox(colliderHitbox, p, getGlobalVit(partie).negated());
+			intersectPoint = Hitbox.projectOnHitbox(colliderHitbox, p, getGlobalVit().negated());
 			if(intersectPoint != null)
 				break;
 		}
 
 		if(!generatedEffect){
 			generatedEffect=true;
-			flecheEffect=new Vent_effect(partie,this,0,partie.getFrame(),normal,null,null,true);
+			flecheEffect=new Vent_effect(partie,this,0,partie.getFrame(),normal,null,null);
 			Vent_effect ventEffect = (Vent_effect) flecheEffect;
 
 			Vector2d objMid = Hitbox.getObjMid(partie, collider) ;
 			
 			//Compute the speed with respect to the intersection point and the middle of the collider hitbox
 			Vitesse projectionSpeed = ventEffect.computeProjectSpeed(partie,objMid,
-					PointHelper.VecToPoint(intersectPoint),1000000,ventEffect.getAnim());
-			((Vent_effect)flecheEffect).SetCollidedObject(collider,projectionSpeed);
+					PointHelper.VecToPoint(intersectPoint),1000000,ventEffect.getMouvIndex());
+			((Vent_effect)flecheEffect).setCollidedObject(collider,projectionSpeed);
 			MusicBruitage.me.startBruitage("vent_effect");
 		}
 		for(Entity obj : objects)
@@ -108,9 +106,7 @@ public class Fleche_vent extends Spirituelle{
 
 		}
 
-		this.doitDeplace=false;
-		this.setCollideWithNone();
-		this.isVisible=false;
+		this.simulateDestroy();
 		//need destroy after collision : false, it will be destroy after the end of the effect 
 		arrowExploded=true;
 		return false;

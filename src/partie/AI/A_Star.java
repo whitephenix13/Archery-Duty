@@ -11,12 +11,17 @@ import javax.vecmath.Vector2d;
 
 import debug.DebugBreak;
 import debug.DebugDraw;
+import debug.DebugLog;
 import gameConfig.InterfaceConstantes;
+import partie.AI.A_Star.A_Star_Parameters;
 import partie.collision.Collidable;
+import partie.collision.Collidable.XAlignmentType;
+import partie.collision.Collidable.YAlignmentType;
 import partie.collision.Collision;
 import partie.collision.Hitbox;
 import partie.modelPartie.AbstractModelPartie;
 import partie.modelPartie.PartieTimer;
+import partie.mouvement.Deplace;
 import utils.PointHelper;
 
 public class A_Star {
@@ -25,7 +30,7 @@ public class A_Star {
 	public enum DEBUG_INVALID_CANDIDATES {ALL,INDICES_ANGLE,INDICES,ANGLE}
 
 	public static int MAX_DISTANCE = InterfaceConstantes.WINDOW_WIDTH + 2* InterfaceConstantes.TAILLE_BLOC;//Maximum distance that the moving object can travel
-	static int MAX_ITERATION = 300;
+	static int MAX_ITERATION = 100;
 	public static class A_Star_Parameters
 	{
 		protected boolean DEBUG = false;
@@ -35,11 +40,12 @@ public class A_Star {
 			if(DEBUG){
 				this.debugInvalidCandidates = new ArrayList<Point>();
 				this.debugSlidedHitbox = new ArrayList<Hitbox>();
+				this.debugSlidedHitboxCheckedForCollision = new ArrayList<Hitbox>();
 			}
 		}
 
-		protected boolean LOG = false; //Manually set to true to get the logs 
-
+		//protected boolean LOG = false; //Manually set to true to get the logs 
+		protected DebugLog debugLog;
 		private ERROR lastError = ERROR.NONE;
 		public ERROR getLastError(){return lastError;}
 		
@@ -50,7 +56,7 @@ public class A_Star {
 		protected final int max_step_size; //maximum value by which the object can move at each iteration
 		public A_Star_Parameters()
 		{
-			this(0.05*Math.pow(10, 9), 2* InterfaceConstantes.TAILLE_BLOC, new Point(1,4), InterfaceConstantes.TAILLE_BLOC);
+			this(0.05*Math.pow(10, 9), 2* InterfaceConstantes.TAILLE_BLOC, new Point(1,4), InterfaceConstantes.TAILLE_BLOC,new DebugLog());
 		}
 		/*public A_Star_Parameters(double reevaluation_time, int redirection_length, Point exploration_angle, int max_step_size)
 		{
@@ -59,8 +65,10 @@ public class A_Star {
 			this.exploration_angle = exploration_angle;//default new Point(1,4); 
 			this.max_step_size = max_step_size;//default InterfaceConstantes.TAILLE_BLOC;
 		}*/
-		public A_Star_Parameters(double reevaluation_time, int redirection_length, Point exploration_angle, int max_step_size)
+		public A_Star_Parameters(double reevaluation_time, int redirection_length, Point exploration_angle, int max_step_size,DebugLog debugLog)
 		{
+			this.debugLog = debugLog;
+			
 			REEVALUATION_TIME = reevaluation_time; //default  0.05*Math.pow(10, 9);
 			REDIRECTION_LENGTH = redirection_length;//default 2* InterfaceConstantes.TAILLE_BLOC;
 			this.exploration_angle = exploration_angle;//default new Point(1,4); 
@@ -112,6 +120,7 @@ public class A_Star {
 		//Debug variables
 		protected ArrayList<Point> debugInvalidCandidates; // list of candidates that where invalid 
 		protected ArrayList<Hitbox> debugSlidedHitbox ; //list of slided hitboxes that does not collide
+		protected ArrayList<Hitbox> debugSlidedHitboxCheckedForCollision ; //list of slided hitboxes computed to check whether there is a collision or not 
 		protected DEBUG_INVALID_CANDIDATES debug_invalid = DEBUG_INVALID_CANDIDATES.ANGLE;
 		
 	}
@@ -280,14 +289,14 @@ public class A_Star {
 		return v.dot(dir) >=params.limCosAngle;
 	}
 
-	/**
+	/**REMOVE
 	 * Return true if there is no collision
 	 * @param partie
 	 * @param elem
 	 * @param objectToMove
 	 * @return
 	 */
-	public static boolean CheckCollision(A_Star_Parameters params,AbstractModelPartie partie,Point elem,Point max_dist_object)
+	/*REMOVE public static boolean CheckCollision(A_Star_Parameters params,AbstractModelPartie partie,Point elem,Point max_dist_object)
 	{
 		Point worldCoordinate = CellToPos(params,elem);
 		Point p1 = new Point(worldCoordinate.x-max_dist_object.x/2,worldCoordinate.y-max_dist_object.y/2);
@@ -297,17 +306,26 @@ public class A_Star {
 		Hitbox estimatedHit = new Hitbox(p1,p2,p3,p4);
 		boolean res = !Collision.isWorldCollision(partie, estimatedHit, true);
 		return res;
-	}
+	}*/
 	
 	/**
 	 * Check whether the object would collide when moving from the current cell to the neighbor. For that we compute the slided hitbox (hitbox of the trajectory of the object)
 	 * The objecthitbox is the hitbox of the object oriented towards the target_pos 
 	 */
-	public static boolean CheckSlidedCollision(A_Star_Parameters params,AbstractModelPartie partie,Point current_pos,Point target_pos,Hitbox objectUnrotatedHitbox)
+	public static boolean CheckSlidedCollision(A_Star_Parameters params,AbstractModelPartie partie,Point current_pos,Point target_pos,Hitbox objectUnrotatedHitbox,boolean checkEarlyCollisionWithTip)
 	{
 		//extend hitbox to avoid unanticipated collisions due to calculation errors (arrow might be 1 aside its path)
-		Hitbox extendedUnrotatedHitbox = Hitbox.extend(objectUnrotatedHitbox,new Point(4,4));
-		Hitbox slidedHitbox =Hitbox.getSlidedHitbox(extendedUnrotatedHitbox, current_pos, target_pos);
+		//rotate object to make it points towards target_pos if that's not the case 
+		Hitbox slidedHitbox = Hitbox.getSlidedHitboxFromPosition(objectUnrotatedHitbox,current_pos,target_pos,new Point(1,1),checkEarlyCollisionWithTip);
+		//Display the slided hitbox computed for collision so that it can be debbuged visually 
+		if(params.DEBUG && checkEarlyCollisionWithTip){ //TODO: remove checkEarlyCollisionWithTip
+			params.debugSlidedHitboxCheckedForCollision.add(slidedHitbox);
+			//TODO: set max dist 
+			int max_dist = params.max_step_size;
+			debugDraw(params,partie,new Point(max_dist,max_dist));
+			DebugBreak.breakAndUpdateGraphic(partie);
+			params.debugSlidedHitboxCheckedForCollision.clear();
+		}
 		boolean res = !Collision.isWorldCollision(partie, slidedHitbox, true);
 		if(params.DEBUG)
 			params.debugSlidedHitbox.add(slidedHitbox);
@@ -360,7 +378,7 @@ public class A_Star {
 					Point p = new Point(x,y);
 
 					if(checkGridIndex(params,p,grid,true) && CheckNeighborsAngle(params,p,elem.cellIndex,dir) &&
-							CheckSlidedCollision(params,partie,elem.getWorldPos(params),CellToPos(params,p),objectUnrotatedHitbox)){
+							CheckSlidedCollision(params,partie,elem.getWorldPos(params),CellToPos(params,p),objectUnrotatedHitbox,false)){
 						AddCandidate(params,p,elem);
 					}
 					else if(params.DEBUG)
@@ -382,7 +400,7 @@ public class A_Star {
 				Point p2 = new Point(x,yend);
 
 				if(checkGridIndex(params,p1,grid,true) && CheckNeighborsAngle(params,p1,elem.cellIndex,dir)&&
-						CheckSlidedCollision(params,partie,elem.getWorldPos(params),CellToPos(params,p1),objectUnrotatedHitbox)){
+						CheckSlidedCollision(params,partie,elem.getWorldPos(params),CellToPos(params,p1),objectUnrotatedHitbox,false)){
 					AddCandidate(params,p1,elem);
 				}
 				else if(params.DEBUG)
@@ -397,7 +415,7 @@ public class A_Star {
 						params.debugInvalidCandidates.add(p1);
 				}
 				if(checkGridIndex(params,p2,grid,true) && CheckNeighborsAngle(params,p2,elem.cellIndex,dir)&&
-						CheckSlidedCollision(params,partie,elem.getWorldPos(params),CellToPos(params,p2),objectUnrotatedHitbox)){
+						CheckSlidedCollision(params,partie,elem.getWorldPos(params),CellToPos(params,p2),objectUnrotatedHitbox,false)){
 					AddCandidate(params,p2,elem);
 				}
 				else if(params.DEBUG)
@@ -505,9 +523,25 @@ public class A_Star {
 									, temp_hit.polygon.xpoints[n2], temp_hit.polygon.ypoints[n2] );
 						}
 					}
+
+					for(int i=0; i<params.debugSlidedHitboxCheckedForCollision.size();++i)
+					{
+						g.setColor(Color.ORANGE);
+						Hitbox hit = params.debugSlidedHitboxCheckedForCollision.get(i);
+						Hitbox temp_hit = hit.copy().translate(partie.getScreenDisp());
+						for(int n=1; n<temp_hit.polygon.npoints+1; ++n){
+							int n1 = n-1;
+							int n2 = n;
+							if(n==temp_hit.polygon.npoints)
+								n2 = 0;
+							g.drawLine(temp_hit.polygon.xpoints[n1], temp_hit.polygon.ypoints[n1] 
+									, temp_hit.polygon.xpoints[n2], temp_hit.polygon.ypoints[n2] );
+						}
+					}
+					
 					
 					g.setColor(Color.BLUE);
-					Point p = PointHelper.RountVecToPoint(params.worldTarget);
+					Point p = PointHelper.RoundVecToPoint(params.worldTarget);
 					g.fillRect(p.x+partie.xScreendisp-2,p.y +partie.yScreendisp-2, 5, 5);
 
 					g.setColor(Color.BLACK);
@@ -538,16 +572,17 @@ public class A_Star {
 		params.lastError= ERROR.NONE;
 
 		Vector2d objWorldPos = Hitbox.getObjMid(partie,objectToMove);
-		if(objWorldPos==null && params.LOG)
-			System.out.println(objectToMove.getHitbox(partie.INIT_RECT, partie.getScreenDisp()));
+		if(objWorldPos==null){
+			params.debugLog.log(objectToMove.getHitbox(partie.INIT_RECT, partie.getScreenDisp()).toString());
+		}
 			//Manually tuned so that an arrow can move through two blocks. Although considering "(int) Math.ceil( Math.sqrt(2) * objectToMove.deplacement.getMaxBoundingSquare(objectToMove))"
 			//is the safest to always find a way, it is also too restrictive. It is less frutrating to see a arrow fail a path because it wasn't shot perfectly
 			//(player mistake) than because the algo decided that there is no enough space 
 			//Point max_bounding_rect= objectToMove.deplacement.getMaxBoundingRect(objectToMove);
-		Hitbox objectUnrotatedHitbox = objectToMove.getDeplacementHitbox(0); //WARNING: this might change 
+		Hitbox objectUnrotatedHitbox = objectToMove.getMouvementHitboxCopy(0); //WARNING: this might change. create a function "get local hitbox?"
 		
 		if(params.DEBUG){
-			int max_dist = objectToMove.getDeplacement().getMaxBoundingSquare();
+			int max_dist = objectToMove.getMouvement().getMaxBoundingSquare();
 			debugDraw(params,partie,new Point(max_dist,max_dist));
 		}
 		//Only happen when generating the path for the first time. Shouldn't trigger when recomputing path 
@@ -560,11 +595,11 @@ public class A_Star {
 			params.initialPos =PointHelper.VecToPoint(objWorldPos);
 		}
 		//Dont set target to grid coordinate since it can be between to grid cells. 
-		if(initPos == null && params.LOG)
-			System.out.println("Object pos "+ ((objWorldPos.y-params.initialPos.y)/params.grid_size + MAX_DISTANCE) +" (int) " + (int)((objWorldPos.y-params.initialPos.y)/params.grid_size + MAX_DISTANCE));
+		if(initPos == null )
+			params.debugLog.log("Object pos "+ ((objWorldPos.y-params.initialPos.y)/params.grid_size + MAX_DISTANCE) +" (int) " + (int)((objWorldPos.y-params.initialPos.y)/params.grid_size + MAX_DISTANCE));
 		
 		//Set object to grid coordinates
-		Point startPos =PointHelper.RountVecToPoint(objWorldPos);
+		Point startPos =PointHelper.RoundVecToPoint(objWorldPos);
 		//In the case where the path is recomputed, we start from a different position
 		if(initPos != null)
 			startPos = initPos;
@@ -575,8 +610,8 @@ public class A_Star {
 		//Check if the initialPos and the object/initIndex or target are not too far one from the other 
 		if(Dist(startPos,params.initialPos)> MAX_DISTANCE || Dist(params.worldTarget,params.initialPos)> MAX_DISTANCE)
 		{
-			if(params.LOG)
-				System.out.println(Dist(startPos,params.initialPos)+" between pos "+ Dist(params.worldTarget,params.initialPos) +" between target "+ MAX_DISTANCE +" max distance");
+			params.debugLog.log(Dist(startPos,params.initialPos)+" between pos "+ Dist(params.worldTarget,params.initialPos) +" between target "+ MAX_DISTANCE +" max distance");
+
 			params.lastError = ERROR.TOO_FAR;
 			return null;
 		}
@@ -587,13 +622,14 @@ public class A_Star {
 		//Iterate until the target is reached or the list of neighbors to explore (listCandidates) is empty 
 		boolean targetReached = false;
 		A_Star_Candidate last_candidate = null;
+		A_Star_Candidate best_last_candidate = null; //Used in case of non convergence to return the best path
+		double best_distance_to_target =0;
 		int iter = 0; 
 		do{
 			if(params.DEBUG){
 				DebugBreak.breakAndUpdateGraphic(partie);
 			}
-			if(params.LOG)
-				System.out.println("Find path" + iter+" dir " + dir +" candidates "+ params.listCandidates); 
+			params.debugLog.log("Find path" + iter+" dir " + dir +" candidates "+ params.listCandidates);
 
 			/*String s="";
 			for(int iter = 0; iter<listCandidates.size(); ++i)
@@ -621,8 +657,8 @@ public class A_Star {
 			A_Star_Candidate bestCandPrev = bestCand.prevNeighbor;
 			
 			String bestCandPrevPos = bestCandPrev==null? "null" : bestCandPrev.getWorldPos(params).toString();
-			if(params.LOG)
-				System.out.println("\tbest cand"  +bestCand.getWorldPos(params)+ " prev best " + bestCandPrevPos + " target "+ params.worldTarget);
+			
+			params.debugLog.log("best cand "  +bestCand.getWorldPos(params)+ " prev best " + bestCandPrevPos + " target "+ params.worldTarget,1);
 			
 			// update the direction 
 			if( bestCandPrev !=null){
@@ -631,18 +667,39 @@ public class A_Star {
 			}
 
 			
+			double distanceToTarget = Dist(params.worldTarget,bestCand.getWorldPos(params));
+
+			if((best_last_candidate ==null) || (distanceToTarget<best_distance_to_target) ){
+				best_distance_to_target = distanceToTarget;
+				best_last_candidate = bestCand;
+			}
+			params.debugLog.log("Is target reached "+ distanceToTarget +" < "+ params.grid_size);
 			//Check if target is reached 
-			if(Dist(params.worldTarget,bestCand.getWorldPos(params)) <params.grid_size){
-				Point pWorldTarget = PointHelper.RountVecToPoint(params.worldTarget);
-				if(CheckSlidedCollision(params,partie,bestCand.getWorldPos(params),pWorldTarget,objectUnrotatedHitbox)){
+			//The distance considered is 1.5* sqr(2) * params.grid_size (approx 2.2 *params.grid_size) since we can have the target that is at the bottom left of the square below, but this square is not considered
+			//as a candidate since it collides with the world. The idea there is "if we already have a direct path to the target, we take it)
+			if(distanceToTarget <params.grid_size*2.2){
+				
+				boolean checkSlidedCollision = false; //Note: do not check collision here otherwise the arrow will rotate to exactly hit the center of the hitbox which might cause it to crash into the ground 
+				//Instead, we assume that we are close enough and that the hitbox has already been hit.
+				
+				if(checkSlidedCollision){
+					Point pWorldTarget = PointHelper.RoundVecToPoint(params.worldTarget);
+					boolean slidedCollision = CheckSlidedCollision(params,partie,bestCand.getWorldPos(params),pWorldTarget,objectUnrotatedHitbox,true);
+					if(!slidedCollision){
+						last_candidate= bestCand;
+						targetReached=true;
+						}
+				}
+				else{
 					last_candidate= bestCand;
 					targetReached=true;
 				}
+				
 			}
 			//Add neighbors to candidate 
 			if(!targetReached){
-				if(params.LOG)
-					System.out.println("Dir before add candidates " + dir);
+				params.debugLog.log("Dir before add candidates " + dir);
+
 				//update the list of candidates 
 				AddNeightbors(params,partie,bestCand,objectUnrotatedHitbox,dir,params.grid);
 			}
@@ -659,26 +716,27 @@ public class A_Star {
 			params.lastError = ERROR.TOO_MUCH_EXPLORED;
 		ArrayList<Point> path = new ArrayList<Point>();
 
-		//no path found
-		if(!targetReached)
-		{
+		A_Star_Candidate path_elem = null;
+		//No path found, return the best path possible
+		if(!targetReached){
 			params.lastError = ERROR.NOT_FOUND;
-			return null;
+			path_elem = best_last_candidate;
+			if(path_elem==null)
+				return null;
 		}
-		//path found: rebuild it by iterating from last candidate 
 		else
+			path_elem = last_candidate;
+		
+		while(path_elem != null)
 		{
-			A_Star_Candidate path_elem = last_candidate;
-			while(path_elem != null)
-			{
-				//If we reach the starting point (if any was given), stop building the path since it will be concatenate in update path 
-				if((initPos != null) && startPosIndex.equals(path_elem.cellIndex) )
-					break;
-				path.add(path_elem.getWorldPos(params));
-				path_elem = path_elem.prevNeighbor;
-			}
-			Collections.reverse(path);
+			//If we reach the starting point (if any was given), stop building the path since it will be concatenate in update path 
+			if((initPos != null) && startPosIndex.equals(path_elem.cellIndex) )
+				break;
+			path.add(path_elem.getWorldPos(params));
+			path_elem = path_elem.prevNeighbor;
 		}
+		Collections.reverse(path);
+		
 		//Only smooth the path if it was call from find path and not update path 
 		if(!calledFromUpdatePath)
 			path = SmoothPath(path, smoothStrength,0);
@@ -760,8 +818,8 @@ public class A_Star {
 						
 			//remove the point that where already crossed from the path, but not from the grid/listCandiates as we they were explored
 			int current_path_index= path.indexOf(prevNextTarget);
-			if(params.LOG)
-				System.out.println("***Path before crossed deletion (0 -> " + (current_path_index-1)+")" + path);
+			params.debugLog.log("***Path before crossed deletion (0 -> " + (current_path_index-1)+")" + path);
+			
 			for(int j=0;j<current_path_index;j++)
 			{
 				path.remove(0);
@@ -795,8 +853,7 @@ public class A_Star {
 				startIndex = Math.max(path.size()-num_point_deleted,0) ;
 			}
 			
-			if(params.LOG)
-				System.out.println("***Path before last points deletion ("+startIndex+"->"+(path.size()-1)+")" + path);
+			params.debugLog.log("***Path before last points deletion ("+startIndex+"->"+(path.size()-1)+")" + path);
 			
 			//Delete the last x points 
 			for(int j=path.size()-1;j>=startIndex;--j)
@@ -820,13 +877,13 @@ public class A_Star {
 			//recompute the end of the path and concatenate it 
 			else
 			{
-				if(params.LOG)
-					System.out.println("\n==========Recomputation of A* Path========");
+				params.debugLog.log("\n==========Recomputation of A* Path========");
+
 				//Compute the correct direction 
 				int originalPathSize = path.size();
 				Vector2d dir = orginalDir;
-				if(params.LOG)
-					System.out.println("***OriginalDir = "+dir+" for path "+ path);
+				params.debugLog.log("***OriginalDir = "+dir+" for path "+ path);
+
 				//As we deleted the last 5 points, we have to build the path from the point path_n-6 
 				//as we know that the arrow will come from  point path_n-6 towards point path_n-5, this gives the direction to use for the exploration
 				if(originalPathSize>=1)
@@ -837,9 +894,8 @@ public class A_Star {
 
 					if(last_cand_prev !=null){
 						dir = new Vector2d(last_cand.cellIndex.x-last_cand_prev.cellIndex.x,last_cand.cellIndex.y-last_cand_prev.cellIndex.y);
-						dir.normalize(); 
-						if(params.LOG)
-							System.out.println("***Dir recomputed = "+dir +" between "+ last_cand_prev.getWorldPos(params) +" and "+last_cand.getWorldPos(params) +" for path \n"+path );
+						dir.normalize();
+						params.debugLog.log("***Dir recomputed = "+dir +" between "+ last_cand_prev.getWorldPos(params) +" and "+last_cand.getWorldPos(params) +" for path \n"+path );
 					}
 
 				}
@@ -853,19 +909,16 @@ public class A_Star {
 				//Extend the existing path by recomputing the last points 
 				if(!builtFromScratch)
 				{
-					if(params.LOG)
-						System.out.println("path containing destination " +path +" |||\n... " );
+					params.debugLog.log("path containing destination " +path +" |||\n... " );
 
 					//Compute the path FROM THE LAST POINT IN THE PATH 
 					endPath = FindPathFromUpdate(params,partie,objectToMove,dir, _target,smoothStrength,path.get(originalPathSize-1),false);
-					if(params.LOG)
-						System.out.println("\t\t endPath for pos "+(path.get(originalPathSize-1))+" " +endPath );
+					params.debugLog.log("\t\t endPath for pos "+(path.get(originalPathSize-1))+" " +endPath );
 				}
 				// recompute from scratch 
 				else
 				{
-					if(params.LOG)
-						System.out.println("path not containing destination");
+					params.debugLog.log("path not containing destination");
 					for(int xInd=0; xInd<params.grid.length;++xInd)
 					{
 						for(int yInd=0; yInd<params.grid[0].length;++yInd)
@@ -954,15 +1007,24 @@ public class A_Star {
 	}
 //================================= TESTING ======================================================================
 	
-	protected boolean TEST_RemovePathPoint_neighborTest()
+	private A_Star_Parameters TEST_init()
+	{
+		int max_step_size = InterfaceConstantes.TAILLE_BLOC/2; //maximum value by which the object can move at each iteration
+		Point explorationAngle = new Point(1,2); //Maximum value by which the object can turn as a fraction of Math.Pi 
+		
+		A_Star_Parameters params = new A_Star_Parameters(0.20*Math.pow(10, 9), 2* InterfaceConstantes.TAILLE_BLOC, explorationAngle, max_step_size,new DebugLog());
+		params.grid = new A_Star_Candidate[10][10] ;
+		return params;
+	}
+	
+	protected String TEST_RemovePathPoint_neighborTest()
 	{
 		// X explored cell , O candidate, . null
 		// Init: X1-X2-X3-O4
 		// Remove X3
-		// Expect: X1-O2-O3
-		A_Star_Parameters params = new A_Star_Parameters();
-		params.grid = new A_Star_Candidate[10][10] ;
-		int grid_scale_divider=1;
+		// Expect: X1-X2-O3
+		A_Star_Parameters params = TEST_init();
+		System.out.println("grid_scale_divider: "+ params.grid_scale_divider);
 		
 		Point p1 = new Point(0,0); Point p2 = new Point(0,1); Point p3 = new Point(0,2);Point p4 = new Point(0,3);
 		
@@ -979,9 +1041,29 @@ public class A_Star {
 
 		OnRemovePathPoint(params,p3,null);
 		
-		boolean neighborAsDesired = (params.grid[p1.x][p1.y].prevNeighbor == null) && (params.grid[p2.x][p2.y].prevNeighbor.cellIndex.equals(p1)) && (params.grid[p3.x][p3.y].prevNeighbor.cellIndex.equals(p2));
-		return neighborAsDesired;
+		String error  ="";
+		if(params.grid[p1.x][p1.y].isCandidate){
+			error += "p1 is candidate whereas it should be explored";
+		}
+		if(params.grid[p1.x][p1.y].prevNeighbor != null){
+			error += "p1 prev neighbor is not null: "+ params.grid[p1.x][p1.y].prevNeighbor.cellIndex;
+		}
+		if(params.grid[p2.x][p2.y].isCandidate){
+			error += "p2 is candidate whereas it should be explored";
+		}
+		if(!params.grid[p2.x][p2.y].prevNeighbor.cellIndex.equals(p1)){
+			error += "p2 prev neighbor is not p2: "+ params.grid[p2.x][p2.y].prevNeighbor.cellIndex+" != "+ p1;
+		}
+		if(!params.grid[p3.x][p3.y].isCandidate){
+			error += "p3 is not candidate whereas it should be";
+		}
+		if(!params.grid[p3.x][p3.y].prevNeighbor.cellIndex.equals(p2)){
+			error += "p3 prev neighbor is not p2: "+ params.grid[p3.x][p3.y].prevNeighbor.cellIndex+" != "+ p2;
+		}
+		return error;
+		
 	}
+	
 	
 	protected boolean TEST_RemovePathPoint_removeInChain()
 	{
@@ -990,10 +1072,7 @@ public class A_Star {
 		// Remove X2
 		// Expect: X1-O2-.
 		
-		A_Star_Parameters params = new A_Star_Parameters();
-		params.grid = new A_Star_Candidate[10][10] ;
-		int grid_scale_divider=1;
-		
+		A_Star_Parameters params =TEST_init();
 		Point p1 = new Point(0,0); Point p2 = new Point(0,1); Point p3 = new Point(0,2);
 		
 		AddCandidate(params,p1,null);
@@ -1021,9 +1100,7 @@ public class A_Star {
 		//				 ^o5
 		//				 ^x6
 		
-		A_Star_Parameters params = new A_Star_Parameters();
-		params.grid = new A_Star_Candidate[10][10] ;
-		int grid_scale_divider=1;
+		A_Star_Parameters params =TEST_init();
 		
 		Point p1 = new Point(0,2); Point p2 = new Point(1,2); Point p3 = new Point(2,2); Point p4 = new Point(3,2); Point p5 = new Point(1,1); Point p6 = new Point(1,0);
 		
@@ -1059,9 +1136,7 @@ public class A_Star {
 		//			  ^x5      o6
 		//			  ^x7<-x8<^x9
 		
-		A_Star_Parameters params = new A_Star_Parameters();
-		params.grid = new A_Star_Candidate[10][10] ;
-		int grid_scale_divider=1;
+		A_Star_Parameters params =TEST_init();
 		
 		Point p1 = new Point(0,2); Point p2 = new Point(1,2); Point p3 = new Point(2,2); Point p4 = new Point(3,2); Point p5 = new Point(1,1);
 		Point p6 = new Point(3,1); Point p7 = new Point(1,0); Point p8 = new Point(2,0); Point p9 = new Point(3,0);

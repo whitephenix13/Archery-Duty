@@ -16,14 +16,13 @@ import partie.collision.Collidable;
 import partie.collision.Collision;
 import partie.collision.Hitbox;
 import partie.conditions.Condition.ConditionEnum;
-import partie.deplacement.Deplace;
-import partie.deplacement.Mouvement;
-import partie.deplacement.Mouvement.DirSubTypeMouv;
-import partie.deplacement.effect.Roche_idle;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
 import partie.modelPartie.PartieTimer;
+import partie.mouvement.Deplace;
+import partie.mouvement.Mouvement.DirSubTypeMouv;
+import partie.mouvement.effect.Roche_idle;
 import partie.projectile.fleches.Fleche;
 import utils.Vitesse;
 
@@ -32,18 +31,25 @@ public class Roche_effect extends Effect{
 	double DUREE_DEFAILLANCE = 3;
 
 	double UPDATE_LENGTH_TIME= 0.01; //10ms
-	double MAX_UPDATE_LENGTH = 2;//2
-	double update_length = 0;
-	double lastLengthUpdate=-1;
+	int MAX_UPDATE_LENGTH = 5;//by how much the pilar grows each update
+	int MAX_LENGTH = 100;
+	
+	double update_length = 0;//how much the pillar actually grown (since it can't be longer than MAX_LENGTH)
+
+	double pilar_length = 1;
+	private double getUnscaledPilarLength(){
+		return pilar_length/getScaling().y;
+	}
+	
+	double lastLengthUpdateTime=-1;
 
 	boolean stopGrowing=false;
 	boolean lastStopGrowingUpdate = true;
-	int pilar_length = 1;
-	int MAX_LENGTH = 100;
+	
 	public boolean isGrowing(){return !stopGrowing;}
 
 	public double PILAR_DURATION= 3; //3sec 
-	double lastPilarFullLength = -1; //used with pilar duration to time the destruction
+	double lastTimePilarFullLength = -1; //used with pilar duration to time the destruction
 	public boolean startDestroyAnim =false;
 
 	List<Collidable> accrochedCol = new ArrayList<Collidable>();
@@ -81,10 +87,11 @@ public class Roche_effect extends Effect{
 
 	private BufferedImage convertedIm=null;
 
-	public Roche_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame,Vector2d _normalCollision,Point _pointCollision,
+	public Roche_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _mouv_index, int current_frame,Vector2d _normalCollision,Point _pointCollision,
 			Point _correctedPointCollision, boolean _groundCollision)
 	{
-		super(_anim,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,_groundCollision,_groundCollision);
+		super(_mouv_index,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,_groundCollision,_groundCollision);
+		assert getScaling().x == getScaling().y;
 		ModelPrincipal.debugTime.startElapsedForVerbose();
 		ModelPrincipal.debugTime.elapsed("Roche effect: call super.init");
 		this.setCollideWithAll();
@@ -92,21 +99,21 @@ public class Roche_effect extends Effect{
 		this.isWorldCollider= groundEffect? true :false; //groundEffect=_groundCollision
 		
 		subTypeMouv = groundEffect?EffectCollisionEnum.GROUND:EffectCollisionEnum.ENTITY;
-		setDeplacement(new Roche_idle(subTypeMouv,partie.getFrame()));
+		setMouvement(new Roche_idle(subTypeMouv,partie.getFrame()));
+		
+		MAX_LENGTH = (int)Math.round(MAX_LENGTH * getScaling().y);
+		MAX_UPDATE_LENGTH = (int)Math.round(MAX_UPDATE_LENGTH * getScaling().y);
 		
 		setFirstPos(partie);
 
 		if(groundEffect)
 			updateHitbox(partie);
-		else
-			this.onUpdate(partie, false); //update rotated hitbox and drawtr
 		
 		ModelPrincipal.debugTime.elapsed("Roche effect: call update hitbox");
 		partie.arrowsEffects.add(this);
 
-		int initialEject = 2;
+		int initialEject = MAX_UPDATE_LENGTH+1;
 		ejectCollidable(partie,initialEject,true);
-		this.onUpdate(partie, false); //update rotated hitbox and drawtr
 		ModelPrincipal.debugTime.elapsed("Roche effect: call on update");
 		//if the eject failed, the object is stuck (for example when arrow roche shot in corner) then destroy it
 	}
@@ -210,7 +217,7 @@ public class Roche_effect extends Effect{
 		for(Collidable col : accrochedCol)
 		{
 			Vector2d xydir_effect = Deplace.angleToVector(getRotation()-Math.PI/2); 
-			Vector2d xydir_col = Deplace.angleToVector(col.getDeplacement().droite_gauche(col.getAnim(),col.getRotation()).equals(DirSubTypeMouv.GAUCHE) ? 5.0*Math.PI/4: 7.0*Math.PI/4);
+			Vector2d xydir_col = Deplace.angleToVector(col.getMouvement().droite_gauche(col.getMouvIndex(),col.getRotation()).equals(DirSubTypeMouv.GAUCHE) ? 5.0*Math.PI/4: 7.0*Math.PI/4);
 
 			Vector2d effect_sp = Hitbox.supportPoint(xydir_effect, getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon);
 			Vector2d col_sp = Hitbox.supportPoint(xydir_col, col.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon);
@@ -255,30 +262,35 @@ public class Roche_effect extends Effect{
 		return success;
 
 	}
+	
+	@Override 
+	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp) {
+		if(groundEffect){
+			int shift = 1;
+			int newyMax = (int)( (Math.round(getUnscaledPilarLength())-shift) * 1); //Don't forget to scale 
 
+			Hitbox mouvementHitbox = getUnscaledMouvementHitboxCopy(getMouvIndex()).copy()
+					.reshapeUnrotatedSquareHitbox(null, null, null, newyMax);
+			return computeEffectHitbox(mouvementHitbox,INIT_RECT,screenDisp);
+		}
+		else 
+			return super.computeHitbox(INIT_RECT, screenDisp);
+	}
 
 	private void updateHitbox(AbstractModelPartie partie)
 	{
 		if(groundEffect)
-		{
-			int shift = 1; // make the pilar look nicer
-			setDeplacementHitbox(Hitbox.createSquareHitboxes(
-					Arrays.asList(35 ,35 ,27 ,10 ,0),
-					Arrays.asList(0,0,0,0,0),
-					Arrays.asList(63 ,63 ,76 ,91 ,99),
-					Arrays.asList(pilar_length-shift,pilar_length-shift,pilar_length-shift,pilar_length-shift,pilar_length-shift)));
-			this.onUpdate(partie, false); //update rotated hitbox and drawtr
-
-		}
+			forceHitboxDirty();
 	}
 
 	/**
 	 * 
 	 * @param current_frame
-	 * @param force: force the destroy anim: first check if it was not already called. Also make sure that the pilar stop growing 
+	 * @param force: force the destroy mouv_index: first check if it was not already called. Also make sure that the pilar stop growing 
 	 */
 	public void startDestroyAnim(int current_frame,boolean force)
 	{
+		System.out.println("==============startDestroyAnim with force: "+ force);
 		if(groundEffect)
 		{
 			if(force)
@@ -288,12 +300,12 @@ public class Roche_effect extends Effect{
 					return;
 				//else make sure to stop growing before calling destroy 
 				stopGrowing=true;
-				lastPilarFullLength=UPDATE_LENGTH_TIME*Math.pow(10, 9)+1;
+				lastTimePilarFullLength=UPDATE_LENGTH_TIME*Math.pow(10, 9)+1;
 				startDestroyAnim=true;
 			}
 			this.setCollideWithNone();
 
-			((Roche_idle)getDeplacement()).setDestroyAnimation(current_frame);
+			((Roche_idle)getMouvement()).setDestroyAnimation(current_frame);
 
 		}
 	}
@@ -314,11 +326,14 @@ public class Roche_effect extends Effect{
 			update_length = MAX_LENGTH - pilar_length;
 		else
 			update_length = this.MAX_UPDATE_LENGTH;
-
-		if(init)
-			update_length=0;
-		growPilar(update_length);
-		updateHitbox(partie);
+		
+		if(!init){
+			growPilar(update_length);
+			updateHitbox(partie);
+		}
+		else
+			update_length=1;
+		
 
 
 		boolean couldntGrow = false; // true if when growing pilar is stuck in ground 
@@ -374,7 +389,6 @@ public class Roche_effect extends Effect{
 
 			}
 		}
-
 		//If there was a problem, revert motion
 		if(couldntGrow)
 		{
@@ -385,41 +399,40 @@ public class Roche_effect extends Effect{
 		}
 
 	}
+	
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
-
-		//update the hitbox : 
+	protected boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie) {
+		
 		if(groundEffect){
-			if(!stopGrowing && (pilar_length < MAX_LENGTH) && (PartieTimer.me.getElapsedNano() - lastLengthUpdate)>UPDATE_LENGTH_TIME*Math.pow(10, 9))
+			if(!stopGrowing && (pilar_length < MAX_LENGTH) && (PartieTimer.me.getElapsedNano() - lastLengthUpdateTime)>UPDATE_LENGTH_TIME*Math.pow(10, 9))
 			{
 				ejectCollidable(partie,0,false);
 				if(pilar_length == MAX_LENGTH)
 				{
 					stopGrowing=true;
-					lastPilarFullLength=PartieTimer.me.getElapsedNano();
+					lastTimePilarFullLength=PartieTimer.me.getElapsedNano();
 				}
-				lastLengthUpdate=PartieTimer.me.getElapsedNano();
-			}
-			
-			if(!startDestroyAnim && stopGrowing&& (PartieTimer.me.getElapsedNano()-lastPilarFullLength)>PILAR_DURATION*Math.pow(10, 9))
+				lastLengthUpdateTime=PartieTimer.me.getElapsedNano();
+			}			
+			if(!startDestroyAnim && stopGrowing&& (PartieTimer.me.getElapsedNano()-lastTimePilarFullLength)>PILAR_DURATION*Math.pow(10, 9))
 			{
 				startDestroyAnim(partie.getFrame(),false);
 				startDestroyAnim=true;
+				return true;
 			}
 		}
-
-		int prevAnim = getAnim();
-		setAnim(getDeplacement().updateAnimation(getAnim(), partie.getFrame(), 1));
-		if(prevAnim!=getAnim())
-			previousMaskedIm=null;
-		//doit deplace, change anim
-		boolean[] res = {true,false};
-		return res;
+		return super.updateMouvementBasedOnAnimation(partie);
 	}
 
 	@Override
-	public Vitesse getModifiedVitesse(AbstractModelPartie partie,
-			Collidable obj) {
+	protected void onMouvementChanged(AbstractModelPartie partie,boolean animationChanged, boolean mouvementChanged)
+	{
+		if(animationChanged)
+			previousMaskedIm=null;
+	}
+
+	@Override
+	public Vitesse getModifiedVitesse(Collidable obj) {
 		return new Vitesse();
 	}
 
@@ -433,11 +446,11 @@ public class Roche_effect extends Effect{
 		if(width==-1 || height == -1 )
 			return im;
 
-		boolean stopUpdate = stopGrowing && getAnim() ==0;
+		boolean stopUpdate = stopGrowing && getMouvIndex() ==0;
 		if( stopUpdate && !lastStopGrowingUpdate)
 			return previousMaskedIm;
 
-		int start_filter = pilar_length;
+		int start_filter = (int)Math.round(getUnscaledPilarLength());
 		if(previousMaskedIm==null){
 			previousMaskedIm = new BufferedImage(width,height,BufferedImage.TYPE_4BYTE_ABGR);
 			convertedIm=partie.toBufferedImage(im);
@@ -460,10 +473,11 @@ public class Roche_effect extends Effect{
 	public void setFirstPos(AbstractModelPartie partie) {
 
 		int divider = groundEffect? 1:2;
-		int pilar_correction = groundEffect? pilar_length :0;//take into account that at the start, the pilar is already of size pilar_length
+		
+		int pilar_correction = groundEffect? (int)Math.round(pilar_length) :0;//take into account that at the start, the pilar is already of size pilar_length
 		//get the middle bottom of the effect
-		int x_eff_center = (int) ((getDeplacement().xtaille.get(getAnim()))/2 * Math.cos(getRotation()) - ((getDeplacement().ytaille.get(getAnim()))/divider+pilar_correction) * Math.sin(getRotation()));
-		int y_eff_center = (int) ((getDeplacement().xtaille.get(getAnim()))/2 * Math.sin(getRotation()) + ((getDeplacement().ytaille.get(getAnim()))/divider+pilar_correction) * Math.cos(getRotation()));
+		int x_eff_center = (int) (getCurrentXtaille()/2 * Math.cos(getRotation()) - (getCurrentYtaille()/divider+pilar_correction) * Math.sin(getRotation()));
+		int y_eff_center = (int) (getCurrentXtaille()/2 * Math.sin(getRotation()) + (getCurrentYtaille()/divider+pilar_correction) * Math.cos(getRotation()));
 		Point firstPos = new Point();
 		if(groundEffect)
 		{
@@ -509,7 +523,7 @@ public class Roche_effect extends Effect{
 	{
 		pilar_length+=update_length;
 		Point deltaGrow = groundEffect? alignWithPilar(update_length) : new Point();
-		//if delta grow is 0,2 , the pilar is growing towards the up direction so we want to lower the position by 0,2 so that the bottom 
+		//if delta grow is 0,-2 , the pilar is growing towards the up direction so we want to lower the position by 0,-2 so that the bottom 
 		//of the pilar stays on the ground
 		addXpos_sync(-deltaGrow.x);
 		addYpos_sync(-deltaGrow.y);
@@ -519,7 +533,7 @@ public class Roche_effect extends Effect{
 		growPilar(-update_length);
 		updateHitbox(partie);
 		stopGrowing=true;
-		lastPilarFullLength=PartieTimer.me.getElapsedNano();
+		lastTimePilarFullLength=PartieTimer.me.getElapsedNano();
 
 		//revert objects position 
 		for(int j=0; j<collidableToMove.size() ; ++j){
@@ -527,11 +541,6 @@ public class Roche_effect extends Effect{
 			colMove.addXpos_sync(-motionToApply.get(j).x);
 			colMove.addYpos_sync(-motionToApply.get(j).y);
 		}
-	}
-	@Override
-	protected void updatePos(AbstractModelPartie partie)
-	{
-		//nothing
 	}
 
 

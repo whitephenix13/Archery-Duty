@@ -12,11 +12,12 @@ import music.MusicBruitage;
 import partie.collision.Collidable;
 import partie.collision.Collision;
 import partie.collision.Hitbox;
-import partie.deplacement.Deplace;
-import partie.deplacement.Mouvement;
-import partie.deplacement.projectile.Mouvement_projectile;
-import partie.deplacement.projectile.T_normal;
 import partie.modelPartie.AbstractModelPartie;
+import partie.mouvement.Deplace;
+import partie.mouvement.Mouvement;
+import partie.mouvement.projectile.Mouvement_projectile;
+import partie.mouvement.projectile.t_normal.T_normal_creation;
+import partie.mouvement.projectile.t_normal.T_normal_idle;
 import utils.Vitesse;
 
 public class TirSpirel extends TirMonstre implements InterfaceConstantes {
@@ -25,31 +26,34 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	 * 
 	 * @param _xpos, la position en x d'apparition du tir
 	 * @param _ypos, la position en y d'apparition du tir
-	 * @param _anim, l'animation de depart du tir
+	 * @param _mouv_index, l'animation de depart du tir
 	 * 
 	 * @return le nombre de tour de boucle a attendre avant de redeplacer le monstre
 	 */	
-	public TirSpirel(AbstractModelPartie partie,int _x_mid_pos, int _y_mid_pos,int _anim, double _rotation,int current_frame,float damageMultiplier,float _speedFactor)
+	public TirSpirel(AbstractModelPartie partie,Vector2d pos,int _mouv_index, double _rotation,Vector2d _scaling,int current_frame,float damageMultiplier,float _speedFactor)
 	{
 		super();
 		
-		setDeplacement(new T_normal(ObjectType.TIR_SPIREL,null,current_frame));
+		setMouvement(new T_normal_idle(ObjectType.TIR_SPIREL,null,current_frame));
 	
-		//Desired location for the projectile: spirel pos + middle of spirel = projectile pos + middle back of projectile
-		//projectile pos = (xpos,ypos) + (xtaille/2,ytaille/2) - (-ytailleproj/2 * sin(angle), ytailleproj/2 * cos(angle)) 
-		int x_tir_pos =  (int) (_x_mid_pos + getDeplacement().ytaille.get(0) * 0.5f  * Math.sin(_rotation));
-		int y_tir_pos =  (int) (_y_mid_pos - getDeplacement().ytaille.get(0) * 0.5f  * Math.cos(_rotation));
+		//Set the back of the projectile at the center of the monstre 
+		setMouvIndex(_mouv_index);
+		setRotation(_rotation);
+		setScaling(_scaling);
+		
+		Point proj_mid = getLeftOfTaille();
+		int x_tir_pos =  (int) (pos.x - proj_mid.x);
+		int y_tir_pos =  (int) (pos.y - proj_mid.y);
 		
 		setXpos_sync(x_tir_pos);
 		setYpos_sync(y_tir_pos);
-		setAnim(_anim);
-		setRotation(_rotation);
+	
 		needDestroy=false;
 		localVit=new Vitesse(0,0);
 		fixedWhenScreenMoves=false ; //true : not influenced by screen displacement (ie: use for the hero)
 
 		useGravity=false;
-		getDeplacement().setSpeed(this,getAnim());
+		getMouvement().setSpeed(this,getMouvIndex());
 
 		damage= -25*damageMultiplier;//-25
 		speedFactor=_speedFactor;
@@ -57,7 +61,7 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 		
 		//on active la musique car le tir part directement 
 		MusicBruitage.me.startBruitage("laser");
-
+		
 		//If collide, destroy it 
 		if(Collision.isWorldCollision(partie, this, true))
 		{
@@ -69,34 +73,53 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	{
 		return null;
 	}
+	
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie,Deplace deplace){
-		boolean animationChanged = false;
+	protected void handleInputs(AbstractModelPartie partie) {}
+	@Override
+	protected boolean updateMouvementBasedOnPhysic(AbstractModelPartie partie) {
+		return false;
+	}
+	@Override
+	protected boolean updateNonInterruptibleMouvement(AbstractModelPartie partie) {
+		return false;
+	}
+	@Override
+	protected boolean updateMouvementBasedOnInput(AbstractModelPartie partie) {
+		return false;
+	}
+	@Override
+	public boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie){
 		//update rotation : not needed 
-		//switch anim 
-		int prev_anim = getAnim();
-		setAnim(getDeplacement().updateAnimation(getAnim(), partie.getFrame(),speedFactor,false));
-		animationChanged = (prev_anim != getAnim());
-		if(animationChanged)
+		//switch mouv_index 
+		
+		if(getMouvement().animEndedOnce() && getMouvement() instanceof T_normal_creation)
 		{
-			//align mid right of tir with previous mid right
-			int x_current_mid = (int) (getDeplacement().xtaille.get(getAnim())* 1 * Math.cos(getRotation()) - (getDeplacement().ytaille.get(getAnim())*0.5f) * Math.sin(getRotation()));
-			int y_current_mid = (int) (getDeplacement().xtaille.get(getAnim())* 1 * Math.sin(getRotation()) + (getDeplacement().ytaille.get(getAnim())*0.5f) * Math.cos(getRotation()));
-		
-			int x_prev_mid = (int) (getDeplacement().xtaille.get(prev_anim)* 1 * Math.cos(getRotation()) - (getDeplacement().ytaille.get(prev_anim)*0.5f) * Math.sin(getRotation()));
-			int y_prev_mid = (int) (getDeplacement().xtaille.get(prev_anim)* 1 * Math.sin(getRotation()) + (getDeplacement().ytaille.get(prev_anim)*0.5f) * Math.cos(getRotation()));
-		
-			addXpos(x_prev_mid-x_current_mid);
-			addYpos(y_prev_mid-y_current_mid);
-
+			setMouvement(new T_normal_idle(ObjectType.TIR_SPIREL,null,partie.getFrame()));
+			setMouvIndex(0);
+		}
+		int prevMouvIndex = getMouvIndex();
+		int nextMouvIndex = getMouvement().updateAnimation(getMouvIndex(), partie.getFrame(),speedFactor);
+		if(prevMouvIndex != getMouvIndex())
+		{
+			try {
+				this.alignNextMouvement(partie, getMouvement(), nextMouvIndex, XAlignmentType.LEFT, YAlignmentType.CENTER, false, true);
+			} catch (Exception e) {} //this happens if we couldn't align the movement. We don't care in that case
+			
+			setMouvIndex(nextMouvIndex);
 		}
 		//update hitbox: draw transform did not changed => not needed
 
 		//set speed of deplacement
+		getMouvement().setSpeed(this,getMouvIndex());
+
 		//update draw transform: not needed
-		boolean[] res = {true,animationChanged};
-		return res;
+		return true;
 	}
+	@Override
+	protected void resetInputState(AbstractModelPartie partie) {}
+	@Override
+	protected void onMouvementChanged(AbstractModelPartie partie,boolean animationChanged, boolean mouvementChanged) {}
 	
 	@Override
 	public void memorizeCurrentValue() {
@@ -136,35 +159,33 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	}
 	
 	@Override
-	protected AffineTransform _computeDrawTr(boolean screenReferential, Point screenDisp)
+	protected AffineTransform _computeDrawTr(boolean screenReferential, Point screenDisp,double rotation,Vector2d scaling)
 	{
-		AffineTransform trans = new AffineTransform();
-		//Translate the object to its position
+		Point pos;
 		if(screenReferential)
-			trans.translate(getPos().x+screenDisp.x, getPos().y+screenDisp.y);
+			pos= new Point(getPos().x+screenDisp.x, getPos().y+screenDisp.y);
 		else
-			trans.translate(getPos().x, getPos().y);
-		//rotate it around its center
-		trans.rotate(getRotation(), 0, 0);
-		return trans;
+			pos= new Point(getPos().x, getPos().y);
+		
+		return AbstractModelPartie.getRotatedTransform(pos,null,rotation,scaling);
 	}
 
 	
-	private Hitbox computeRotatedHitbox(Point screendisp,Mouvement dep, int anim)
+	private Hitbox computeRotatedHitbox(Point screendisp,Mouvement dep, int mouv_index)
 	{
-		return Hitbox.convertHitbox(dep.getHitbox().get(anim),_computeDrawTr(false,screendisp),new Point(getXpos(),getYpos()),new Point(0,0));
+		//Use a scaling of 1 as scaling is used in computeDrawTr
+		return dep.getScaledHitboxCopy(mouv_index, new Vector2d(1,1)).transformHitbox(_computeDrawTr(false,screendisp),getPos(),new Point(0,0));
 	}
 	
 	@Override
 	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp) {
-		AffineTransform trans = _computeDrawTr(false,screenDisp);
-		Hitbox hit =  Hitbox.convertHitbox(getDeplacement().getHitbox().get(getAnim()),trans,new Point(0,0),new Point(0,0));
-		return hit;
+		AffineTransform trans = _computeDrawTr(false,screenDisp); //this takes into account the scaling the get hitbox with scaling once below
+		return getMouvement().getHitboxCopy(getMouvIndex()).transformHitbox(trans,new Point(0,0),new Point(0,0));
 	}
 	@Override
-	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp, Mouvement _dep, int _anim) {
+	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp, Mouvement _dep, int _mouv_index) {
 		Mouvement_projectile dep_copy = (Mouvement_projectile) _dep.Copy(); //create the mouvement
-		Hitbox rotatedTempHit = computeRotatedHitbox(screenDisp,dep_copy,_anim); //new hibox 
+		Hitbox rotatedTempHit = computeRotatedHitbox(screenDisp,dep_copy,_mouv_index); //new hibox 
 		
 		return rotatedTempHit.translate(getXpos(),getYpos());
 	}
@@ -189,6 +210,5 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 			MusicBruitage.me.startBruitage("annulation tir");
 		needDestroy=true;
 	}
-
 
 }

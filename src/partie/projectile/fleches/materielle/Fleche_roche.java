@@ -61,7 +61,7 @@ public class Fleche_roche extends Materielle {
 			}
 			ModelPrincipal.debugTime.elapsed("Fleche roche: After synchro speed with other roche");
 			if(!flecheEffect.getNeedDestroy())
-				this.isVisible=false;
+				this.simulateDestroy();
 			ModelPrincipal.debugTime.elapsed("Fleche roche: After set fleche invisible");
 			MusicBruitage.me.startBruitage("arc");
 			ModelPrincipal.debugTime.elapsed("Fleche roche: After start bruitage");
@@ -88,10 +88,8 @@ public class Fleche_roche extends Materielle {
 			flecheEffect=new Roche_effect(partie,this,0,partie.getFrame(),normal,null,null,false);
 			MusicBruitage.me.startBruitage("arc");
 
-			this.doitDeplace=false;
-			this.setCollideWithNone();
 			//Hide the arrow but don't destroy it otherwise the effect position is no longer updated
-			this.isVisible=false;
+			this.simulateDestroy();
 			return false;
 		}
 		return true;

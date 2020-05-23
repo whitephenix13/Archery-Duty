@@ -3,20 +3,23 @@ package partie.collision;
 import java.awt.Point;
 import java.awt.geom.AffineTransform;
 
-import partie.deplacement.Mouvement;
+import partie.collision.CachedObject.CachedParameter;
 import partie.modelPartie.AbstractModelPartie;
+import partie.mouvement.Mouvement;
 
 public class CachedAffineTransform extends CachedObject<AffineTransform>{
 
 	public CachedAffineTransform(Collidable _parent) {
 		super(_parent);
-		valueChangedStrategy = new boolean[6];
-		valueChangedStrategy[ANIM]=true;
-		valueChangedStrategy[DEPLACEMENT]=true;
-		valueChangedStrategy[HITBOX]=false;
-		valueChangedStrategy[POS]=true;
-		valueChangedStrategy[ROTATION]=true;
-		valueChangedStrategy[SCREENDISP]=true;
+		valueChangedStrategy = new boolean[8];
+		valueChangedStrategy[CachedParameter.FORCED.getIndex()]=true;
+		valueChangedStrategy[CachedParameter.MOUV_INDEX.getIndex()]=true;
+		valueChangedStrategy[CachedParameter.MOUVEMENT.getIndex()]=true;
+		valueChangedStrategy[CachedParameter.HITBOX.getIndex()]=false;
+		valueChangedStrategy[CachedParameter.POS.getIndex()]=true;
+		valueChangedStrategy[CachedParameter.ROTATION.getIndex()]=true;
+		valueChangedStrategy[CachedParameter.SCALING.getIndex()]=true;
+		valueChangedStrategy[CachedParameter.SCREENDISP.getIndex()]=true;
 	}
 	public CachedAffineTransform(CachedAffineTransform obj)
 	{

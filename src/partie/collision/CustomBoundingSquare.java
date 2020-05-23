@@ -2,14 +2,11 @@ package partie.collision;
 
 import java.awt.Point;
 import java.awt.geom.AffineTransform;
-import java.util.List;
 
 import javax.vecmath.Vector2d;
 
-import gameConfig.InterfaceConstantes;
-import partie.deplacement.Deplace;
-import partie.deplacement.Mouvement;
 import partie.modelPartie.AbstractModelPartie;
+import partie.mouvement.Mouvement;
 import utils.Vitesse;
 
 /**
@@ -44,7 +41,7 @@ public class CustomBoundingSquare extends Collidable{
 				 ((InterfaceConstantes.BD_FENETRE.x - InterfaceConstantes.HG_FENETRE.x)/2));
 	}*/
 	@Override
-	public Vitesse getGlobalVit(AbstractModelPartie partie) {
+	public Vitesse getGlobalVit() {
 		
 		return null;
 	}
@@ -76,7 +73,7 @@ public class CustomBoundingSquare extends Collidable{
 	}
 
 	@Override
-	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp, Mouvement mouv, int _anim) {
+	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp, Mouvement mouv, int mouv_index) {
 		
 		return null;
 	}
@@ -108,11 +105,6 @@ public class CustomBoundingSquare extends Collidable{
 		
 	}
 
-	@Override
-	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
-		
-		return null;
-	}
 	@Override 
 	public void deplaceOutOfScreen(AbstractModelPartie partie)
 	{
@@ -148,9 +140,33 @@ public class CustomBoundingSquare extends Collidable{
 		
 	}
 	@Override
-	public Hitbox getNextEstimatedHitbox(AbstractModelPartie partie, double newRotation,int anim) {
+	protected void onStartDeplace(){}
+	@Override
+	protected void handleInputs(AbstractModelPartie partie) {
 		
-		return null;
 	}
-
+	@Override
+	protected boolean updateMouvementBasedOnPhysic(AbstractModelPartie partie) {
+		return false;
+	}
+	@Override
+	protected boolean updateNonInterruptibleMouvement(AbstractModelPartie partie) {
+		return false;
+	}
+	@Override
+	protected boolean updateMouvementBasedOnInput(AbstractModelPartie partie) {
+		return false;
+	}
+	@Override
+	protected boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie) {
+		return false;
+	}
+	@Override
+	protected void resetInputState(AbstractModelPartie partie) {
+		
+	}
+	@Override
+	protected void onMouvementChanged(AbstractModelPartie partie,boolean animationChanged, boolean mouvementChanged) {
+		
+	}
 }

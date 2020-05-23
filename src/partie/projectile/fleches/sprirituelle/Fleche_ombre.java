@@ -10,13 +10,13 @@ import partie.collision.Collidable;
 import partie.collision.Collision;
 import partie.collision.GJK_EPA;
 import partie.collision.Hitbox;
-import partie.deplacement.Deplace;
 import partie.effects.Effect;
 import partie.effects.Ombre_effect;
 import partie.effects.Roche_effect;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
+import partie.mouvement.Deplace;
 import partie.projectile.Projectile;
 
 public class Fleche_ombre extends Spirituelle {
@@ -189,8 +189,7 @@ public class Fleche_ombre extends Spirituelle {
 
 		Roche_effect.synchroniseMovementWithRocheEffectMovement(collidedObject, new Collidable[] {this,flecheEffect});
 
-		this.doitDeplace=false;
-		this.setCollideWithNone();
+		this.simulateDestroy();
 	}
 	@Override
 	protected void onPlanted(List<Entity> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
@@ -211,7 +210,7 @@ public class Fleche_ombre extends Spirituelle {
 				ejectArrow(partie,unprojectedSpeed);
 		
 		this.isVisible=false;
-		this.doitDeplace=false;
+		this.shouldMove=false;
 		this.setCollideWithNone();
 		if(collider instanceof Entity){
 			applyArrowEffect(objects,partie,collider,normal,null,null);

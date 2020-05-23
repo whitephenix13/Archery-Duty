@@ -27,10 +27,10 @@ public class DrawImageItem {
 	AffineTransform tr=null;
 	ImageObserver observer=null;
 	//line
-	Point p1;
+	Point p1; //Use p1 for oval size
 	Point p2;
 	int layerIndex ;
-	public enum Type_Item{Image,Transform_Image,String,Polygon,Bar,FillPoly,Line};
+	public enum Type_Item{Image,Transform_Image,String,Polygon,Bar,FillPoly,Line,Oval};
 	Type_Item item = Type_Item.Image;
 	Color originalColor =null; 
 	Color newColor=null;
@@ -117,6 +117,19 @@ public class DrawImageItem {
 		item = Type_Item.Line;
 
 	}
+	//For oval
+	public DrawImageItem(int _x,int _y ,Point _p1, Color _newColor, Color _originalColor, int _layerIndex)
+	{
+		x=_x;
+		y=_y;
+		p1=_p1;
+		newColor=_newColor;
+		originalColor =_originalColor;
+		layerIndex=_layerIndex;
+
+		item = Type_Item.Oval;
+
+	}
 	public void draw(Graphics g)
 	{
 		Graphics2D g2d = (Graphics2D)g;
@@ -168,7 +181,16 @@ public class DrawImageItem {
 			if(originalColor != null)
 				g.setColor(originalColor);
 		}
-		
+		else if(Type_Item.Oval.equals(item)){
+			if(newColor != null)
+				g.setColor(newColor);
+			//x and y are the center of the object. 
+			//in the drawOval function, they are the top left of the oval. 
+			//=> translate by width/2 and height/2
+			g.drawOval(x-p1.x/2,y-p1.y/2,p1.x,p1.y);
+			if(originalColor != null)
+				g.setColor(originalColor);
+		}
 	}
 	
 }

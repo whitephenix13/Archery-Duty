@@ -6,6 +6,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
+import java.util.Arrays;
 
 import javax.vecmath.Vector2d;
 
@@ -13,11 +14,11 @@ import gameConfig.ObjectTypeHelper;
 import gameConfig.ObjectTypeHelper.ObjectType;
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
-import partie.deplacement.Deplace;
-import partie.deplacement.effect.Grappin_idle;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
+import partie.mouvement.Deplace;
+import partie.mouvement.effect.Grappin_idle;
 import partie.projectile.fleches.Fleche;
 import utils.Vitesse;
 
@@ -34,20 +35,32 @@ public class Grappin_effect extends Effect{
 	public boolean isDragging = false;
 	//shooter
 	//use shooter
-	Point middleHeros = new Point(); // correspond to the middle of the hero
-	public Point getMiddleHeros(){return middleHeros;}
+	Vector2d middleHeros = new Vector2d(); // correspond to the middle of the hero
+	public Vector2d getMiddleHeros(){return middleHeros;}
 
 	//arrow 
-	//use ref_fleche
-	Point middleTailArrow = new Point();
-	public Point getMiddleTailArrow(){return middleTailArrow;}
+	//use ref_flecheVector2d
+	Vector2d middleTailArrow = new Vector2d();
+	public Vector2d getMiddleTailArrow(){return middleTailArrow;}
 
 	public double getShooterToAnchorDistance(){return (Math.sqrt(Math.pow(middleTailArrow.x-middleHeros.x,2)+Math.pow(middleTailArrow.y-middleHeros.y,2)));}
 
 	private int last_start_filter=-1;
 	private BufferedImage convertedIm=null;
-	double current_length = 0;
-	public double getRemainingLength(){return (MAX_LENGTH-current_length);}
+	
+	private double _current_length; //Never access this directly
+	private double getCurrentLength(){
+		return _current_length;
+	}
+	private void setCurrentLength(double newLength){
+		if(_current_length != newLength){
+			forceHitboxDirty(); //force hitbox recomputation
+			_current_length = newLength;
+		}
+	}
+	
+	//double current_length = 0;
+	public double getRemainingLength(){return (MAX_LENGTH-getCurrentLength());}
 
 	private Vitesse modified_vitesse = null;
 	public boolean reached_max_length=false;
@@ -55,34 +68,49 @@ public class Grappin_effect extends Effect{
 	public double MIN_SHOOTER_ANCHOR_D = 50;
 	int MAX_LENGTH = 1000; 
 	private double DRAG_SPEED=15;//15
-	public Grappin_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame, Collidable _shooter )
+	
+	public Grappin_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _mouv_index, int current_frame, Collidable _shooter )
 	{
-		super(_anim,_ref_fleche);
-		
+		super(_mouv_index,_ref_fleche);
+		setScaling(1,getScaling().y);//Never change the x scaling or it will screw the arrow (since grappin is from hero to arrow disregarding the scale).
+		this.setCollideWithNone();
+	
 		ref_fleche=_ref_fleche;
 		localVit= new Vitesse();
 		setRotation(0);
 		shooter=_shooter;
 		
 		subTypeMouv = null;
-		setDeplacement(new Grappin_idle(subTypeMouv,partie.getFrame()));
-		
-		xplace=2;
-		yplace=1;
-
+		setMouvement(new Grappin_idle(subTypeMouv,partie.getFrame()));
 
 		TEMPS_DESTRUCTION= _ref_fleche.TEMPS_DESTRUCTION;
-
+				
 		partie.arrowsEffects.add(this);
 		setFirstPos(partie);
-		this.onUpdate(partie, false); //update rotated hitbox and drawtr
+		
+		this.onUpdate(partie); 
+		
 	}
 
+	
 	@Override
-	public void onUpdate(AbstractModelPartie partie,boolean lastCompute) {		
+	protected boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie) {
+		onUpdate(partie);
+		return super.updateMouvementBasedOnAnimation(partie);
+	}
+	
+	@Override 
+	public void onRemoveRefFleche(AbstractModelPartie partie,boolean destroyNow){
+		this.needDestroy=true;
+		super.onRemoveRefFleche(partie, destroyNow);
+	}
+	
+
+	
+	private void onUpdate(AbstractModelPartie partie) {		
 		//destroy object when heros has collide
 		boolean stopCondi = getShooterToAnchorDistance()<=MIN_SHOOTER_ANCHOR_D && isDragging;
-		if(stopCondi && !lastCompute)
+		if(stopCondi)
 		{
 			if(this.tempsDetruit>0)
 				return;
@@ -91,7 +119,7 @@ public class Grappin_effect extends Effect{
 			this.destroy(partie,false);
 			return;
 		}
-		if(reached_max_length && !lastCompute)
+		if(reached_max_length)
 		{
 			return;
 		}
@@ -99,7 +127,7 @@ public class Grappin_effect extends Effect{
 		if(ref_fleche==null )
 			return;
 
-		if((ref_fleche.getNeedDestroy() || this.needDestroy) && !lastCompute )
+		if((ref_fleche.getNeedDestroy() || this.needDestroy))
 		{
 			this.destroy(partie,true);
 			return;
@@ -110,11 +138,12 @@ public class Grappin_effect extends Effect{
 
 		Heros her = ref_fleche.shooter;
 		Hitbox herHit = her.getHitbox(partie.INIT_RECT, partie.getScreenDisp());
+		
 		Vector2d topleftH = Hitbox.supportPoint(new Vector2d(-1,-1), herHit.polygon);
 		Vector2d bottomrightH = Hitbox.supportPoint(new Vector2d(1,1), herHit.polygon);
 
-		Point prevMiddleHeros = (Point) middleHeros.clone();
-		middleHeros=new Point((int) (topleftH.x + bottomrightH.x)/2,(int) (topleftH.y + bottomrightH.y)/2);
+		Vector2d prevMiddleHeros = new Vector2d(middleHeros);
+		middleHeros=herHit.getCenter();
 
 		//get the tail of the arrow
 
@@ -127,28 +156,29 @@ public class Grappin_effect extends Effect{
 		//get the opposite since the direction we found was the one towards the tip
 		Vector2d fleche_tail1 = Hitbox.supportPoint(new Vector2d(-XY[0],-XY[1]),ref_fleche.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon);
 		Vector2d fleche_tail2 = Hitbox.supportPoint(new Vector2d(-XY2[0],-XY2[1]),ref_fleche.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon);
-		Point prevMiddleTailArrow = (Point) middleTailArrow.clone();
-		middleTailArrow = new Point((int)((fleche_tail1.x+fleche_tail2.x)/2),(int)((fleche_tail1.y+fleche_tail2.y)/2));
+		Vector2d prevMiddleTailArrow = new Vector2d(middleTailArrow);
+		//compute the middle of the tail
+		middleTailArrow.set(fleche_tail1);
+		middleTailArrow.add(fleche_tail2);
+		middleTailArrow.scale(0.5f);
 
 		double xPosRelative= middleTailArrow.x-middleHeros.x; 
 		double yPosRelative= middleTailArrow.y-middleHeros.y;
-		current_length= Math.sqrt(xPosRelative*xPosRelative+yPosRelative*yPosRelative);
+		setCurrentLength(Math.sqrt(xPosRelative*xPosRelative+yPosRelative*yPosRelative));
 		//if max length is reached: the effect has to be detroyed, no need to update the rotation
-		if(Math.round(current_length)>MAX_LENGTH){
+		if(Math.round(getCurrentLength())>MAX_LENGTH){
 			reached_max_length=true;
 			middleHeros=prevMiddleHeros;
 			middleTailArrow=prevMiddleTailArrow;
 			
-			if(!lastCompute){
 			ref_fleche.destroy(partie,false);
 			destroy(partie,false);
-			}
 		}
-		else
-			setRotation(Deplace.XYtoAngle(xPosRelative, yPosRelative));
-		
-		setDeplacementHitbox(Hitbox.createSquareHitboxes((int)(getDeplacement().xtaille.get(getAnim())-current_length),0,getDeplacement().xtaille.get(getAnim()),30,1));
-		super.onUpdate(partie, lastCompute);	
+		else{
+			setRotation(Deplace.XYtoAngle(xPosRelative, yPosRelative));	
+			System.out.println(middleTailArrow +" "+ middleHeros);
+			System.out.println("Fleche grappin rotation "+ (getRotation()*180/Math.PI) + "for relative ("+xPosRelative+","+yPosRelative+")");
+		}
 	}
 
 	
@@ -159,7 +189,7 @@ public class Grappin_effect extends Effect{
 	}
 	
 	@Override
-	public Vitesse getModifiedVitesse(AbstractModelPartie partie,Collidable obj) {
+	public Vitesse getModifiedVitesse(Collidable obj) {
 		if(ObjectTypeHelper.isTypeOf(obj, ObjectType.HEROS) && ! this.shooterDragged)
 			return new Vitesse(); 
 
@@ -178,27 +208,31 @@ public class Grappin_effect extends Effect{
 	@Override
 	public AffineTransform computeDrawTr(Point screenDisp)
 	{
-		Point middle = new Point(getDeplacement().xtaille.get(getAnim())/2,getDeplacement().ytaille.get(getAnim())/2);
-		
-		//shift value to get to the middle right of the effect
-		int xshift =(int) ( middle.x * xplace * Math.cos(0) - middle.y * yplace * Math.sin(0));
-		int yshift =(int) ( middle.x * xplace * Math.sin(0) + middle.y * yplace * Math.cos(0));
+		Point middle_right = getPointOfTaille(1,0.5f,0,getScaling(),getMouvIndex()); //for grappin effect
 
 		//position is top left 
-		Point pos = new Point(middleTailArrow.x-xshift+screenDisp.x,middleTailArrow.y-yshift+screenDisp.y);
-		Point anchor = new Point(xshift,yshift);//rotate around middle right 
-		AffineTransform tr = AbstractModelPartie.getRotatedTransform(pos,anchor, getRotation());
+		Point pos = new Point((int)Math.round(middleTailArrow.x-middle_right.x+screenDisp.x),(int)Math.round(middleTailArrow.y-middle_right.y+screenDisp.y));
+		Point anchor = middle_right;//rotate around middle right 
+		AffineTransform tr = AbstractModelPartie.getRotatedTransform(pos,anchor, getRotation(),getScaling());
 		return tr;
+	}
+	@Override 
+	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp) {
+
+		//Get the mouvement hitbox and reshape the xmin so that they fit with the current length
+		int newXMin = (int)( (getCurrentXtaille()-getCurrentLength())); //Don't forget to get the unscale value 
+		Hitbox unscaledMouvementHitbox = getUnscaledMouvementHitboxCopy(getMouvIndex()).copy()
+				.reshapeUnrotatedSquareHitbox(newXMin, null, null, null);
+		return computeEffectHitbox(unscaledMouvementHitbox,INIT_RECT,screenDisp);
 	}
 
 	public void setFirstPos(AbstractModelPartie partie)
 	{
 		//get the middle right of the effect
-		int x_eff = (int) (getDeplacement().xtaille.get(getAnim()) * Math.cos(ref_fleche.getRotation()) - getDeplacement().ytaille.get(getAnim())/2 * Math.sin(ref_fleche.getRotation()));
-		int y_eff =(int) (getDeplacement().xtaille.get(getAnim()) * Math.sin(ref_fleche.getRotation()) + getDeplacement().ytaille.get(getAnim())/2 * Math.cos(ref_fleche.getRotation()));
+		Point middle_right = getRightOfTaille();
 
-		setXpos_sync((int)(middleTailArrow.x)-x_eff+partie.xScreendisp);
-		setYpos_sync((int)(middleTailArrow.y)-y_eff+partie.yScreendisp);
+		setXpos_sync((int)(middleTailArrow.x)-middle_right.x+partie.xScreendisp);
+		setYpos_sync((int)(middleTailArrow.y)-middle_right.y+partie.yScreendisp);
 	}
 
 	@Override
@@ -209,7 +243,7 @@ public class Grappin_effect extends Effect{
 			return im;
 
 		int distance = (int) Math.round(Math.sqrt(Math.pow((middleTailArrow.x-middleHeros.x),2) + Math.pow((middleTailArrow.y-middleHeros.y),2) ));
-		int start_filter = width - distance;
+		int start_filter = width - distance ; 
 		if(previousMaskedIm==null){
 			previousMaskedIm = new BufferedImage(width,height,BufferedImage.TYPE_4BYTE_ABGR);
 			convertedIm=partie.toBufferedImage(im);
@@ -234,13 +268,6 @@ public class Grappin_effect extends Effect{
 		//Do not register entitie as the effect really starts if the arrow collides with an Entite or the ground 
 	}
 	
-	@Override
-	public void onRemoveRefFleche(AbstractModelPartie partie,boolean destroyNow)
-	{
-		this.onUpdate(partie,true);
-		ref_fleche=null;
-		this.needDestroy=true;
-	};
 
 
 }

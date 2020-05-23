@@ -2,20 +2,22 @@ package partie.collision;
 
 import java.awt.Point;
 
-import partie.deplacement.Mouvement;
 import partie.modelPartie.AbstractModelPartie;
+import partie.mouvement.Mouvement;
 
 public class CachedHitbox extends CachedObject<Hitbox>{
 
 	public CachedHitbox(Collidable _parent) {
 		super(_parent);
-		valueChangedStrategy = new boolean[6];
-		valueChangedStrategy[ANIM]=true;
-		valueChangedStrategy[DEPLACEMENT]=true;
-		valueChangedStrategy[HITBOX]=true;
-		valueChangedStrategy[POS]=true;
-		valueChangedStrategy[ROTATION]=true;
-		valueChangedStrategy[SCREENDISP]=true;
+		valueChangedStrategy = new boolean[8];
+		valueChangedStrategy[CachedParameter.FORCED.getIndex()]=true;
+		valueChangedStrategy[CachedParameter.MOUV_INDEX.getIndex()]=true;
+		valueChangedStrategy[CachedParameter.MOUVEMENT.getIndex()]=true;
+		valueChangedStrategy[CachedParameter.HITBOX.getIndex()]=true;
+		valueChangedStrategy[CachedParameter.POS.getIndex()]=true;
+		valueChangedStrategy[CachedParameter.ROTATION.getIndex()]=true;
+		valueChangedStrategy[CachedParameter.SCALING.getIndex()]=true;
+		valueChangedStrategy[CachedParameter.SCREENDISP.getIndex()]=true;
 
 	}
 	public CachedHitbox(CachedHitbox obj)
@@ -31,9 +33,9 @@ public class CachedHitbox extends CachedObject<Hitbox>{
 	{
 		return _getObject(INIT_RECT,currentScreendisp);
 	}
-	public Hitbox getObject(Point INIT_RECT, Point currentScreendisp,Mouvement mouv, int _anim)
+	public Hitbox getObject(Point INIT_RECT, Point currentScreendisp,Mouvement mouv, int mouv_index)
 	{
-		return parent.computeHitbox(INIT_RECT, currentScreendisp, mouv, _anim);
+		return parent.computeHitbox(INIT_RECT, currentScreendisp, mouv, mouv_index);
 	}
 	
 	@Override

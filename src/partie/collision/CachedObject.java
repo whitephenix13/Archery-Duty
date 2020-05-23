@@ -3,19 +3,22 @@ package partie.collision;
 import java.awt.Point;
 import java.util.Arrays;
 
+import gameConfig.InterfaceConstantes;
 import partie.projectile.fleches.Fleche;
 
 public abstract class CachedObject<T> {
 	
 	protected Collidable parent;
 	
-	public final static int ANIM =0; 
-	public final static int DEPLACEMENT =1;
-	public final static int HITBOX =2;
-	public final static int POS =3;
-	public final static int ROTATION =4;
-	public final static int SCREENDISP =5;
-
+	public static enum CachedParameter{
+		FORCED(0),MOUV_INDEX(1),MOUVEMENT(2),HITBOX(3),POS(4),ROTATION(5),SCALING(6),SCREENDISP(7);
+		private final int index;
+		private CachedParameter(int val){
+			index = val;
+		}
+		public int getIndex(){return index;}
+	}
+	
 	public Point cachedScreenDisp; //screen disp when the object was cached
 	protected boolean[] valueChanged;
 	protected boolean[] valueChangedStrategy;//which parameters to use to determine if the object is dirty
@@ -24,7 +27,7 @@ public abstract class CachedObject<T> {
 	
 	protected CachedObject()
 	{
-		valueChanged = new boolean[5];
+		valueChanged = new boolean[7]; //screendisp is not part of it 
 		cachedObject=null; //force computation on first time 
 		
 		//WARNING : initialize cachedParametersStrategy when heriting from that class
@@ -52,21 +55,49 @@ public abstract class CachedObject<T> {
 		cachedObject = obj.cachedObject;
 	}
 	
-	public void OnChangedHitbox(){valueChanged[HITBOX]=true;}
-	public void OnChangedAnim(){valueChanged[ANIM]=true;}
-	public void OnChangedRotation(){valueChanged[ROTATION]=true;}
-	public void OnChangedDeplacement(boolean sameTypeOfDeplacement){valueChanged[DEPLACEMENT] = true;valueChanged[HITBOX]=true;}//as hitbox are protected; we assume that they are changed whenever the deplacement is changed
-	public void OnChangedPos(){valueChanged[POS] = true;}
+	public void onChangedHitbox(){valueChanged[CachedParameter.HITBOX.getIndex()]=true;}
+	public void onChangedMouvIndex(){valueChanged[CachedParameter.MOUV_INDEX.getIndex()]=true;}
+	public void onChangedRotation(){valueChanged[CachedParameter.ROTATION.getIndex()]=true;}
+	public void onChangedScaling(){valueChanged[CachedParameter.SCALING.getIndex()]=true;}
+	public void onChangedMouvement(boolean sameTypeOfMouvement){valueChanged[CachedParameter.MOUVEMENT.getIndex()] = true;
+	valueChanged[CachedParameter.HITBOX.getIndex()]=true;}//as hitbox are protected; we assume that they are changed whenever the mouvement is changed
+	public void onChangedPos(){valueChanged[CachedParameter.POS.getIndex()] = true;}
 
-
+	public void forceDirty(){valueChanged[CachedParameter.FORCED.getIndex()] = true;}
 	public boolean isObjectDirty(Point currentScreendisp)
 	{
+		
+		
+		if(InterfaceConstantes.DEBUG_CACHED_OBJECT){
+			String debug_dirty_cause = "";
+			if((valueChangedStrategy[CachedParameter.MOUV_INDEX.getIndex()] && valueChanged[CachedParameter.MOUV_INDEX.getIndex()]))
+				debug_dirty_cause += " Mouv index changed";
+			if((valueChangedStrategy[CachedParameter.MOUVEMENT.getIndex()] && valueChanged[CachedParameter.MOUVEMENT.getIndex()]))
+				debug_dirty_cause += "; Mouvement changed";
+			if((valueChangedStrategy[CachedParameter.POS.getIndex()] && valueChanged[CachedParameter.POS.getIndex()]) )
+				debug_dirty_cause += "; Position changed";
+			if((valueChangedStrategy[CachedParameter.ROTATION.getIndex()] && valueChanged[CachedParameter.ROTATION.getIndex()]) )
+				debug_dirty_cause += "; Rotation changed";
+			if((valueChangedStrategy[CachedParameter.SCALING.getIndex()] && valueChanged[CachedParameter.SCALING.getIndex()]) )
+				debug_dirty_cause += "; Scaling changed";
+			if((valueChangedStrategy[CachedParameter.SCREENDISP.getIndex()] && (cachedScreenDisp==null || !cachedScreenDisp.equals(currentScreendisp))) )
+				debug_dirty_cause += "; Screendisp changed";
+			if((valueChangedStrategy[CachedParameter.FORCED.getIndex()] && valueChanged[CachedParameter.FORCED.getIndex()]))
+				debug_dirty_cause += "; Forced";
+			if(cachedObject==null)
+				debug_dirty_cause += "; Cached object is null";
+			if(!debug_dirty_cause.equals(""))
+				System.out.println(parent+"<"+this+"> dirty because "+debug_dirty_cause);
+		}
+		//if(InterfaceConstantes)
 		//Do not update the cached hitbox if the hitbox is still under computation 
-		if((valueChangedStrategy[ANIM] && valueChanged[ANIM]) 
-				||(valueChangedStrategy[DEPLACEMENT] && valueChanged[DEPLACEMENT])
-				||(valueChangedStrategy[POS] && valueChanged[POS]) 
-				||(valueChangedStrategy[ROTATION] && valueChanged[ROTATION]) 
-				||(valueChangedStrategy[SCREENDISP] && (cachedScreenDisp==null || !cachedScreenDisp.equals(currentScreendisp))) 
+		if((valueChangedStrategy[CachedParameter.MOUV_INDEX.getIndex()] && valueChanged[CachedParameter.MOUV_INDEX.getIndex()]) 
+				||(valueChangedStrategy[CachedParameter.MOUVEMENT.getIndex()] && valueChanged[CachedParameter.MOUVEMENT.getIndex()])
+				||(valueChangedStrategy[CachedParameter.POS.getIndex()] && valueChanged[CachedParameter.POS.getIndex()]) 
+				||(valueChangedStrategy[CachedParameter.ROTATION.getIndex()] && valueChanged[CachedParameter.ROTATION.getIndex()]) 
+				||(valueChangedStrategy[CachedParameter.SCALING.getIndex()] && valueChanged[CachedParameter.SCALING.getIndex()]) 
+				||(valueChangedStrategy[CachedParameter.SCREENDISP.getIndex()] && (cachedScreenDisp==null || !cachedScreenDisp.equals(currentScreendisp))) 
+				||(valueChangedStrategy[CachedParameter.FORCED.getIndex()] && valueChanged[CachedParameter.FORCED.getIndex()])
 				|| cachedObject==null)
 			return true;
 		else

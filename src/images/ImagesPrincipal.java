@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 import gameConfig.ObjectTypeHelper.ObjectType;
 import images.ImagesContainer.ImageInfo;
-import partie.deplacement.entity.Mouvement_entity.MouvEntityEnum;
+import partie.mouvement.entity.Mouvement_entity.EntityTypeMouv;
 
 public class ImagesPrincipal extends ImagesContainer{
 	public static enum ImPrincipalInfo implements ImageInfo{BACKGROUND}
@@ -44,7 +44,7 @@ public class ImagesPrincipal extends ImagesContainer{
 	}
 
 	@Override
-	public ArrayList<Image> getImages(ObjectType objType, ImageInfo info1,ImageInfo info2, int anim)
+	public ArrayList<Image> getImages(ObjectType objType, ImageInfo info1,ImageInfo info2, int mouv_index)
 	{
 		return null;
 	}

@@ -1,6 +1,5 @@
 package partie.collision;
 
-import java.awt.Point;
 import java.awt.Polygon;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,10 +26,11 @@ public abstract class GJK_EPA {
 		if(simplex!=null)
 		{
 			dNull=false;
-			GJK_EPA.EPA(b, a, simplex, firstDir , normals);
+			GJK_EPA.directionalEPA(b, a, simplex, firstDir , normals);
 		}
 		return isIntersect(dInter,dNull);
 	}
+
 	public static int isIntersect(double dInter,boolean dNull)
 	{
 		if(dNull)
@@ -112,8 +112,9 @@ public abstract class GJK_EPA {
 			// Point is valid so update the simplex:
 			simplex.add( point );
 			// Evaluate and update the simplex while checking for an early exit:
-			if ( evaluate( simplex, direction ) == true )
+			if ( evaluate( simplex, direction ) == true ){
 				return simplex;
+			}
 		}
 	}
 
@@ -254,7 +255,6 @@ public abstract class GJK_EPA {
 			final Vector2d a  = simplex.get( 2 );
 			final Vector2d b  = simplex.get( 1 );
 			final Vector2d c  = simplex.get( 0 );
-
 			// Compute helper vectors:
 			final Vector2d ao = createVector( a, new Vector2d( ) );
 			final Vector2d ab = createVector( a, b );
@@ -304,11 +304,11 @@ public abstract class GJK_EPA {
 		public double distance; //penetration distance , penetration vector is speed.normalize * distance
 
 		public double distanceNormal; //distance from to origine to the intersect point along the normal
-		public Vector2d normal; //normal of the simplex edge containing the intersect point
+		public Vector2d normal =null; //normal of the simplex edge containing the intersect point
 
-		public int index; //index of where to add the point in the simplex list
+		public int index; //index of where to add the point in the simplex list. this should be between the indices of the inspected closest edge
 		
-		public Vector2d intersect = null;
+		public Vector2d intersect = null; //the actual intersect point
 		public IntersectPoint(double d,double nd, Vector2d n, Vector2d _inter)
 		{
 			distance=d; 
@@ -316,44 +316,106 @@ public abstract class GJK_EPA {
 			normal=n;
 			intersect=_inter;
 		}
-
-	}
-
-	/**Expansion algorithm which iteratively adds a point in order to expand the simplex. Stop when the distance to the closest edge is close to the one of the point added */
-	public static double EPA(Polygon shapeA, Polygon shapeB, List<Vector2d> simplex, Vector2d dir, List<Vector2d> outNormal)
-	{
-		while(true)
-		{
-			
-			double distance = FLOAT_MAX;
-
-			IntersectPoint edgeInDirection = getEdgeInDirection(simplex, dir,shapeA, shapeB);
-			if(edgeInDirection==null)
-				return 0;
-
-			
-			final Vector2d edgeNormal = edgeInDirection.normal;
-			//get support point in direction of edge's normal
-			final Vector2d sup = support( shapeA,edgeNormal  );
-			sup.sub( support( shapeB, new Vector2d( -edgeNormal.x, -edgeNormal.y ) ) ); 
-		
-			distance = edgeInDirection.distanceNormal;
-			double d = sup.dot(edgeNormal);
-			
-			
-			if( (d - distance) <= TOLERANCE)
-			{
-				edgeInDirection.normal= correctNormal(edgeInDirection.normal);
-				outNormal.add(edgeInDirection.normal);
-				return edgeInDirection.distance;
-			}
-			else{
-
-				simplex.add(edgeInDirection.index,sup);
-			}
-
+		@Override
+		public String toString(){
+			StringBuilder bd = new StringBuilder();
+			bd.append("distance ").append(distance).append(" distanceNormal ").append(distanceNormal).append(" normal ").append(normal).append(" index ").append(index).append(" intersect ").append(intersect);
+			return bd.toString();
 		}
 	}
+
+	/***
+	 * Applies {@link #_EPA(Polygon, Polygon, List, Vector2d, List)} to find the smallest penetration vector
+	 * @param shapeA
+	 * @param shapeToMove
+	 * @param simplex
+	 * @param outNormal
+	 * @return
+	 */
+	public static double EPA(Polygon shapeA, Polygon shapeToMove, List<Vector2d> simplex, List<Vector2d> outNormal){
+		return _EPA(shapeA,shapeToMove,simplex,null,outNormal);
+	}
+
+	/***
+	 * Applies {@link #_EPA(Polygon, Polygon, List, Vector2d, List)} to find the penetration vector in the given direction
+	 * @param shapeA
+	 * @param shapeToMove
+	 * @param simplex
+	 * @param dir direction by which shapeA(to verify) should be moved out of shape B. This is often -speed of object A (that has shape A as polygon)
+	 * @param outNormal
+	 * @return
+	 */
+	public static double directionalEPA(Polygon shapeA, Polygon shapeToMove, List<Vector2d> simplex, Vector2d dir, List<Vector2d> outNormal){
+		return _EPA(shapeA,shapeToMove,simplex,dir,outNormal);
+	}
+	
+	/**
+	 * 
+	 * @param shapeA should be the same shapeA as GJK
+	 * @param shapeToMouv should be the same shapeB as GJK
+	 * @param simplex should be the output of GJK
+	 * @param dir direction by which shapeB should be moved out of shape B. This is often -speed of object A (that has shape A as polygon). Set to null to find
+	 * the smallest penetration vector
+	 * @param outNormal return parameters, contains a list to ensure that outNormal is given by reference and not by copy to the function
+	 * @return the penetration distance and the normal (as out parameter)
+	 */
+	private static double _EPA(Polygon shapeA, Polygon shapeToMouv, List<Vector2d> simplex, Vector2d dir, List<Vector2d> outNormal){
+		int iter=0;
+		int simplex_init_size = simplex.size();
+		while(true && iter<10000)
+		{
+			double distance = FLOAT_MAX;
+			IntersectPoint closestEdge =null;
+			//We get the closest edge of the simplex to the origin (or the closest edge in the direction) 
+
+			if(dir == null){ // get closest edge without direction
+				closestEdge = getClosestIntersect(simplex);
+			}
+			else
+				closestEdge =getIntersectInDirection(simplex, dir);
+
+			if(closestEdge==null){
+				return 0;
+			}
+
+			
+			Vector2d edgeNormal = closestEdge.normal;
+			if(edgeNormal==null){
+				System.out.println("EPA no normal for "+ Hitbox.polyToString(shapeA)+ " "+Hitbox.polyToString(shapeToMouv)+" "+simplex +" "+dir);
+				try {throw new Exception("EPA normal is null");} catch (Exception e) {e.printStackTrace();}
+			}
+
+			//get support point in direction of edge's normal
+			
+			final Vector2d sup = support( shapeA,edgeNormal  );
+			sup.sub( support( shapeToMouv, new Vector2d( -edgeNormal.x, -edgeNormal.y ) ) ); 
+
+			distance = closestEdge.distanceNormal;
+			double d = sup.dot(edgeNormal);
+			//We look for a support point in the direction of the normal of the closest edge (in direction).
+			//If the support point we find lies on the closest edge, then we can't find a closer edge => we find the closest edge
+			//else this means that this edge was not on the Minkowski difference of shapeA and shapeB (not a real edge be an edge linking two points of the 
+			//Minkowski difference) and therefore we look for another one.* 
+			//To do so we add the support point to the simplex and keep iterating
+			//*Note: the simplex is within the Minkowski but its edges might not be the same as the Minkowski difference one. 
+			//For example, consider a polygon A B C D E and the simplex A C E, the edge AC can't be the closest edge since it it does not belong to the polygon
+			if( (d - distance) <= TOLERANCE)
+			{
+				closestEdge.normal= correctNormal(closestEdge.normal);
+				outNormal.add(closestEdge.normal);
+				return closestEdge.distance;
+			}
+			else{
+				simplex.add(closestEdge.index,sup);
+
+			}
+			iter+=1;
+		}
+		assert false : "EPA failed: infinite loop. Shape A"+Hitbox.polyToString(shapeA)+" B "+Hitbox.polyToString(shapeToMouv)+" simplex(size= "+simplex_init_size+") "+simplex+" dir "+dir+" outNormal "+outNormal;
+		return 0;
+		
+	}
+	
 	/*Project a vector to the closest vector that makes a 90° with the axis.
 	 * Positif perturbation makes the vector turn toward the positif angle*/
 	public static Vector2d projectVectorTo90(Vector2d v,boolean negate,double perturbation)
@@ -426,94 +488,81 @@ public abstract class GJK_EPA {
 		}
 		return res;
 	}
+	private static IntersectPoint getClosestIntersect(List<Vector2d> simplex){
+		return getIntersectInformation(simplex,null);
+	}
+	private static IntersectPoint getIntersectInDirection(List<Vector2d> simplex, Vector2d dir){
+		return getIntersectInformation(simplex,dir);
+	}
+	private static IntersectPoint getIntersectInformation(List<Vector2d> simplex, Vector2d dir){
+		boolean closestEdge = dir==null;
+		IntersectPoint res = new IntersectPoint(Float.MAX_VALUE,Float.MAX_VALUE,null,null);
 
-	public static IntersectPoint getEdgeInDirection(List<Vector2d> simplex, Vector2d dir,Polygon shA, Polygon shB)
-	{
-		IntersectPoint intersectTest=null;
-		IntersectPoint memIntersectTest=null;
+		//variable for closest edge in direction
+		Vector2d normalizedDir= null; 
+		if(!closestEdge){
+			normalizedDir= new Vector2d(dir);
+			normalizedDir.normalize();
+		}
+		
+		for(int ind=0; ind<simplex.size()+1; ++ind){
+			int i = ind%simplex.size();
+			int j = (ind+1)%simplex.size();
+			int k = (ind+2)%simplex.size(); //use to handle case where distance is 0
+			Vector2d a = simplex.get(i);
+			Vector2d b = simplex.get(j);
+			Vector2d edge = new Vector2d(b);
+			edge.sub(a);
+			Vector2d normal = new Vector2d(edge.y,-edge.x); //we don't know yet if the normal is pointing towards the origin or not 
+			normal.normalize();
+			double signed_distance = a.dot(normal); //OA.n >0 if normal points outside of the polygon
+			double distance = Math.abs(signed_distance);
 
-		for(int i = 0; i < simplex.size(); i++)
-		{
-			int j;
-			if(i+1 == simplex.size())
-				j = 0;
-			else
-				j = i+1;
-			Vector2d origin = new Vector2d(0,0);
-			intersectTest = getProjectionDistance(simplex.get(i),simplex.get(j),dir,origin);
-			if(intersectTest!=null)
-			{
-				//check if the next one can't be better ie normal distance shorter
-				if((i+1)<simplex.size())
-				{
-					int i2 = i+1;
-					int j2 = (i2+1 == simplex.size())? 0 : i2+1;
-					IntersectPoint intersectTest2 = getProjectionDistance(simplex.get(i2),simplex.get(j2),dir,origin);
-					if(intersectTest2!=null && (intersectTest2.distanceNormal<intersectTest.distanceNormal)){
-						intersectTest=intersectTest2;
-						i=i2;
-						j=j2;
-					}
+			if(signed_distance<0){
+				normal.negate();
+			}
+			else if(signed_distance ==0){
+				//we want to make sure that there is no support point in the direction -OC where C = simplex.get(k)
+				//Therefore we want normal.dot(OC) <0
+				if(normal.dot(simplex.get(k))>0)
+					normal.negate();
+			}
+			
+			boolean isClosest=false;
+			if(closestEdge)
+				isClosest = (distance<res.distanceNormal);//TODO: also check that distance*normals is within tolerance bounds 
+			
+			else{
+				//Only one edge in the direction or that the first one found (if closest edge is a vertex)
+				Vector2d intersect = projection(new Vector2d(),a,b,dir,false);
+				if(intersect!=null){
+					isClosest = true;
+					res.intersect=intersect;
 				}
-				//in the case where i=0 also check the last one 
-				if(i==0 && ((i+1)< simplex.size()))
-				{
-					int i2 = simplex.size()-1;
-					int j2 = 0;
-					IntersectPoint intersectTest2 = getProjectionDistance(simplex.get(i2),simplex.get(j2),dir,origin);
-					if(intersectTest2!=null && (intersectTest2.distanceNormal<intersectTest.distanceNormal)){
-						intersectTest=intersectTest2;
-						i=i2;
-						j=j2;
-					}
-				}
-				
-				intersectTest.index=j;
-				if(intersectTest.normal==null)
-				{
-					Vector2d n = new Vector2d(simplex.get(i).y-simplex.get(j).y,simplex.get(j).x-simplex.get(i).x); 
-					n.normalize();
-					//we compare the dot product of the normal and each points. 
-					//if the dot products is positif, it means that simplex.get(i) and simplex.get(j) are not the support points
-					//for n and thus, the normal is oriented towards the center of the polygon
-					//if it is negative, the normal is correct.
-
-
-					outerloop: 
-						for(int indA =0; indA<shA.npoints; indA++)
-							for(int indB =0; indB<shB.npoints; indB++)
-							{
-								Vector2d v = new Vector2d(shA.xpoints[indA]-shB.xpoints[indB],shA.ypoints[indA]-shB.ypoints[indB]);
-								double dot = v.dot(n);
-								if(dot<TOLERANCE)
-								{
-									break outerloop;
-								}
-
-								else if (dot>TOLERANCE)
-									n = new Vector2d(-n.x,-n.y);
-
-								//else: continue
-							}
-					intersectTest.normal=n;
-
-				}
-				//if(intersectTest.distanceNormal>TOLERANCE )){
-				return intersectTest;
-
-				//else
-				//memIntersectTest=intersectTest; //continue to look for a better point if exists 
 
 			}
+			if(isClosest){
+				res.distanceNormal = distance; 
+				res.index = j; //such as the support point in the normal direction is added between A and B in the simplex 
+				res.normal = normal;
+				if(closestEdge){
+					res.distance=res.distanceNormal;
+					res.intersect = null; //useless. If we really want this, it is equal to (simplex.get(i) + simplex.get(j) ) /2 
+				}
+				else{
+					res.distance=res.intersect.length();
+					if(res.intersect!=null)
+						res.distance=res.intersect.length();
+				}
+			}
 		}
-
-		return memIntersectTest;
+		return res;
 	}
-
+	
 
 	/**calculate the projection of the point A in the direction dir on the segment [p1,p2]
 	 * allDirection: if true check intersection in dir AND -dir */
-	public static Vector2d projection(Vector2d p1, Vector2d p2, Vector2d dir, Vector2d A,boolean allDirection)
+	public static Vector2d projection(Vector2d A,Vector2d p1, Vector2d p2, Vector2d dir ,boolean allDirection)
 	{
 		//(1)y=a1x+b1 avec pt intercection P={X,Y} et X[min(p1.x,p2.x),max(p1.x,p2.x)], Y[min(p1.y,p2.y),max(p1.y,p2.y)]
 		//(2)D : y= a2 * x + b2 with a2 = dir.y/dir.x and b2 = (A.y - a2 * A.x)  
@@ -609,39 +658,6 @@ public abstract class GJK_EPA {
 			}
 		}
 		return intersectP;
-	}
-
-	//Calculate the distance from A to segment, the normal to the segment, (or return null) and store those information in IntresectPoint
-	public static IntersectPoint getProjectionDistance(Vector2d p1, Vector2d p2, Vector2d dir, Vector2d A)
-	{
-		Vector2d projectedP=projection(p1,p2,dir,A,false);
-		if(projectedP==null)
-			return null;
-		//Compute the normal to the segment 
-
-		//normal to segment [p2.x-p1.x,p2.y-p1.y] is [-1,1].[p2.y-p1.y,p2.x-p1.x](left 90°) or [1,-1].[p2.y-p1.y,p2.x-p1.x](right 90°)
-		//plus we want the normal n to verify: n . intersectP >0
-		Vector2d n = new Vector2d(p1.y-p2.y,p2.x-p1.x); // *[-1,1]
-		n.normalize();
-
-		Vector2d v = new Vector2d(dir.x,dir.y);
-		v.normalize();
-
-		Vector2d projVect = new Vector2d(projectedP.x-A.x,projectedP.y-A.y);
-		if(n.dot(projVect)<0) //compute the normal such that the A point is considered to be INSIDE
-			n=new Vector2d(-n.x, -n.y);
-		else if (n.dot(projVect)==0) // if the direction and the segment where parallel
-			if(n.dot(dir)<0) //check the normal direction using the original dir 
-				n=new Vector2d(-n.x, -n.y);
-			else if(n.dot(dir)==0)
-			{
-				//special case, handled in getEdgeInDirection
-				return new IntersectPoint(projectedP.dot(v),0,null,projectedP);
-			}
-		double distance = projVect.dot(v);
-		double distanceNormal= projVect.dot(n);
-		//double distance = intersectP.length();
-		return new IntersectPoint(distance,distanceNormal,n,projectedP);
 	}
 
 

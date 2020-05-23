@@ -12,14 +12,14 @@ import javax.vecmath.Vector2d;
 import gameConfig.Destroyable;
 import gameConfig.ObjectTypeHelper;
 import gameConfig.ObjectTypeHelper.ObjectType;
-import partie.deplacement.Deplace;
-import partie.deplacement.Mouvement;
-import partie.deplacement.Mouvement.SubTypeMouv;
-import partie.deplacement.Mouvement.TypeMouv;
-import partie.deplacement.entity.Mouvement_entity.MouvEntityEnum;
 import partie.effects.Effect;
+import partie.effects.Vent_effect;
 import partie.entitie.Entity;
+import partie.entitie.monstre.Spirel;
 import partie.modelPartie.AbstractModelPartie;
+import partie.mouvement.Mouvement;
+import partie.mouvement.Mouvement.SubTypeMouv;
+import partie.mouvement.Mouvement.TypeMouv;
 import partie.projectile.Projectile;
 import partie.projectile.fleches.Fleche;
 import utils.Vitesse;
@@ -29,10 +29,6 @@ import utils.Vitesse;
 public abstract class Collidable extends Destroyable{
 	
 	public ObjectType objType;
-	
-	//Used to determine the index of cachedParameters 
-	public final static int ANIM_CHANGED =0; 
-	
 
 	public Vitesse localVit;
 	//Every registered object here will see their speed synchronise with respect to this collidable 
@@ -57,10 +53,11 @@ public abstract class Collidable extends Destroyable{
 	protected Point correctedPointCollision = null;
 	protected CurrentValue currentValue;
 
-	private int anim;
-	private Mouvement deplacement;
+	private int mouv_index;
+	private Mouvement mouvement;
 	private Point pos;
 	private double rotation=0;
+	private Vector2d scaling = new Vector2d(1,1);//x,y scaling of the unrotated object
 
 	//All types that the object will not be consider when colliding
 	private List<ObjectType> immuneType =null;
@@ -82,17 +79,17 @@ public abstract class Collidable extends Destroyable{
 	
 	public List<ObjectType> getImmuneType() {return immuneType;}
 	
-	public int getAnim(){return anim;}
-	public void setAnim(int i){
-		if(i!=anim)
+	public int getMouvIndex(){return mouv_index;}
+	public void setMouvIndex(int i){
+		if(i!=mouv_index)
 		{
-			anim=i;
-			OnChangedAnim();
+			mouv_index=i;
+			onChangedMouvIndex();
 		}
 	}
-	public void OnChangedAnim(){if(cachedHitbox !=null) cachedHitbox.OnChangedAnim();if(cachedDrawTr !=null) cachedDrawTr.OnChangedAnim();}
+	public void onChangedMouvIndex(){if(cachedHitbox !=null) cachedHitbox.onChangedMouvIndex();if(cachedDrawTr !=null) cachedDrawTr.onChangedMouvIndex();}
 	
-	public void OnChangedHitbox(){if(cachedHitbox !=null) cachedHitbox.OnChangedHitbox();if(cachedDrawTr !=null) cachedDrawTr.OnChangedHitbox();}
+	public void onChangedHitbox(){if(cachedHitbox !=null) cachedHitbox.onChangedHitbox();if(cachedDrawTr !=null) cachedDrawTr.onChangedHitbox();}
 	
 	public double getRotation(){return rotation;}
 	public void setRotation(double rot){
@@ -103,28 +100,56 @@ public abstract class Collidable extends Destroyable{
 		{
 			rotation=rot;
 			if(!ignoreOnChangedRotation)
-				OnChangedRotation();
+				onChangedRotation();
 		}
 	}
-	public void OnChangedRotation(){if(cachedHitbox !=null) cachedHitbox.OnChangedRotation();if(cachedDrawTr !=null) cachedDrawTr.OnChangedRotation();}
+	public void onChangedRotation(){if(cachedHitbox !=null) cachedHitbox.onChangedRotation();if(cachedDrawTr !=null) cachedDrawTr.onChangedRotation();}
 
-	public Mouvement getDeplacement(){return deplacement;}
-	public boolean isDeplacement(TypeMouv t){return deplacement.IsDeplacement(t);}
-	public boolean isDeplacement(Mouvement m){return deplacement.IsDeplacement(m);}
-	public boolean isDeplacement(TypeMouv type,SubTypeMouv sub){return deplacement.IsDeplacement(type, sub);}
-	public void setDeplacement(Mouvement dep){
-		if(!dep.equals(deplacement))
+	public Vector2d getScaling(){return scaling;}
+	public void setScaling(double xScaling,double yScaling){setScaling(new Vector2d(xScaling,yScaling));}
+	public void setScaling(Vector2d new_scaling){if(scaling != new_scaling){scaling = new_scaling; onChangedScaling();}}
+	public void onChangedScaling(){if(cachedHitbox !=null) cachedHitbox.onChangedScaling();if(cachedDrawTr !=null) cachedDrawTr.onChangedScaling();}
+	
+	public Mouvement getMouvement(){return mouvement;}
+	public boolean isMouvement(TypeMouv t){return mouvement.isMouvement(t);}
+	public boolean isMouvement(Mouvement m){return mouvement.isMouvement(m);}
+	public boolean isMouvement(TypeMouv type,SubTypeMouv sub){return mouvement.isMouvement(type, sub);}
+	public void setMouvement(Mouvement dep){
+		mouvement = dep; //change since animation might change 
+		if(!dep.isMouvement(mouvement))//on call on changed movement if movement changed (hitbox is fixed per mouvement) 
 		{
-			deplacement = dep;
-			OnDeplacementChanged(deplacement==null?false: dep.IsDeplacement(deplacement));
+			onChangedMouvement(mouvement==null?false: dep.isMouvement(mouvement));
 		}
 	}
 	
-	public void OnDeplacementChanged(boolean sameTypeOfDeplacement){
-		if(cachedHitbox !=null) cachedHitbox.OnChangedDeplacement(sameTypeOfDeplacement);
-		if(cachedDrawTr !=null) cachedDrawTr.OnChangedDeplacement(sameTypeOfDeplacement);
+	public void onChangedMouvement(boolean sameTypeOfMouvement){
+		if(cachedHitbox !=null) cachedHitbox.onChangedMouvement(sameTypeOfMouvement);
+		if(cachedDrawTr !=null) cachedDrawTr.onChangedMouvement(sameTypeOfMouvement);
 	}
 		//as hitbox are protected; we assume that they are changed whenever the deplacement is changed
+	public int getXtaille(int mouv_index){return mouvement.getXtaille(mouv_index, scaling.x);}
+	public int getYtaille(int mouv_index){return mouvement.getYtaille(mouv_index, scaling.y);}
+	public int getCurrentXtaille(){return getXtaille(mouv_index);}
+	public int getCurrentYtaille(){return getYtaille(mouv_index);}
+
+	public Point getPointOfTaille(final float xdivider, final float ydivider,final double rotation,final Vector2d scaling,final int mouv_index){
+		assert 0<=xdivider && xdivider<=1;
+		assert 0<=ydivider && ydivider<=1;
+		double unrot_x = mouvement.getXtaille(mouv_index, scaling.x)*xdivider;
+		double unrot_y = mouvement.getYtaille(mouv_index, scaling.y)*ydivider;
+
+		return new Point((int)Math.round(unrot_x* Math.cos(rotation) - unrot_y * Math.sin(rotation)),(int)Math.round(unrot_x * Math.sin(rotation) + unrot_y * Math.cos(rotation)));
+	}
+	public Point getPointOfTaille(final float xdivider, final float ydivider){
+		return getPointOfTaille(xdivider,ydivider,rotation,scaling,mouv_index);
+	}
+	public Point getLeftOfTaille(final double rotation,final Vector2d scaling,final int mouv_index){
+		return getPointOfTaille(0,0.5f,rotation,scaling,mouv_index);
+	}
+	public Point getCenterOfTaille(){return getPointOfTaille(0.5f,0.5f);}
+	public Point getBottomOfTaille(){return getPointOfTaille(0.5f,1);}
+	public Point getLeftOfTaille(){return getPointOfTaille(0,0.5f);}
+	public Point getRightOfTaille(){return getPointOfTaille(1,0.5f);}
 	
 	public int getXpos(){return xpos;}
 	public int getYpos(){return ypos;}
@@ -147,7 +172,7 @@ public abstract class Collidable extends Destroyable{
 	public void setXpos_sync(int x){if(xpos!=x){xpos=x; this.synchroSpeedAll(x, 0,false);OnPosChanged();}}
 	public void setYpos_sync(int y){if(ypos!=y){ypos=y;this.synchroSpeedAll(0, y,false);OnPosChanged();}}
 	
-	public void OnPosChanged(){if(cachedHitbox !=null) cachedHitbox.OnChangedPos();if(cachedDrawTr !=null) cachedDrawTr.OnChangedPos();}
+	public void OnPosChanged(){if(cachedHitbox !=null) cachedHitbox.onChangedPos();if(cachedDrawTr !=null) cachedDrawTr.onChangedPos();}
 	
 	public Point getPos(){pos.x =xpos; pos.y=ypos;return pos;}
 	/**
@@ -247,7 +272,7 @@ public abstract class Collidable extends Destroyable{
 		return immuneType.contains(ObjectType.COLLIDABLE);
 	}
 
-	public abstract Vitesse getGlobalVit(AbstractModelPartie partie);
+	public abstract Vitesse getGlobalVit();
 	//Last norm of colliding object (most of the time: world). Null if none. The colliding object must be unpentrable, otherwise its norm is not registered as "last"
 	//WARNING: only works with single object collision. WARNING strange things might happen if the object can move 
 	
@@ -257,6 +282,9 @@ public abstract class Collidable extends Destroyable{
 	//return the last norm of colliding object. This object has to be unpenetrable.
 	public abstract Vector2d getNormCollision();
 	
+	public static enum XAlignmentType{NONE,CENTER,LEFT,RIGHT}
+	public static enum YAlignmentType{NONE,CENTER,TOP,BOTTOM}
+
 	public Collidable()
 	{
 		objType = ObjectTypeHelper.getTypeObject(this);
@@ -269,32 +297,136 @@ public abstract class Collidable extends Destroyable{
 		setCollideWithNone();
 	}
 
-	public TypeMouv getTypeMouv(){return deplacement.getTypeMouv();}
+	public TypeMouv getTypeMouv(){return mouvement.getTypeMouv();}
 	
+	public void forceDrawTrDirty(){
+		if(cachedDrawTr!=null)
+			cachedDrawTr.forceDirty();
+	}
 	public AffineTransform getDrawTr(Point currentScreendisp)
 	{	if(cachedDrawTr==null)
 			cachedDrawTr = new CachedAffineTransform(this);
 		return cachedDrawTr.getObject(currentScreendisp);
 	}
 
+	public void forceHitboxDirty(){
+		if(cachedHitbox!=null)
+			cachedHitbox.forceDirty();
+	}
 	public Hitbox getHitbox(Point INIT_RECT, Point currentScreendisp)
 	{
 		if(cachedHitbox==null)
 			cachedHitbox= new CachedHitbox(this);
 		return cachedHitbox.getObject(INIT_RECT, currentScreendisp);
 	}
-	public Hitbox getHitbox(Point INIT_RECT,Point screenDisp,Mouvement mouv, int _anim)
+	public Hitbox getHitbox(Point INIT_RECT,Point screenDisp,Mouvement mouv, int _mouv_index)
 	{
 		if(cachedHitbox==null)
 			cachedHitbox= new CachedHitbox(this);
-		return cachedHitbox.getObject(INIT_RECT, screenDisp, mouv, _anim);
+		return cachedHitbox.getObject(INIT_RECT, screenDisp, mouv, _mouv_index);
 	}
 
-	public Hitbox getDeplacementHitbox(int i){
-		return deplacement.getHitbox().get(i);
+	/***
+	 * This is especially usefull in computeHitbox for effect that are based on a transformation that already takes into account the scaling
+	 * @param i
+	 * @return
+	 */
+	public Hitbox getUnscaledMouvementHitboxCopy(int i){
+		return mouvement.getHitboxCopy(i);
 	}
-	public void setDeplacementHitbox(List<Hitbox> hitboxes){
-		deplacement.setHitbox(this, hitboxes);
+	public Hitbox getMouvementHitboxCopy(int i){
+		return mouvement.getScaledHitboxCopy(i,scaling);
+	}
+	/*public void setMouvementHitbox(List<Hitbox> hitboxes){
+		mouvement.setHitbox(this, hitboxes);
+	}*/
+	
+	protected abstract void onStartDeplace();
+	/***
+	 * Handle non mouvement based inputs
+	 * @param partie
+	 */
+	protected abstract void handleInputs(AbstractModelPartie partie);
+	/***
+	 * 
+	 * @return true if mouvement updated
+	 */
+	protected abstract boolean updateMouvementBasedOnPhysic(AbstractModelPartie partie);
+	/***
+	 * 
+	 * @return true if mouvement updated
+	 */
+	protected abstract boolean updateNonInterruptibleMouvement(AbstractModelPartie partie);
+	/***
+	 * 
+	 * @return true if mouvement updated
+	 */
+	protected abstract boolean updateMouvementBasedOnInput(AbstractModelPartie partie);
+	/***
+	 * 
+	 * @return true if mouvement updated
+	 */
+	protected abstract boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie);
+	/***
+	 * Callback that is called before updating the animation in deplace() function
+	 */
+	protected abstract void resetInputState(AbstractModelPartie partie);
+	/***
+	 * Callback that is called before updating the animation in deplace() function
+	 */
+	protected abstract void onMouvementChanged(AbstractModelPartie partie,boolean animationChanged, boolean mouvementChanged);
+	protected void onAnimationEnded(AbstractModelPartie partie){
+		destroy(partie,true);
+	}
+	protected void updateTimers(){};
+	protected boolean shouldUpdateSpeed(){
+		return true;
+	}
+	/**
+	 * 
+	 * @param partie
+	 * @param deplace
+	 * @return shouldMove: true if the collision (hence movement) have to be applied to this object. 
+	 */
+	public boolean deplace(AbstractModelPartie partie) {
+		onStartDeplace();
+		
+		int prev_mouv_index =getMouvIndex();
+		TypeMouv prev_mouv_type = getMouvement().getTypeMouv();
+		
+		handleInputs(partie);
+		
+		boolean isUpdated = updateMouvementBasedOnPhysic(partie);
+		String updateCause = "Physic";
+		if(!isUpdated){
+			isUpdated= updateNonInterruptibleMouvement(partie);
+			updateCause = "Non interruptible mouvement";
+		}
+		if(!isUpdated){
+			isUpdated= updateMouvementBasedOnInput(partie);
+			updateCause = "Input";
+		}
+		if(!isUpdated){
+			isUpdated =updateMouvementBasedOnAnimation(partie); //TODO: here update roche_effect hitbox (what is called in onDeplaceStart + call this at instantiation)
+			updateCause = "Animation";
+		}
+		resetInputState(partie);
+		
+		if(isUpdated){
+			if(this instanceof Spirel)
+				System.out.println(updateCause+" causes update "+prev_mouv_type +" "+prev_mouv_index +" -> "+getMouvement() +" " +getMouvIndex());
+			onMouvementChanged( partie,prev_mouv_index != getMouvIndex(), !getMouvement().isMouvement(prev_mouv_type));
+		}
+				
+		if(getMouvement().animEnded())
+			onAnimationEnded(partie);
+		
+		updateTimers();
+		
+		//update speed that depends on mouvement 
+		if(shouldUpdateSpeed())
+			getMouvement().setSpeed(this, getMouvIndex());
+		return !getNeedDestroy();
 	}
 	
 	public abstract int getMaxBoundingSquare();
@@ -306,7 +438,7 @@ public abstract class Collidable extends Destroyable{
 	 */
 	public abstract AffineTransform computeDrawTr(Point screenDisp);
 	public abstract Hitbox computeHitbox(Point INIT_RECT,Point screenDisp);
-	public abstract Hitbox computeHitbox(Point INIT_RECT,Point screenDisp,Mouvement mouv, int _anim);
+	public abstract Hitbox computeHitbox(Point INIT_RECT,Point screenDisp,Mouvement mouv, int _mouv_index);
 
 	public abstract void handleWorldCollision(Vector2d normal,AbstractModelPartie partie,Collidable collidedObject,boolean stuck);
 	public abstract void handleObjectCollision(AbstractModelPartie partie,Collidable collider,Vector2d normal);
@@ -316,14 +448,7 @@ public abstract class Collidable extends Destroyable{
 	 * Function used in Deplace to get back to  the previous correct posistion if stuck
 	 */
 	public abstract void memorizeCurrentValue();
-	/**
-	 * 
-	 * @param partie
-	 * @param deplace
-	 * @return [shouldMove,changedAnimation] shouldMove: if the collision (hence movement) have to be applied to this object. 
-	 * changedAnimation : if the animation changed due to a change of movement or a change in droite_gauche
-	 */
-	public abstract boolean[] deplace(AbstractModelPartie partie, Deplace deplace);
+
 	public abstract void deplaceOutOfScreen(AbstractModelPartie partie);
 	//Use the function trick to memorize the reset values
 	protected class CurrentValue{public void res(){};}
@@ -332,7 +457,6 @@ public abstract class Collidable extends Destroyable{
 	public abstract void handleDeplacementSuccess(AbstractModelPartie partie);
 	public abstract void resetVarDeplace(boolean speedUpdated);
 
-	public abstract Hitbox getNextEstimatedHitbox(AbstractModelPartie partie, double newRotation,int anim);
 	/*{
 		throw new java.lang.UnsupportedOperationException("Not supported yet.");
 	}*/
@@ -380,16 +504,17 @@ public abstract class Collidable extends Destroyable{
 		//However as it is not preventing the ref_object from moving, the function returns true (but the object is not registred in collidableToMove)
 		return true;
 	}
-	public void alignHitbox(int animActu,Mouvement depSuiv, int animSuiv, AbstractModelPartie partie,Deplace deplace, boolean left, boolean down,
+	/* ***REMOVE public void alignHitbox(int currentMouvIndex,Mouvement nextMouvement, int nextMouvIndex, AbstractModelPartie partie, boolean left, boolean down,
 			Object obj, boolean useTouchCollision)
 	{
 		//Collect the added motion 
-		Mouvement depActu= getDeplacement();
+		Mouvement depActu= getMouvement();
 
 		int xdir = left ? -1 :1;
 		int ydir = down ? 1 :-1;
-		final Polygon currentPol = getHitbox(partie.INIT_RECT,partie.getScreenDisp(),depActu, animActu).polygon;
-		final Polygon nextHit = getHitbox(partie.INIT_RECT,partie.getScreenDisp(),depSuiv, animSuiv).polygon;
+		final Polygon currentPol = getHitbox(partie.INIT_RECT,partie.getScreenDisp(),depActu, currentMouvIndex,scaling).polygon;
+		//Assumed that there are no change in scaling 
+		final Polygon nextHit = getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouvement, nextMouvIndex,scaling).polygon;
 		
 		int dx= (int) Math.round( (Hitbox.supportPoint(new Vector2d(xdir,0),currentPol ).x -
 				Hitbox.supportPoint(new Vector2d(xdir,0), nextHit).x));
@@ -412,15 +537,15 @@ public abstract class Collidable extends Destroyable{
 		//String s_y =down? " down":" up";
 		//String s_my =!down? " down":" up";
 
-		boolean valid=alignTestValid(depSuiv, animSuiv, partie,deplace,obj,useTouchCollision);
+		boolean valid=alignTestValid(nextMouvement, nextMouvIndex, partie,useTouchCollision);
 
 		//s+= (valid && s=="") ? s_x+s_y : "";
-		boolean n_glisse = depSuiv.IsDeplacement(MouvEntityEnum.GLISSADE);
+		boolean n_glisse = nextMouvement.isMouvement(MouvEntityEnum.GLISSADE);
 		//test the opposite y 
 		if(!valid)
 		{
-			m_dy=(int) Math.round(Hitbox.supportPoint(new Vector2d(0,-ydir), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),depActu, animActu).polygon).y -
-					Hitbox.supportPoint(new Vector2d(0,-ydir), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),depSuiv, animSuiv).polygon).y);
+			m_dy=(int) Math.round(Hitbox.supportPoint(new Vector2d(0,-ydir), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),depActu, currentMouvIndex,scaling).polygon).y -
+					Hitbox.supportPoint(new Vector2d(0,-ydir), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouvement, nextMouvIndex,scaling).polygon).y);
 
 			addXpos(dx-xadded);
 			addYpos(m_dy-yadded);
@@ -428,15 +553,15 @@ public abstract class Collidable extends Destroyable{
 			xadded=dx;
 			yadded=m_dy;
 
-			valid=alignTestValid(depSuiv, animSuiv, partie,deplace,obj,useTouchCollision);
+			valid=alignTestValid(nextMouvement, nextMouvIndex, partie,useTouchCollision);
 			//s+= (valid && s=="") ? s_x+s_my : "";
 		}
 
 		//test the opposite x with the first value of y
 		if(!valid && !n_glisse)
 		{
-			m_dx=(int) Math.round(Hitbox.supportPoint(new Vector2d(-xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),depActu, animActu).polygon).x -
-					Hitbox.supportPoint(new Vector2d(-xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),depSuiv, animSuiv).polygon).x);
+			m_dx=(int) Math.round(Hitbox.supportPoint(new Vector2d(-xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),depActu, currentMouvIndex,scaling).polygon).x -
+					Hitbox.supportPoint(new Vector2d(-xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouvement, nextMouvIndex,scaling).polygon).x);
 
 			addXpos(m_dx-xadded);
 			addYpos(dy-yadded);
@@ -444,7 +569,7 @@ public abstract class Collidable extends Destroyable{
 			xadded=m_dx;
 			yadded=dy;
 
-			valid=alignTestValid(depSuiv, animSuiv, partie,deplace,obj,useTouchCollision);
+			valid=alignTestValid(nextMouvement, nextMouvIndex, partie,useTouchCollision);
 			//s+= (valid && s=="") ? s_mx+s_y : "";
 
 		}
@@ -456,29 +581,95 @@ public abstract class Collidable extends Destroyable{
 			addYpos(m_dy-yadded);
 			xadded=m_dx;
 			yadded=m_dy;
-			valid=alignTestValid(depSuiv, animSuiv, partie,deplace,obj,useTouchCollision);
+			valid=alignTestValid(nextMouvement, nextMouvIndex, partie,useTouchCollision);
 			//s+= (valid && s=="") ? s_mx+s_my : "";
 
 		}
 
 
-		/*if(deplacement_type.equals(TypeObject.heros)){
-			System.out.println(deplacement.getClass().getName() +animActu +" "+depSuiv.getClass().getName()+animSuiv);
-			System.out.println(s);
-		}*/
-	}
+		//if(deplacement_type.equals(TypeObject.heros)){
+		//	System.out.println(deplacement.getClass().getName() +currentMouvIndex +" "+depSuiv.getClass().getName()+nextMouvIndex);
+		//	System.out.println(s);
+		//}
+	} */
 
-	public boolean alignTestValid(Mouvement depSuiv, int animSuiv, AbstractModelPartie partie,Deplace deplace, 
-			Object obj, boolean useTouchCollision)
+	/***
+	 * 
+	 * @param partie
+	 * @param nextMouv
+	 * @param nextIndex
+	 * @param xAlignment
+	 * @param yAlignment
+	 * @param avoidCollision
+	 * @param useTouchCollision
+	 * @return Only works for square hitbox
+	 * @throws Exception
+	 */
+	protected boolean alignNextMouvement(AbstractModelPartie partie,Mouvement nextMouv, int nextIndex,XAlignmentType xAlignment,YAlignmentType yAlignment,boolean avoidCollision,boolean useTouchCollision) throws Exception{
+		if(xAlignment.equals(XAlignmentType.NONE) && yAlignment.equals(YAlignmentType.NONE))
+			return true;
+
+		final Hitbox currentHit = getHitbox(partie.INIT_RECT,partie.getScreenDisp(),getMouvement(), getMouvIndex());
+		//Assumed that there are no change in scaling 
+		final Hitbox nextHit = getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouv, nextIndex);
+		
+		final Vector2d currentAnchor = currentHit.getPoint(getRotation(), xAlignment, yAlignment);
+		final Vector2d nextAnchor = nextHit.getPoint(getRotation(), xAlignment, yAlignment);
+		
+		//Example, current anchor is 0,0 next anchor is 2,2, we want to move by (-2,-2)
+		if(this instanceof Vent_effect)
+		{	
+			System.out.println("Current index "+getMouvIndex() +" next index "+ nextIndex);
+			System.out.println("Align next mouv vent "+currentHit +" "+nextHit+" for alignment "+ xAlignment+" "+ yAlignment );
+			System.out.println("currentAnchor "+currentAnchor +" nextAnchor "+nextAnchor);
+		}
+		addXpos_sync((int)Math.round(currentAnchor.x-nextAnchor.x));
+		addYpos_sync((int)Math.round(currentAnchor.y-nextAnchor.y));
+
+		int prevMouvIndex = getMouvIndex();
+		Mouvement prev_mouv = getMouvement().Copy();
+		mouv_index = nextIndex;
+		this.mouvement=nextMouv;
+
+		boolean valid = false;
+		if(avoidCollision){
+			//We make an estimation of the eject max dist using hitbox (not taille as it leads to incorrect result since two mouvement 
+			//can have the same taille but different hitboxes). Anyway when changing mouvement, 
+			//the next hitbox should either have multiple collision (mouv invalid since new hitbox too big in narrow space) 
+			//or can be eject by at most the difference between the size of the hitbox => closestEjectMaxDist in't too relevant
+			//closestEjectMaxDist is only use for early stopping in case of obvious failure			
+			//Mouvement have unrotated hitboxes so hitbox size can be computed easily
+			Hitbox prevMouvHit = prev_mouv.getHitboxes().get(prevMouvIndex);
+			Hitbox nextMouvHit = nextMouv.getHitboxes().get(nextIndex);
+			Point currentProjectedTaille = Hitbox.getProjectedSize(prevMouvHit.getXTaille(),prevMouvHit.getYTaille(),getRotation());
+			Point nextProjectedTaille = Hitbox.getProjectedSize(nextMouvHit.getXTaille(),nextMouvHit.getYTaille(),getRotation());
+			
+			Vector2d closestEjectMaxDist = new Vector2d(Math.abs(currentProjectedTaille.x-nextProjectedTaille.x),
+					Math.abs(currentProjectedTaille.y-nextProjectedTaille.y));
+			valid = Collision.ejectFromCollision(partie, this, null, true,useTouchCollision, closestEjectMaxDist);
+		}
+		else{
+			valid = !Collision.isWorldCollision(partie, this,useTouchCollision);
+		}
+		mouv_index = prevMouvIndex;
+		this.mouvement=prev_mouv;
+		
+		if(!valid){
+			throw new Exception("World/Animation design: could not align mouvement for "+ this.toString()+" current : "+ 
+		getMouvement().getTypeMouv()+" "+getMouvIndex()+" next: "+ nextMouv.getTypeMouv()+" "+nextIndex);
+		}
+		return valid;
+	}
+	public boolean isNextMouvValid(Mouvement nextMouvement, int nextMouvIndex, AbstractModelPartie partie, boolean useTouchCollision)
 	{
-		int prev_anim = anim;
-		Mouvement prev_mouv = deplacement.Copy();
-		anim = animSuiv;
-		this.deplacement=depSuiv;
+		int prevMouvIndex = mouv_index;
+		Mouvement prev_mouv = mouvement.Copy();
+		mouv_index = nextMouvIndex;
+		this.mouvement=nextMouvement;
 
 		boolean valid= !Collision.isWorldCollision(partie, this,useTouchCollision);
-		anim = prev_anim;
-		this.deplacement=prev_mouv;
+		mouv_index = prevMouvIndex;
+		this.mouvement=prev_mouv;
 		return valid;
 	}
 

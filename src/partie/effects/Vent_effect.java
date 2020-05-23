@@ -1,17 +1,18 @@
 package partie.effects;
 
 import java.awt.Point;
+import java.util.Arrays;
 
 import javax.vecmath.Vector2d;
 
+import gameConfig.ObjectTypeHelper.ObjectType;
 import partie.collision.Collidable;
 import partie.collision.Collision;
 import partie.collision.Hitbox;
 import partie.conditions.Condition.ConditionEnum;
-import partie.deplacement.Deplace;
-import partie.deplacement.effect.Vent_idle;
 import partie.entitie.Entity;
 import partie.modelPartie.AbstractModelPartie;
+import partie.mouvement.effect.Vent_idle;
 import partie.projectile.fleches.Fleche;
 import utils.Vitesse;
 
@@ -25,38 +26,33 @@ public class Vent_effect extends Effect{
 	public static double[] SQRT_EJECT_SPEED={30,22, 18,15};//square of desired speed at distance < sqrt(EJECT_DISTANCE) per animation 
 	private int getEJECT_DISTANCE()
 	{
-		return getDeplacement().xtaille.get(getAnim()) * getDeplacement().ytaille.get(getAnim());
+		return getCurrentXtaille() * getCurrentYtaille();
 	}
-	float xalign = 1; // 0 , 1/2 , 1. Set 1 for right align 
-	float yalign = 0.5f; // 0 , 1/2 , 1. Set 1 for bottom align 
 	
 	private Collidable collidedObject=null;
 	private Vitesse collidedEjectSpeed=null;
 	
 	
 
-	public Vent_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame,Vector2d _normalCollision,Point _pointCollision,
-			Point _correctedPointCollision,boolean fromCenter)
+	public Vent_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _mouv_index, int current_frame,Vector2d _normalCollision,Point _pointCollision,
+			Point _correctedPointCollision)
 	{
-		super(_anim,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,false,false);
-		if(fromCenter)
-			xalign = 0.5f;
+		super(_mouv_index,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,false,false);
+		this.setCollideWithout(Arrays.asList(ObjectType.PROJECTILE));
 		
 		subTypeMouv = null;
-		setDeplacement(new Vent_idle(subTypeMouv,partie.getFrame()));
-		
+		setMouvement(new Vent_idle(subTypeMouv,partie.getFrame()));
 		partie.arrowsEffects.add(this);
 		setFirstPos(partie);
-		this.onUpdate(partie, false); //update rotated hitbox and drawtr
 	}
-	public void SetCollidedObject(Collidable _collidedObject,Vitesse _collidedEjectSpeed)
+	public void setCollidedObject(Collidable _collidedObject,Vitesse _collidedEjectSpeed)
 	{
 		collidedObject=_collidedObject;
 		collidedEjectSpeed=_collidedEjectSpeed;
 	}
 	
 
-	public Vitesse computeProjectSpeed(AbstractModelPartie partie,Vector2d objPoint,Point flechePoint,int EJECT_DISTANCE,int anim)
+	public Vitesse computeProjectSpeed(AbstractModelPartie partie,Vector2d objPoint,Point flechePoint,int EJECT_DISTANCE,int mouv_index)
 	{
 
 		double deltaX= (objPoint.x - flechePoint.x);
@@ -70,7 +66,7 @@ public class Vent_effect extends Effect{
 		if(distance<EJECT_DISTANCE)
 		{
 			double sqrt_distance = Math.sqrt(distance);
-			double sqrt_eject_speed = SQRT_EJECT_SPEED[anim];
+			double sqrt_eject_speed = SQRT_EJECT_SPEED[mouv_index];
 			//The normalized vector is deltaX/sqrt_distance, deltaY/sqrt_distance. We want this vector to have sqrt_eject_speed as a norm
 			x_vit = deltaX * sqrt_eject_speed/sqrt_distance;
 			y_vit = deltaY * sqrt_eject_speed/sqrt_distance;
@@ -94,7 +90,7 @@ public class Vent_effect extends Effect{
 		//find where object is precisely using the middle of the hitbox
 		Vector2d obj_mid = Hitbox.getObjMid(partie,obj);
 
-		return computeProjectSpeed(partie,obj_mid,super.getArrowTip(partie),getEJECT_DISTANCE(),getAnim());
+		return computeProjectSpeed(partie,obj_mid,super.getArrowTip(partie),getEJECT_DISTANCE(),getMouvIndex());
 	}
 
 	@Override
@@ -105,34 +101,30 @@ public class Vent_effect extends Effect{
 			attacher.conditions.addNewCondition(ConditionEnum.MOTION, DUREE_EJECT,init_vit,System.identityHashCode(this));
 		}
 	}
-
-	@Override
-	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
-		updatePos(partie);
-		int prev_anim =getAnim();
-		setAnim(getDeplacement().updateAnimation(getAnim(),partie.getFrame(),1));
-		if(prev_anim != getAnim())
-			onAnimChanged(prev_anim,getAnim());
-		//doit deplace, change anim
-		boolean[] res = {true,false};
-		return res;
-	}
-	private void onAnimChanged(int prevAnim, int anim)
+	
+	private void alignBasedOnMouvIndex(AbstractModelPartie partie,int mouvIndex, int nextMouvIndex)
 	{
-			//We want the point of interest to stay the same: pos += (previous center - new center)
-			int deltaX = (int)((getDeplacement().xtaille.get(prevAnim)-getDeplacement().xtaille.get(anim)) * xalign * Math.cos(getRotation()) - 
-					(getDeplacement().ytaille.get(prevAnim)-getDeplacement().ytaille.get(anim)) * yalign * Math.sin(getRotation()));
-
-			int deltaY = (int)((getDeplacement().xtaille.get(prevAnim)-getDeplacement().xtaille.get(anim)) * yalign * Math.sin(getRotation()) +
-					(getDeplacement().ytaille.get(prevAnim)-getDeplacement().ytaille.get(anim)) * yalign * Math.cos(getRotation())); 
-			addXpos_sync(deltaX);
-			addYpos_sync(deltaY);
-		
+		try {
+			this.alignNextMouvement(partie, getMouvement(), nextMouvIndex, XAlignmentType.CENTER, YAlignmentType.CENTER, false, true);
+		} catch (Exception e) {} //this happens if we couldn't align the movement. We don't care in that case
+	}
+	@Override
+	protected boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie) {
+		int nextMouvIndex = getMouvement().updateAnimation(getMouvIndex(), partie.getFrame(),1);
+		System.out.println("Next vent mouv "+ nextMouvIndex +" <= "+ getMouvIndex());
+		if(getMouvIndex()!=nextMouvIndex){
+			boolean success = true;//no need to hitbox alignment check 
+			if(success){
+				alignBasedOnMouvIndex(partie,getMouvIndex(),nextMouvIndex);
+				setMouvIndex(nextMouvIndex);
+				return true;
+			}
+		}
+		return false;
 	}
 
-
 	@Override
-	public Vitesse getModifiedVitesse(AbstractModelPartie partie, Collidable obj) {
+	public Vitesse getModifiedVitesse(Collidable obj) {
 		return new Vitesse();
 	}
 
@@ -140,18 +132,17 @@ public class Vent_effect extends Effect{
 	public void setFirstPos(AbstractModelPartie partie) {
 
 		boolean worldCollision = pointCollision!=null;
-		//get the middle bottom of the effect
-		int x_eff_center = (int) (getDeplacement().xtaille.get(getAnim())* xalign * Math.cos(getRotation()) - (getDeplacement().ytaille.get(getAnim())*yalign) * Math.sin(getRotation()));
-		int y_eff_center = (int) (getDeplacement().xtaille.get(getAnim())* xalign * Math.sin(getRotation()) + (getDeplacement().ytaille.get(getAnim())*yalign) * Math.cos(getRotation()));
-
+		Vector2d eff_center = Hitbox.getObjMid(partie, this);//.getCenterOfTaille();
+		Point p_eff_center = new Point((int)Math.round(eff_center.x),(int)Math.round(eff_center.y));
+		
 		Point firstPos = new Point();
 		if(worldCollision)
-			firstPos = super.setFirstPos(partie,new Point(x_eff_center,y_eff_center));
+			firstPos = super.setFirstPos(partie,p_eff_center);
 		else{
 			//get the tip of the arrow
 			Point arrowTip = super.getArrowTip(partie);
 
-			firstPos=new Point(arrowTip.x-x_eff_center,arrowTip.y-y_eff_center);
+			firstPos=new Point(arrowTip.x-p_eff_center.x,arrowTip.y-p_eff_center.y);
 
 		}
 		setXpos_sync(firstPos.x);

@@ -14,14 +14,16 @@ import gameConfig.ObjectTypeHelper;
 import gameConfig.ObjectTypeHelper.ObjectType;
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
-import partie.deplacement.Deplace;
-import partie.deplacement.Mouvement;
-import partie.deplacement.Mouvement.DirSubTypeMouv;
-import partie.deplacement.entity.Mouvement_entity;
 import partie.effects.Effect;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
+import partie.input.InputPartie;
+import partie.input.InputPartiePool;
 import partie.modelPartie.AbstractModelPartie;
+import partie.mouvement.Deplace;
+import partie.mouvement.Mouvement;
+import partie.mouvement.Mouvement.DirSubTypeMouv;
+import partie.mouvement.entity.Mouvement_entity;
 import partie.projectile.Projectile;
 import partie.projectile.fleches.Fleche;
 
@@ -33,13 +35,23 @@ public abstract class Monstre extends Entity implements InterfaceConstantes, Ser
 	public boolean finSaut;
 	public boolean peutSauter;
 	public boolean glisse;
-		
 	
-	public boolean actionReussite;
-	public boolean doitChangMouv;
-	public Mouvement_entity nouvMouv;
-	public int nouvAnim;
-
+	public boolean isStatic;
+	
+    public interface AIAction{};//used for implementation in enum of sub classes (i.e. Ai of spirel)
+	public AIAction lastIAAction =null;
+	// ***REMOVEpublic boolean actionReussite;
+	//public boolean doitChangMouv;
+	//public Mouvement_entity nouvMouv;
+	//public int newMouvIndex;
+	
+	protected InputPartie inputPartie;
+	private InputPartiePool monstreInputPool; //based on a unique input partie since montre input and heros input need to be different
+	private InputPartiePool playerInputPool; //input pool of the player that controles this monstre 
+	protected InputPartiePool getCurrentInputPool(){if(controlledBy==null)return monstreInputPool; else return playerInputPool;}; //input pool that is currently used: either monstreInputPool or playerInputPool
+	
+	protected Heros controlledBy=null; //null if AI controls the monster, reference to the collidable controlling the monster if not
+	
 	protected ResetHandleCollision resetHandleCollision;
 	Image SPattente0; 
 	Image SPattente1;
@@ -48,21 +60,41 @@ public abstract class Monstre extends Entity implements InterfaceConstantes, Ser
 	Image SPmarche1;
 	Image SPmarche2;
 	Image SPmarche3; 
-	
-	public Monstre()
+	public Monstre(InputPartie inputPartie)
 	{
 		super();
 		this.setCollideWithout(Arrays.asList(ObjectType.MONSTRE,ObjectType.TIR_MONSTRE));
+		monstreInputPool = new InputPartiePool();
 	}
 	/**
 	 * Permet de savoir de quel cote est tourné le monstre
 	 * 
-	 * @param anim, l'animation du monstre
+	 * @param mouv_index, l'animation du monstre
 	 * 
 	 * @return String , Mouvement.DROITE ou Mouvement.GAUCHE, direction dans laquelle le monstre est tourné
 	 */
-	public abstract DirSubTypeMouv droite_gauche (int anim);  
-
+	public abstract DirSubTypeMouv droite_gauche (int mouv_index);  
+	
+	public void startControlledBy(Heros who){
+		
+		playerInputPool = new InputPartiePool(who.getInputPartie());//Create new input partie pool: we want to get the input from keyboard but to have 
+		//Get previous input and release jeys for continuity of the movement
+		playerInputPool.copyValues(monstreInputPool);
+		playerInputPool.releaseIfDown(false);
+		monstreInputPool.resetAll();
+		//a different handling (in case both heros and monster are controlled at the same time)
+		controlledBy = who;
+	}
+	
+	public void endControlledBy(Heros who){
+		if(who.equals(controlledBy)){
+			//Get previous input and release jeys for continuity of the movement
+			monstreInputPool.copyValues(playerInputPool);
+			monstreInputPool.releaseIfDown(false);
+			playerInputPool=null;
+			controlledBy=null;
+		}
+	}
 	/**
 	 * IA pour le deplacement du monstre 
 	 * 
@@ -70,23 +102,8 @@ public abstract class Monstre extends Entity implements InterfaceConstantes, Ser
 	 * @param heros, le personnage jouable
 	 * @param Monde, le niveau en cours  
 	 */	
-	public abstract void IA (List<Projectile> tabTirMonstre, Heros heros,AbstractModelPartie partie);
-	/**
-	 * Applique l'action voulue pour le deplacement du monstre 
-	 * 
-	 * @param monstre, le monstre a deplacer 
-	 * @param Monde, le niveau en cours 
-	 */	
-	public abstract void changeMouv (AbstractModelPartie partie,Deplace deplace);
-	/**
-	 * Align to the rigth/left/up/down the next movement/hitbox to the previous one
-	 * @param monstre
-	 * @param animActu
-	 * @param depSuiv
-	 * @param animSuiv
-	 * @param partie
-	 */
-	public abstract void alignHitbox(int animActu,Mouvement depSuiv, int animSuiv, AbstractModelPartie partie,Deplace deplace);
+	public abstract void AI (List<Projectile> tabTirMonstre, AbstractModelPartie partie);
+
 	
 	@Override
 	public void registerEffect(Effect eff)
@@ -118,12 +135,12 @@ public abstract class Monstre extends Entity implements InterfaceConstantes, Ser
 	@Override
 	public int getMaxBoundingSquare()
 	{
-		return getDeplacement().getMaxBoundingSquare();
+		return getMouvement().getMaxBoundingSquare();
 	}
 	@Override
 	public Point getMaxBoundingRect()
 	{
-		return getDeplacement().getMaxBoundingRect();
+		return getMouvement().getMaxBoundingRect();
 	}
 	@Override
 	public AffineTransform computeDrawTr(Point screenDisp)
@@ -132,15 +149,16 @@ public abstract class Monstre extends Entity implements InterfaceConstantes, Ser
 	}
 	@Override
 	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp) {
-		return getDeplacementHitbox(getAnim()).copy().translate(getXpos(),getYpos());
+		return getMouvementHitboxCopy(getMouvIndex()).translate(getXpos(),getYpos());
 	}
 
 	@Override
-	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp,Mouvement _dep, int _anim) {
+	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp,Mouvement _dep, int _mouv_index) {
 		Mouvement temp = _dep.Copy(); //create the mouvement
-		return temp.getHitbox().get(_anim).translate(getXpos(),getYpos());//no need to copy hitbox as it comes from a copied mouvement 
+		return temp.getScaledHitboxCopy(_mouv_index,getScaling()).translate(getXpos(),getYpos());//no need to copy hitbox as it comes from a copied mouvement 
 	}
-	
+	@Override
+	protected void onStartDeplace(){}
 	@Override
 	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,Collidable collidedObject,boolean stuck) {
 		conditions.OnAttacherCollided();
@@ -190,11 +208,6 @@ public abstract class Monstre extends Entity implements InterfaceConstantes, Ser
 		{};
 	}
 	
-	@Override
-	public Hitbox getNextEstimatedHitbox(AbstractModelPartie partie,double newRotation,int anim)
-	{
-		throw new java.lang.UnsupportedOperationException("Not supported yet.");
-	}
 }
 
 

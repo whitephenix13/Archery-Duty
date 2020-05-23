@@ -15,5 +15,5 @@ public abstract class ImagesContainer extends LoaderItem{
 		super(name);
 	}
 	public abstract Image getImage(ObjectType typeObj, ImageInfo info1,ImageInfo info2);
-	public abstract ArrayList<Image> getImages(ObjectType typeObj, ImageInfo info1,ImageInfo info2,int anim);
+	public abstract ArrayList<Image> getImages(ObjectType typeObj, ImageInfo info1,ImageInfo info2,int mouv_index);
 }

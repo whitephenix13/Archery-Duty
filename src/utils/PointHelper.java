@@ -10,7 +10,7 @@ public class PointHelper {
 		return new Point((int)vec.x,(int)vec.y);
 	}
 	
-	public static Point RountVecToPoint(Vector2d vec)
+	public static Point RoundVecToPoint(Vector2d vec)
 	{
 		return new Point((int)Math.round(vec.x),(int)Math.round(vec.y));
 	}

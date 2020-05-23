@@ -5,8 +5,9 @@ import java.util.Arrays;
 
 import gameConfig.ObjectTypeHelper.ObjectType;
 import partie.collision.Hitbox;
-import partie.deplacement.Deplace;
+import partie.input.InputPartie;
 import partie.modelPartie.AbstractModelPartie;
+import partie.mouvement.Deplace;
 import partie.projectile.Projectile;
 
 public abstract class TirMonstre extends Projectile{
@@ -21,29 +22,13 @@ public abstract class TirMonstre extends Projectile{
 	@Override
 	public int getMaxBoundingSquare()
 	{
-		return getDeplacement().getMaxBoundingSquare();
+		return getMouvement().getMaxBoundingSquare();
 	}
 	@Override
 	public Point getMaxBoundingRect()
 	{
-		return getDeplacement().getMaxBoundingRect();
-	}
-	
-	
-	@Override
-	public boolean[] deplace(AbstractModelPartie partie,Deplace deplace){
-		//update rotation 
-		//switch anim 
-		//update hitbox 
-			//only need to update if animation changed 
-		//set speed of deplacement
-		//update draw transform only if needed 
-		boolean[] res = {true,false};
-		return res;
+		return getMouvement().getMaxBoundingRect();
 	}
 	@Override
-	public Hitbox getNextEstimatedHitbox(AbstractModelPartie partie,double newRotation,int anim)
-	{
-		throw new java.lang.UnsupportedOperationException("Not supported yet.");
-	}
+	protected void onStartDeplace(){}
 }

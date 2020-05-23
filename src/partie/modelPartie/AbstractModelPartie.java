@@ -2,12 +2,13 @@ package partie.modelPartie;
 
 import java.awt.Graphics;
 import java.awt.Image;
-import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.vecmath.Vector2d;
 
 import ActiveJComponent.ActiveJButton;
 import Affichage.DrawImageHandler;
@@ -19,16 +20,20 @@ import images.ImagesFlecheIcon;
 import loading.Loader;
 import menu.menuPrincipal.GameHandler;
 import menu.menuPrincipal.GameMode;
+import music.Music;
 import music.MusicBruitage;
 import option.Touches;
 import partie.AI.A_Star;
 import partie.AI.A_Star_Helper;
 import partie.bloc.Monde;
 import partie.collision.Collidable;
-import partie.deplacement.Deplace;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
+import partie.input.InputPartie;
+import partie.input.InputPartiePool;
+import partie.mouvement.Deplace;
 import partie.projectile.Projectile;
+import partie.projectile.fleches.Fleche;
 import utils.observer.Observable;
 import utils.observer.Observer;
 
@@ -54,13 +59,22 @@ public abstract class AbstractModelPartie  implements Observable, GameMode{
 	//Action speciale pour ralentir le temps 
 	public boolean slowDown=false;
 	public int slowCount=0;
-	
+	public void onPartieSlowDown(){
+		slowCount=0;
+		slowDown= ! slowDown;
+		PartieTimer.me.changedSlowMotion(slowDown);
+
+		if(slowDown)
+			Music.me.slowDownMusic();
+		else
+			Music.me.endSlowDownMusic();
+	}
 	//Index of the slot that was clicked using the hotkeys
-	public int arrowSlotKey = -1;
+	//public int arrowSlotKey = -1;
 
 	//Mouse position when the shoot key was pressed/released
-	public Point lastMousePosWhenClicked = null;
-	public Point lastMousePosWhenReleased = null;
+	//public Point lastMousePosWhenClicked = null;
+	//public Point lastMousePosWhenReleased = null;
 
 	
 	public List<Projectile> tabFleche= new ArrayList<Projectile>();
@@ -80,16 +94,17 @@ public abstract class AbstractModelPartie  implements Observable, GameMode{
 	protected List<Integer> lEffaceEffect= new ArrayList<Integer>();
 
 	//INPUT 
-	Touches touches;
+	public Touches touches;
 	public InputPartie inputPartie;
-
-	//Variables de déplacement 
-	//booleen pour savoir si on change de mouvement et donc qu'on doit reequilibre la hitbox du heros
-	public boolean changeMouv=false;
+	protected InputPartiePool inputGamemodePool;
 	
-	protected boolean finPartie =false;
+	//Variables de déplacement 
+	
+	protected boolean isPartieEnded =false;
+	public boolean isPartieEnded(){return isPartieEnded;}
 	protected boolean inPause=false;
-	public boolean getinPause(){return inPause;}
+	public boolean isInPause(){return inPause;}
+
 	protected boolean shoudResumeGame = false; //true when we go to the options from partie and we want to resume the partie when exiting the option 
 	public boolean shoudResumeGame(){return shoudResumeGame;}
 	
@@ -156,7 +171,7 @@ public abstract class AbstractModelPartie  implements Observable, GameMode{
 	private ArrayList<Observer> listObserver = new ArrayList<Observer>();
 	//}}
 	public boolean getDisableBoutonsFin(){return disableBoutonsFin ;}
-	public boolean getFinPartie(){return finPartie;}
+	public boolean getFinPartie(){return isPartieEnded;}
 
 	public void init()
 	{
@@ -177,7 +192,7 @@ public abstract class AbstractModelPartie  implements Observable, GameMode{
 		if(monde==null)
 			monde = new Monde();
 		frame= 0;
-		heros= new Heros(InterfaceConstantes.WINDOW_WIDTH/2,InterfaceConstantes.WINDOW_HEIGHT/2,1,frame);
+		heros= new Heros(InterfaceConstantes.WINDOW_WIDTH/2,InterfaceConstantes.WINDOW_HEIGHT/2,1,frame,inputPartie);
 
 		//Action speciale pour ralentir le temps 
 		slowDown=false;
@@ -196,9 +211,8 @@ public abstract class AbstractModelPartie  implements Observable, GameMode{
 		lEffaceTirMonstre= new ArrayList<Integer>();
 		lEffaceEffect= new ArrayList<Integer>();
 		//INPUT 
-		changeMouv=false;
 		
-		finPartie =false;
+		isPartieEnded =false;
 		inPause=false;
 		shoudResumeGame=false;
 
@@ -230,18 +244,20 @@ public abstract class AbstractModelPartie  implements Observable, GameMode{
 	 * @param anchor: position of center of rotation relative to top left of hitbox
 	 * @param taille: size of hitbox
 	 * @param rotation
+	 * @param scaling
 	 * @return
 	 */
-	public static AffineTransform getRotatedTransform(Point pos,Point topLeftAnchor,double rotation)
-	{
+	public static AffineTransform getRotatedTransform(Point pos,Point topLeftAnchor,double rotation, Vector2d scaling)
+	{		
 		AffineTransform trans = new AffineTransform();
+		if(topLeftAnchor == null)
+			topLeftAnchor = new Point();
 		//Translate the object to its position
-		trans.translate(pos.x, pos.y);
-		//rotate it around its center
-		if(topLeftAnchor==null)
-			trans.rotate(rotation);
-		else
-			trans.rotate(rotation, topLeftAnchor.x, topLeftAnchor.y);
+		trans.translate(pos.x + topLeftAnchor.x*(1-scaling.x), pos.y + topLeftAnchor.y*(1-scaling.y));
+		//scale to object around its anchor (otherwise it is by default around its top left corner)
+		trans.scale(scaling.x, scaling.y);
+		//rotate it around its anchor (most of the time its center)
+		trans.rotate(rotation, topLeftAnchor.x, topLeftAnchor.y);
 
 		return trans;
 	}
@@ -250,7 +266,7 @@ public abstract class AbstractModelPartie  implements Observable, GameMode{
 
 	public abstract void startPartie(int typeDeSpawn);
 	public abstract void play(GameRenderer affich) ;
-	
+	public abstract Fleche getFlecheEncochee(Heros shooter);
 	public abstract void precomputeDraw();
 	public abstract void drawPartie(Graphics g);
 

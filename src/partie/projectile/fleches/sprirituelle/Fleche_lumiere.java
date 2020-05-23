@@ -44,9 +44,7 @@ public class Fleche_lumiere extends Spirituelle {
 		}
 		Roche_effect.synchroniseMovementWithRocheEffectMovement(collidedObject, new Collidable[] {this,flecheEffect});
 
-		this.doitDeplace=false;
-		this.setCollideWithNone();
-		this.isVisible=false;
+		this.simulateDestroy();
 
 	}
 	@Override
@@ -67,7 +65,6 @@ public class Fleche_lumiere extends Spirituelle {
 				ejectArrow(partie,unprojectedSpeed);
 
 		applyArrowEffect(objects,partie,collider,normal,null,null);
-		this.isVisible=false;
 		return false;
 	}
 

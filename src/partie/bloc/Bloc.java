@@ -8,9 +8,10 @@ import javax.vecmath.Vector2d;
 import images.ImagesContainer.ImageInfo;
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
-import partie.deplacement.Deplace;
-import partie.deplacement.Mouvement;
+import partie.input.InputPartie;
 import partie.modelPartie.AbstractModelPartie;
+import partie.mouvement.Deplace;
+import partie.mouvement.Mouvement;
 import utils.Vitesse;
 
 public class Bloc extends Collidable{
@@ -31,7 +32,7 @@ public class Bloc extends Collidable{
 		this.type=type;
 		this.setXpos_sync(x);
 		this.setYpos_sync(y);
-		this.setDeplacement(new partie.deplacement.bloc.Idle());
+		this.setMouvement(new partie.mouvement.bloc.Idle());
 		localVit= new Vitesse(0,0);
 		fixedWhenScreenMoves=false;
 		this.bloquer=bl;
@@ -78,12 +79,12 @@ public class Bloc extends Collidable{
 	@Override
 	public int getMaxBoundingSquare()
 	{
-		return getDeplacement().getMaxBoundingSquare();
+		return getMouvement().getMaxBoundingSquare();
 	}
 	@Override
 	public Point getMaxBoundingRect()
 	{
-		return getDeplacement().getMaxBoundingRect();
+		return getMouvement().getMaxBoundingRect();
 	}
 	@Override
 	public AffineTransform computeDrawTr(Point screendisp)
@@ -93,11 +94,11 @@ public class Bloc extends Collidable{
 	@Override
 	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp) {
 		if(!bloquer)
-			return null;
+			return Hitbox.createEmptyHitbox();
 
-		return this.getDeplacementHitbox(0).copy().translate(getXpos()-INIT_RECT.x,getYpos()-INIT_RECT.y);
+		return this.getMouvementHitboxCopy(0).copy().translate(getXpos()-INIT_RECT.x,getYpos()-INIT_RECT.y);
 	}
-	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp, Mouvement mouv, int _anim) {
+	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp, Mouvement mouv, int mouv_index) {
 		return computeHitbox(INIT_RECT,screenDisp);
 	}
 	@Override
@@ -118,12 +119,7 @@ public class Bloc extends Collidable{
 	public void memorizeCurrentValue() {
 		//do nothing
 	}
-	@Override
-	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
-		//Do nothing
-		boolean[] res = {false,false};
-		return res;
-	}
+
 	@Override 
 	public void deplaceOutOfScreen(AbstractModelPartie partie)
 	{
@@ -154,12 +150,38 @@ public class Bloc extends Collidable{
 		//do nothing
 	}
 	@Override
-	public Vitesse getGlobalVit(AbstractModelPartie partie) {
+	public Vitesse getGlobalVit() {
 		return null;
 	}
 	@Override
-	public Hitbox getNextEstimatedHitbox(AbstractModelPartie partie,double newRotation,int anim)
-	{
-		throw new java.lang.UnsupportedOperationException("Not supported yet.");
+	protected void onStartDeplace(){}
+	@Override
+	protected void handleInputs(AbstractModelPartie partie) {
+		
 	}
+	@Override
+	protected boolean updateMouvementBasedOnPhysic(AbstractModelPartie partie) {
+		return false;
+	}
+	@Override
+	protected boolean updateNonInterruptibleMouvement(AbstractModelPartie partie) {
+		return false;
+	}
+	@Override
+	protected boolean updateMouvementBasedOnInput(AbstractModelPartie partie) {
+		return false;
+	}
+	@Override
+	protected boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie) {
+		return false;
+	}
+	@Override
+	protected void resetInputState(AbstractModelPartie partie) {
+		
+	}
+	@Override
+	protected void onMouvementChanged(AbstractModelPartie partie,boolean animationChanged, boolean mouvementChanged) {
+		
+	}
+
 }

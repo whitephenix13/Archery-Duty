@@ -6,52 +6,55 @@ import java.util.List;
 import javax.vecmath.Vector2d;
 
 import gameConfig.InterfaceConstantes;
-import gameConfig.ObjectTypeHelper;
 import gameConfig.ObjectTypeHelper.ObjectType;
 import menu.menuPrincipal.ModelPrincipal;
 import music.MusicBruitage;
 import partie.collision.CachedAffineTransform;
 import partie.collision.CachedHitbox;
+import partie.collision.Collidable;
 import partie.collision.Collision;
 import partie.collision.Hitbox;
-import partie.deplacement.Deplace;
-import partie.deplacement.Mouvement;
-import partie.deplacement.Mouvement.DirSubTypeMouv;
-import partie.deplacement.entity.Attente;
-import partie.deplacement.entity.Marche;
-import partie.deplacement.entity.Mouvement_entity;
-import partie.deplacement.entity.Mouvement_entity.MouvEntityEnum;
-import partie.deplacement.entity.Saut;
-import partie.deplacement.entity.Saut.SubMouvSautEnum;
+import partie.collision.Collidable.XAlignmentType;
+import partie.collision.Collidable.YAlignmentType;
 import partie.entitie.heros.Heros;
+import partie.input.InputPartie;
+import partie.input.InputPartiePool.InputType;
+import partie.input.InputPartiePool.InputTypeArray;
 import partie.modelPartie.AbstractModelPartie;
 import partie.modelPartie.PartieTimer;
+import partie.mouvement.Deplace;
+import partie.mouvement.Mouvement;
+import partie.mouvement.Mouvement.DirSubTypeMouv;
+import partie.mouvement.entity.Attente;
+import partie.mouvement.entity.Marche;
+import partie.mouvement.entity.Mouvement_entity;
+import partie.mouvement.entity.Saut;
+import partie.mouvement.entity.Mouvement_entity.EntityTypeMouv;
+import partie.mouvement.entity.Saut.SubMouvSautEnum;
+import partie.mouvement.entity.Tir;
 import partie.projectile.Projectile;
 import partie.projectile.tirMonstre.TirSpirel;
 import utils.Vitesse;
 
 @SuppressWarnings("serial")
 public class Spirel extends Monstre{
-	//timer pour que le monstre agisse toutes les (maximum 300ms )
-
-	//variable for ChangMouv to indicates if the animation was changed or not 
-	private boolean animationChanged = true;
-	
-	private double tempsAncienMouv=0;
+	private double lastAIUpdate=0;
 	private static double delaiMouv= 50;
 	private double last_shoot_time=-1;
 	private double last_update_shoot_time=-1;
 
 	private static double delaiTir= 2000;//ms
-	private double distanceAttaque= 160000; // 400^2
+	private double squaredAttackDistance= 160000; // 400^2
+	public double getSquaredAttackDistance(){return squaredAttackDistance*getScaling().lengthSquared();} //need to multiply by scaling squared
 	private boolean cooldown=true;
 
 	public boolean peutSauter = true;
 	public boolean sautDroit= false;
 	public boolean sautGauche= false;
 	private boolean wasGrounded=false;
-	
-	public boolean staticSpirel=false;
+	private boolean prevDirectionWasRight = false;
+		
+	public enum AISpirelAction implements AIAction{WAIT,MOVE_TOWARDS_HERO,MOVE_AWAY_HERO,JUMP,JUMP_ABOVE_OBSTACLE,WAIT_CLOSE_TO_HOLE,JUMP_ABOVE_HOLE,AVOID_HOLE,MOVE_TOWARDS_HOLE,MOVE_AWAY_HOLE,SHOOT};
 
 	/**
 	 * constructeur
@@ -60,16 +63,14 @@ public class Spirel extends Monstre{
 	 * @param yPo, position originale en y
 	 * @param _staticSpirel, permet de rendre la spirel immobile (si =true)
 	 */	
-	public Spirel( int xPo,int yPo,boolean _staticSpirel,int current_frame){
-		super();
-		staticSpirel=_staticSpirel;
-
+	public Spirel( int xPo,int yPo,boolean _isStatic,int current_frame,InputPartie inputPartie){
+		super(inputPartie);
+		isStatic=_isStatic;
 		setXpos_sync(xPo);
 		setYpos_sync(yPo); 
 		localVit= new Vitesse(0,0);
-		setDeplacement(new Attente(ObjectType.SPIREL,DirSubTypeMouv.GAUCHE,current_frame));
-		setAnim(1);
-		actionReussite=false;
+		setMouvement(new Attente(ObjectType.SPIREL,DirSubTypeMouv.GAUCHE,current_frame));
+		setMouvIndex(1);
 
 		finSaut=false;
 		peutSauter=false;
@@ -81,10 +82,10 @@ public class Spirel extends Monstre{
 		MAXLIFE = 100;
 		MINLIFE = 0;
 		life= MAXLIFE;
-		
+				
 		//add randomness to the update time of the spirel so that they don't all update at the same time
 		double rand = Math.random();
-		tempsAncienMouv = PartieTimer.me.getElapsedNano() - rand*delaiMouv*Math.pow(10, 6);
+		lastAIUpdate = PartieTimer.me.getElapsedNano() - rand*delaiMouv*Math.pow(10, 6);
 		last_shoot_time = PartieTimer.me.getElapsedNano() - Math.random()*delaiTir *Math.pow(10, 6);
 	}
 	
@@ -95,7 +96,7 @@ public class Spirel extends Monstre{
 	/**
 	 * Permet de savoir de quel cote est tourné le monstre
 	 * 
-	 * @param anim, l'animation du monstre
+	 * @param mouv_index, l'animation du monstre
 	 * 
 	 * @return String , Mouvement.DROITE ou Mouvement.GAUCHE, direction dans laquelle le monstre est tourné
 	 */
@@ -107,35 +108,9 @@ public class Spirel extends Monstre{
 	}
 	
 	@Override
-	public DirSubTypeMouv droite_gauche (int anim)
+	public DirSubTypeMouv droite_gauche (int mouv_index)
 	{
-		if(getDeplacement().IsDeplacement(MouvEntityEnum.MARCHE))
-		{
-			if(anim <2)
-			{
-				return (DirSubTypeMouv.GAUCHE);
-			}
-			else return(DirSubTypeMouv.DROITE);
-		}
-		else if(getDeplacement().IsDeplacement(MouvEntityEnum.ATTENTE))
-		{
-			if(anim <1)
-			{
-				return (DirSubTypeMouv.GAUCHE);
-			}
-			else return(DirSubTypeMouv.DROITE);
-		}
-		else if(getDeplacement().IsDeplacement(MouvEntityEnum.SAUT))
-		{
-			if(anim <1)
-			{
-				return (DirSubTypeMouv.GAUCHE);
-			}
-			else return(DirSubTypeMouv.DROITE);
-		}
-
-		else 
-			throw new IllegalArgumentException("Spirel/droite_gauche: ERREUR deplacement inconnu");
+		return getMouvement().droite_gauche(mouv_index, getRotation());
 	}
 	
 	public Vector2d getNormCollision()
@@ -145,43 +120,55 @@ public class Spirel extends Monstre{
 		else
 			return normCollision;
 	}
-	
-	/**
-	 * Gère l'ensemble des événements lié au deplacement d'un monstre 
-	 * 
-	 * @param monstre, le monstre a deplacer 
-	 * @param heros, le personnage jouable
-	 * @param Monde, le niveau en cours 
-	 */		
-	@Override
-	public boolean[] deplace(AbstractModelPartie partie,Deplace deplace)
-	{
-		ModelPrincipal.debugTime.startElapsedForVerbose();
-		updateShootTime();
-		ModelPrincipal.debugTime.elapsed("Spirel update shoot time" );
-		//compute the next desired movement 
-		IA(partie.tabTirMonstre,partie.heros,partie);
-		ModelPrincipal.debugTime.elapsed("Spirel IA");
-		//compute the true next movement depending on landing, gravity, ... 
-		animationChanged=true;
-		changeMouv(partie,deplace);
-		ModelPrincipal.debugTime.elapsed("Spirel changeMouv");
-		boolean[] res= {true,animationChanged};
-		return res;//move the object
+	/***
+	 * Handle non mouvement based inputs
+	 * @param partie
+	 */
+	protected void handleInputs(AbstractModelPartie partie){
+		if(controlledBy== null)
+			AI(partie.tabTirMonstre,partie);
 	}
+	private Collidable selectTarget(AbstractModelPartie partie){
+		return partie.heros; //by default, should be more complex later including clones or enemies if this entity is controlled by heros
+	}
+	
+	private void moveTo(boolean leftDirection){		
+		//Only move if not already moving in that direction
+		if(!getCurrentInputPool().isInputDown(leftDirection?InputType.LEFT:InputType.RIGHT))
+			getCurrentInputPool().onMove(leftDirection?-1:1, false, false);
+		//Only release if was moving in that direction
+		if(getCurrentInputPool().isInputDown(leftDirection?InputType.RIGHT:InputType.LEFT))
+			getCurrentInputPool().onMove(leftDirection?1:-1, false, true);
+	}
+	private void stopMoving(){
+		if(getCurrentInputPool().isInputDown(InputType.RIGHT))
+			getCurrentInputPool().onMove(1, false, true);
+		if(getCurrentInputPool().isInputDown(InputType.LEFT))
+			getCurrentInputPool().onMove(-1, false, true);
+	}
+	@Override
+	public void AI (List<Projectile> tabTirMonstre,AbstractModelPartie partie)
+	{	
+		if(!getMouvement().isInterruptible(getMouvIndex()))
+			return;
+		
+		//Release pressed input
+		if(getCurrentInputPool().isInputDown(InputType.JUMP)){
+			lastIAAction = AISpirelAction.JUMP;
+			getCurrentInputPool().onJump(true);
+		}
 
-	/**
-	 * IA pour le deplacement du monstre 
-	 * 
-	 * @param monstre, le monstre a deplacer 
-	 * @param heros, le personnage jouable
-	 * @param Monde, le niveau en cours  
-	 */	
-	public void IA (List<Projectile> tabTirMonstre, Heros heros,AbstractModelPartie partie)
-	{
-		boolean herosAGauche;
+		//If shooting and shoot anim ended once, release the shoot key; 
+		if(getMouvement().getTypeMouv().equals(EntityTypeMouv.TIR) && getMouvement().animEndedOnce()){
+			lastIAAction = AISpirelAction.SHOOT;
+			getCurrentInputPool().onShoot(0, true);
+			return;
+		}
+		
+		boolean targetAtMyLeft;
+		boolean isFacingLeft = getMouvement().droite_gauche(getMouvIndex(), getRotation()).equals(DirSubTypeMouv.GAUCHE);
 		boolean monsterOnScreen= InterfaceConstantes.SCREEN.polygon.contains(new Point (getXpos()+partie.xScreendisp,getYpos()+partie.yScreendisp));
-		boolean canAction= (PartieTimer.me.getElapsedNano()-tempsAncienMouv)*Math.pow(10, -6)>delaiMouv && monsterOnScreen;
+		boolean canAction= (PartieTimer.me.getElapsedNano()-lastAIUpdate)*Math.pow(10, -6)>delaiMouv && monsterOnScreen;
 		boolean canShoot = (PartieTimer.me.getElapsedNano()-last_shoot_time)*Math.pow(10, -6)>delaiTir ;
 		//On test le cooldown de tir
 		if(canShoot)
@@ -192,196 +179,389 @@ public class Spirel extends Monstre{
 		//on test le cooldown de mouvement
 		if(canAction)
 		{
-			Hitbox heros_hit = heros.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
-			Vector2d heros_left_up_hit  = Hitbox.supportPoint(new Vector2d(-1,-1), heros_hit.polygon) ;
-			Vector2d heros_right_down_hit  = Hitbox.supportPoint(new Vector2d(1,1), heros_hit.polygon) ;
-			double herosXmiddle = (heros_left_up_hit.x + heros_right_down_hit.x)/2;
-			double herosYmiddle = (heros_left_up_hit.y + heros_right_down_hit.y)/2;
-
+			Collidable target = selectTarget(partie);
+			Hitbox target_hit = target.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
+			Vector2d targetCenter = target_hit.getCenter();
+	
 			Hitbox monstre_hit = this.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
-			Vector2d monstre_left_up_hit  = Hitbox.supportPoint(new Vector2d(-1,-1), monstre_hit.polygon) ;
-			Vector2d monstre_right_down_hit  = Hitbox.supportPoint(new Vector2d(1,1), monstre_hit.polygon) ;
-			double monstreXmiddle=(monstre_left_up_hit.x + monstre_right_down_hit.x)/2;
-			double monstreYmiddle=(monstre_left_up_hit.y + monstre_right_down_hit.y)/2;
+			Vector2d monsterCenter = monstre_hit.getCenter();
 			
-			double deltaX= Math.abs(monstreXmiddle-herosXmiddle);
-			double deltaY= Math.abs(monstreYmiddle-herosYmiddle);
+			double deltaX= Math.abs(monsterCenter.x-targetCenter.x);
+			double deltaY= Math.abs(monsterCenter.y-targetCenter.y);
 			
-			herosAGauche= monstreXmiddle-herosXmiddle>=0;
-
-			boolean shootAllowed= deltaX*deltaX+deltaY*deltaY<distanceAttaque && ! cooldown && (conditions.getShotSpeedFactor()>0);
+			targetAtMyLeft= monsterCenter.x-targetCenter.x>=0;
+			
+			boolean closeEnoughToShoot =  deltaX*deltaX+deltaY*deltaY<getSquaredAttackDistance();
+			
+			boolean shootAllowed=closeEnoughToShoot && ! cooldown && (conditions.getShotSpeedFactor()>0) && !getCurrentInputPool().isInputDown(InputTypeArray.SHOOT,0);
 			//If drag and can't shoot, exit 
 			if(this.isDragged() && !shootAllowed)
 				return;
 			//Shoot towards heros
 			if(shootAllowed)
 			{	
-				int decision = (int) (Math.random()*100);
-				if(decision<=50){
-					//animation d'attente
-					doitChangMouv= !((getDeplacement().IsDeplacement(MouvEntityEnum.ATTENTE)) 
-							&& (herosAGauche? getAnim()==0 : getAnim()==1));
-					nouvAnim=herosAGauche? 0 : 1;
-					nouvMouv= new Attente(ObjectType.SPIREL,herosAGauche?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
-	
-					//shoot projectile
-					double tir1_rotation = droite_gauche(getAnim()).equals(DirSubTypeMouv.GAUCHE)?Math.PI : 0;
-					double tir2_rotation = 3*Math.PI/2;
-					
-					//middle of the spirel hitbox
-					int xmid = getXpos() + getDeplacement().xtaille.get(getAnim())/2;
-					int ymid = getYpos() + getDeplacement().ytaille.get(getAnim())/2;
-	
-					tabTirMonstre.add(new TirSpirel(partie,xmid , ymid,
-							0,tir1_rotation,partie.getFrame(),conditions.getDamageFactor(),conditions.getShotSpeedFactor()));	
-					tabTirMonstre.add(new TirSpirel(partie, xmid , ymid ,
-							0,tir2_rotation,partie.getFrame(),conditions.getDamageFactor(),conditions.getShotSpeedFactor()));	
-	
-					cooldown=true;
+				if((isFacingLeft && targetAtMyLeft) || (!isFacingLeft && !targetAtMyLeft)){
+					int decision = (int) (Math.random()*100);
+					if(decision<=50){
+						lastIAAction = AISpirelAction.SHOOT;
+						stopMoving();
+						getCurrentInputPool().onShoot(0, false);
+					}
+				}
+				else{
+					lastIAAction = AISpirelAction.MOVE_TOWARDS_HERO;
+					moveTo(targetAtMyLeft);
 				}
 
 			}
-			else if (!staticSpirel) // Heros is not in range, try to move towards him
+			else if (!isStatic) // Target is not in range, try to move towards him
 			{
 				
 				//sinon on se rapproche ou on reste proche 
-				boolean blocGaucheBas= nearObstacle(partie,-1,-1);
-				boolean blocDroitBas= nearObstacle(partie,1,-1);
+				boolean blocLeftDown= nearObstacle(partie,-1,-1);
+				boolean blocRightDown= nearObstacle(partie,1,-1);
 
 				boolean blocRight= nearObstacle(partie,1,0);
 				boolean blocLeft= nearObstacle(partie,-1,0);
 				
-				double jumpHeight= 100; //approx value
-				boolean blocRightUp= nearObstacle(partie,1,jumpHeight);
-				boolean blocLeftUp= nearObstacle(partie,-1,jumpHeight);
+				boolean blocRightUp= nearObstacle(partie,1,InterfaceConstantes.TAILLE_BLOC);
+				boolean blocLeftUp= nearObstacle(partie,-1,InterfaceConstantes.TAILLE_BLOC);
 				
-				boolean jumpAbove= (droite_gauche(getAnim()).equals(DirSubTypeMouv.GAUCHE)? (blocLeft && !blocLeftUp) : (blocRight && !blocRightUp) ) && peutSauter;
-				boolean inAir= getDeplacement().IsDeplacement(MouvEntityEnum.SAUT);
-				boolean moveInAir=droite_gauche(getAnim()).equals(DirSubTypeMouv.GAUCHE)?(!blocLeft) :(!blocRight); 
-				boolean holeClose= (droite_gauche(getAnim()).equals(DirSubTypeMouv.GAUCHE)? (!blocGaucheBas) : (!blocDroitBas) );
+				boolean jumpAbove= (droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE)? (blocLeft && !blocLeftUp) : (blocRight && !blocRightUp) ) && peutSauter;
+				boolean inAir= getMouvement().isMouvement(EntityTypeMouv.SAUT);
+				boolean holeClose= (droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE)? (!blocLeftDown) : (!blocRightDown) );
 
 				//on saute au dessus d'un obstacle si possible
-				if( jumpAbove)
-				{
-					doitChangMouv=!getDeplacement().IsDeplacement(MouvEntityEnum.SAUT);
-					nouvAnim=(herosAGauche? 0 : 1);
-					nouvMouv= new Saut(ObjectType.SPIREL,herosAGauche?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE,partie.getFrame());
+				if( jumpAbove){
+					lastIAAction = AISpirelAction.JUMP_ABOVE_OBSTACLE;
+					getCurrentInputPool().onJump(false);
 				}
 				//si on est en l'air, on se deplace
-				else if (inAir)
-				{
-					//si on peut se deplacer sur le coté
-					if(moveInAir)
-					{
-						if(herosAGauche)
-						{
-							sautGauche=true;
-							sautDroit=false;
-						}
-						else
-						{
-							sautGauche=false;
-							sautDroit=true;
-						}
-						doitChangMouv=!(herosAGauche? getAnim()==0 : getAnim()==1);
-						nouvAnim=(herosAGauche? 0 : 1);
-						nouvMouv= new Saut(ObjectType.SPIREL,herosAGauche?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE,partie.getFrame());
-					}
-					else
-					{
-						sautGauche=false;
-						sautDroit=false;
-					}
-
+				else if (inAir){
+					lastIAAction = AISpirelAction.MOVE_TOWARDS_HERO;
+					moveTo(targetAtMyLeft);
 				}
 				//Si il y a un trou a coté du monstre
 				else if(holeClose)
 				{
 					int decision = (int) (Math.random()*100);
 					//on attend 
-					if(decision <= 70)
-					{
-						//animation d'attente
-						doitChangMouv= !((getDeplacement().IsDeplacement(MouvEntityEnum.ATTENTE)) 
-								&& (herosAGauche? getAnim()==0 : getAnim()==1));
-						nouvAnim=herosAGauche? 0 : 1;
-						nouvMouv= new Attente(ObjectType.SPIREL,herosAGauche?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
-
+					if(decision <= 70){
+						lastIAAction = AISpirelAction.WAIT_CLOSE_TO_HOLE;
+						stopMoving();
 					}
+					//WARNING need refactor, hole close does not mean that the spirel is facing the hole, therefore the decision makes no sense 
 					//on se deplace dans l'autre direction
-					else if(decision <= 90)
-					{
-						doitChangMouv=true;
-						//on change de direction
-						nouvAnim=(herosAGauche? 2 : 0);
-						nouvMouv= new Marche(ObjectType.SPIREL,herosAGauche?DirSubTypeMouv.DROITE:DirSubTypeMouv.GAUCHE,partie.getFrame());
+					else if(decision <= 90){
+						lastIAAction = AISpirelAction.MOVE_AWAY_HOLE;
+						moveTo(!targetAtMyLeft);
 					}
-					//le monstre tombe en marchant
-					else 
-					{
-						doitChangMouv=!((getDeplacement().IsDeplacement(MouvEntityEnum.MARCHE)) 
-								&& (herosAGauche? getAnim()<2 : getAnim()>=2));
-						nouvAnim=(herosAGauche? 0 : 2);
-						nouvMouv= new Marche(ObjectType.SPIREL,herosAGauche?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
+					//Move in the same direction and fall into the hole 
+					else{
+						lastIAAction = AISpirelAction.MOVE_TOWARDS_HOLE;
+						moveTo(targetAtMyLeft);
 					}
 				}
 				//sinon on se deplace
 				else
 				{
 					int decision = (int) (Math.random()*100);
-
 					//deplacement
-					if(decision <= 90)
-					{
-						doitChangMouv=!((getDeplacement().IsDeplacement(MouvEntityEnum.MARCHE)) 
-								&& (herosAGauche? getAnim()<2 : getAnim()>=2));
-						nouvAnim=(herosAGauche? 0 : 2);
-						nouvMouv= new Marche(ObjectType.SPIREL,herosAGauche?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
+					if(decision <= 90){
+						lastIAAction = AISpirelAction.MOVE_TOWARDS_HERO;
+						moveTo(targetAtMyLeft);
 					}
 					//attente
-					else
-					{
-						//animation d'attente
-						doitChangMouv= !((getDeplacement().IsDeplacement(MouvEntityEnum.ATTENTE)) 
-								&& (herosAGauche? getAnim()==0 : getAnim()==1));
-						nouvAnim=herosAGauche? 0 : 1;
-						nouvMouv= new Attente(ObjectType.SPIREL,herosAGauche?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
+					else{
+						lastIAAction = AISpirelAction.WAIT;
+						stopMoving();
 					}
 				}
-
 			}
-			else //spirel is static
-			{
-				//animation d'attente
-				doitChangMouv= !((getDeplacement().IsDeplacement(MouvEntityEnum.ATTENTE)) 
-						&& (herosAGauche? getAnim()==0 : getAnim()==1));
-				nouvAnim=herosAGauche? 0 : 1;
-				nouvMouv= new Attente(ObjectType.SPIREL,herosAGauche?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
-			}	
+			else{ //spirel is static
+				lastIAAction = AISpirelAction.WAIT;
+				stopMoving();
+			}
 
-			tempsAncienMouv=PartieTimer.me.getElapsedNano();
+			lastAIUpdate=PartieTimer.me.getElapsedNano();
 		}
-		else
-		{
-			//on continue le mouvement précédant
-			doitChangMouv=false;
-		}
-
 	}
+	
+	private void setMouvement(AbstractModelPartie partie,Mouvement newMouv, int newMouvIndex){
+		System.out.println("Set mouvement "+ newMouv+" "+newMouvIndex);
+		if(!getMouvement().getTypeMouv().equals(EntityTypeMouv.SAUT) && newMouv.getTypeMouv().equals(EntityTypeMouv.SAUT)){
+			peutSauter = false;
+		}
+		if(wasGrounded){
+			useGravity=false;
+			peutSauter=true;
+			sautDroit=false;
+			sautGauche=false;
+			finSaut=false;
+		}
+		setMouvement(newMouv);
+		setMouvIndex(newMouvIndex);
+	}
+	/***
+	 * 
+	 * @return true if mouvement updated
+	 */
+	protected boolean updateMouvementBasedOnPhysic(AbstractModelPartie partie){
+		ModelPrincipal.debugTime.startElapsedForVerbose();
+		boolean isFacingLeft = getMouvement().droite_gauche(getMouvIndex(), getRotation()).equals(DirSubTypeMouv.GAUCHE);
+		boolean falling= !isGrounded(partie);
+		wasGrounded = !falling;
+		boolean landing= (finSaut||!falling) && getMouvement().isMouvement(EntityTypeMouv.SAUT);
+		if(falling)
+			useGravity=falling;
+		//update variable since the spirel can be ejected 
+		this.peutSauter=!falling;
+		this.finSaut=this.finSaut && !falling;
+		
+		ModelPrincipal.debugTime.elapsed("Spirel chang mouv: init var");
+		//chute
+		if(falling && !getMouvement().getTypeMouv().equals(EntityTypeMouv.SAUT))
+		{
+			int nextMouvIndex = isFacingLeft? 0 : 1;
+			//no fall animation, put the jump instead
+			Mouvement_entity nextMouv=new Saut(ObjectType.SPIREL,isFacingLeft?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE, partie.getFrame());
+			
+			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+			if(success){
+				setMouvement(partie,nextMouv,nextMouvIndex);
+				return true;
+			}
+		}
+		ModelPrincipal.debugTime.elapsed("Spirel chang mouv: falling");
+		//atterrissage
+		if(landing)
+		{
+			int nextMouvIndex = isFacingLeft? 0 : 1;
+			Mouvement_entity nextMouv=new Attente(ObjectType.SPIREL,isFacingLeft?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
+			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+			if(success){
+				setMouvement(partie,nextMouv,nextMouvIndex);
+				return true;
+			}
+			
+			ModelPrincipal.debugTime.elapsed("Spirel chang mouv: landing");
+			return true;
+		}
+		return false;
+	}
+	/***
+	 * 
+	 * @return true if mouvement updated
+	 */
+	protected boolean updateNonInterruptibleMouvement(AbstractModelPartie partie){
+		return false;
+	}
+	/***
+	 * 
+	 * @return true if mouvement updated
+	 */
+	protected boolean updateMouvementBasedOnInput(AbstractModelPartie partie){
+		//First handle released (shoot & move) then handle press (shoot,jump,move)
+		boolean isFacingLeft = getMouvement().droite_gauche(getMouvIndex(), getRotation()).equals(DirSubTypeMouv.GAUCHE);
+		boolean falling = !isGrounded(partie);
+		if(getCurrentInputPool().isInputReleased(InputTypeArray.SHOOT,0)){
+			
+			int nextMouvIndex = isFacingLeft?0:1;
+			Mouvement nextMouv = new Attente(ObjectType.SPIREL,isFacingLeft?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
+			
+			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+			if(success){
+				setMouvement(partie,nextMouv,nextMouvIndex);
+			}
+			else
+				return false;
+			//shoot projectile
+			double tir1_rotation = droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE)?Math.PI : 0;
+			double tir2_rotation = 3*Math.PI/2;
+			
+			//middle of the spirel hitbox
+			Vector2d spirelMid = Hitbox.getObjMid(partie, this);
+			
+			partie.tabTirMonstre.add(createProjectile(partie,spirelMid,tir1_rotation,getScaling()));	
+			partie.tabTirMonstre.add(createProjectile(partie,spirelMid,tir2_rotation,getScaling()));	
+			
+			cooldown=true;
+			return true;
+		}
+		else if(getCurrentInputPool().isInputReleased(InputType.LEFT) || getCurrentInputPool().isInputReleased(InputType.RIGHT)){
+			boolean shouldStop = (getCurrentInputPool().isInputReleased(InputType.LEFT) && isFacingLeft) || (getCurrentInputPool().isInputReleased(InputType.RIGHT) &&!isFacingLeft);
+			if(shouldStop){
+				if(falling){
+					int nextMouvIndex = isFacingLeft?0:1;
+					Mouvement nextMouv = new Saut(ObjectType.SPIREL,isFacingLeft?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
+					
+					boolean isNextDirectionLeft = nextMouv.droite_gauche(nextMouvIndex,0).equals(DirSubTypeMouv.GAUCHE);
+					boolean isSameMouvement = getMouvement().isMouvement(EntityTypeMouv.SAUT) && ((isFacingLeft&& isNextDirectionLeft)||(!isFacingLeft && !isNextDirectionLeft));
+					
+					if(!isSameMouvement){
+						boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+						if(success){
+							setMouvement(partie,nextMouv,nextMouvIndex);
+							return true;
+						}
+					}
+				}
+				else{
+					int nextMouvIndex = isFacingLeft?0:1;
+					Mouvement nextMouv = new Attente(ObjectType.SPIREL,isFacingLeft?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
+					
+					boolean isNextDirectionLeft = nextMouv.droite_gauche(nextMouvIndex,0).equals(DirSubTypeMouv.GAUCHE);
+					boolean isSameMouvement = getMouvement().isMouvement(EntityTypeMouv.ATTENTE) && ((isFacingLeft&& isNextDirectionLeft)||(!isFacingLeft && !isNextDirectionLeft));
+					
+					if(!isSameMouvement){
+						boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+						if(success){
+							setMouvement(partie,nextMouv,nextMouvIndex);
+							return true;
+						}
+					}
+				}
+			}
+		}
+		//When shooting is down, either starts shooting or do nothing. But make sure not to trigger move left/right-> 2nd if condition is within this loop
+		if(getCurrentInputPool().isInputDown(InputTypeArray.SHOOT,0)){
+			if(!getMouvement().isMouvement(EntityTypeMouv.TIR)){
+				int nextMouvIndex = isFacingLeft?0:1;
+				Mouvement nextMouv = new Tir(ObjectType.SPIREL,isFacingLeft?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
+				boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+				if(success){
+					setMouvement(partie,nextMouv,nextMouvIndex);
+					return true;
+				}
+			}
+		}
+		else if(getCurrentInputPool().isInputDown(InputType.JUMP)){
+			int nextMouvIndex = isFacingLeft?0:1;
+			Mouvement nextMouv = new Saut(ObjectType.SPIREL,isFacingLeft?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE,partie.getFrame());
+			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+			if(success){
+				setMouvement(partie,nextMouv,nextMouvIndex);
+				return true;
+			}
+		}
+		else if(getCurrentInputPool().isInputDown(InputType.LEFT) || getCurrentInputPool().isInputDown(InputType.RIGHT)){
+			boolean rightAndLeftPressedTogether = getCurrentInputPool().isInputDown(InputType.LEFT) &&  getCurrentInputPool().isInputDown(InputType.RIGHT);
+			boolean shouldMoveRight = rightAndLeftPressedTogether? !prevDirectionWasRight:getCurrentInputPool().isInputDown(InputType.RIGHT); 
+			if(falling){
+				//if(!getMouvement().isMouvement(EntityTypeMouv.SAUT)){
+				int nextMouvIndex = !shouldMoveRight?0:1;
+				Mouvement nextMouv = new Saut(ObjectType.SPIREL,!shouldMoveRight?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE,partie.getFrame());
+				
+				boolean isSameMouvement = getMouvement().isMouvement(EntityTypeMouv.SAUT) && ((!shouldMoveRight&& isFacingLeft)||(shouldMoveRight && !isFacingLeft));
+				System.out.println("shouldMoveright "+ shouldMoveRight +" isFacingRight "+ !isFacingLeft+" same mouv "+ isSameMouvement);
+				if(!isSameMouvement){
+					boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+					if(success){
+						sautDroit = shouldMoveRight;
+						sautGauche = !shouldMoveRight;
+						setMouvement(partie,nextMouv,nextMouvIndex);
+						return true;
+					}
+				}else{
+					sautDroit = shouldMoveRight;
+					sautGauche = !shouldMoveRight;
+				}
+			}
+			else{
+				int nextMouvIndex = !shouldMoveRight?0:2;
+				Mouvement nextMouv = new Marche(ObjectType.SPIREL,!shouldMoveRight?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
+				
+				boolean isSameMouvement = getMouvement().isMouvement(EntityTypeMouv.MARCHE) && ((!shouldMoveRight&& isFacingLeft)||(shouldMoveRight && !isFacingLeft));
+				
+				if(!isSameMouvement){
+					boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+					if(success){
+						setMouvement(partie,nextMouv,nextMouvIndex);
+						return true;
+					}
+				}
+			}
+			prevDirectionWasRight  = rightAndLeftPressedTogether?prevDirectionWasRight :   getCurrentInputPool().isInputDown(InputType.RIGHT);
+		}
+		return false;
+	}
+	/***
+	 * 
+	 * @return true if mouvement updated
+	 */
+	protected boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie){
+		int nextMouvIndex = getMouvement().updateAnimation(getMouvIndex(), partie.getFrame(),conditions.getSpeedFactor());
+		if(getMouvIndex() != nextMouvIndex){
+			boolean success = alignNextMouvement(partie,getMouvement(), nextMouvIndex);
+			if(success){
+				setMouvement(partie,getMouvement(),nextMouvIndex);
+				return true;
+			}
+		}
+		return false;
+	}
+	/***
+	 * Callback that is called before updating the animation in deplace() function
+	 */
+	protected void resetInputState(AbstractModelPartie partie){
+		getCurrentInputPool().updateInputState();
+	}
+	/***
+	 * Callback that is called before updating the animation in deplace() function
+	 */
+	protected void onMouvementChanged(AbstractModelPartie partie,boolean animationChanged, boolean mouvementChanged){
+	}
+	protected void onAnimationEnded(AbstractModelPartie partie){
+		destroy(partie,true);
+	}
+	protected void updateTimers(){
+		updateShootTime();
+	};
 
+	/**
+	 * Gère l'ensemble des événements lié au deplacement d'un monstre 
+	 * 
+	 * @param monstre, le monstre a deplacer 
+	 * @param heros, le personnage jouable
+	 * @param Monde, le niveau en cours 
+	 */		
+	//@Override
+	/* ***REMOVEpublic boolean deplac(AbstractModelPartie partie)
+	{
+		//ModelPrincipal.debugTime.startElapsedForVerbose();
+		//updateShootTime();
+		//ModelPrincipal.debugTime.elapsed("Spirel update shoot time" );
+		//compute the next desired movement 
+		IA(partie.tabTirMonstre,partie.heros,partie);
+		ModelPrincipal.debugTime.elapsed("Spirel IA");
+		//compute the true next movement depending on landing, gravity, ... 
+		changeMouv(partie);
+		ModelPrincipal.debugTime.elapsed("Spirel changeMouv");
+		return true;//move the object
+	}*/
+	
+	/**
+	 * IA pour le deplacement du monstre 
+	 * 
+	 * @param monstre, le monstre a deplacer 
+	 * @param heros, le personnage jouable
+	 * @param Monde, le niveau en cours  
+	 */	
+	
+	// ***REMOVE @Override
 	/**
 	 * 
 	 * 
 	 * @param monstre, le monstre a deplacer 
 	 * @param Monde, le niveau en cours 
 	 */	
-	public void changeMouv (AbstractModelPartie partie,Deplace deplace)
+	/* ***REMOVE public void changeMouv (AbstractModelPartie partie)
 	{
 		ModelPrincipal.debugTime.startElapsedForVerbose();
 		boolean herosAGauche= getXpos()-(partie.heros.getXpos()-partie.xScreendisp)>=0;
 		boolean falling= !isGrounded(partie);
 		wasGrounded = !falling;
-		boolean landing= (finSaut||!falling) && getDeplacement().IsDeplacement(MouvEntityEnum.SAUT);
+		boolean landing= (finSaut||!falling) && getMouvement().isMouvement(MouvEntityEnum.SAUT);
 		if(falling)
 			useGravity=falling;
 		//update variable since the spirel can be ejected 
@@ -393,27 +573,27 @@ public class Spirel extends Monstre{
 		if(falling)
 		{
 			peutSauter=false;
-			int animSuiv = herosAGauche? 0 : 1;
+			int nextMouvIndex = herosAGauche? 0 : 1;
 			//no fall animation, put the jump instead
 			Mouvement_entity depSuiv=new Saut(ObjectType.SPIREL,herosAGauche?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE, partie.getFrame());
-			alignHitbox(getAnim(),depSuiv,animSuiv,partie,deplace);
+			alignHitbox(getMouvIndex(),depSuiv,nextMouvIndex,partie);
 
 			//le monstre tombe, on met donc son animation de saut
-			setAnim(animSuiv);
-			setDeplacement(depSuiv);
-			getDeplacement().setSpeed(this,getAnim());
+			setMouvIndex(nextMouvIndex);
+			setMouvement(depSuiv);
+			getMouvement().setSpeed(this,getMouvIndex());
 
 		}
 		ModelPrincipal.debugTime.elapsed("Spirel chang mouv: falling");
 		//atterrissage
 		if(landing)
 		{
-			int animSuiv = herosAGauche? 0 : 1;
+			int nextMouvIndex = herosAGauche? 0 : 1;
 			Mouvement_entity depSuiv=new Attente(ObjectType.SPIREL,herosAGauche?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
-			alignHitbox(getAnim(),depSuiv,animSuiv,partie,deplace);
-			setAnim(animSuiv);
-			setDeplacement(depSuiv);
-			getDeplacement().setSpeed(this,getAnim());
+			alignHitbox(getMouvIndex(),depSuiv,nextMouvIndex,partie);
+			setMouvIndex(nextMouvIndex);
+			setMouvement(depSuiv);
+			getMouvement().setSpeed(this,getMouvIndex());
 			useGravity=false;
 			peutSauter=true;
 			sautDroit=false;
@@ -426,50 +606,59 @@ public class Spirel extends Monstre{
 		{
 			if(doitChangMouv)
 			{
-				//monstre.actionReussite= (decallageMonstre(monstre,monstre.nouvMouv,monstre.anim,monstre.nouvAnim,false,false,partie));
-				alignHitbox(getAnim(),nouvMouv,nouvAnim,partie,deplace);
+				//monstre.actionReussite= (decallageMonstre(monstre,monstre.nouvMouv,monstre.mouv_index,monstre.nouvAnim,false,false,partie));
+				alignHitbox(getMouvIndex(),nouvMouv,newMouvIndex,partie);
 
-				setDeplacement(nouvMouv);
-				setAnim(nouvAnim);
-				getDeplacement().setSpeed(this,getAnim());
+				setMouvement(nouvMouv);
+				setMouvIndex(newMouvIndex);
+				getMouvement().setSpeed(this,getMouvIndex());
 				ModelPrincipal.debugTime.elapsed("Spirel chang mouv: doit changer mouv");
 
 			}
 			else 
 			{
-				animationChanged=false;
-				int nextAnim = getDeplacement().updateAnimation(getAnim(), partie.getFrame(),conditions.getSpeedFactor());
-				if(getAnim() != nextAnim){
-					alignHitbox(getAnim(),getDeplacement(),nextAnim,partie,deplace);
-					setAnim(nextAnim);
+				int nextMouvIndex = getMouvement().updateAnimation(getMouvIndex(), partie.getFrame(),conditions.getSpeedFactor());
+				if(getMouvIndex() != nextMouvIndex){
+					alignHitbox(getMouvIndex(),getMouvement(),nextMouvIndex,partie);
+					setMouvIndex(nextMouvIndex);
 				}
-				getDeplacement().setSpeed(this, getAnim());
+				getMouvement().setSpeed(this, getMouvIndex());
 				ModelPrincipal.debugTime.elapsed("Spirel chang mouv: meme mouv");
 			}
 		}
-		doitChangMouv=false;
-	}
+	}*/
 	/**
 	 * Align to the rigth/left/up/down the next movement/hitbox to the previous one
 	 * @param monstre
-	 * @param animActu
+	 * @param currentMouvIndex
 	 * @param depSuiv
-	 * @param animSuiv
+	 * @param nextMouvIndex
 	 * @param partie
 	 */
-	public void alignHitbox(int animActu,Mouvement depSuiv, int animSuiv, AbstractModelPartie partie, Deplace deplace)
+	public boolean alignNextMouvement(AbstractModelPartie partie,Mouvement nextMouv, int nextMouvIndex)
 	{
-		boolean going_left = getGlobalVit(partie).x<0;
-		boolean facing_left_still= getGlobalVit(partie).x==0 &&(droite_gauche(animActu).equals(DirSubTypeMouv.GAUCHE)|| last_colli_left);
-		boolean sliding_left_wall = (droite_gauche(animActu).equals(DirSubTypeMouv.DROITE)) ;
+		boolean going_left = getGlobalVit().x<0;
+		boolean facing_left_still= getGlobalVit().x==0 &&(droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE)|| last_colli_left);
+		boolean sliding_left_wall = (droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.DROITE)) ;
+		
 		boolean left = ( going_left|| facing_left_still ||sliding_left_wall) ; 
-		boolean down = getGlobalVit(partie).y>=0; 
-
-		super.alignHitbox(animActu,depSuiv, animSuiv, partie,deplace,left, down,this,true);
+		boolean down = getGlobalVit().y>=0; 
+		
+		boolean success = false;
+		try{
+			System.out.println("Align "+ nextMouv +" "+nextMouvIndex);
+			success = super.alignNextMouvement(partie, nextMouv, nextMouvIndex, left? XAlignmentType.LEFT : XAlignmentType.RIGHT,
+					down?YAlignmentType.BOTTOM : YAlignmentType.TOP , true, !nextMouv.isMouvement(EntityTypeMouv.GLISSADE));
+		} catch(Exception e){e.printStackTrace();}
+		
+		return success;
 
 	}
 
-	
+	private TirSpirel createProjectile(AbstractModelPartie partie, Vector2d pos,double rotation,Vector2d scaling){
+		return new TirSpirel(partie,pos,
+				0,rotation,scaling,partie.getFrame(),conditions.getDamageFactor(),conditions.getShotSpeedFactor());
+	}
 	public boolean isGrounded(AbstractModelPartie partie)
 	{
 		return nearObstacle(partie,0,-1);
@@ -482,40 +671,28 @@ public class Spirel extends Monstre{
 	 * @param height the height to shift the hitbox, positive is towards the top of the screen
 	 * @return
 	 */
-	public boolean nearObstacle(AbstractModelPartie partie,double right,double height)
+	public boolean nearObstacle(AbstractModelPartie partie,int right,int height)
 	{
 		Hitbox hit = getHitbox(partie.INIT_RECT,partie.getScreenDisp()).copy();
 		assert hit.polygon.npoints==4;
-		//get world hitboxes with Collision
-		//Shift all points towards right/left
-		for(int i=0; i<hit.polygon.npoints; ++i){
-			hit.polygon.xpoints[i]+=right;
-			hit.polygon.ypoints[i]-=height;
-		}
+		
+		hit.translate(right, -1*height);
 		return Collision.isWorldCollision(partie, hit, true);
-		/*//get all hitboxes: it can be slower 
-		List<Collidable> mondeHitboxes=Collision.getMondeBlocs(partie.monde, objectHitboxL, partie.INIT_RECT, partie.TAILLE_BLOC);
-		//if there is a collision between mondeHitboxes and objectHitbox, it means that lower the hitbox by 1 leads to a 
-		//collision: the object is likely to be on the ground (otherwise, it is in a bloc).
-		for(Collidable b : mondeHitboxes)
-			if(GJK_EPA.intersectsB(objectHitboxL.polygon, b.getHitbox(partie.INIT_RECT).polygon, new Vector2d(right,-height))==GJK_EPA.TOUCH)
-				return true;
-		return false;*/
 	}
 
 	@Override
 	public void memorizeCurrentValue()
 	{
 		final Point memPos= new Point(getXpos(),getYpos()); 
-		final Mouvement_entity memDep = (Mouvement_entity) getDeplacement().Copy();
-		final int memAnim = getAnim();
+		final Mouvement_entity memDep = (Mouvement_entity) getMouvement().Copy();
+		final int memMouvIndex = getMouvIndex();
 		final Vitesse memVitloca = localVit.Copy();
 		final CachedHitbox cachedHit = this.getCacheHitboxCopy();
 		final CachedAffineTransform cachedDrawTr = this.getCacheDrawTrCopy();
 		currentValue=new CurrentValue(){		
 			@Override
 			public void res()
-			{setXpos_sync(memPos.x);setYpos_sync(memPos.y);setDeplacement(memDep);setAnim(memAnim);localVit=memVitloca;
+			{setXpos_sync(memPos.x);setYpos_sync(memPos.y);setMouvement(memDep);setMouvIndex(memMouvIndex);localVit=memVitloca;
 			setCachedHit(cachedHit);setCachedDrawTr(cachedDrawTr);}};
 	}
 	@Override

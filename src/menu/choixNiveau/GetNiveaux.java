@@ -17,19 +17,19 @@ public class GetNiveaux {
 		File folder = new File(path);
 		File[] listOfFiles = folder.listFiles();
 
-		    for (int i = 0; i < listOfFiles.length; i++) {
-		      if (listOfFiles[i].isFile())
-		      {
-		    	  _listNomNiveaux.add(listOfFiles[i].getName());
-		      }
-		     // else if (listOfFiles[i].isDirectory()) {
-		    	  //_listNomNiveaux.add(listOfFiles[i].getName()); 
-		    	 // }
-		    }
-		    return(_listNomNiveaux);
+		for (int i = 0; i < listOfFiles.length; i++) {
+			if (listOfFiles[i].isFile())
+			{
+				_listNomNiveaux.add(listOfFiles[i].getName());
+			}
+			// else if (listOfFiles[i].isDirectory()) {
+			//_listNomNiveaux.add(listOfFiles[i].getName()); 
+			// }
+		}
+		return(_listNomNiveaux);
 	}
-	
-	
+
+
 	public static List<String> getDocInJar(String path)
 	{
 		List<String> _listNomNiveaux = new ArrayList<String>();
@@ -42,24 +42,24 @@ public class GetNiveaux {
 				zip = new ZipInputStream(jar.openStream());
 			} 
 			catch (IOException e2) {e2.printStackTrace();}
-			while(true)
-			{
-				ZipEntry e = null;
+
+			ZipEntry e = null;
+			do{
 				try {
 					e = zip.getNextEntry();
 				} 
 				catch (IOException e1) {e1.printStackTrace();}
-				if(e==null)
-				{
-					break;
-				}
-				String name = e.getName();
-				
-				if(name.startsWith(path) && ! name.endsWith(path))
-				{
-					_listNomNiveaux.add(name.replaceFirst(path, ""));
+
+				if(e!=null){
+					String name = e.getName();
+
+					if(name.startsWith(path) && ! name.endsWith(path))
+					{
+						_listNomNiveaux.add(name.replaceFirst(path, ""));
+					}
 				}
 			}
+			while(e != null);
 		}
 		else
 		{

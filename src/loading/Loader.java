@@ -92,13 +92,13 @@ public class Loader implements GameMode{
 			{
 				int res = 0;
 				int num = pendingItems.size();
-				//DEBUG String str ="(";
+				//String str ="(";
 				for(int i =0; i< num; ++i){
-					//DEBUG str+=pendingItems.get(i).getName() +" " + pendingItems.get(i).getProgress()+",";
+					//str+=pendingItems.get(i).getName() +" " + pendingItems.get(i).getProgress()+",";
 					res+=pendingItems.get(i).getProgress();
 				}
 				res= (int) (((float) res )/ num);
-				//DEBUG System.out.println(res+": " + str.substring(0, str.length()-1)+")");
+				//System.out.println(res+": " + str.substring(0, str.length()-1)+")");
 				return res;
 			}
 		};

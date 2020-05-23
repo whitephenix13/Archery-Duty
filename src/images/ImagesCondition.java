@@ -163,7 +163,7 @@ public class ImagesCondition extends ImagesContainer{
 		return null;
 	}
 	@Override 
-	public ArrayList<Image> getImages(ObjectType objType, ImageInfo info1,ImageInfo info2, int anim)
+	public ArrayList<Image> getImages(ObjectType objType, ImageInfo info1,ImageInfo info2, int mouv_index)
 	{
 		return null;
 	}

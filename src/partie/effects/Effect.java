@@ -8,15 +8,17 @@ import java.util.List;
 
 import javax.vecmath.Vector2d;
 
+import debug.DebugStack;
 import partie.collision.Collidable;
 import partie.collision.GJK_EPA;
 import partie.collision.Hitbox;
-import partie.deplacement.Deplace;
-import partie.deplacement.Mouvement;
-import partie.deplacement.Mouvement.SubTypeMouv;
-import partie.deplacement.Mouvement.TypeMouv;
 import partie.entitie.Entity;
+import partie.input.InputPartie;
 import partie.modelPartie.AbstractModelPartie;
+import partie.mouvement.Deplace;
+import partie.mouvement.Mouvement;
+import partie.mouvement.Mouvement.SubTypeMouv;
+import partie.mouvement.Mouvement.TypeMouv;
 import partie.projectile.fleches.Fleche;
 import utils.Vitesse;
 
@@ -35,10 +37,10 @@ public abstract class Effect extends Collidable{
 	public boolean groundEffect = false;
 
 	public Fleche ref_fleche=null;
-	public void onRemoveRefFleche(AbstractModelPartie partie,boolean destroyNow){this.onUpdate(partie,true);ref_fleche=null;};
+	public void onRemoveRefFleche(AbstractModelPartie partie,boolean destroyNow){ref_fleche=null;};
 	
-	public int xplace=1;	//Determine what is the key point defining the draw position 0 left 1 center 2 right
-	public int yplace=1;	//Determine what is the key point defining the draw position 0 up 1 center 2 down
+	//public int xplace=1;	//Determine what is the key point defining the draw position 0 left 1 center 2 right
+	//public int yplace=1;	//Determine what is the key point defining the draw position 0 up 1 center 2 down
 
 	//normal value of the surface to reproject the desired speed in order to slide 
 	public Vector2d normal = null;
@@ -49,9 +51,9 @@ public abstract class Effect extends Collidable{
 	public boolean isProjectile = false; //set to true if this object should be consider as a projectile for projectile/projectile and projectile/heros collision
 	
 	
-	public Effect(int _anim,Fleche _ref_fleche)
+	public Effect(int _mouv_index,Fleche _ref_fleche)
 	{
-		this(_anim,_ref_fleche,null,null,null,false,false);
+		this(_mouv_index,_ref_fleche,null,null,null,false,false);
 	}
 
 	/**
@@ -59,12 +61,12 @@ public abstract class Effect extends Collidable{
 	 * @param _normalCollision
 	 * @param useRefArrowRotation false: compute the projected rotation to main x/y axis (angle = -Pi:Pi, -Pi/2 0 Pi/2 -
 	 */
-	public Effect(int _anim,Fleche _ref_fleche,Vector2d _normalCollision,Point _pointCollision,
+	public Effect(int _mouv_index,Fleche _ref_fleche,Vector2d _normalCollision,Point _pointCollision,
 			Point _correctedPointCollision,boolean groundEffect,boolean useProjectedRot)
 	{
 		super();
 		
-		setAnim(_anim);
+		setMouvIndex(_mouv_index);
 		ref_fleche = _ref_fleche;
 		normalCollision=_normalCollision;
 		pointCollision=_pointCollision;
@@ -87,17 +89,16 @@ public abstract class Effect extends Collidable{
 	}
 	public boolean isEnded()
 	{
-		return getDeplacement().animEnded();
+		return getMouvement().animEnded();
 	}
 	/** call each step by the main loop*/
-	public void onUpdate(AbstractModelPartie partie, boolean last) {
-	}
+	//REMOVE public void onUpdate(AbstractModelPartie partie, boolean last) {}
 	/** call in deplace, apply relative effects to collidable to which the effect is attached to. For speed modifiers, use getModifiedSpeed*/
 	public abstract void updateOnCollidable(AbstractModelPartie partie,Entity attacher);
 	/**
 	 * return the speed to add to the agents concerned by the effect 
 	 * */
-	public abstract Vitesse getModifiedVitesse(AbstractModelPartie partie, Collidable obj);
+	public abstract Vitesse getModifiedVitesse(Collidable obj);
 	@Override
 	public void onDestroy(AbstractModelPartie partie)
 	{
@@ -126,9 +127,6 @@ public abstract class Effect extends Collidable{
 	}
 	
 
-	protected void updatePos(AbstractModelPartie partie)
-	{
-	}
 	protected Point setFirstPos(AbstractModelPartie partie,Point effCenter)
 	{
 		if(pointCollision!=null)
@@ -151,31 +149,103 @@ public abstract class Effect extends Collidable{
 	@Override
 	public AffineTransform computeDrawTr(Point screenDisp)
 	{
-		return AbstractModelPartie.getRotatedTransform(new Point(getXpos()+screenDisp.x, getYpos()+screenDisp.y),null,getRotation());
+		return AbstractModelPartie.getRotatedTransform(new Point(getXpos()+screenDisp.x, getYpos()+screenDisp.y),null,getRotation(),getScaling());
 	}
 	
-	@Override
-	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp) {
+	protected Hitbox computeEffectHitbox(Hitbox unscaledMouvementHitbox,Point INIT_RECT,Point screenDisp){
+		//Give the unscale mouvement hitbox since the affineTransformation used to transform the hitbox already took the scaling into account
 		AffineTransform tr = computeDrawTr(screenDisp);
 		if(tr==null)
-			return this.getDeplacementHitbox(getAnim()).copy().translate(getXpos(),getYpos());
+			return unscaledMouvementHitbox.translate(getXpos(),getYpos());
 		else{
-			Hitbox rotatedHitbox = Hitbox.convertHitbox(getDeplacementHitbox(getAnim()), tr,new Point(getXpos(),getYpos()), screenDisp); //new hitbox
+			Hitbox rotatedHitbox = unscaledMouvementHitbox.transformHitbox(tr, getPos(), screenDisp);
 			return rotatedHitbox.translate(getXpos(),getYpos());
 		}	
 	}
+	@Override
+	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp) {
+		return computeEffectHitbox(getUnscaledMouvementHitboxCopy(getMouvIndex()),INIT_RECT,screenDisp);
+	}
 
+	
+	/***
+	 * Callback that is called before updating position in deplace() function
+	 */
+	/*protected void onDeplaceStart(AbstractModelPartie partie)
+	{
+		
+	}*/
 
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
-		updatePos(partie);
+	protected void onStartDeplace(){}
+	@Override
+	protected void handleInputs(AbstractModelPartie partie) {
 		
-		setAnim(getDeplacement().updateAnimation(getAnim(), partie.getFrame(), 1));
-		getDeplacement().setSpeed(this, getAnim());
-		//doit deplace, change anim
-		boolean[] res = {!getNeedDestroy(),false};
-		return res;
 	}
+	@Override
+	protected boolean updateMouvementBasedOnPhysic(AbstractModelPartie partie) {
+		return false;
+	}
+	@Override
+	protected boolean updateNonInterruptibleMouvement(AbstractModelPartie partie) {
+		return false;
+	}
+	@Override
+	protected boolean updateMouvementBasedOnInput(AbstractModelPartie partie) {
+		return false;
+	}
+	@Override
+	protected boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie) {
+		int nextMouvIndex = getMouvement().updateAnimation(getMouvIndex(), partie.getFrame(),1);
+		if(getMouvIndex()!=nextMouvIndex){
+			boolean success = true;//no need to hitbox alignment check 
+			if(success){
+				setMouvIndex(nextMouvIndex);
+				return true;
+			}
+		}
+		return false;
+	}
+	@Override
+	protected void resetInputState(AbstractModelPartie partie) {
+		
+	}
+	@Override
+	protected void onMouvementChanged(AbstractModelPartie partie,boolean animationChanged, boolean mouvementChanged) {
+	}
+	/***
+	 * Callback that is called before updating the animation in deplace() function
+	 */
+	@Override
+	protected void onAnimationEnded(AbstractModelPartie partie)
+	{
+		destroy(partie,true);
+	}
+	/*REMOVE @Override 
+	/* REMOVE public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
+		//onDeplaceStart(partie);
+		
+		//if(shouldUpdatePos())
+		//	updatePos(partie);
+		
+		//if(isEnded())
+		//	onAnimationEnded(partie);
+		
+		//boolean changedAnim  =false;
+		//int prev_mouv_index =getAnim();
+		//int next_mouv_index = getDeplacement().updateAnimation(getAnim(), partie.getFrame(), 1);
+		
+		//setAnim(next_mouv_index);
+		//if(prev_mouv_index != getAnim()){
+		//	changedAnim=true;
+		//	onAnimChanged(partie,prev_mouv_index,getAnim());
+		//}
+		
+		//getDeplacement().setSpeed(this, getAnim());
+		//doit deplace, change mouv_index
+		boolean[] res = {!getNeedDestroy(),changedAnim};
+		return res;
+	}*/
 	@Override 
 	public void deplaceOutOfScreen(AbstractModelPartie partie)
 	{
@@ -189,7 +259,7 @@ public abstract class Effect extends Collidable{
 	}
 	
 	@Override
-	public Vitesse getGlobalVit(AbstractModelPartie partie){
+	public Vitesse getGlobalVit(){
 		return localVit.Copy();
 	}
 	
@@ -199,8 +269,9 @@ public abstract class Effect extends Collidable{
 	}
 	
 	@Override
-	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp, Mouvement mouv, int _anim) {
-		return computeHitbox(INIT_RECT,screenDisp);
+	public Hitbox computeHitbox(Point INIT_RECT,Point screenDisp, Mouvement mouv, int _mouv_index) {
+		//do not take into account scaling since it is taken into account in affine transformation
+		return computeEffectHitbox(mouv.getHitboxCopy(_mouv_index),INIT_RECT,screenDisp);
 	}
 	
 	public void handleEntitieEffectCollision(Entity ent)
@@ -241,21 +312,16 @@ public abstract class Effect extends Collidable{
 	public void resetVarDeplace(boolean speedUpdated) {		
 	}
 	
-	@Override
-	public Hitbox getNextEstimatedHitbox(AbstractModelPartie partie,double newRotation,int anim)
-	{
-		throw new java.lang.UnsupportedOperationException("Not supported yet.");
-	}
-	
 	
 	@Override
 	public int getMaxBoundingSquare()
 	{
-		return getDeplacement().getMaxBoundingSquare();
+		return getMouvement().getMaxBoundingSquare();
 	}
 	@Override
 	public Point getMaxBoundingRect() {
-		return getDeplacement().getMaxBoundingRect();
+		return getMouvement().getMaxBoundingRect();
 	}
 
+	
 }

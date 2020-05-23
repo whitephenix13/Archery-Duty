@@ -21,7 +21,7 @@ public class ConditionHandler {
 
 	private Integer lastXDraw = null;
 	private Integer lastYDraw = null;
-
+	
 	public ConditionHandler()
 	{
 		conditionsMap.put(ConditionEnum.BRULURE, null);
@@ -151,48 +151,49 @@ public class ConditionHandler {
 	}
 
 	/** Add a new condition to the list or replace existing one */
-	public void addNewCondition(ConditionEnum type,double _duree, Vitesse init_speed,int id)
+	public Condition addNewCondition(ConditionEnum type,double _duree, Vitesse init_speed,int id)
 	{
+		//Replace existing condition
 		if(conditionsMap.containsKey(type))
 		{
 			Condition condi = conditionsMap.get(type);
 			if(condi != null){
 				condi.onAddCondition(_duree,init_speed,id);
-				return;
+				return condi ;
 			}
 		}
-
+		Condition newCondi = null;
 		if(type.equals(ConditionEnum.BRULURE))
-			conditionsMap.put(type, new C_Brulure(_duree));
+			newCondi= new C_Brulure(_duree);
 		else if(type.equals(ConditionEnum.REGENERATION))
-			conditionsMap.put(type, new C_Regeneration(_duree));
+			newCondi= new C_Regeneration(_duree);
 
 		else if(type.equals(ConditionEnum.LENTEUR))
-			conditionsMap.put(type, new C_Lenteur(_duree));
+			newCondi= new C_Lenteur(_duree);
 
 		else if(type.equals(ConditionEnum.VITESSE))
-			conditionsMap.put(type, new C_Vitesse(_duree));
+			newCondi= new C_Vitesse(_duree);
 
 		else if(type.equals(ConditionEnum.PARALYSIE))
-			conditionsMap.put(type, new C_Paralysie(_duree));		
+			newCondi= new C_Paralysie(_duree);		
 
 		else if(type.equals(ConditionEnum.PRECISION))
-			conditionsMap.put(type, new C_Precision(_duree));		
+			newCondi= new C_Precision(_duree);		
 
 		else if(type.equals(ConditionEnum.DEFAILLANCE))
-			conditionsMap.put(type, new C_Defaillance(_duree));	
+			newCondi= new C_Defaillance(_duree);	
 
 		else if(type.equals(ConditionEnum.FORCE))
-			conditionsMap.put(type, new C_Force(_duree));	
+			newCondi= new C_Force(_duree);	
 
 		else if(type.equals(ConditionEnum.RESISTANCE))
-			conditionsMap.put(type, new C_Resistance(_duree));	
+			newCondi= new C_Resistance(_duree);	
 
 		else if(type.equals(ConditionEnum.FAIBLESSE))
-			conditionsMap.put(type, new C_Faiblesse(_duree));
+			newCondi= new C_Faiblesse(_duree);
 
 		else if(type.equals(ConditionEnum.MOTION))
-			conditionsMap.put(type, new C_Motion(init_speed));
+			newCondi= new C_Motion(init_speed);
 		else{
 			try {
 				throw(new Exception("Condition not known: "+ type));
@@ -200,12 +201,16 @@ public class ConditionHandler {
 				e.printStackTrace();
 			}
 		}
+		if(newCondi != null)
+			conditionsMap.put(type, newCondi);
+		return newCondi;
 	}  
-
-	public void addNewCondition(ConditionEnum type,double _duree,int id)
+	
+	public Condition addNewCondition(ConditionEnum type,double _duree,int id)
 	{
-		addNewCondition(type,_duree,new Vitesse(),id);
+		return addNewCondition(type,_duree,new Vitesse(),id);
 	}  
+	
 	/** Remove conditions that expired */
 	public void updateConditionState()
 	{

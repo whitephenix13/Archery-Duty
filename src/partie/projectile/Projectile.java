@@ -3,6 +3,8 @@ package partie.projectile;
 import java.awt.Point;
 import java.awt.geom.AffineTransform;
 
+import javax.vecmath.Vector2d;
+
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
 import partie.modelPartie.AbstractModelPartie;
@@ -28,7 +30,7 @@ public abstract class Projectile extends Collidable{
 		return _computeDrawTr(true,screenDisp);
 	}
 	@Override
-	public Vitesse getGlobalVit(AbstractModelPartie partie){
+	public Vitesse getGlobalVit(){
 		Vitesse vit = localVit.Copy();
 		return vit.times(speedFactor);
 	}
@@ -42,5 +44,9 @@ public abstract class Projectile extends Collidable{
 	 * @param screenDisp
 	 * @return
 	 */
-	protected abstract AffineTransform _computeDrawTr(boolean screenReferential, Point screenDisp);
+	protected AffineTransform _computeDrawTr(boolean screenReferential, Point screenDisp){
+		return _computeDrawTr(screenReferential,screenDisp,getRotation(),getScaling());
+	}
+	
+	protected abstract AffineTransform _computeDrawTr(boolean screenReferential, Point screenDisp,double rotation,Vector2d scaling);
 }

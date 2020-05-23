@@ -1,16 +1,18 @@
 package partie.effects;
 
 import java.awt.Point;
+import java.util.Arrays;
 
 import javax.vecmath.Vector2d;
 
+import gameConfig.ObjectTypeHelper.ObjectType;
 import partie.collision.Collidable;
 import partie.collision.Collision;
 import partie.conditions.Condition.ConditionEnum;
-import partie.deplacement.effect.Feu_idle;
 import partie.entitie.Entity;
 import partie.modelPartie.AbstractModelPartie;
 import partie.modelPartie.PartieTimer;
+import partie.mouvement.effect.Feu_idle;
 import partie.projectile.fleches.Fleche;
 import utils.Vitesse;
 
@@ -21,19 +23,26 @@ public class Feu_effect extends Effect{
 	double UPDATE_TIME = 0.05 ; //s
 	double damage = -3;
 	
-	public Feu_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _anim, int current_frame,Vector2d _normalCollision,Point _pointCollision,
+	public Feu_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _mouv_index, int current_frame,Vector2d _normalCollision,Point _pointCollision,
 			Point _correctedPointCollision,boolean groundEffect,int shift)
 	{
-		super(_anim,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,groundEffect,groundEffect);
-		this.shift=shift;
+		super(_mouv_index,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,groundEffect,groundEffect);
+		this.setCollideWithout(Arrays.asList(ObjectType.PROJECTILE));
+		
+		assert getScaling().x == getScaling().y;
+		
+		this.shift=(int)Math.round(shift*getScaling().x);
 		this.groundEffect = groundEffect;
 		
 		subTypeMouv = groundEffect?EffectCollisionEnum.GROUND:EffectCollisionEnum.ENTITY;
-		setDeplacement(new Feu_idle(subTypeMouv,partie.getFrame()));
+		setMouvement(new Feu_idle(subTypeMouv,partie.getFrame()));
 		
 		partie.arrowsEffects.add(this);
 		setFirstPos(partie);
-		this.onUpdate(partie, false); //update rotated hitbox and drawtr
+		//Destroy if it is colliding in the ground
+		/*if(groundEffect && Collision.isWorldCollision(partie, this, true)){//
+			this.destroy(partie, true);
+		}*/
 	}
 
 	@Override
@@ -50,30 +59,25 @@ public class Feu_effect extends Effect{
 	}
 
 	@Override
-	public Vitesse getModifiedVitesse(AbstractModelPartie partie,
-			Collidable obj) {
+	public Vitesse getModifiedVitesse(Collidable obj) {
 		return new Vitesse();
 	}
 
 
 	public void setFirstPos(AbstractModelPartie partie) {
-
-		//get the middle bottom of the effect
-		int divider = groundEffect? 1:2;
-
-		int x_eff_center = (int) (getDeplacement().xtaille.get(getAnim())/2 * Math.cos(getRotation()) - (getDeplacement().ytaille.get(getAnim())/divider) * Math.sin(getRotation()));
-		int y_eff_center = (int) (getDeplacement().xtaille.get(getAnim())/2 * Math.sin(getRotation()) + (getDeplacement().ytaille.get(getAnim())/divider) * Math.cos(getRotation()));
 		
+		Point eff_center = groundEffect? getBottomOfTaille() : getCenterOfTaille();
+			
 		Point firstPos = new Point();
 		if(groundEffect){
-			firstPos = super.setFirstPos(partie,new Point(x_eff_center,y_eff_center));
+			firstPos = super.setFirstPos(partie,eff_center);
 			firstPos = new Point(firstPos.x+(int) (shift * Math.cos(getRotation())),firstPos.y +(int) (shift * Math.sin(getRotation())) );
 		}
 		else
 		{
 			//get the tip of the arrow
 			Point arrowTip = super.getArrowTip(partie);
-			firstPos=new Point(arrowTip.x-x_eff_center,arrowTip.y-y_eff_center);
+			firstPos=new Point(arrowTip.x-eff_center.x,arrowTip.y-eff_center.y);
 		}
 
 		setXpos_sync(firstPos.x);

@@ -211,7 +211,7 @@ public class AffichagePartie extends Drawable implements Observer{
 	{
 
 		//End game 
-		if(controlerPartie.partie.finPartie && !firstTimePause)
+		if(controlerPartie.partie.isPartieEnded && !firstTimePause)
 		{
 			doitRevalidate=true;
 			firstTimePause=true;
@@ -230,7 +230,7 @@ public class AffichagePartie extends Drawable implements Observer{
 
 		}
 		//Start pause
-		else if(!controlerPartie.partie.finPartie &&controlerPartie.partie.inPause && !firstTimeFin)
+		else if(!controlerPartie.partie.isPartieEnded &&controlerPartie.partie.inPause && !firstTimeFin)
 		{
 			doitRevalidate=true;
 			firstTimeFin=true;
@@ -254,7 +254,7 @@ public class AffichagePartie extends Drawable implements Observer{
 
 
 		//reset var 
-		if(!controlerPartie.partie.finPartie && firstTimePause)
+		if(!controlerPartie.partie.isPartieEnded && firstTimePause)
 		{
 			doitRevalidate=true;
 			firstTimePause=false;
@@ -526,7 +526,7 @@ public class AffichagePartie extends Drawable implements Observer{
 	
 	private void changeArrowSlot(ArrowSlotButton source_but)
 	{
-		if( (controlerPartie.partie.finPartie) || (!controlerPartie.partie.finPartie &&controlerPartie.partie.inPause))
+		if( (controlerPartie.partie.isPartieEnded) || (!controlerPartie.partie.isPartieEnded &&controlerPartie.partie.inPause))
 			return;
 
 		ArrowSlotButton[][] allSlots = {bSlot1,bSlot2,bSlot3,bSlot4};
@@ -630,18 +630,18 @@ public class AffichagePartie extends Drawable implements Observer{
 	}
 
 	public void update() {	
-		if(controlerPartie.partie.arrowSlotKey != -1)
+		int arrowSlotKey = controlerPartie.partie.heros.getPressedSlotForUI();
+		if(arrowSlotKey != -1)
 		{
 			ArrowSlotButton source_but;
 			ArrowSlotButton[][] allSlots = {bSlot1,bSlot2,bSlot3,bSlot4};
 			//slot opened 
 			if(slotOpened!=-1)
-				source_but = allSlots[slotOpened][controlerPartie.partie.arrowSlotKey];
+				source_but = allSlots[slotOpened][arrowSlotKey];
 			//slot closed => get first button of the slot 
 			else
-				source_but = allSlots[controlerPartie.partie.arrowSlotKey][0];
+				source_but = allSlots[arrowSlotKey][0];
 			changeArrowSlot(source_but);
-			controlerPartie.partie.arrowSlotKey=-1;
 		}
 		
 		else if(controlerPartie.partie.getDisableBoutonsFin()){

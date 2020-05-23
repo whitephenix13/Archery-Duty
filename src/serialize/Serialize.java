@@ -429,7 +429,8 @@ public class Serialize implements InterfaceConstantes{
 		FileOutputStream fos;
 		String err="";
 		try {
-			fos=new FileOutputStream("src/resources/levels/"+name);
+			System.out.println("Save to "+ModelChoixNiveau.getPath()+name);
+			fos=new FileOutputStream(ModelChoixNiveau.getPath()+name);
 			String version = VERSION;
 			fos.write(version.getBytes());
 			err+=serializeMonde(fos,monde,version);
@@ -450,6 +451,8 @@ public class Serialize implements InterfaceConstantes{
 
 		InputStream is;
 		String path = ModelChoixNiveau.getPath()+ name;
+		System.out.println("Load from "+path);
+
 		byte[] bytes= new byte[5];
 		byte4 =new byte[4];
 		byte1 = new byte[1];

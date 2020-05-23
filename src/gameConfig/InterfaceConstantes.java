@@ -8,7 +8,7 @@ import partie.collision.Hitbox;
 
 
 public interface InterfaceConstantes {
-	static final String VERSION ="0.2.4";
+	static final String VERSION ="0.2.5"; //0.3 when all arrows implemented
 	
 	static final boolean SHOW_FPS = true;
 	
@@ -28,12 +28,14 @@ public interface InterfaceConstantes {
 	static final int DEBUG_TIME_AFFICHAGE_VERBOSE=5;
 	static final PrintMode DEBUG_TIME_AFFICHAGE_PRINT_MODE = PrintMode.NONE;
 	
+	static final boolean DEBUG_CACHED_OBJECT = false;
+	
 	static final boolean DRAW_HITBOX_MONDE = false;
-	static final boolean DRAW_HITBOX_PERSO = false;
+	static final boolean DRAW_HITBOX_PERSO = true;
 	static final boolean DRAW_HITBOX_MONSTRES = false;
-	static final boolean DRAW_HITBOX_FLECHES = false;
-	static final boolean DRAW_HITBOX_TIR_MONSTRES = false;
-	static final boolean DRAW_HITBOX_EFFECTS = true;
+	static final boolean DRAW_HITBOX_FLECHES = true;
+	static final boolean DRAW_HITBOX_TIR_MONSTRES = true;
+	static final boolean DRAW_HITBOX_EFFECTS = false;
 	
 	//taille maximum de la matrice 
 	static final int ABS_MAX = 1000;
@@ -42,10 +44,8 @@ public interface InterfaceConstantes {
 	
 	//nombre de fleches max: 
 	static final int NB_FLECHES_MAX = 50;
-	static final long FLECHE_TIR_COOLDOWN = (long) ( 1* Math.pow(10, 8));//nanos, 0.1 sec 
-	static final long ARMED_MIN_TIME = (long) (1* Math.pow(10, 8));//nanos, 0.1 sec 
-	static final long WALL_JUMP_DISABLE_TIME = (long) (2* Math.pow(10, 8));//nanos, 0.2 sec 
-	static final long ACCROCHE_COOLDOWN = (long) (2* Math.pow(10, 8));
+	static final long FLECHE_TIR_COOLDOWN = (long) ( 25* Math.pow(10, 6));//nanos, 50ms
+
 	
 	static final int NB_MONSTRES_MAX=100;
 	static final int SLOW_DOWN_FACTOR = 4;//10 looks fun :p
@@ -72,8 +72,8 @@ public interface InterfaceConstantes {
 	static final Color BACKGROUND_COLOR = Color.BLACK;
 	static final int SCREEN_FADE_OUT_TIME = 204; //204ms
 
-	//permet de determiner les vitesses de chute, de deplacement et de saut 
-	final static long TDash= 150;
+	final static long T_DOUBLE_TAP= 150;
+	
 	//durée d'invincibilité lorsque le héros est touché 
 	static final long INV_TOUCHE = 1000;
 	//fréquence à laquelle il clignote

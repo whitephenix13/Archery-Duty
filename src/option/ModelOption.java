@@ -15,7 +15,7 @@ import menu.menuPrincipal.GameHandler.GameModeType;
 import menu.menuPrincipal.GameMode;
 import music.Music;
 import music.MusicBruitage;
-import partie.modelPartie.InputPartie;
+import partie.input.InputPartie;
 
 
 public class ModelOption extends AbstractModelOption{

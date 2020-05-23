@@ -95,48 +95,48 @@ public class ImagesFleche extends ImagesContainer{
 	 * info2 : null
 	 */
 	@Override
-	public ArrayList<Image> getImages(ObjectType objType, ImageInfo info1,ImageInfo info2, int anim)
+	public ArrayList<Image> getImages(ObjectType objType, ImageInfo info1,ImageInfo info2, int mouv_index)
 	{
 		ArrayList<Image> im = new ArrayList<Image>();
 
 		if (objType.equals(ObjectType.ELECTRIQUE))
-			im.add(this.im_electrique_aura.get(anim));
+			im.add(this.im_electrique_aura.get(mouv_index));
 		if (objType.equals(ObjectType.FEU))
-			im.add(this.im_feu_aura.get(anim));
+			im.add(this.im_feu_aura.get(mouv_index));
 		if (objType.equals(ObjectType.GLACE))
-			im.add(this.im_glace_aura.get(anim));
+			im.add(this.im_glace_aura.get(mouv_index));
 		if (objType.equals(ObjectType.ROCHE))
-			im.add(this.im_roche_aura.get(anim));
+			im.add(this.im_roche_aura.get(mouv_index));
 
 
 		if (objType.equals(ObjectType.GRAPPIN))
-			im.add(this.im_grappin_aura.get(anim));
+			im.add(this.im_grappin_aura.get(mouv_index));
 		if (objType.equals(ObjectType.OMBRE))
-			im.add(this.im_ombre_aura.get(anim));
+			im.add(this.im_ombre_aura.get(mouv_index));
 		if (objType.equals(ObjectType.LUMIERE))
-			im.add(this.im_lumiere_aura.get(anim));
+			im.add(this.im_lumiere_aura.get(mouv_index));
 		if (objType.equals(ObjectType.VENT))
-			im.add(this.im_vent_aura.get(anim));
+			im.add(this.im_vent_aura.get(mouv_index));
 
 		if (objType.equals(ObjectType.BARRAGE))
-			im.add(this.im_barrage_aura.get(anim));
+			im.add(this.im_barrage_aura.get(mouv_index));
 		if (objType.equals(ObjectType.FAUCON))
-			im.add(this.im_faucon_aura.get(anim));
+			im.add(this.im_faucon_aura.get(mouv_index));
 		if (objType.equals(ObjectType.EXPLOSIVE))
-			im.add(this.im_explosive_aura.get(anim));
+			im.add(this.im_explosive_aura.get(mouv_index));
 		if (objType.equals(ObjectType.TROU_NOIR))
-			im.add(this.im_trou_noir_aura.get(anim));
+			im.add(this.im_trou_noir_aura.get(mouv_index));
 
 		if (objType.equals(ObjectType.MARQUE_MORTELLE))
-			im.add(this.im_marque_mortelle_aura.get(anim));
+			im.add(this.im_marque_mortelle_aura.get(mouv_index));
 		if (objType.equals(ObjectType.LEURRE))
-			im.add(this.im_leurre_aura.get(anim));
+			im.add(this.im_leurre_aura.get(mouv_index));
 		if (objType.equals(ObjectType.ABSORPTION))
-			im.add(this.im_absorption_aura.get(anim));
+			im.add(this.im_absorption_aura.get(mouv_index));
 		if (objType.equals(ObjectType.NINJA))
-			im.add(this.im_ninja_aura.get(anim));
+			im.add(this.im_ninja_aura.get(mouv_index));
 
-		im.add(im_fleche.get(anim));
+		im.add(im_fleche.get(mouv_index));
 
 		return im;
 

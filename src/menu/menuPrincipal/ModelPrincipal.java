@@ -118,6 +118,7 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		@Override
 		public void run()
 		{
+			while(true){
 			try{
 				if((System.nanoTime()-last_fps_update_time)>=1000000000) //more than 1 sec: update fps
 				{
@@ -125,6 +126,7 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 					num_frame_since_last_fps=0;
 					last_fps_update_time=System.nanoTime();
 				}
+				double begin_time = System.nanoTime();
 				ModelPrincipal.debugTime.print();
 				ModelPrincipal.debugTime.init(InterfaceConstantes.DEBUG_TIME_PRINT_MODE,frame);
 				
@@ -144,8 +146,17 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 				num_frame_since_last_fps+=1;
 				frame+=1;
 
+				double elapsed = ( System.nanoTime() - begin_time )*Math.pow(10, -6);//ms
+				long sleeptime = Math.round(Config.getDeltaFrame(true) - elapsed);
+				if(sleeptime>=0 ){
+					Thread.sleep(sleeptime);//not super accurate but good enough
+				}
+				//No catchup if computation is too long
+				//Catchup would drop rendering and execute more computation 
+
 			}
 			catch(Exception e){e.printStackTrace();}
+			}
 
 		}
 	}
@@ -263,11 +274,14 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 	
 	public void startGame()
 	{
+		Thread mainThread = new Thread(new MainLoop());
+		mainThread.start();
 		//Very important: This method tries to keep up: 
 		//if one game tick took long enough to delay the next game tick, the executor service will consider this in the calculation for the next sleep duration.
-		executor = Executors
+		/*executor = Executors
                 .newSingleThreadScheduledExecutor();
         executor.scheduleAtFixedRate(new MainLoop(), 0, (int)Math.round(Config.getDeltaFrame(true)), TimeUnit.MILLISECONDS);//call scheduleAtFixedRate.shutdown() to stop this
+		*/
 	}
 	
 	@Override 
@@ -523,9 +537,9 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		return getImageGroup(group).getImage(typeObj,  info1, info2);
 	}
 	@Override
-	public ArrayList<Image> getImages(ImageGroup group,ObjectType typeObj, ImageInfo info1,ImageInfo info2,int anim)
+	public ArrayList<Image> getImages(ImageGroup group,ObjectType typeObj, ImageInfo info1,ImageInfo info2,int mouv_index)
 	{
-		return getImageGroup(group).getImages(typeObj, info1, info2,anim);
+		return getImageGroup(group).getImages(typeObj, info1, info2,mouv_index);
 	}
 	@Override
 	public ImagesContainer getImageGroup(ImageGroup group) {

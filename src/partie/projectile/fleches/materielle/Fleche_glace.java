@@ -43,7 +43,7 @@ public class Fleche_glace extends Materielle {
 			MusicBruitage.me.startBruitage("arc");
 			Roche_effect.synchroniseMovementWithRocheEffectMovement(collidedObject, new Collidable[] {this,flecheEffect});
 
-			this.isVisible=false;
+			this.simulateDestroy();
 		}
 	}
 
@@ -60,10 +60,8 @@ public class Fleche_glace extends Materielle {
 			flecheEffect=new Glace_effect(partie,this,0,partie.getFrame(),normal,null,null,false,damage_init);
 			MusicBruitage.me.startBruitage("arc");
 
-			this.doitDeplace=false;
-			this.setCollideWithNone();
 			//Hide the arrow but don't destroy it otherwise the effect position is no longer updated
-			this.isVisible=false;
+			this.simulateDestroy();
 			return false;
 		}
 		return true;

@@ -17,7 +17,7 @@ public class DebugBreak {
 	public static void breakHere()
 	{
 		PartieTimer.me.freezeTime();
-		System.out.print("");
+		System.out.print("");//break here 
 		PartieTimer.me.unfreezeTime();
 	}
 }

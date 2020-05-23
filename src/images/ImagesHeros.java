@@ -4,7 +4,7 @@ import java.awt.Image;
 import java.util.ArrayList;
 
 import gameConfig.ObjectTypeHelper.ObjectType;
-import partie.deplacement.entity.Mouvement_entity.MouvEntityEnum;
+import partie.mouvement.entity.Mouvement_entity.EntityTypeMouv;
 
 public class ImagesHeros extends ImagesContainer{
 	
@@ -87,41 +87,41 @@ public class ImagesHeros extends ImagesContainer{
 	}
 	/***
 	 * objType: null
-	 * info1 : {@link MouvEntityEnum}
+	 * info1 : {@link EntityTypeMouv}
 	 * info2 : null
 	 */
 	@Override
-	public ArrayList<Image> getImages(ObjectType objType, ImageInfo info1,ImageInfo info2, int anim)
+	public ArrayList<Image> getImages(ObjectType objType, ImageInfo info1,ImageInfo info2, int mouv_index)
 	{
 		ArrayList<Image> l = new ArrayList<Image>();
-		if(info1.equals(MouvEntityEnum.ATTENTE))
-			l.add(attente.get(anim));
+		if(info1.equals(EntityTypeMouv.ATTENTE))
+			l.add(attente.get(mouv_index));
 		
-		else if(info1.equals(MouvEntityEnum.GLISSADE))
-			l.add(glissade.get(anim));
+		else if(info1.equals(EntityTypeMouv.GLISSADE))
+			l.add(glissade.get(mouv_index));
 		
-		else if(info1.equals(MouvEntityEnum.ACCROCHE))
-			l.add(accroche.get(anim));
+		else if(info1.equals(EntityTypeMouv.ACCROCHE))
+			l.add(accroche.get(mouv_index));
 		
-		else if(info1.equals(MouvEntityEnum.SAUT))
-			l.add(saut.get(anim));
+		else if(info1.equals(EntityTypeMouv.SAUT))
+			l.add(saut.get(mouv_index));
 
-		else if(info1.equals(MouvEntityEnum.MARCHE))
-			l.add(marche.get(anim));
+		else if(info1.equals(EntityTypeMouv.MARCHE))
+			l.add(marche.get(mouv_index));
 
-		else if(info1.equals(MouvEntityEnum.COURSE))
-			l.add(course.get(anim));
+		else if(info1.equals(EntityTypeMouv.COURSE))
+			l.add(course.get(mouv_index));
 
-		else if(info1.equals(MouvEntityEnum.TIR))
+		else if(info1.equals(EntityTypeMouv.TIR))
 		{
-			l.add(tir_body.get(anim));
-			l.add(tir_back_arm.get(anim));
-			l.add(tir_head.get(anim));
-			l.add(tir_front_arm.get(anim));
+			l.add(tir_body.get(mouv_index));
+			l.add(tir_back_arm.get(mouv_index));
+			l.add(tir_head.get(mouv_index));
+			l.add(tir_front_arm.get(mouv_index));
 		}
 		else
 		{
-			throw new IllegalArgumentException("Heros: GetImages deplacement inconnu "+info1 +" "+anim );
+			throw new IllegalArgumentException("Heros: GetImages mouvement inconnu "+info1 +" "+mouv_index );
 		}
 		return l;
 	}

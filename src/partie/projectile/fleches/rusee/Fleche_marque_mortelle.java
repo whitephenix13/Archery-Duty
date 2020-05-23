@@ -15,13 +15,13 @@ import music.MusicBruitage;
 import partie.AI.A_Star_Helper;
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
-import partie.deplacement.Deplace;
 import partie.effects.Effect;
 import partie.effects.Roche_effect;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
 import partie.modelPartie.PartieTimer;
+import partie.mouvement.Deplace;
 import partie.projectile.Projectile;
 import utils.PointHelper;
 import utils.Vitesse;
@@ -44,27 +44,31 @@ public class Fleche_marque_mortelle extends Rusee{
 	private double last_trail_time = 0;
 	private double UPDATE_TRAIL_TIME = 0.01*Math.pow(10, 9); // 0.01 sec (10ms)
 	private double last_update_trail_time = 0;
-	private int delta_transparency = 12;
-
+	private int delta_transparency = 5;//12
+	private int MAX_NUMBER_TRAIL = 40;
+	
 	//Size of the trail
-	private double trail_height = 60; // size of the ytaille of T_normal for Fleche , original size is 6
-	private double trail_width = 5; 
+	private double trail_height = 30; // size of the ytaille of T_normal for Fleche , original size is 6
+	private double trail_width = 3; 
 
+	public double shootTime =0; //used to compute an increasing speed over time
+	
 	public A_Star_Helper pathAlgo = null;
 	private Collidable objTargeted;
 	private boolean firstTarget;
 	private int MAX_NUMBER_TARGET = 3;//Number of target to consider to smooth the direction towards next target when moving the arrow 
 	//A Star algorithm variables 
 	double reevaluation_time= 0.20*Math.pow(10, 9); // 0.05 sec (200ms)
-	int max_step_size = InterfaceConstantes.TAILLE_BLOC/2; //maximum value by which the object can move at each iteration
-	Point explorationAngle = new Point(1,2); //Maximum value by which the object can turn as a fraction of Math.Pi 
+	int max_step_size = InterfaceConstantes.TAILLE_BLOC/4; //maximum value by which the object can move at each iteration
+	Point explorationAngle = new Point(1,4); //Maximum value by which the object can turn as a fraction of Math.Pi 
 	int redirection_l = 2* InterfaceConstantes.TAILLE_BLOC; //This is used to delete the last x points when Updating the path
 	//This value should be equal to the estimated distance that the target can move within REEVALUATION_TIME
 	float smoothStrength = 0.0f;
 
 	boolean stopTargeting = false;
+	boolean shouldSetSpeed = true;
 	//Maximum number of trails (life duration of a trail)
-	private int MAX_NUMBER_TRAIL = 5;
+	
 	public Fleche_marque_mortelle(List<Projectile> tabFleche, int current_frame,Heros _shooter, boolean add_to_list,float damageMult,float speedFactor) {
 		super(tabFleche, current_frame,_shooter,add_to_list,damageMult,speedFactor);
 		TEMPS_DESTRUCTION= (long) (2* Math.pow(10,8));//in nano sec = 0.2 sec 
@@ -81,10 +85,16 @@ public class Fleche_marque_mortelle extends Rusee{
 		if(pathAlgo!=null)
 			pathAlgo.setDebug(val);
 	}
-
+	
+	@Override
+	public void OnShoot(AbstractModelPartie partie){
+		shootTime = PartieTimer.me.getElapsedNano();
+		super.OnShoot(partie);
+	}
+	
 	private Polygon generateTrail(AbstractModelPartie partie)
 	{
-		Vector2d arrow_middle = Hitbox.getHitboxCenter(getHitbox(partie.INIT_RECT, partie.getScreenDisp()));
+		Vector2d arrow_middle = Hitbox.getObjMid(partie, this);
 		if(trail_last_arrow_middle==null){
 			
 			trail_last_arrow_middle =PointHelper.VecToPoint(arrow_middle);
@@ -152,7 +162,7 @@ public class Fleche_marque_mortelle extends Rusee{
 		for(Entity ent: partie.tabMonstre) //only take enemies visible on screen 
 		{
 			if(Collidable.isObjectOnScreen(partie, ent)){
-				Vector2d objMid = Hitbox.getHitboxCenter(ent.getHitbox(partie.INIT_RECT, partie.getScreenDisp()));
+				Vector2d objMid = Hitbox.getObjMid(partie, ent);
 				//Consider scalar product of vector : fleche/mouse fleche/montre as fleche pos = heros pos at the start.
 				//The target should minimize the angle and the distance to the mouse and be >0
 				Vector2d thisToMouse = new Vector2d(worldMousePos.x-thisMid.x,worldMousePos.y-thisMid.y);
@@ -176,117 +186,114 @@ public class Fleche_marque_mortelle extends Rusee{
 		}
 		return target;
 	}
-
-	Point tempTarget =null;
+	
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
+	protected boolean shouldUpdateSpeed(){
+		return shouldSetSpeed;
+	}
+	
+
+	@Override
+	public boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie) {
 		
 		ModelPrincipal.debugTime.startElapsedForVerbose();
-		
-		boolean[] res = {doitDeplace,animationChanged};
-		
-		boolean shouldSetSpeed = true; //set to false if speed is set in a custom way 
-		if(!encochee)
+		boolean res = shouldMove;		
+		shouldSetSpeed = true; //set to false if speed is set in a custom way 
+		if(!encochee && !stopTargeting)
 		{
-			DebugBreak.breakHere();
-			if(!stopTargeting){
-				Vector2d dir = Deplace.angleToVector(getRotation());
-				Vector2d thisMid = Hitbox.getHitboxCenter(getHitbox(partie.INIT_RECT, partie.getScreenDisp()));
-				Vector2d target;
-				
-				//If we have not found the first target => find closest target to mouse
-				if(firstTarget)
-				{
-					objTargeted = FindTarget(partie,thisMid,partie.lastMousePosWhenReleased);
-					target = Hitbox.getHitboxCenter(objTargeted.getHitbox(partie.INIT_RECT, partie.getScreenDisp()));
-					firstTarget=false;
-				}
-				//Else if we found first target and it is not destroyed yet  
-				else if(objTargeted!= null && !objTargeted.getNeedDestroy())
-				{
-					target = Hitbox.getHitboxCenter(objTargeted.getHitbox(partie.INIT_RECT, partie.getScreenDisp()));
-				}
-				//target destroyed => move straight
-				else
-				{
-					stopTargeting =true;
-					target = null;
-				}
-
-				ModelPrincipal.debugTime.elapsed("find target");
-				if(target!=null){
-					ArrayList<Point> nextPathPoints = pathAlgo.GetNextTargets(partie, this, dir, target,MAX_NUMBER_TARGET);
-					ModelPrincipal.debugTime.elapsed("get next targets");
-					if(nextPathPoints != null && nextPathPoints.size()>0){
-						//Point to the next target and move to exactly end up at the target point.
-						//This is due to avoid trajectory imprecision 
-						Point nextPoint = nextPathPoints.get(0);
-						Vector2d final_direction = new Vector2d(nextPoint.x-thisMid.x,nextPoint.y-thisMid.y);
-						
-						if(!final_direction.equals(new Vector2d(0,0))){
-							setRotation(Deplace.XYtoAngle(final_direction.x, final_direction.y));
-							ModelPrincipal.debugTime.elapsed("rotation");
-
-							//Set speed to reach the target. Make sure that this speed is not bigger than the normal one 
-							Vector2d vit1 = final_direction;
-							double scaler = this.getDeplacement().getSpeed(this, getAnim()).length() / vit1.length();
-							if(scaler<1){
-								vit1.scale(scaler);
-							}
-							this.setLocalVit(new Vitesse(vit1));
-							shouldSetSpeed=false;
-							ModelPrincipal.debugTime.elapsed("set speed with targeting");
-						}
-
-					}
-					else if(!stopTargeting)
-					{
-						Vector2d final_direction = new Vector2d(target.x-thisMid.x,target.y-thisMid.y);
-						setRotation(Deplace.XYtoAngle(final_direction.x, final_direction.y));
-						ModelPrincipal.debugTime.elapsed("rotation");
-						partie.forceRepaint();
-						ModelPrincipal.debugTime.elapsed("force repaint");
-						
-						double scaler = this.getDeplacement().getSpeed(this, getAnim()).length() / final_direction.length();
-						if(scaler<1){
-							final_direction.scale(scaler);
-						}
-						this.setLocalVit(new Vitesse(final_direction));
-						
-						shouldSetSpeed=false;
-						stopTargeting=true;
-						ModelPrincipal.debugTime.elapsed("set speed without targeting");
-					}
-				}
-				else
-					stopTargeting=true;
-			}
-			else
-			
-			try {
-				setAnim(changeAnim(partie,deplace));
-				ModelPrincipal.debugTime.elapsed("change anim");	
-			} 
-			catch (InterruptedException e) {e.printStackTrace();}
-			if(shouldSetSpeed)	
-				getDeplacement().setSpeed(this, getAnim());
+			OnTargetActive(partie);
+			ModelPrincipal.debugTime.elapsed("change mouv_index based on target");	
 		}
 		else
 		{
-			try {
-				setAnim(changeAnim(partie,deplace));
-				ModelPrincipal.debugTime.elapsed("change anim");	
-			} 
-			catch (InterruptedException e) {e.printStackTrace();}
+			res = super.updateMouvementBasedOnAnimation(partie);
+			ModelPrincipal.debugTime.elapsed("change mouv_index based on regular update");	
 		}
-		//updateTransformAndHitbox(partie);
 		ModelPrincipal.debugTime.elapsed("update transform and hitbox");
 		updateTrail(partie);
 		ModelPrincipal.debugTime.elapsed("update trail");
 
-		res[0]=doitDeplace;res[1]=animationChanged;
 		return res;
 	}
+	/***
+	 * Keep moving towards the target
+	 */
+	private void OnTargetActive(AbstractModelPartie partie){
+		Vector2d dir = Deplace.angleToVector(getRotation());
+		Vector2d thisMid = Hitbox.getObjMid(partie, this);
+		Vector2d target=null;
+		System.out.println("1");
+		//If we have not found the first target => find closest target to mouse
+		if(firstTarget)
+		{
+			objTargeted = FindTarget(partie,thisMid,shooter.getMousePositionWhenReleased());
+			if(objTargeted != null)
+				target = Hitbox.getObjMid(partie, objTargeted);
+			firstTarget=false;
+		}
+		//Else if we found first target and it is not destroyed yet  
+		if(!firstTarget && objTargeted!= null && !objTargeted.getNeedDestroy())
+		{
+			target = Hitbox.getObjMid(partie, objTargeted);
+		}
+		//target destroyed => move straight
+		else if(!firstTarget)
+		{
+			stopTargeting =true;
+			target = null;
+		}
+		System.out.println("2");
+		ModelPrincipal.debugTime.elapsed("find target");
+		if(target!=null){
+			ArrayList<Point> nextPathPoints = pathAlgo.GetNextTargets(partie, this, dir, target,MAX_NUMBER_TARGET);
+			System.out.println("2-1-1");
+			ModelPrincipal.debugTime.elapsed("get next targets");
+			if(nextPathPoints != null && nextPathPoints.size()>0){
+				//Point to the next target and move to exactly end up at the target point.
+				//This is due to avoid trajectory imprecision 
+				Point nextPoint = nextPathPoints.get(0);
+				Vector2d final_direction = new Vector2d(nextPoint.x-thisMid.x,nextPoint.y-thisMid.y);
+				
+				if(!final_direction.equals(new Vector2d(0,0))){
+					setRotation(Deplace.XYtoAngle(final_direction.x, final_direction.y));
+					ModelPrincipal.debugTime.elapsed("rotation");
+
+					//Set speed to reach the target. Make sure that this speed is not bigger than the normal one 
+					Vector2d vit1 = final_direction;
+					double scaler = this.getMouvement().getSpeed(this, getMouvIndex()).length() / vit1.length();
+					if(scaler<1){
+						vit1.scale(scaler);
+					}
+					this.setLocalVit(new Vitesse(vit1));
+					shouldSetSpeed=false;
+					ModelPrincipal.debugTime.elapsed("set speed with targeting");
+				}
+				System.out.println("2-1-z");
+			}
+			else if(!stopTargeting)
+			{
+				Vector2d final_direction = new Vector2d(target.x-thisMid.x,target.y-thisMid.y);
+				setRotation(Deplace.XYtoAngle(final_direction.x, final_direction.y));
+				ModelPrincipal.debugTime.elapsed("rotation");
+				partie.forceRepaint();
+				ModelPrincipal.debugTime.elapsed("force repaint");
+				
+				double scaler = this.getMouvement().getSpeed(this, getMouvIndex()).length() / final_direction.length();
+				if(scaler<1){
+					final_direction.scale(scaler);
+				}
+				this.setLocalVit(new Vitesse(final_direction));
+				
+				shouldSetSpeed=false;
+				stopTargeting=true;
+				ModelPrincipal.debugTime.elapsed("set speed without targeting");
+				System.out.println("2-2-z");
+			}
+		}
+		else
+			stopTargeting=true;
+	}
+
 
 	@Override
 	public void destroy(AbstractModelPartie partie,boolean destroyNow)
@@ -316,8 +323,8 @@ public class Fleche_marque_mortelle extends Rusee{
 					eff.addSynchroSpeed(flecheEffect);
 				}
 			}
-			this.doitDeplace=false;
-			this.setCollideWithNone();
+			this.simulateDestroy();
+			this.isVisible=true;
 		}
 		destroy(partie,false);
 	}

@@ -6,12 +6,14 @@ import debug.DebugStack;
 import gameConfig.ObjectTypeHelper;
 import gameConfig.ObjectTypeHelper.ObjectType;
 import partie.collision.Collidable;
+import partie.collision.Collision;
+import partie.collision.Hitbox;
 import partie.conditions.ConditionHandler;
-import partie.deplacement.entity.Mouvement_entity.MouvEntityEnum;
 import partie.effects.Effect;
 import partie.effects.Grappin_effect;
 import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
+import partie.mouvement.entity.Mouvement_entity.EntityTypeMouv;
 import utils.Vitesse;
 
 public abstract class Entity extends Collidable{
@@ -61,30 +63,44 @@ public abstract class Entity extends Collidable{
 
 	}
 	
+	public boolean isGrounded(AbstractModelPartie partie)
+	{
+		Hitbox hit =getHitbox(partie.INIT_RECT,partie.getScreenDisp()).copy();
+		assert hit.polygon.npoints==4;
+		//get world hitboxes with Collision
+		//lowers all points by 1 at most 
+		for(int i=0; i<hit.polygon.npoints; ++i)
+			hit.polygon.ypoints[i]+=1;
+		boolean res =  Collision.isWorldCollision(partie,hit,true);
+		return res;
+	}
+	
 	@Override 
 	public void deplaceOutOfScreen(AbstractModelPartie partie)
 	{
 		//do nothing
+		if(this instanceof Heros)
+			System.out.println("ENTITY: Out of screen "+getPos()+" "+ this.getGlobalVit());
 	}
 	
 	@Override
-	public Vitesse getGlobalVit(AbstractModelPartie partie){
+	public Vitesse getGlobalVit(){
 		Vitesse vit = localVit.Copy().times(conditions.getSpeedFactor());
 		boolean isDragged = this.isDragged();
 		//Do not apply any effect when accroche 
 		boolean applyEffects = true;
 		if(this instanceof Heros)
 		{
-			applyEffects = !((Heros)this).getDeplacement().IsDeplacement(MouvEntityEnum.ACCROCHE);
+			applyEffects = !((Heros)this).getMouvement().isMouvement(EntityTypeMouv.ACCROCHE);
 		}
 		if(applyEffects){
 			for(Effect eff: currentEffects)
 			{
 				if(isDragged && ObjectTypeHelper.isTypeOf(eff, ObjectType.GRAPPIN_EFF)){
-					vit = eff.getModifiedVitesse(partie, this);
+					vit = eff.getModifiedVitesse(this);
 					return vit;
 				}
-				vit =vit.add(eff.getModifiedVitesse(partie, this));
+				vit =vit.add(eff.getModifiedVitesse(this));
 			}
 			vit = vit.add(conditions.getModifiedVitesse());
 		}

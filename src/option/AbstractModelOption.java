@@ -10,7 +10,7 @@ import menu.menuPrincipal.GameHandler;
 import menu.menuPrincipal.GameHandler.GameModeType;
 import menu.menuPrincipal.GameMode;
 import option.AffichageOption.CustomClickableLabel;
-import partie.modelPartie.InputPartie;
+import partie.input.InputPartie;
 import utils.observer.Observable;
 import utils.observer.Observer;
 

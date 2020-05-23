@@ -42,7 +42,7 @@ public class Fleche_explosive extends Destructrice {
 		
 		Roche_effect.synchroniseMovementWithRocheEffectMovement(collidedObject, new Collidable[] {this,flecheEffect});
 
-		this.doitDeplace=false;
+		this.shouldMove=false;
 		this.setCollideWithNone();
 	}
 	@Override
@@ -54,7 +54,7 @@ public class Fleche_explosive extends Destructrice {
 			destroy(partie,false);
 		else
 			applyArrowEffect(objects,partie,collidedObject,this.normCollision,this.pointCollision,this.correctedPointCollision);
-		this.isVisible=false;
+		this.simulateDestroy();
 	}
 	@Override
 	protected boolean OnObjectsCollision(List<Entity> objects,AbstractModelPartie partie,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
@@ -64,7 +64,7 @@ public class Fleche_explosive extends Destructrice {
 				ejectArrow(partie,unprojectedSpeed);
 		applyArrowEffect(objects,partie,collider,normal,null,null);
 		//Hide the arrow but don't destroy it otherwise the effect position is no longer updated
-		this.isVisible=false;
+		this.simulateDestroy();
 		collider.addSynchroSpeed(flecheEffect);
 		return false;
 	}

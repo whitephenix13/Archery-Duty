@@ -8,7 +8,7 @@ import javax.swing.AbstractAction;
 import javax.swing.JComponent;
 import javax.swing.KeyStroke;
 
-import partie.modelPartie.InputPartie;
+import partie.input.InputPartie;
 
 public class InputOption {
 	private AbstractControlerOption controlerOption;

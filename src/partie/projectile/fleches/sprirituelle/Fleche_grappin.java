@@ -6,13 +6,13 @@ import javax.vecmath.Vector2d;
 
 import music.MusicBruitage;
 import partie.collision.Collidable;
-import partie.deplacement.Deplace;
 import partie.effects.Effect;
 import partie.effects.Grappin_effect;
 import partie.effects.Roche_effect;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
+import partie.mouvement.Deplace;
 import partie.projectile.Projectile;
 import partie.projectile.fleches.Fleche;
 import utils.Vitesse;
@@ -39,7 +39,7 @@ public class Fleche_grappin extends Spirituelle {
 
 	//only move arrow if the grappin length is long enough
 	@Override
-	public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
+	public boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie) {
 		if(collider!=null)
 			if(collider.getNeedDestroy()){
 				collider=null;
@@ -50,22 +50,22 @@ public class Fleche_grappin extends Spirituelle {
 		
 		Grappin_effect eff = (Grappin_effect) this.flecheEffect;
 		if(eff!= null && eff.shooterDragged){
-			this.setLocalVit(eff.getModifiedVitesse(partie, this));
+			this.setLocalVit(eff.getModifiedVitesse(this));
 		}
-		boolean[] res = super.deplace(partie, deplace);
-		double speedNorm = this.getGlobalVit(partie).norm();
+		boolean updated = super.updateMouvementBasedOnAnimation(partie);
+		double speedNorm = this.getGlobalVit().norm();
 		if(generatedEffect && (this.tempsDetruit==0) && (!this.getNeedDestroy()) )
 		{
 			double rope_remaining_length = eff.getRemainingLength();
 			//there is a 1-1 correspondance between speed and displacement
 			if(rope_remaining_length<=0 || eff.isEnded() || eff.tempsDetruit>0 || destroy_next_frame)
 			{
-				res[0]=false;
+				shouldMove=false;
 				if(this.tempsDetruit<=0)
 				{
 					eff.reached_max_length=true;
 					destroy(partie,false);
-					doitDeplace=false;
+					shouldMove=false;
 				}
 			}
 			else if(speedNorm>rope_remaining_length)
@@ -74,7 +74,7 @@ public class Fleche_grappin extends Spirituelle {
 				destroy_next_frame=true;
 			} 
 		}
-		return res;
+		return updated;
 	}
 
 	@Override
@@ -95,8 +95,8 @@ public class Fleche_grappin extends Spirituelle {
 		{
 			//planted is only called if the arrow collide with the world hence the grappin applies on the shooter
 			this.setCollideWithNone();
-			this.getDeplacement().stopSpeed=true;
-			this.doitDeplace=true; //force this to keep the 
+			this.getMouvement().stopSpeed=true;
+			this.shouldMove=true; //force this to keep the 
 			if(!stuck)
 			{
 				shooter.registerEffect(flecheEffect);
@@ -148,9 +148,9 @@ public class Fleche_grappin extends Spirituelle {
 
 
 	@Override
-	public void OnShoot(AbstractModelPartie partie,Deplace deplace)
+	public void OnShoot(AbstractModelPartie partie)
 	{
-		super.OnShoot(partie, deplace);
+		super.OnShoot(partie);
 		if(!generatedEffect){
 			generatedEffect=true;
 			flecheEffect=new Grappin_effect(partie,this,0,partie.getFrame(),shooter);

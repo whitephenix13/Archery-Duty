@@ -6,13 +6,13 @@ import javax.vecmath.Vector2d;
 
 import music.MusicBruitage;
 import partie.collision.Collidable;
-import partie.deplacement.Deplace;
 import partie.effects.Effect;
 import partie.effects.Feu_effect;
 import partie.effects.Roche_effect;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
+import partie.mouvement.Deplace;
 import partie.projectile.Projectile;
 
 public class Fleche_feu extends Materielle {
@@ -43,14 +43,14 @@ public class Fleche_feu extends Materielle {
 			Vector2d arrowDir = Deplace.angleToVector(getRotation());
 			int sign = ((this.normCollision.x<0 && arrowDir.y<0) || (this.normCollision.y<0 && arrowDir.x<0))?-1 : 1;
 			//creating the effect registers it to arrowsEffects from partie 
-			Feu_effect flecheEffect=new Feu_effect(partie,this,0,partie.getFrame(),normCollision,pointCollision,correctedPointCollision,true,0);
-			Feu_effect flecheEffect2=new Feu_effect(partie,this,0,partie.getFrame(),normCollision,pointCollision,correctedPointCollision,true,sign*40);
-			Feu_effect flecheEffect3=new Feu_effect(partie,this,0,partie.getFrame(),normCollision,pointCollision,correctedPointCollision,true,sign*80);
+			Feu_effect flecheEffect=new Feu_effect(partie,this,0,partie.getFrame(),normCollision,pointCollision,correctedPointCollision,true,-1*sign*40);
+			Feu_effect flecheEffect2=new Feu_effect(partie,this,0,partie.getFrame(),normCollision,pointCollision,correctedPointCollision,true,0);
+			Feu_effect flecheEffect3=new Feu_effect(partie,this,0,partie.getFrame(),normCollision,pointCollision,correctedPointCollision,true,sign*40);
 			
 			
 			Roche_effect.synchroniseMovementWithRocheEffectMovement(collidedObject, new Collidable[] {this,flecheEffect,flecheEffect2,flecheEffect3});
 
-			this.isVisible=false;
+			this.simulateDestroy();
 			MusicBruitage.me.startBruitage("arc");
 
 		}
@@ -73,11 +73,9 @@ public class Fleche_feu extends Materielle {
 			{
 				obj.registerEffect(this.flecheEffect);
 			}
-			this.doitDeplace=false;
-			this.setCollideWithNone();
 			
 			//Hide the arrow but don't destroy it otherwise the effect position is no longer updated
-			this.isVisible=false;
+			this.simulateDestroy();
 			return false;
 		}
 		return true;

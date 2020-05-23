@@ -16,7 +16,7 @@ public class C_Motion extends Condition{
 	double FRICTION_UPDATE_TIME = 0.01 ; // ~4 frames
 	double lastFrictionUpdate = 0;
 	double speedThreshold = 10e-2;
-	double FRICTION_VAL = 0.20f;
+	double FRICTION_VAL = 0.05f;
 	
 	float MAX_SPEED_NORM =200;
 	Vitesse init_speed;
