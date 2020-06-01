@@ -3,6 +3,16 @@ package loading;
 import java.lang.ref.WeakReference;
 
 import gameConfig.InterfaceConstantes;
+import images.ImagesBackground;
+import images.ImagesCondition;
+import images.ImagesEffect;
+import images.ImagesFleche;
+import images.ImagesFlecheIcon;
+import images.ImagesHeros;
+import images.ImagesMonde;
+import images.ImagesMonstre;
+import images.ImagesPrincipal;
+import images.ImagesTirMonstre;
 import menu.menuPrincipal.AbstractModelPrincipal;
 import music.Music;
 import music.MusicBruitage;
@@ -97,23 +107,23 @@ public class LoaderUtils {
 			}
 		};
 	}
-	public static LoaderItem loadAllImagesAndSounds(final AbstractModelPrincipal princip, final AbstractModelPartie partie)
+	public static LoaderItem loadAllImagesAndSounds(final AbstractModelPartie partie)
 	{
 		return new LoaderItem("Load all images and sounds "){
 			@Override
 			public void run()
 			{
 				//Load Heros, Monstre, TirMonstre, Fleche
-				princip.imPrincipal.run();
-				princip.imBackground.run();
-				princip.imHeros.run();
-				princip.imMonstre.run();
-				princip.imTirMonstre.run();
-				princip.imFleches.run();
-				princip.imEffect.run();
-				princip.imMonde.run();
-				princip.imConditions.run();
-				princip.imFlecheIcon.run();
+				ImagesPrincipal.me.run();
+				ImagesBackground.me.run();
+				ImagesHeros.me.run();
+				ImagesMonstre.me.run();
+				ImagesTirMonstre.me.run();
+				ImagesFleche.me.run();
+				ImagesEffect.me.run();
+				ImagesMonde.me.run();
+				ImagesCondition.me.run();
+				ImagesFlecheIcon.me.run();
 				
 				if(!InterfaceConstantes.IGNORE_SOUND){
 					Music.me.loaderMusic.run();
@@ -125,16 +135,17 @@ public class LoaderUtils {
 			public int getProgress()
 			{
 				int res = (int) Math.round((
-						princip.imPrincipal.getProgress()+
-						princip.imBackground.getProgress()+
-						princip.imHeros.getProgress() + 
-						princip.imMonstre.getProgress() + 
-						princip.imTirMonstre.getProgress() + 
-						princip.imFleches.getProgress() + 
-						princip.imEffect.getProgress() +
-						princip.imMonde.getProgress() + 
-						princip.imConditions.getProgress() +
-						princip.imFlecheIcon.getProgress() +
+						ImagesPrincipal.me.getProgress()+
+						ImagesBackground.me.getProgress()+
+						ImagesHeros.me.getProgress()+
+						ImagesMonstre.me.getProgress()+
+						ImagesTirMonstre.me.getProgress()+
+						ImagesFleche.me.getProgress()+
+						ImagesEffect.me.getProgress()+
+						ImagesMonde.me.getProgress()+
+						ImagesCondition.me.getProgress()+
+						ImagesFlecheIcon.me.getProgress()+
+
 						(InterfaceConstantes.IGNORE_SOUND?0:(Music.me.loaderMusic.getProgress() +MusicBruitage.me.loaderMusicBruitage.getProgress()))
 						)/(InterfaceConstantes.IGNORE_SOUND?10.0:12.0)) ;
 				return res;
@@ -153,7 +164,7 @@ public class LoaderUtils {
 				percentage=0;
 				if(media_type.equals(MT_IMAGE)){
 					if(media_categorie.equals(C_PRINCIPAL)){
-						media=princip.imPrincipal;
+						media=ImagesPrincipal.me;
 						media.run();
 						percentage=100;
 					}

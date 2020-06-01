@@ -48,6 +48,8 @@ public class Electrique_effect extends Effect{
 			Point _correctedPointCollision,boolean groundCollision,int max_explosion_depth,int explosionDepth,Collidable prevCollider,Point previousEffectPos)
 	{
 		super(_mouv_index,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,groundCollision,groundCollision);
+		double newScaling = Math.pow(2, -1*explosionDepth);
+		setScaling(new Vector2d(newScaling,newScaling));
 		TEMPS_DESTRUCTION = 1*(long) Math.pow(10, 8);//nanos, 0.3sec 
 		isProjectile =true; //to allow for collision with other projectile and entities
 		this.setCollideWithout(Arrays.asList(ObjectType.ELECTRIQUE_EFF,ObjectType.FLECHE));
@@ -113,27 +115,6 @@ public class Electrique_effect extends Effect{
 	}
 	
 	@Override
-	protected void onMouvementChanged(AbstractModelPartie partie,boolean animationChanged, boolean mouvementChanged)
-	{
-		//TODO:test
-		if(animationChanged && getMouvement().getTypeMouv().equals(MouvEffectEnum.ELECTRIQUE_SPLIT) && getMouvIndex() == 3)
-		{
-			Vector2d mid = Hitbox.getObjMid(partie, this);
-			double center_offset = 0.45 * getCurrentXtaille();
-			Point leftPos = new Point((int)Math.round(mid.x - center_offset*Math.cos(getRotation())) , 
-									(int)Math.round(mid.y - center_offset*Math.sin(getRotation())));
-			Point rightPos = new Point((int)Math.round(mid.x + center_offset*Math.cos(getRotation())) , 
-					(int)Math.round(mid.y + center_offset*Math.sin(getRotation())));
-			for(int i=0; i<2;++i)
-			{
-				Point lastPos = i%2==0? leftPos: rightPos;
-				new Electrique_effect(partie,ref_fleche,0,partie.getFrame(),normal,null,null,false,maxExplosionDepth,explosionDepth+1,currentCollider,lastPos);
-			}
-		}
-		
-	}
-	
-	@Override
 	protected void onAnimationEnded(AbstractModelPartie partie)
 	{
 		if(getMouvement().getTypeMouv().equals(MouvEffectEnum.ELECTRIQUE_APPEAR))
@@ -146,17 +127,18 @@ public class Electrique_effect extends Effect{
 			//TODO: convert the point to world coordinate (instead of screen ones) ? 
 			//TODO: compute the first pos based on those new points 
 			//TODO: make it work with scaling 
-			/*Vector2d mid = Hitbox.getObjMid(partie, this);
-			double center_offset = 0.45 * getDeplacement().xtaille.get(getAnim());
+			Vector2d mid = Hitbox.getObjMid(partie, this);
+			double center_offset = 0.45 * getCurrentXtaille();
 			Point leftPos = new Point((int)Math.round(mid.x - center_offset*Math.cos(getRotation())) , 
 									(int)Math.round(mid.y - center_offset*Math.sin(getRotation())));
 			Point rightPos = new Point((int)Math.round(mid.x + center_offset*Math.cos(getRotation())) , 
 					(int)Math.round(mid.y + center_offset*Math.sin(getRotation())));
+			
 			for(int i=0; i<2;++i)
 			{
 				Point lastPos = i%2==0? leftPos: rightPos;
 				new Electrique_effect(partie,ref_fleche,0,partie.getFrame(),normal,null,null,false,maxExplosionDepth,explosionDepth+1,currentCollider,lastPos);
-			}*/
+			}
 			 destroy(partie,true);
 		}
 		 else
@@ -201,13 +183,15 @@ public class Electrique_effect extends Effect{
 		if(collider == previousCollider)
 			return;
 		//If collide with the heros, gain seyeri
-		if(collider instanceof Heros)
+		if(collider instanceof Heros){
 			((Heros)collider).addLife(lifeGained);
+			this.destroy(partie, true);
+		}
 		//else exploded in other electrique effect 
 		else 
 		{
 			this.setCollideWithNone();
-			if(explosionDepth < maxExplosionDepth ){
+			if(explosionDepth < (maxExplosionDepth-1) ){
 				this.setMouvIndex(0);
 				this.setMouvement(new Electrique_split(EffectCollisionEnum.ENTITY,partie.getFrame()));
 				currentCollider = collider;

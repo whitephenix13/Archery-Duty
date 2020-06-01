@@ -73,17 +73,13 @@ public class Heros extends Entity{
 	private InputPartie inputPartie;
 	public InputPartie getInputPartie(){return inputPartie;}
 	private InputPartiePool inputPool;
-	// ***REMOVE public int nouvMouvIndex= 0;
-	// ***REMOVE public Mouvement nouvMouv =null;
 	private boolean prevDirectionWasRight = false;
-
 
 	private float seyeri=InterfaceConstantes.MAXSEYERI;
 	private float not_enough_seyeri=0; // variable to keep track of the amount of seyeri that a rejected action required (used for visual effect)
 	public void setNotEnoughSeyeri(float val){not_enough_seyeri=val;not_enough_seyeri_counter=10;}
 	public float getNotEnoughSeyeri(){return not_enough_seyeri;}
 	private int not_enough_seyeri_counter; // use this to let the red indicaters appear longer
-	// ***REMOVE private double accrocheCooldownTimer=0;
 	public void decreaseNotEnoughSeyeriCounter()
 	{
 		if(not_enough_seyeri<=0)
@@ -113,10 +109,6 @@ public class Heros extends Entity{
 	
 	//booleen pour savoir si le personnage veut sauter alors qu'il glisse/accroche
 	
-	public boolean canJump = true;
-	public boolean airJumping = false;
-	public boolean wallJumping = false;
-	public boolean groundJumping = false;
 	private boolean isMoveRightKeyDown = false;
 	public boolean isMoveRightKeyDown(){return isMoveRightKeyDown;}
 	private boolean isMoveLeftKeyDown = false;
@@ -151,9 +143,6 @@ public class Heros extends Entity{
 	public long last_shoot_time = -1;
 	private long last_update_shoot_time=-1;
 
-	//last time I armed an arrow
-	// ***REMOVE public long last_armed_time = -1;
-	// ***REMOVE private long last_update_armed_time=-1;
 	//last time the heros wall jump: use to disable keys 
 	public double last_wall_jump_time = -1;
 	
@@ -184,12 +173,9 @@ public class Heros extends Entity{
 		fixedWhenScreenMoves=true;
 		setMouvement(new Attente(ObjectType.HEROS,DirSubTypeMouv.GAUCHE,current_frame));
 		this.setMouvIndex(_mouv_index);
-		// ***REMOVE nouvMouvIndex= 0;
-		// ***REMOVE nouvMouv = new Attente(ObjectType.HEROS,DirSubTypeMouv.GAUCHE,current_frame);
 		tempsTouche=PartieTimer.me.getElapsedNano();
 		controlScreenMotion=true;
 		last_update_shoot_time=-1;
-		// ***REMOVE last_update_armed_time=-1;
 		this.inputPartie = inputPartie;
 		inputPool = new InputPartiePool(inputPartie);
 		inputPool.setPlayerInputPool(true);
@@ -432,21 +418,19 @@ public class Heros extends Entity{
 		last_colli_left=collision_gauche;
 		last_colli_right=collision_droite;
 
-		final boolean mem_peutSauter=canJump;
 		final boolean mem_useGravity=useGravity;
-
+		final boolean mem_wasGrounded = wasGrounded;
 		resetHandleCollision = new ResetHandleCollision(){
 			@Override
 			public void reset()
 			{
-				canJump=mem_peutSauter;
+				wasGrounded = mem_wasGrounded;
 				useGravity= mem_useGravity;
 			}};
 
 			if(collision_bas)
 			{
 				wasGrounded = true;
-				canJump=true;
 				useGravity=false;
 			}
 
@@ -463,7 +447,6 @@ public class Heros extends Entity{
 		if(ObjectTypeHelper.isTypeOf(collider, ObjectType.TIR_MONSTRE))
 		{
 			if(!invincible){
-				TirMonstre tm = (TirMonstre)collider;
 				touche(((TirMonstre)collider).damage);
 			}
 		}
@@ -489,7 +472,6 @@ public class Heros extends Entity{
 	private void setMouvement(AbstractModelPartie partie,Mouvement newMouv, int newMouvIndex){
 		//Use this function to set specific variables when changing movement (ie: peutSauter if newMouv = saut)
 		if(newMouv.isMouvement(EntityTypeMouv.ACCROCHE) && (newMouvIndex==0 || newMouvIndex==2)){
-			// ***REMOVE accrocheCooldownTimer=PartieTimer.me.getElapsedNano();
 			for(Collidable eff : partie.arrowsEffects){
 				if(eff instanceof Roche_effect){
 					Roche_effect r_eff = (Roche_effect) eff;
@@ -502,19 +484,11 @@ public class Heros extends Entity{
 		else if(newMouv.isMouvement(EntityTypeMouv.ATTENTE)){
 			localVit.y=0;
 			useGravity=false;
-			canJump = true;
 		}
 		else if(newMouv.isMouvement(EntityTypeMouv.GLISSADE)){
 			localVit.x=(0);
 		}
 		else if(newMouv.isMouvement(EntityTypeMouv.SAUT)){
-			if(newMouvIndex==0||newMouvIndex==3){
-				canJump = false;
-			}
-			else if(newMouv.isMouvement(EntityTypeMouv.SAUT)&& (newMouvIndex==1||newMouvIndex==4))
-			{
-				canJump = false; //handle case where heros was on ground and is now falling
-			}
 			if(getMouvement().isMouvement(EntityTypeMouv.GLISSADE)){
 				this.last_wall_jump_time=PartieTimer.me.getElapsedNano();
 			}
@@ -524,7 +498,6 @@ public class Heros extends Entity{
 		}
 		
 		if(wasGrounded){
-			canJump=true;
 			useGravity=false;
 		}
 		
@@ -543,301 +516,7 @@ public class Heros extends Entity{
 		setMouvement(newMouv);
 		setMouvIndex(newMouvIndex);
 	}
-	/* ***REMOVE @Override
-	protected void handleKeyDownInput(AbstractModelPartie partie) {
-		if(!partie.isPartieEnded())
-		{
-			final boolean currentDirectionIsRight = getMouvement().droite_gauche(getMouvIndex(), getRotation()).equals(DirSubTypeMouv.DROITE);
 
-			final boolean isMoveRightDTapDown = inputPool.isMoveRightDoubleTapState(KeyState.DOWN);
-			final boolean isMoveRightDown = inputPool.isMoveRightState(KeyState.DOWN);
-			final boolean isMoveLeftDTapDown = inputPool.isMoveLeftDoubleTapState(KeyState.DOWN);
-			final boolean isMoveLeftDown = inputPool.isMoveLeftState(KeyState.DOWN);
-			final boolean isSlowDown = inputPool.isSlowState(KeyState.DOWN);
-			final boolean isJumpDown = inputPool.isJumpState(KeyState.DOWN);
-			final boolean isPauseDown = inputPool.isPauseState(KeyState.DOWN);
-			
-			final boolean rightAndLeftPressedTogether = (isMoveRightDTapDown || isMoveRightDown) &&  (isMoveLeftDTapDown || isMoveLeftDown);
-			final boolean courseDroiteDown = isMoveRightDTapDown && (rightAndLeftPressedTogether? !prevDirectionWasRight : true );
-			final boolean marcheDroiteDown = isMoveRightDown  && (rightAndLeftPressedTogether? !prevDirectionWasRight : true );
-			final boolean marcheGaucheDown = isMoveLeftDown  && (rightAndLeftPressedTogether? prevDirectionWasRight : true );
-			final boolean courseGaucheDown = isMoveLeftDTapDown  && (rightAndLeftPressedTogether? prevDirectionWasRight : true );
-
-			if(isPauseDown)
-			{
-				partie.onPauseDown();
-				inputPool.resetPauseState();
-				if(partie.isInPause())
-					inputPool.getReferenceInputPartie().resetTouchesFocus();
-			}
-			if(!partie.isInPause())
-			{
-				
-				boolean isDragged = this.isDragged();
-				int shootDownIndex = inputPool.hasShootState(KeyState.DOWN);
-				//SHOOTING 
-				if(shootDownIndex>-1 && !this.flecheEncochee && !this.doitEncocherFleche 
-						&& ((System.nanoTime()-this.last_shoot_time)>InterfaceConstantes.FLECHE_TIR_COOLDOWN))
-				{
-					//if not wall jump recently
-					if(!(this.getMouvement().isMouvement(MouvEntityEnum.SAUT) && ((PartieTimer.me.getElapsedNano()-this.last_wall_jump_time)<=InterfaceConstantes.WALL_JUMP_DISABLE_TIME)))
-					{
-						//If multiple input pressed => prioritize regular shoot
-						inputPool.resetShootState(shootDownIndex);
-						this.set_tir_type(shootDownIndex);				
-						
-						boolean can_shoot_arrow = canShootArrow(partie);
-						if(can_shoot_arrow){
-							//on ne tir qu'une fleche
-							this.doitEncocherFleche=true;
-							this.nouvMouv= new Tir(ObjectType.HEROS,null,partie.getFrame()); 
-							this.last_armed_time=System.nanoTime();
-						}
-					}
-				}
-
-				boolean heros_shoots = this.flecheEncochee||this.doitEncocherFleche;
-				boolean heros_accroche = this.getMouvement().isMouvement(MouvEntityEnum.ACCROCHE);
-				boolean heros_glisse = this.getMouvement().isMouvement(MouvEntityEnum.GLISSADE);
-				//COURSE
-				if((courseDroiteDown||courseGaucheDown) && !heros_glisse && !heros_accroche && !heros_shoots && !isDragged)
-				{
-
-					boolean isRunningInOppositeDirection = (courseDroiteDown && !currentDirectionIsRight) || (courseGaucheDown && currentDirectionIsRight);
-					//si on ne courrait pas vers la droite avant
-					if(! (this.getMouvement().isMouvement(MouvEntityEnum.COURSE) && isRunningInOppositeDirection))
-					{
-						//do not run if we just wall jump
-						if(! (this.getMouvement().isMouvement(MouvEntityEnum.SAUT) && (PartieTimer.me.getElapsedNano()-this.last_wall_jump_time)<= InterfaceConstantes.WALL_JUMP_DISABLE_TIME ))
-						{
-							this.nouvMouvIndex= courseDroiteDown?4:0; 
-							this.nouvMouv= new Course(ObjectType.HEROS,courseDroiteDown?DirSubTypeMouv.DROITE:DirSubTypeMouv.GAUCHE,partie.getFrame()); 
-						}
-					}
-				}
-				//MARCHE 
-				else if((marcheDroiteDown||marcheGaucheDown)&& !heros_shoots && !isDragged)
-				{
-					int marche_anim_offset = marcheDroiteDown?4:0;
-					int saut_anim_offset = marcheDroiteDown?3:0;
-					int nb_accroche_anim_offset = 2;
-					
-					final boolean moveInSameDirection =(currentDirectionIsRight && marcheDroiteDown) || (!currentDirectionIsRight && marcheGaucheDown) ;
-					
-					if(heros_glisse || heros_accroche)
-					{
-						boolean isFirstAccrocheAnim = (getMouvIndex() == 0 || getMouvIndex() ==nb_accroche_anim_offset);
-						//fall from side/accroche
-						if( (heros_glisse && !moveInSameDirection) || (heros_accroche && isFirstAccrocheAnim && !moveInSameDirection)) 
-						{
-							this.nouvMouvIndex= (getGlobalVit(partie).y>=0 ? saut_anim_offset+1 : saut_anim_offset); 
-							SubMouvSautEnum subMouv = marcheDroiteDown?(getGlobalVit(partie).y>=0? SubMouvSautEnum.FALL_DROITE:SubMouvSautEnum.JUMP_DROITE) 
-									: (getGlobalVit(partie).y>=0? SubMouvSautEnum.FALL_GAUCHE:SubMouvSautEnum.JUMP_GAUCHE);
-							this.nouvMouv= new Saut(ObjectType.HEROS,subMouv,partie.getFrame()); 
-						}
-						//Move in same direction while accroche => climb
-						else if(heros_accroche && isFirstAccrocheAnim && moveInSameDirection)
-						{
-							this.nouvMouvIndex= marcheDroiteDown?1+nb_accroche_anim_offset: 1; 
-							this.nouvMouv= new Accroche(ObjectType.HEROS,marcheDroiteDown?SubMouvAccrocheEnum.GRIMPE_DROITE:SubMouvAccrocheEnum.GRIMPE_GAUCHE,partie.getFrame()); 						
-						}
-					}
-					//Do nothing if we were running in this direction already
-					else if(this.getMouvement().isMouvement(MouvEntityEnum.COURSE) && moveInSameDirection)
-					{		
-						//no change mouv
-					}
-
-					//Grounded and move in different direction  
-					else if(! (this.getMouvement().isMouvement(MouvEntityEnum.MARCHE) && moveInSameDirection)&& this.peutSauter)
-					{
-						this.nouvMouvIndex= marche_anim_offset; 
-						this.nouvMouv=new Marche(ObjectType.HEROS,DirSubTypeMouv.DROITE,partie.getFrame());
-					}
-
-					//Moving while being in air 
-					else if (!this.peutSauter) 
-					{
-						//do not move if we just wall jump
-						if(this.getMouvement().isMouvement(MouvEntityEnum.SAUT)&& 
-								(!this.isMouvement(MouvEntityEnum.SAUT, SubMouvSautEnum.LAND_GAUCHE)) && (!this.isMouvement(MouvEntityEnum.SAUT, SubMouvSautEnum.LAND_DROITE)) && 
-								((PartieTimer.me.getElapsedNano()-this.last_wall_jump_time)> InterfaceConstantes.WALL_JUMP_DISABLE_TIME))
-						{
-							if(marcheDroiteDown)
-								this.deplaceSautDroit=true; //activates the speed while in air 
-							else
-								this.deplaceSautGauche=true; //activates the speed while in air 
-							boolean fall = this.getGlobalVit(partie).y >=0 ;
-							this.nouvMouvIndex= fall? 1+saut_anim_offset : saut_anim_offset ; 
-							SubMouvSautEnum subMouv = marcheDroiteDown?(fall?SubMouvSautEnum.FALL_DROITE:SubMouvSautEnum.JUMP_DROITE) 
-									: (fall?SubMouvSautEnum.FALL_GAUCHE:SubMouvSautEnum.JUMP_GAUCHE);
-							this.nouvMouv=new Saut(ObjectType.HEROS,subMouv,partie.getFrame());
-						}
-					}
-				}
-				//SLOW DOWN 
-				if(isSlowDown)
-				{
-					partie.onPartieSlowDown();
-					inputPool.resetSlowState();
-				}
-
-				//SAUT 
-				if(isJumpDown &&  !heros_shoots && !isDragged)
-				{
-					if(heros_glisse)
-					{
-						this.sautGlisse=true;
-
-						this.nouvMouvIndex= (this.droite_gauche(this.getMouvIndex()).equals(DirSubTypeMouv.GAUCHE)? 0 : 3);
-						this.nouvMouv=new Saut(ObjectType.HEROS,this.nouvMouvIndex==0?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE,partie.getFrame() );
-						this.last_wall_jump_time=PartieTimer.me.getElapsedNano();
-					}
-					else if(heros_accroche && ( (this.getMouvIndex()==0) || (this.getMouvIndex()==2)))
-					{
-						this.sautAccroche=true;
-						this.useGravity=true;
-						this.nouvMouvIndex= ((this.getMouvIndex() == 0)? 0 : 3);
-						this.nouvMouv=new Saut(ObjectType.HEROS,this.nouvMouvIndex==0?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE,partie.getFrame() );
-					}
-					else if(this.peutSauter){
-						inputPool.resetMoveLeftDoubleTapState();
-						inputPool.resetMoveRightDoubleTapState();
-
-						this.peutSauter=false;
-
-						//Heros jumps so "finSaut" has to be false
-						this.debutSaut=true;
-						this.finSaut=false;
-
-						this.nouvMouvIndex=this.droite_gauche(this.getMouvIndex()).equals(DirSubTypeMouv.GAUCHE) ? 0 : 3 ;
-						this.nouvMouv= new Saut(ObjectType.HEROS,this.nouvMouvIndex==0?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE,partie.getFrame() );
-					}
-				}
-				prevDirectionWasRight = rightAndLeftPressedTogether?prevDirectionWasRight :  (isMoveRightDown || isMoveRightDTapDown);
-				//Reset pool for which holding down <=> pressing once 
-				inputPool.resetJumpState();
-			}
-			
-			int indexSlotDown = inputPool.hasSlotState(KeyState.DOWN);
-			if(indexSlotDown >=0)
-			{
-				inputPool.resetSlotState(indexSlotDown);
-				arrowSlotKeyPool = indexSlotDown;
-			}
-		}
-	}
-	@Override
-	protected void handleKeyReleasedInput(AbstractModelPartie partie) {
-		boolean isPauseReleased = inputPool.isPauseState(KeyState.RELEASED);
-		int shoot_index = inputPool.hasShootState(KeyState.RELEASED);
-		if(isPauseReleased)
-		{
-			inputPool.resetPauseState();
-		}
-		//TIR 
-		if( shoot_index>=0 && ((System.nanoTime()-last_armed_time)>InterfaceConstantes.ARMED_MIN_TIME))
-		{
-			inputPool.resetShootState(shoot_index);		
-			
-			if(flecheEncochee)
-			{
-				flecheEncochee=false;
-				
-				partie.getFlecheEncochee(this).OnShoot(partie);
-
-				nouvMouvIndex= (droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE) ? 0 : 2) ;
-				nouvMouv= new Attente(ObjectType.HEROS,nouvMouvIndex==0? DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
-				last_shoot_time= System.nanoTime();
-
-			}
-
-		}
-		
-		final boolean isMoveRightDTapDown = inputPool.isMoveRightDoubleTapState(KeyState.DOWN);
-		final boolean isMoveRightDown = inputPool.isMoveRightState(KeyState.DOWN);
-		final boolean isMoveLeftDTapDown = inputPool.isMoveLeftDoubleTapState(KeyState.DOWN);
-		final boolean isMoveLeftDown = inputPool.isMoveLeftState(KeyState.DOWN);
-		final boolean just_wall_jump= getMouvement().isMouvement(MouvEntityEnum.SAUT) && (((PartieTimer.me.getElapsedNano()-last_wall_jump_time)<=InterfaceConstantes.WALL_JUMP_DISABLE_TIME));
-		//MARCHE
-		if ((isMoveRightDown||isMoveLeftDown||isMoveRightDTapDown||isMoveLeftDTapDown) && !just_wall_jump){
-			runBeforeJump=false;
-			if(isMoveRightDown)
-				inputPool.resetMoveRightState();
-			if(isMoveRightDTapDown)
-				inputPool.resetMoveRightDoubleTapState();
-			if(isMoveLeftDown)
-				inputPool.resetMoveLeftState();
-			if(isMoveLeftDTapDown)
-				inputPool.resetMoveLeftDoubleTapState();
-
-			final boolean heros_glisse = getMouvement().isMouvement(MouvEntityEnum.GLISSADE);
-			final boolean heros_accroche = getMouvement().isMouvement(MouvEntityEnum.ACCROCHE);
-
-			if( !heros_glisse && !heros_accroche && !flecheEncochee )
-			{
-				//pas de decallage de sprite 
-
-				//au sol
-				if((getMouvement().isMouvement(MouvEntityEnum.MARCHE)|| getMouvement().isMouvement(MouvEntityEnum.COURSE)) && peutSauter)
-				{
-					//on variablesPartieRapide.affiche l'animation d'attente
-
-					nouvMouvIndex= (droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.DROITE) ? 2: 0 );
-					nouvMouv= new Attente(ObjectType.HEROS,nouvMouvIndex==0? DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
-
-					//on met sa vitesse à 0:  
-					localVit.x=0;
-
-				}
-
-				else if (getMouvement().isMouvement(MouvEntityEnum.ATTENTE))
-				{
-					//on arrete quand meme le heros (exemple si il relache la touche de deplacement sur laquelle il avait appuyé en l'air)
-					//on variablesPartieRapide.affiche l'animation d'attente
-
-					nouvMouvIndex= droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.DROITE) ? 2: 0 ;
-					nouvMouv= new Attente(ObjectType.HEROS,nouvMouvIndex==0? DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
-
-					//on met sa vitesse à 0:  
-					localVit.x=0;
-				}
-				//en l'air et glisse pas
-				else if(!peutSauter)
-				{
-
-					localVit.x=0;
-					// tout dépend si le heros tombe ou non 
-
-					if (getGlobalVit(partie).y<0)//il ne tombe pas donc on met les premières animations de saut
-						nouvMouvIndex= droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE) ? 0: 3 ;
-
-					else // le heros tombe 
-						nouvMouvIndex=droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE) ? 1: 4 ;
-
-					SubTypeMouv type_mouv=nouvMouvIndex==0? SubMouvSautEnum.JUMP_GAUCHE: (nouvMouvIndex==3?SubMouvSautEnum.JUMP_DROITE:  (nouvMouvIndex==1?SubMouvSautEnum.FALL_GAUCHE:SubMouvSautEnum.FALL_DROITE));
-					nouvMouv=new Saut(ObjectType.HEROS,type_mouv,partie.getFrame());
-
-				}
-			}
-		}
-		//SLOW DOWN
-		if(inputPool.isSlowState(KeyState.RELEASED))
-			inputPool.resetSlowState();
-		//SAUT 
-		if(inputPool.isJumpState(KeyState.RELEASED)&& !flecheEncochee )
-			inputPool.resetJumpState();
-		//DASH
-		if(inputPool.isDashState(KeyState.RELEASED))
-			inputPool.resetDashState();
-		
-		int indexSlotReleased = inputPool.hasSlotState(KeyState.RELEASED);
-		if(indexSlotReleased >=0)
-		{
-			inputPool.resetSlotState(indexSlotReleased);
-			arrowSlotKeyPool = -1;
-		}
-	}*/
 	@Override
 	protected void onStartDeplace(){shouldUpdateSpeed=true;}
 	@Override
@@ -876,8 +555,6 @@ public class Heros extends Entity{
 		boolean beginAccroche_r = beginAccroche[1];
 		boolean beginAccroche_l = beginAccroche[0];
 
-		//update some values because player might have been ejected due to a fleche vent
-		updateVarSaut(falling, beginAccroche_r || beginAccroche_l, beginSliding_r || beginSliding_l);
 		//special case, dealing with stop of accroche 
 		boolean accrocheRightEarlyEnd = getMouvement().isMouvement(EntityTypeMouv.ACCROCHE) && !(blocDroitGlisse && blocDroitAccroche) 
 				&& (droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.DROITE)) && (getMouvIndex() != 1) && (getMouvIndex() != 3);
@@ -931,8 +608,8 @@ public class Heros extends Entity{
 		}
 		//Handle sliding starts/ends 
 		boolean fallingSautAnimation = getMouvement().isMouvement(EntityTypeMouv.SAUT)  && (herosMouvIndex == 0 || herosMouvIndex ==  3||herosMouvIndex == 1 || herosMouvIndex == 4);
-		boolean canSwitchToFall = !getMouvement().isMouvement(EntityTypeMouv.ACCROCHE) && !getMouvement().isMouvement(EntityTypeMouv.GLISSADE)
-				&& !fallingSautAnimation;
+
+		boolean canSwitchToFall = !getMouvement().isMouvement(EntityTypeMouv.ACCROCHE) && !getMouvement().isMouvement(EntityTypeMouv.GLISSADE);
 		boolean landing = (!falling) && getMouvement().isMouvement(EntityTypeMouv.SAUT) && fallingSautAnimation;
 
 		boolean standup = getMouvement().isMouvement(EntityTypeMouv.SAUT) && (herosMouvIndex ==2 || herosMouvIndex ==5)  && getMouvement().animEndedOnce();
@@ -964,7 +641,6 @@ public class Heros extends Entity{
 			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
 			if(success){
 				setMouvement(partie,nextMouv,nextMouvIndex);
-				//REMOVE localVit.x=(0);
 				return true;
 			}
 		}
@@ -1012,11 +688,12 @@ public class Heros extends Entity{
 				(down==0?SubMouvSautEnum.JUMP_DROITE:SubMouvSautEnum.FALL_DROITE);
 			Mouvement nextMouv = new Saut(ObjectType.HEROS,sub_type_mouv,partie.getFrame());
 			int nextMouvIndex = (droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ? 0+down :3+down);
-			
-			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
-			if(success){
-				setMouvement(partie,nextMouv,nextMouvIndex);
-				return true;
+			if(!getMouvement().isMouvement(nextMouv) || herosMouvIndex!=nextMouvIndex){
+				boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+				if(success){
+					setMouvement(partie,nextMouv,nextMouvIndex);
+					return true;
+				}
 			}
 		}
 		return false; 
@@ -1236,22 +913,7 @@ public class Heros extends Entity{
 		} //end of if move
 		return false;
 	}//end of function
-	private void setJumpSpeed(boolean isWallJumping,boolean isAirJumping, boolean isGroundJumping){
-		if(isAirJumping)
-			airJumping = true;
-		else if(isWallJumping)
-			wallJumping = true;
-		else 
-			groundJumping = true;
-		getMouvement().setSpeed(this, getMouvIndex());
-		if(isAirJumping)
-			airJumping = false;
-		else if(isWallJumping)
-			wallJumping = false;
-		else 
-			groundJumping = false;
-	}
-	
+
 	@Override
 	protected boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie){
 		if(getMouvement().isMouvement(EntityTypeMouv.TIR)){
@@ -1373,434 +1035,16 @@ public class Heros extends Entity{
 		res[3]=blocDroitAccrocheHit;
 		return res;
 	}
-	/* ***REMOVE public void updateMouvement(AbstractModelPartie partie)
-	{
-		ModelPrincipal.debugTime.startElapsedForVerbose();
-		
-		int herosMouvIndex=getMouvIndex();
-		
-		Hitbox[] hitboxesToSlideAccrocheOn = computeHitboxToSlideAccrocheOn(partie);
-		boolean blocGaucheGlisse =hitboxesToSlideAccrocheOn[0]!=null;
-		boolean blocDroitGlisse =hitboxesToSlideAccrocheOn[1]!=null;
-		boolean blocGaucheAccroche=hitboxesToSlideAccrocheOn[2]!=null;
-		boolean blocDroitAccroche=hitboxesToSlideAccrocheOn[3]!=null;
-		// le heros est en chute libre
-		boolean falling = !isGrounded(partie);
-		wasGrounded=!falling;
-		if(falling)
-			useGravity=falling && !this.getMouvement().isMouvement(MouvEntityEnum.ACCROCHE) && !isDragged();
-
-		//le heros chute ou cours vers un mur: il commence � glisser sur le mur 
-		boolean[] beginSliding= computeBeginSliding(partie,blocDroitGlisse,blocGaucheGlisse,falling); 
-		boolean beginSliding_r= beginSliding[0] ;
-		boolean beginSliding_l= beginSliding[1] ;
-
-		boolean[] beginAccroche= computeAccroche(partie,blocDroitGlisse,blocGaucheGlisse,blocDroitAccroche,blocGaucheAccroche,falling);
-		boolean beginAccroche_r = beginAccroche[1];
-		boolean beginAccroche_l = beginAccroche[0];
-
-		//update some values because player might have been ejected due to a fleche vent
-		updateVarSaut(falling, beginAccroche_r || beginAccroche_l, beginSliding_r || beginSliding_l);
-
-		//le heros atteri alors qu'il etait en chute libre,
-		boolean landing = (!falling) && getMouvement().isMouvement(MouvEntityEnum.SAUT) && (herosMouvIndex == 1 || herosMouvIndex == 4 ||
-				( (herosMouvIndex == 0 || herosMouvIndex ==  3) && this.getGlobalVit(partie).y>=0 ));
-
-		boolean standup = getMouvement().isMouvement(MouvEntityEnum.SAUT) && (herosMouvIndex ==2 || herosMouvIndex ==5)  && getMouvement().animEndedOnce();
-		//deal with the case where the heros was ejected while standing up
-		if(standup && falling)
-		{
-			standup=false;
-			finSaut=false;
-		}
-
-		//special case, dealing with stop of accroche 
-		boolean stopAccrocheD = getMouvement().isMouvement(MouvEntityEnum.ACCROCHE) && !(blocDroitGlisse && blocDroitAccroche) 
-				&& (droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.DROITE)) && (getMouvIndex() != 1) && (getMouvIndex() != 3);
-		boolean stopAccrocheG = getMouvement().isMouvement(MouvEntityEnum.ACCROCHE) && !(blocGaucheGlisse && blocGaucheAccroche) 
-				&& (droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE))&& (getMouvIndex() != 1) && (getMouvIndex() != 3);
-		if(stopAccrocheD || stopAccrocheG)
-		{
-			Mouvement nextMouv = new Attente(ObjectType.HEROS,droite_gauche(herosMouvIndex),partie.getFrame());
-			int nextMouvIndex = (droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ? 0 : 2 );
-			
-			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
-			if(success){
-				localVit.y=(0);
-				setMouvement(nextMouv);
-				setMouvIndex(nextMouvIndex);
-			}
-			return;
-		}
-		//le heros touche le sol en glissant
-		boolean landSliding = finSaut && getMouvement().isMouvement(MouvEntityEnum.GLISSADE);
-
-		//le heros d�croche du mur
-		boolean endSliding = getMouvement().isMouvement(MouvEntityEnum.GLISSADE) && 
-				((!blocDroitGlisse && droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE)) ||
-						(!blocGaucheGlisse && droite_gauche(herosMouvIndex)==(DirSubTypeMouv.DROITE)) || !falling) ;
-		
-		int mouv_index=herosMouvIndex;
-
-		ModelPrincipal.debugTime.elapsed("Init 2");
-
-		if( (doitEncocherFleche || flecheEncochee))//cas different puisqu'on ne veut pas que l'avatar ait l'animation de chute en l'air
-		{
-			double[] mouv_index_rotation = Deplace.getMouvIndexRotationTir(partie,false);
-			int nextMouvIndex = (int)mouv_index_rotation[0];
-			rotation_tir=mouv_index_rotation[1];
-			//on decalle
-			Mouvement nextMouv = new Tir(ObjectType.HEROS,null,partie.getFrame());
-			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
-			if(success){
-				setMouvement(nextMouv);
-				getMouvement().setSpeed(this, nextMouvIndex);
-				if(!falling)
-				{
-					finSaut=false;
-					peutSauter=true;
-					useGravity=false;
-				}
-				setMouvIndex(nextMouvIndex);
-				return;
-			}
-		}
-		ModelPrincipal.debugTime.elapsed("fleche");
-
-		//SPECIAL CASE that comes from computation on the current Mouvement 
-		if( (beginSliding_r||beginSliding_l) && !getMouvement().isMouvement(MouvEntityEnum.GLISSADE))
-		{
-			Mouvement nextMouv = new Glissade(ObjectType.HEROS,beginSliding_l?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
-			int nextMouvIndex = (beginSliding_l ? 0 :1);
-			
-			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
-			if(success){
-				mouv_index = nextMouvIndex;
-				setMouvement(nextMouv);
-				getMouvement().setSpeed(this, mouv_index);
-				deplaceSautGauche=false;
-				deplaceSautDroit=false;
-				localVit.x=(0);
-				setMouvIndex(mouv_index);
-			}
-			return;
-		}
-		ModelPrincipal.debugTime.elapsed("slide");
-
-		if((beginAccroche_r || beginAccroche_l) && !getMouvement().isMouvement(MouvEntityEnum.ACCROCHE))
-		{
-			Mouvement nextMouv= new Accroche(ObjectType.HEROS, beginAccroche_l? SubMouvAccrocheEnum.ACCROCHE_GAUCHE:SubMouvAccrocheEnum.ACCROCHE_DROITE,partie.getFrame());
-			int nextMouvIndex = (beginAccroche_l?0:2);
-
-			//Manually align hitbox 
-			int xdir = beginAccroche_l ? -1 :1;
-			int ydir = -1; //get upper part of hitbox
-
-			double ycurrentup = Hitbox.supportPoint(new Vector2d(0,ydir), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),getMouvement(), herosMouvIndex,getScaling()).polygon).y;
-			//get value to align hitbox 
-			double dx= Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),getMouvement(), herosMouvIndex,getScaling()).polygon).x -
-					Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouv, nextMouvIndex,getScaling()).polygon).x;
-
-			double dy= ycurrentup -
-					Hitbox.supportPoint(new Vector2d(0,ydir), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouv, nextMouvIndex,getScaling()).polygon).y;
-
-			//align to lower bloc: make ycurrentup align with top of collider hitbox 
-
-			double colliderTopY=0;
-			if(beginAccroche_r)
-			{
-				colliderTopY= Hitbox.supportPoint(new Vector2d(0,-1), hitboxesToSlideAccrocheOn[3].polygon).y; //right accroche hitbox
-			}
-			else
-			{
-				colliderTopY= Hitbox.supportPoint(new Vector2d(0,-1), hitboxesToSlideAccrocheOn[2].polygon).y;//left accroche hitbox
-			}
-			double align_to_ground = colliderTopY-ycurrentup;
-
-			addXpos_sync((int)dx);
-			addYpos_sync((int)dy);
-			addYpos_sync((int) align_to_ground);
-
-
-			boolean motionSuccess = true;
-			
-			motionSuccess= isNextMouvValid(nextMouv,nextMouvIndex, partie, true);
-			accrocheCooldownTimer=PartieTimer.me.getElapsedNano();
-
-			if(motionSuccess){
-				for(Collidable eff : partie.arrowsEffects){
-					if(eff instanceof Roche_effect){
-						Roche_effect r_eff = (Roche_effect) eff;
-						if((r_eff.groundEffect) && (eff == accrocheCol))
-						{
-							r_eff.registerAccrocheCol(this);
-						}
-					}
-				}
-				useGravity=false;
-				
-				setMouvement(nextMouv);
-				mouv_index=nextMouvIndex;
-				getMouvement().setSpeed(this, nextMouvIndex);
-
-				setMouvIndex(mouv_index);
-				return;
-			}
-			else
-			{
-				addXpos_sync((int)-dx);
-				addYpos_sync((int)-dy);
-				addYpos_sync((int)-align_to_ground);
-			}
-
-		}
-		ModelPrincipal.debugTime.elapsed("accroche");
-
-		if(falling)
-		{
-			peutSauter=false;
-			if(!(getMouvement().isMouvement(MouvEntityEnum.GLISSADE)||getMouvement().isMouvement(MouvEntityEnum.COURSE)
-					||getMouvement().isMouvement(MouvEntityEnum.ACCROCHE)))
-			{
-				int up = getGlobalVit(partie).y>=0 ? 1 : 0;
-				SubTypeMouv sub_type_mouv = droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ? (up==0?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.FALL_GAUCHE) :
-					(up==0?SubMouvSautEnum.JUMP_DROITE:SubMouvSautEnum.FALL_DROITE);
-				Mouvement nextMouv = new Saut(ObjectType.HEROS,sub_type_mouv,partie.getFrame());
-				int nextMouvIndex = (droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ? 0+up :3+up);
-				
-				boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
-				if(success){
-					herosMouvIndex = nextMouvIndex;
-					mouv_index=nextMouvIndex;
-					setMouvement(nextMouv);
-					getMouvement().setSpeed(this, mouv_index);
-					beginSliding= computeBeginSliding(partie,blocDroitGlisse,blocGaucheGlisse,(falling&&!landing));
-				}
-			}
-		}
-
-		if(getMouvement().isMouvement(MouvEntityEnum.ACCROCHE))
-		{			
-			if( (mouv_index == 1 || mouv_index == 3) && getMouvement().animEndedOnce())
-			{
-				int nextMouvIndex = (droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ? 0 :2);
-				Mouvement nextMouv = new Attente(ObjectType.HEROS,droite_gauche(herosMouvIndex),partie.getFrame());
-				
-				boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
-				if(success){
-					mouv_index= nextMouvIndex;
-					setMouvement(nextMouv);
-					getMouvement().setSpeed(this, mouv_index);
-	
-	
-	
-					//on reinitialise les variables de saut 
-					debutSaut = false;
-					finSaut = false;
-					useGravity=false;
-					peutSauter = true;
-					sautGlisse = false;
-					sautAccroche=false;
-					setMouvIndex(mouv_index);
-					return;
-				}
-			}
-		}
-		else if(landing) //atterrissage: accroupi 
-		{
-			Mouvement nextMouv = new Saut(ObjectType.HEROS,droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ?SubMouvSautEnum.LAND_GAUCHE:SubMouvSautEnum.LAND_DROITE,partie.getFrame());
-			int nextMouvIndex = (droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE)? 2 : 5 );
-			//on ajuste la position du personnage pour qu'il soit centre 
-			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
-			if(success){
-				finSaut=false;//set landing to false
-				setMouvement(nextMouv);
-				mouv_index= nextMouvIndex;
-				getMouvement().setSpeed(this, mouv_index);
-	
-				setMouvIndex(mouv_index);
-				return;
-			}
-		}
-		else if(standup)//atterissage: se releve
-		{
-
-			int nextMouvIndex = runBeforeJump? (droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ? 0 : 4 ) : (droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ? 0 : 2 );
-			Mouvement_entity nextMouv=  runBeforeJump? new Course(ObjectType.HEROS,droite_gauche(herosMouvIndex),partie.getFrame()) 
-					: new Attente(ObjectType.HEROS,droite_gauche(herosMouvIndex),partie.getFrame());
-			//on ajuste la position du personnage pour qu'il soit centre
-			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
-			if(success){
-				//on choisit la direction d'attente			
-				localVit.x=(0);
-				finSaut=false;
-				peutSauter=true;
-				mouv_index=nextMouvIndex;
-				setMouvement(nextMouv);
-	
-				setMouvIndex(mouv_index);
-				return;
-			}
-
-		}
-		else if(landSliding)
-		{
-
-			Mouvement nextMouv = new Attente(ObjectType.HEROS,droite_gauche(herosMouvIndex),partie.getFrame());
-			int nextMouvIndex = (droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ? 0 : 2 );
-			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
-			if(success){
-				finSaut=false;
-				//on ajuste la position du personnage pour qu'il soit centre
-				mouv_index= nextMouvIndex;
-				setMouvement(nextMouv);
-				localVit.y=(0);
-				setMouvIndex(mouv_index);
-				return;
-			}
-		}
-
-		else if(endSliding)
-		{
-
-			int nextMouvIndex= (droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ? 1 :4);
-			Mouvement nextMouv = new Saut(ObjectType.HEROS,droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ?SubMouvSautEnum.FALL_GAUCHE: SubMouvSautEnum.FALL_DROITE,partie.getFrame());
-			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
-			if(success){
-				mouv_index = nextMouvIndex;
-				setMouvement(nextMouv);
-				getMouvement().setSpeed(this, mouv_index);
-				localVit.x=(0);
-				nouvMouvIndex=mouv_index;	
-				setMouvIndex(mouv_index);
-				return;
-			}
-		}
-		ModelPrincipal.debugTime.elapsed("fall");
-
-		//Call function to check if move is allowed
-		boolean allowed = moveAllowed(nouvMouv,nouvMouvIndex);
-		//CHANGEMENT DE MOUVEMENT
-		ModelPrincipal.debugTime.elapsed("move allow");
-
-		if(nouvMouv!=null && allowed)
-		{
-			boolean accroche_not_enough_space = false;
-
-			if(nouvMouv.isMouvement(MouvEntityEnum.ACCROCHE) && ( (nouvMouvIndex == 1) || (nouvMouvIndex == 3)))
-			{				
-				//manually align hitbox 
-				int xdir = (nouvMouvIndex == 1) ? -1 :1;
-				int ydir_up = -1; //get upper part of hitbox
-				int ydir_down = 1; //get lower part of hitbox
-
-				//top of hitbox should now be bottom of next hitbox 
-				//Manually align hitbox 
-
-				double ycurrentup = Hitbox.supportPoint(new Vector2d(0,ydir_up), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),getMouvement(), herosMouvIndex,getScaling()).polygon).y;
-				//get value to align hitbox 
-				double next_x = Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nouvMouv, nouvMouvIndex,getScaling()).polygon).x;
-				double dx= Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),getMouvement(), herosMouvIndex,getScaling()).polygon).x -
-						next_x;
-
-				double next_y_bottom = Hitbox.supportPoint(new Vector2d(0,ydir_down), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nouvMouv, nouvMouvIndex,getScaling()).polygon).y;
-				double dy= ycurrentup -next_y_bottom;
-
-				//Variables to test  if the heros would have enough space to stand up
-				Mouvement nextMouv_space = new Attente(ObjectType.HEROS,droite_gauche(nouvMouvIndex),partie.getFrame());
-				int nextMouvIndex_space = (droite_gauche(nouvMouvIndex).equals(DirSubTypeMouv.GAUCHE) ? 0 : 2 );
-				double x_space= Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouv_space, nextMouvIndex_space,getScaling()).polygon).x;
-				double y_bottom_space= Hitbox.supportPoint(new Vector2d(0,ydir_down), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouv_space, nextMouvIndex_space,getScaling()).polygon).y;
-
-				//Normal match 
-				int xdecall = 12 *  ((nouvMouvIndex==1)? -1:1);
-				addXpos_sync((int) (dx + xdecall));
-				addYpos_sync( (int) (dy-1));
-
-				//test if the heros would have enough space to stand up
-				double dx_space= next_x -x_space;
-				double dy_space= next_y_bottom -y_bottom_space;
-				//test if heros collide when stand up 
-				addXpos_sync( (int) (dx_space));
-				addYpos_sync( (int) (dy_space));
-
-				Hitbox attenteHit = getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouv_space, nextMouvIndex_space,getScaling()).copy();
-				accroche_not_enough_space=Collision.isWorldCollision(partie,attenteHit , true);
-				addXpos_sync( (int) (-dx_space));
-				addYpos_sync( (int) (-dy_space));
-				//revert motion if stuck
-				if(accroche_not_enough_space)
-				{
-					addXpos_sync((int) (-dx - xdecall));
-					addYpos_sync( (int) (1-dy));
-
-				}
-
-			}
-
-			else{
-				boolean success = alignNextMouvement(partie,nouvMouv, nouvMouvIndex);
-			}
-			if(nouvMouv.isMouvement(MouvEntityEnum.SAUT) && debutSaut)
-			{
-				if(getMouvement().isMouvement(MouvEntityEnum.COURSE))
-					runBeforeJump=true;
-				else
-					runBeforeJump=false;
-			}
-
-			if(!accroche_not_enough_space)
-			{
-				mouv_index=nouvMouvIndex;
-				setMouvement(nouvMouv);
-			}
-			getMouvement().setSpeed(this, mouv_index);
-			nouvMouv = null;
-			nouvMouvIndex = -1;
-		}
-		else
-			//if(!partie.changeMouv ) // MEME MOUVEMENT QUE PRECEDEMMENT
-		{
-			int nextMouvIndex = getMouvement().updateAnimation(herosMouvIndex, partie.getFrame(),conditions.getSpeedFactor());
-			if(mouv_index!=nextMouvIndex){
-				boolean success = alignNextMouvement(partie,nouvMouv, nouvMouvIndex);
-				if(success)
-					mouv_index= nextMouvIndex;				
-			}
-			getMouvement().setSpeed(this, mouv_index);
-
-		}
-		ModelPrincipal.debugTime.elapsed("End changeMouvIndex");
-
-		setMouvIndex(mouv_index);
-	}*/
-
-	/* ***REMOVE public void afterChangeMouv(AbstractModelPartie partie)
-	{
-		if(!getMouvement().isMouvement(MouvEntityEnum.ACCROCHE)){
-			//unregister accroche from roche_effect
-			for(Collidable eff : partie.arrowsEffects){
-				if(eff instanceof Roche_effect)
-				{
-					Roche_effect r_eff = (Roche_effect) eff;
-					if(r_eff.groundEffect)
-						r_eff.unregisterAccrocheCol(this);
-				}
-			}
-			accrocheCol=null;
-		}
-	}*/
 
 	private boolean[] computeSlide_Accroche(AbstractModelPartie partie,boolean slide, boolean blocDroitGlisse, boolean blocGaucheGlisse, boolean blocDroitAccroche, boolean blocGaucheAccroche, boolean falling)
 	{
 		boolean blocGauche = slide? blocGaucheGlisse : (!blocGaucheGlisse && blocGaucheAccroche);
 		boolean blocDroit = slide? blocDroitGlisse:  (!blocDroitGlisse && blocDroitAccroche);
 		boolean falling_running = ( falling && getMouvement().isMouvement(EntityTypeMouv.COURSE)) || getMouvement().isMouvement(EntityTypeMouv.SAUT);
-		// ***REMOVE? boolean accrocheCooldownDone = slide? true : (PartieTimer.me.getElapsedNano() - accrocheCooldownTimer) > InterfaceConstantes.ACCROCHE_COOLDOWN;
 		//Special case in which accroche should not happen : if object is dragged or if wind arrow stick to it 
 		boolean no_accroche= slide? false  : this.isDragged(); 
-		boolean res_d =  (blocGauche&&(last_colli_left||getGlobalVit().x<0)) && falling_running && !no_accroche;// ***REMOVE && accrocheCooldownDone; 
-		boolean res_g =  (blocDroit && (last_colli_right||getGlobalVit().x>0))&& falling_running  && !no_accroche;// ***REMOVE && accrocheCooldownDone; 
+		boolean res_d =  (blocGauche&&(last_colli_left||getGlobalVit().x<0)) && falling_running && !no_accroche;
+		boolean res_g =  (blocDroit && (last_colli_right||getGlobalVit().x>0))&& falling_running  && !no_accroche;
 
 		boolean[] res ={res_d,res_g};
 		//caution for accroche, res_d is actually res_l, and res_l res_d
@@ -1815,27 +1059,6 @@ public class Heros extends Entity{
 	{
 		return computeSlide_Accroche(partie,false,blocDroitGlisse,blocGaucheGlisse,blocDroitAccroche,blocGaucheAccroche,falling);
 	}
-
-	/* ***REMOVE private boolean moveAllowed(Mouvement nextMove, int nextMouvIndex)
-	{
-		if(nextMove==null)
-			return true;
-		Mouvement currentM = getMouvement();
-
-		boolean allowed=true;
-
-		//Unexpected behaviour: attente/marche while being in the air(ie current move being saut/glissade )
-		//Unexpected behaviour: going right/left in the air while landing
-
-		boolean inAirAllowed = !( (currentM.isMouvement(MouvEntityEnum.SAUT) || currentM.isMouvement(MouvEntityEnum.GLISSADE)) &&
-				(nextMove.isMouvement(MouvEntityEnum.ATTENTE) || nextMove.isMouvement(MouvEntityEnum.MARCHE) ));
-
-		boolean airLandingAllowed= ! (currentM.isMouvement(MouvEntityEnum.SAUT) && nextMove.isMouvement(MouvEntityEnum.SAUT) && 
-				((getMouvIndex()==2) || (getMouvIndex()==5) )) ; //movement in air allowed only if not landing
-
-		allowed = allowed && airLandingAllowed && inAirAllowed;
-		return allowed; 
-	}*/
 	
 	/***
 	 * 
@@ -1873,17 +1096,7 @@ public class Heros extends Entity{
 	public boolean alignNextMouvement(AbstractModelPartie partie,Mouvement nextMouv, int nextIndex){
 		
 		int currentMouvIndex = getMouvIndex();
-		/*REMOVE boolean isGlissade = getMouvement().isMouvement(MouvEntityEnum.GLISSADE);
-		boolean going_left = getGlobalVit(partie).x<0;
-
-		boolean facing_left_still= getGlobalVit(partie).x==0 &&(droite_gauche(currentMouvIndex).equals(DirSubTypeMouv.GAUCHE)|| last_colli_left)&& !isGlissade;
-		boolean sliding_left_wall = (droite_gauche(currentMouvIndex)==DirSubTypeMouv.DROITE) && isGlissade;
-		boolean start_falling_face_right = (!getMouvement().isMouvement(MouvEntityEnum.SAUT) && nextMouv.isMouvement(MouvEntityEnum.SAUT)) 
-				&& (droite_gauche(currentMouvIndex).equals(DirSubTypeMouv.DROITE));
-		boolean start_falling_face_left = (!getMouvement().isMouvement(MouvEntityEnum.SAUT) && nextMouv.isMouvement(MouvEntityEnum.SAUT)) 
-				&& (droite_gauche(currentMouvIndex).equals(DirSubTypeMouv.GAUCHE));
-		boolean left = ! start_falling_face_left && ( going_left|| facing_left_still ||sliding_left_wall || blocGaucheGlisse || start_falling_face_right) ; 
-		boolean down = getGlobalVit(partie).y>=0; */
+		
 		// handle case where heros is near a cliff and moves above it, we want the heros to fall => align to the back of the heros (ie : move right, align left)
 		
 		//Start falling facing left or right
@@ -1973,47 +1186,16 @@ public class Heros extends Entity{
 		//mult = 0.5 : last_time += 0.5 delta : elapsed time -0.5 * delta = 0.5 delta = mult
 		double mult = conditions.getSpeedFactor();
 		double deltaShoot = (System.nanoTime() - last_update_shoot_time) * (mult-1);
-		// ***REMOVE double deltaArmed = (System.nanoTime() - last_update_armed_time) * (mult-1);
 		
 		last_shoot_time -= deltaShoot;
-		// ***REMOVE last_armed_time -= deltaArmed;
 		
 		last_update_shoot_time=System.nanoTime();
-		// ***REMOVE last_update_armed_time=System.nanoTime();
 	}
 	@Override
 	protected boolean shouldUpdateSpeed(){
 		return shouldUpdateSpeed;
 	}
-	//Move the character to center it before the animation change.
-	/*REMOVE public void alignHitbox(int currentMouvIndex,Mouvement depSuiv, int nextMouvIndex, AbstractModelPartie partie,boolean blocGaucheGlisse)
-	{
-		alignHitbox(currentMouvIndex, depSuiv, nextMouvIndex, partie, blocGaucheGlisse,null,null);
-	}
-	public void alignHitbox(int currentMouvIndex,Mouvement depSuiv, int nextMouvIndex, AbstractModelPartie partie,boolean blocGaucheGlisse, Boolean forcedleft,
-			Boolean forcedDown )
-	{
-		boolean isGlissade = getMouvement().isMouvement(MouvEntityEnum.GLISSADE);
-		boolean going_left = getGlobalVit(partie).x<0;
-
-		boolean facing_left_still= getGlobalVit(partie).x==0 &&(droite_gauche(currentMouvIndex).equals(DirSubTypeMouv.GAUCHE)|| last_colli_left)&& !isGlissade;
-		boolean sliding_left_wall = (droite_gauche(currentMouvIndex)==DirSubTypeMouv.DROITE) && isGlissade;
-		boolean start_falling_face_right = (!getMouvement().isMouvement(MouvEntityEnum.SAUT) && depSuiv.isMouvement(MouvEntityEnum.SAUT)) 
-				&& (droite_gauche(currentMouvIndex).equals(DirSubTypeMouv.DROITE));
-		boolean start_falling_face_left = (!getMouvement().isMouvement(MouvEntityEnum.SAUT) && depSuiv.isMouvement(MouvEntityEnum.SAUT)) 
-				&& (droite_gauche(currentMouvIndex).equals(DirSubTypeMouv.GAUCHE));
-		boolean left = ! start_falling_face_left && ( going_left|| facing_left_still ||sliding_left_wall || blocGaucheGlisse || start_falling_face_right) ; 
-		boolean down = getGlobalVit(partie).y>=0; 
-
-		if(forcedleft!=null)
-			left=forcedleft;
-		if(forcedDown!=null)
-			down=forcedDown;
-		last_align_left=left;
-		last_align_down=down;
-		super.alignHitbox(currentMouvIndex,depSuiv, nextMouvIndex, partie,left, down,this,!depSuiv.isMouvement(MouvEntityEnum.GLISSADE));
-	}*/
-
+	
 	@Override
 	public void resetVarBeforeCollision()
 	{
@@ -2188,9 +1370,6 @@ public class Heros extends Entity{
 		//Do nothing
 	}
 
-	private void updateVarSaut(boolean falling, boolean accroche, boolean glisse) {
-		this.canJump=!falling;
-	}
 	@Override
 	public void destroy(AbstractModelPartie partie,boolean destroyNow) {
 		//Remove all related effects 

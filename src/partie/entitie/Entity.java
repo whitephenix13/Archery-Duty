@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import debug.DebugStack;
 import gameConfig.ObjectTypeHelper;
 import gameConfig.ObjectTypeHelper.ObjectType;
+import menu.menuPrincipal.GameHandler;
 import partie.collision.Collidable;
 import partie.collision.Collision;
 import partie.collision.Hitbox;
@@ -13,6 +14,7 @@ import partie.effects.Effect;
 import partie.effects.Grappin_effect;
 import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.DamageDrawer;
 import partie.mouvement.entity.Mouvement_entity.EntityTypeMouv;
 import utils.Vitesse;
 
@@ -22,8 +24,14 @@ public abstract class Entity extends Collidable{
 	public float MINLIFE ;
 	protected float life;
 	public ArrayList<Effect> currentEffects;
-
+	public ArrayList<DamageDrawer> lastDamageTaken;
+	
 	public double last_feu_effect_update = -1;
+	
+	public boolean airJumping = false;
+	public boolean wallJumping = false;
+	public boolean groundJumping = false;
+	public boolean draggable =true;
 
 	public abstract void onAddLife();
 	
@@ -32,6 +40,7 @@ public abstract class Entity extends Collidable{
 		super();
 		conditions= new ConditionHandler();
 		currentEffects  = new ArrayList<Effect>();
+		lastDamageTaken = new ArrayList<DamageDrawer>();
 	}
 	
 	public float getLife()
@@ -41,11 +50,18 @@ public abstract class Entity extends Collidable{
 
 	public void addLife(double add)
 	{
+		if(add==0)
+			return;
+		
 		if(add<0)
 			add = conditions.onDamageReceived(add);
+		
+		float prevLife = life;
 		life += add;
 		if(life>MAXLIFE){life=MAXLIFE;}
 		if(life<MINLIFE){life=MINLIFE;}
+		
+		lastDamageTaken.add(new DamageDrawer(add));
 		//used to check if entitie should die
 		onAddLife();
 	}
@@ -74,7 +90,21 @@ public abstract class Entity extends Collidable{
 		boolean res =  Collision.isWorldCollision(partie,hit,true);
 		return res;
 	}
-	
+	protected void setJumpSpeed(boolean isWallJumping,boolean isAirJumping, boolean isGroundJumping){
+		if(isAirJumping)
+			airJumping = true;
+		else if(isWallJumping)
+			wallJumping = true;
+		else 
+			groundJumping = true;
+		getMouvement().setSpeed(this, getMouvIndex());
+		if(isAirJumping)
+			airJumping = false;
+		else if(isWallJumping)
+			wallJumping = false;
+		else 
+			groundJumping = false;
+	}
 	@Override 
 	public void deplaceOutOfScreen(AbstractModelPartie partie)
 	{
@@ -116,7 +146,6 @@ public abstract class Entity extends Collidable{
 		currentEffects.remove(eff);
 	}
 
-	public boolean draggable =true;
 	public boolean isDragged(){
 		for(Effect eff:currentEffects)
 		{
@@ -130,5 +159,15 @@ public abstract class Entity extends Collidable{
 			}
 		}
 		return false;
+	}
+	
+	public void beforeGraphicUpdate(){
+		ArrayList<DamageDrawer> toDelete = new ArrayList<DamageDrawer>();
+		for(DamageDrawer damageDrawer : lastDamageTaken){
+			if(!damageDrawer.shouldDraw())
+				toDelete.add(damageDrawer);
+		}
+		for(DamageDrawer obj : toDelete)
+			lastDamageTaken.remove(obj);
 	}
 }

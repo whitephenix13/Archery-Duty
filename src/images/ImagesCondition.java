@@ -9,6 +9,7 @@ import partie.conditions.Condition.ConditionEnum;
 public class ImagesCondition extends ImagesContainer{
 
 	private static String path ="resources/conditions/";
+	public static ImagesCondition me=null; //singleton
 	Image im_brulure =null;
 	Image im_regeneration =null;
 	Image im_lenteur =null;
@@ -20,7 +21,11 @@ public class ImagesCondition extends ImagesContainer{
 	Image im_force =null;
 	Image im_faiblesse =null;
 
-	public ImagesCondition (){super("Image conditions");}
+	public ImagesCondition (){
+		super("Image conditions");
+		if(me==null)
+			me=this;
+	}
 
 	@Override
 	public void run() {

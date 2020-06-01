@@ -48,12 +48,11 @@ public class Spirel extends Monstre{
 	public double getSquaredAttackDistance(){return squaredAttackDistance*getScaling().lengthSquared();} //need to multiply by scaling squared
 	private boolean cooldown=true;
 
-	public boolean peutSauter = true;
 	public boolean sautDroit= false;
 	public boolean sautGauche= false;
-	private boolean wasGrounded=false;
 	private boolean prevDirectionWasRight = false;
-		
+	
+	private boolean shouldUpdateSpeed = true;
 	public enum AISpirelAction implements AIAction{WAIT,MOVE_TOWARDS_HERO,MOVE_AWAY_HERO,JUMP,JUMP_ABOVE_OBSTACLE,WAIT_CLOSE_TO_HOLE,JUMP_ABOVE_HOLE,AVOID_HOLE,MOVE_TOWARDS_HOLE,MOVE_AWAY_HOLE,SHOOT};
 
 	/**
@@ -72,9 +71,7 @@ public class Spirel extends Monstre{
 		setMouvement(new Attente(ObjectType.SPIREL,DirSubTypeMouv.GAUCHE,current_frame));
 		setMouvIndex(1);
 
-		finSaut=false;
-		peutSauter=false;
-		glisse=false;
+		wasGrounded=false;
 
 		//Param from Collidable
 		fixedWhenScreenMoves=false;
@@ -120,6 +117,8 @@ public class Spirel extends Monstre{
 		else
 			return normCollision;
 	}
+	@Override
+	protected void onStartDeplace(){shouldUpdateSpeed=true;}
 	/***
 	 * Handle non mouvement based inputs
 	 * @param partie
@@ -227,7 +226,7 @@ public class Spirel extends Monstre{
 				boolean blocRightUp= nearObstacle(partie,1,InterfaceConstantes.TAILLE_BLOC);
 				boolean blocLeftUp= nearObstacle(partie,-1,InterfaceConstantes.TAILLE_BLOC);
 				
-				boolean jumpAbove= (droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE)? (blocLeft && !blocLeftUp) : (blocRight && !blocRightUp) ) && peutSauter;
+				boolean jumpAbove= (droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE)? (blocLeft && !blocLeftUp) : (blocRight && !blocRightUp) ) && wasGrounded;
 				boolean inAir= getMouvement().isMouvement(EntityTypeMouv.SAUT);
 				boolean holeClose= (droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE)? (!blocLeftDown) : (!blocRightDown) );
 
@@ -288,16 +287,10 @@ public class Spirel extends Monstre{
 	}
 	
 	private void setMouvement(AbstractModelPartie partie,Mouvement newMouv, int newMouvIndex){
-		System.out.println("Set mouvement "+ newMouv+" "+newMouvIndex);
-		if(!getMouvement().getTypeMouv().equals(EntityTypeMouv.SAUT) && newMouv.getTypeMouv().equals(EntityTypeMouv.SAUT)){
-			peutSauter = false;
-		}
 		if(wasGrounded){
 			useGravity=false;
-			peutSauter=true;
 			sautDroit=false;
 			sautGauche=false;
-			finSaut=false;
 		}
 		setMouvement(newMouv);
 		setMouvIndex(newMouvIndex);
@@ -311,12 +304,9 @@ public class Spirel extends Monstre{
 		boolean isFacingLeft = getMouvement().droite_gauche(getMouvIndex(), getRotation()).equals(DirSubTypeMouv.GAUCHE);
 		boolean falling= !isGrounded(partie);
 		wasGrounded = !falling;
-		boolean landing= (finSaut||!falling) && getMouvement().isMouvement(EntityTypeMouv.SAUT);
+		boolean landing= !falling && getMouvement().isMouvement(EntityTypeMouv.SAUT);
 		if(falling)
 			useGravity=falling;
-		//update variable since the spirel can be ejected 
-		this.peutSauter=!falling;
-		this.finSaut=this.finSaut && !falling;
 		
 		ModelPrincipal.debugTime.elapsed("Spirel chang mouv: init var");
 		//chute
@@ -435,12 +425,14 @@ public class Spirel extends Monstre{
 				}
 			}
 		}
-		else if(getCurrentInputPool().isInputDown(InputType.JUMP)){
+		else if(getCurrentInputPool().isInputDown(InputType.JUMP) && wasGrounded){
 			int nextMouvIndex = isFacingLeft?0:1;
 			Mouvement nextMouv = new Saut(ObjectType.SPIREL,isFacingLeft?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE,partie.getFrame());
 			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
 			if(success){
 				setMouvement(partie,nextMouv,nextMouvIndex);
+				shouldUpdateSpeed = false;
+				setJumpSpeed(false,false,true);
 				return true;
 			}
 		}
@@ -453,7 +445,6 @@ public class Spirel extends Monstre{
 				Mouvement nextMouv = new Saut(ObjectType.SPIREL,!shouldMoveRight?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE,partie.getFrame());
 				
 				boolean isSameMouvement = getMouvement().isMouvement(EntityTypeMouv.SAUT) && ((!shouldMoveRight&& isFacingLeft)||(shouldMoveRight && !isFacingLeft));
-				System.out.println("shouldMoveright "+ shouldMoveRight +" isFacingRight "+ !isFacingLeft+" same mouv "+ isSameMouvement);
 				if(!isSameMouvement){
 					boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
 					if(success){
@@ -519,115 +510,6 @@ public class Spirel extends Monstre{
 	};
 
 	/**
-	 * Gère l'ensemble des événements lié au deplacement d'un monstre 
-	 * 
-	 * @param monstre, le monstre a deplacer 
-	 * @param heros, le personnage jouable
-	 * @param Monde, le niveau en cours 
-	 */		
-	//@Override
-	/* ***REMOVEpublic boolean deplac(AbstractModelPartie partie)
-	{
-		//ModelPrincipal.debugTime.startElapsedForVerbose();
-		//updateShootTime();
-		//ModelPrincipal.debugTime.elapsed("Spirel update shoot time" );
-		//compute the next desired movement 
-		IA(partie.tabTirMonstre,partie.heros,partie);
-		ModelPrincipal.debugTime.elapsed("Spirel IA");
-		//compute the true next movement depending on landing, gravity, ... 
-		changeMouv(partie);
-		ModelPrincipal.debugTime.elapsed("Spirel changeMouv");
-		return true;//move the object
-	}*/
-	
-	/**
-	 * IA pour le deplacement du monstre 
-	 * 
-	 * @param monstre, le monstre a deplacer 
-	 * @param heros, le personnage jouable
-	 * @param Monde, le niveau en cours  
-	 */	
-	
-	// ***REMOVE @Override
-	/**
-	 * 
-	 * 
-	 * @param monstre, le monstre a deplacer 
-	 * @param Monde, le niveau en cours 
-	 */	
-	/* ***REMOVE public void changeMouv (AbstractModelPartie partie)
-	{
-		ModelPrincipal.debugTime.startElapsedForVerbose();
-		boolean herosAGauche= getXpos()-(partie.heros.getXpos()-partie.xScreendisp)>=0;
-		boolean falling= !isGrounded(partie);
-		wasGrounded = !falling;
-		boolean landing= (finSaut||!falling) && getMouvement().isMouvement(MouvEntityEnum.SAUT);
-		if(falling)
-			useGravity=falling;
-		//update variable since the spirel can be ejected 
-		this.peutSauter=!falling;
-		this.finSaut=this.finSaut && !falling;
-		
-		ModelPrincipal.debugTime.elapsed("Spirel chang mouv: init var");
-		//chute
-		if(falling)
-		{
-			peutSauter=false;
-			int nextMouvIndex = herosAGauche? 0 : 1;
-			//no fall animation, put the jump instead
-			Mouvement_entity depSuiv=new Saut(ObjectType.SPIREL,herosAGauche?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE, partie.getFrame());
-			alignHitbox(getMouvIndex(),depSuiv,nextMouvIndex,partie);
-
-			//le monstre tombe, on met donc son animation de saut
-			setMouvIndex(nextMouvIndex);
-			setMouvement(depSuiv);
-			getMouvement().setSpeed(this,getMouvIndex());
-
-		}
-		ModelPrincipal.debugTime.elapsed("Spirel chang mouv: falling");
-		//atterrissage
-		if(landing)
-		{
-			int nextMouvIndex = herosAGauche? 0 : 1;
-			Mouvement_entity depSuiv=new Attente(ObjectType.SPIREL,herosAGauche?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
-			alignHitbox(getMouvIndex(),depSuiv,nextMouvIndex,partie);
-			setMouvIndex(nextMouvIndex);
-			setMouvement(depSuiv);
-			getMouvement().setSpeed(this,getMouvIndex());
-			useGravity=false;
-			peutSauter=true;
-			sautDroit=false;
-			sautGauche=false;
-			finSaut=false;
-			ModelPrincipal.debugTime.elapsed("Spirel chang mouv: landing");
-		}
-		//on execute l'action voulue
-		else
-		{
-			if(doitChangMouv)
-			{
-				//monstre.actionReussite= (decallageMonstre(monstre,monstre.nouvMouv,monstre.mouv_index,monstre.nouvAnim,false,false,partie));
-				alignHitbox(getMouvIndex(),nouvMouv,newMouvIndex,partie);
-
-				setMouvement(nouvMouv);
-				setMouvIndex(newMouvIndex);
-				getMouvement().setSpeed(this,getMouvIndex());
-				ModelPrincipal.debugTime.elapsed("Spirel chang mouv: doit changer mouv");
-
-			}
-			else 
-			{
-				int nextMouvIndex = getMouvement().updateAnimation(getMouvIndex(), partie.getFrame(),conditions.getSpeedFactor());
-				if(getMouvIndex() != nextMouvIndex){
-					alignHitbox(getMouvIndex(),getMouvement(),nextMouvIndex,partie);
-					setMouvIndex(nextMouvIndex);
-				}
-				getMouvement().setSpeed(this, getMouvIndex());
-				ModelPrincipal.debugTime.elapsed("Spirel chang mouv: meme mouv");
-			}
-		}
-	}*/
-	/**
 	 * Align to the rigth/left/up/down the next movement/hitbox to the previous one
 	 * @param monstre
 	 * @param currentMouvIndex
@@ -646,7 +528,6 @@ public class Spirel extends Monstre{
 		
 		boolean success = false;
 		try{
-			System.out.println("Align "+ nextMouv +" "+nextMouvIndex);
 			success = super.alignNextMouvement(partie, nextMouv, nextMouvIndex, left? XAlignmentType.LEFT : XAlignmentType.RIGHT,
 					down?YAlignmentType.BOTTOM : YAlignmentType.TOP , true, !nextMouv.isMouvement(EntityTypeMouv.GLISSADE));
 		} catch(Exception e){e.printStackTrace();}
@@ -707,7 +588,10 @@ public class Spirel extends Monstre{
 	@Override
 	public void handleDeplacementSuccess(AbstractModelPartie partie) {
 	}
-	
+	@Override
+	protected boolean shouldUpdateSpeed(){
+		return shouldUpdateSpeed;
+	}
 	@Override
 	public void resetVarBeforeCollision()
 	{

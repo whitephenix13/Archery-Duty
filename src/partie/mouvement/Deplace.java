@@ -13,6 +13,7 @@ import partie.effects.Effect;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.DamageDrawer;
 import partie.mouvement.entity.Mouvement_entity;
 import partie.mouvement.entity.Mouvement_entity.EntityTypeMouv;
 
@@ -112,6 +113,7 @@ public class Deplace implements InterfaceConstantes{
 			
 			//Apply conditions damage 
 			enti.addLife(enti.conditions.conditionDamageReceived());
+			
 		}
 		
 		ModelPrincipal.debugTime.elapsed("update conditions");

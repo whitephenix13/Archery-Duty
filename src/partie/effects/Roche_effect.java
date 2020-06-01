@@ -290,7 +290,6 @@ public class Roche_effect extends Effect{
 	 */
 	public void startDestroyAnim(int current_frame,boolean force)
 	{
-		System.out.println("==============startDestroyAnim with force: "+ force);
 		if(groundEffect)
 		{
 			if(force)

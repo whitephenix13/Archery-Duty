@@ -37,8 +37,8 @@ public class Saut extends Mouvement_entity{
 			
 			List<List<Point>> hitboxCreation = new ArrayList<List<Point>>();
 			//add for every edge, a list of point depending on the animation
-			List<Integer> xg = Arrays.asList(35,27,27,10,12,4);
-			List<Integer> xd = Arrays.asList(74,71,69,49,56,46);
+			List<Integer> xg = Arrays.asList(30,30,30,10,10,10);
+			List<Integer> xd = Arrays.asList(71,71,71,51,51,51);
 			List<Integer> yh = Arrays.asList(10,12,0,10,12,0);
 			List<Integer> yb = Arrays.asList(96,98,86,96,98,86);
 
@@ -210,7 +210,7 @@ public class Saut extends Mouvement_entity{
 			int xspeed=(int)(3.0 / Config.ratio_fps());//10000
 			int yspeed=(int)(13.0 / Config.ratio_fps());//15000
 
-			if(spirel.peutSauter)
+			if(spirel.groundJumping)
 				return new Vitesse(object.localVit.x,-1*yspeed);
 			
 			if(spirel.sautGauche && ! spirel.sautDroit)

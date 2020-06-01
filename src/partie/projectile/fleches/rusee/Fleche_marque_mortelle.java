@@ -222,7 +222,6 @@ public class Fleche_marque_mortelle extends Rusee{
 		Vector2d dir = Deplace.angleToVector(getRotation());
 		Vector2d thisMid = Hitbox.getObjMid(partie, this);
 		Vector2d target=null;
-		System.out.println("1");
 		//If we have not found the first target => find closest target to mouse
 		if(firstTarget)
 		{
@@ -242,11 +241,9 @@ public class Fleche_marque_mortelle extends Rusee{
 			stopTargeting =true;
 			target = null;
 		}
-		System.out.println("2");
 		ModelPrincipal.debugTime.elapsed("find target");
 		if(target!=null){
 			ArrayList<Point> nextPathPoints = pathAlgo.GetNextTargets(partie, this, dir, target,MAX_NUMBER_TARGET);
-			System.out.println("2-1-1");
 			ModelPrincipal.debugTime.elapsed("get next targets");
 			if(nextPathPoints != null && nextPathPoints.size()>0){
 				//Point to the next target and move to exactly end up at the target point.
@@ -268,7 +265,6 @@ public class Fleche_marque_mortelle extends Rusee{
 					shouldSetSpeed=false;
 					ModelPrincipal.debugTime.elapsed("set speed with targeting");
 				}
-				System.out.println("2-1-z");
 			}
 			else if(!stopTargeting)
 			{
@@ -287,7 +283,6 @@ public class Fleche_marque_mortelle extends Rusee{
 				shouldSetSpeed=false;
 				stopTargeting=true;
 				ModelPrincipal.debugTime.elapsed("set speed without targeting");
-				System.out.println("2-2-z");
 			}
 		}
 		else

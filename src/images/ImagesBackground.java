@@ -13,12 +13,15 @@ public class ImagesBackground extends ImagesContainer{
 	
 	private static String path ="resources/background/";
 	public enum ImBackgroundInfo implements ImageInfo{BLACK,WHITE};
-	
+	public static ImagesBackground me=null; //singleton
+
 	BufferedImage im_white =null;
 	BufferedImage im_black =null;
 	
 	public ImagesBackground() {
 		super("Image background");
+		if(me==null)
+			me=this;
 	}
 	
 	@Override

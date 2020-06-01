@@ -30,7 +30,7 @@ public class A_Star {
 	public enum DEBUG_INVALID_CANDIDATES {ALL,INDICES_ANGLE,INDICES,ANGLE}
 
 	public static int MAX_DISTANCE = InterfaceConstantes.WINDOW_WIDTH + 2* InterfaceConstantes.TAILLE_BLOC;//Maximum distance that the moving object can travel
-	static int MAX_ITERATION = 100;
+	static int MAX_ITERATION = 1000;
 	public static class A_Star_Parameters
 	{
 		protected boolean DEBUG = false;
@@ -289,24 +289,6 @@ public class A_Star {
 		return v.dot(dir) >=params.limCosAngle;
 	}
 
-	/**REMOVE
-	 * Return true if there is no collision
-	 * @param partie
-	 * @param elem
-	 * @param objectToMove
-	 * @return
-	 */
-	/*REMOVE public static boolean CheckCollision(A_Star_Parameters params,AbstractModelPartie partie,Point elem,Point max_dist_object)
-	{
-		Point worldCoordinate = CellToPos(params,elem);
-		Point p1 = new Point(worldCoordinate.x-max_dist_object.x/2,worldCoordinate.y-max_dist_object.y/2);
-		Point p2 = new Point(worldCoordinate.x+max_dist_object.x/2,worldCoordinate.y-max_dist_object.y/2);
-		Point p3 = new Point(worldCoordinate.x+max_dist_object.x/2,worldCoordinate.y+max_dist_object.y/2);
-		Point p4 = new Point(worldCoordinate.x-max_dist_object.x/2,worldCoordinate.y+max_dist_object.y/2);
-		Hitbox estimatedHit = new Hitbox(p1,p2,p3,p4);
-		boolean res = !Collision.isWorldCollision(partie, estimatedHit, true);
-		return res;
-	}*/
 	
 	/**
 	 * Check whether the object would collide when moving from the current cell to the neighbor. For that we compute the slided hitbox (hitbox of the trajectory of the object)
@@ -320,7 +302,6 @@ public class A_Star {
 		//Display the slided hitbox computed for collision so that it can be debbuged visually 
 		if(params.DEBUG && checkEarlyCollisionWithTip){ //TODO: remove checkEarlyCollisionWithTip
 			params.debugSlidedHitboxCheckedForCollision.add(slidedHitbox);
-			//TODO: set max dist 
 			int max_dist = params.max_step_size;
 			debugDraw(params,partie,new Point(max_dist,max_dist));
 			DebugBreak.breakAndUpdateGraphic(partie);

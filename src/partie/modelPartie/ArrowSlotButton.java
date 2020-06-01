@@ -10,6 +10,7 @@ import javax.swing.ImageIcon;
 import ActiveJComponent.ActiveEmptyBorder;
 import ActiveJComponent.ActiveJButton;
 import gameConfig.ObjectTypeHelper.ObjectType;
+import images.ImagesFlecheIcon;
 import option.Config;
 import option.Touches;
 import partie.projectile.fleches.Fleche;
@@ -34,7 +35,6 @@ public class ArrowSlotButton extends ActiveJButton{
 		
 		this.touches=touches;
 		slot=_slot;
-		isSelected = original_position==0;
 		this.setContentAreaFilled(false);
 		this.setBorder(new ActiveEmptyBorder(0,5,5,0));
 	}
@@ -63,22 +63,31 @@ public class ArrowSlotButton extends ActiveJButton{
 		this.setRolloverIcon(icon);
 		this.setPressedIcon(icon);
 	}
-	public static ArrowSlotButton[] setIcons(ArrowSlotButton[] buttons, Image[] images)
-	{
-		for(int i=0; i<buttons.length;++i)
-		{
-			buttons[i].setIcons(images[i]);
+	
+	/***
+	 * Init all buttons of a group
+	 */
+	public static void initSlotButtonGroup(ArrowSlotButton[] group,ObjectType firstTypeOfGroup){
+		
+		ObjectType[] outArrowType = new ObjectType[4];
+		Image[] allImagesForGroup = ((ImagesFlecheIcon)ImagesFlecheIcon.me).getAllImagesOfSameClass(firstTypeOfGroup,outArrowType);
+		
+		for(int i=0; i<group.length;++i){
+			//set the icons
+			group[i].setIcons(allImagesForGroup[i]);
+			//set the arrow type
+			group[i].arrowType=outArrowType[i];
+			//set the original position
+			group[i].setOriginalPosition();
+			//set the isSelected value 
+			group[i].isSelected = i==0;
 		}
-		return buttons;
+		
+		
+		
+		
 	}
-	public static void setArrowType (ArrowSlotButton[] buttons, ObjectType[] names)
-	{
-		for(int i=0; i<buttons.length;++i)
-		{
-			buttons[i].arrowType=names[i];
-			buttons[i].setOriginalPosition();
-		}
-	}
+
 	public static void switchButtonType (ArrowSlotButton button1, ArrowSlotButton button2)
 	{
 		Icon temp_icon = button1.getIcon();
@@ -108,8 +117,7 @@ public class ArrowSlotButton extends ActiveJButton{
 	public void paint(Graphics g)
 	{
 		super.paint(g);
-		
-		if(this.isActiveVisible() && isSelected && Config.showHotkeyWhenPlaying){
+		if(this.isActiveVisible() && isSelected && Config.showHotkeyWhenPlaying){ //this.isActiveVisible() && isSelected && Config.showHotkeyWhenPlaying
 			g.setColor(new Color(255,255,255,200));
 			g.fillRect(getBounds().width+xShiftStartHotKey, getBounds().height+yShiftStartHotKey, xSizeHotKey, ySizeHotKey);
 			g.setColor(Color.black);

@@ -247,9 +247,6 @@ public abstract class Collision implements InterfaceConstantes{
 	 */
 	private static boolean isWorldCollision(AbstractModelPartie partie, Collidable object,Hitbox objectHitbox ,boolean touchingIsColliding,boolean considerEffects)
 	{
-		if(object instanceof Effect){
-			System.out.println("Is world colli ");
-		}
 		List<Collidable> mondeBlocs = null;
 		Vector2d firstDir =new Vector2d(1,0);
 		Vector2d speed =new Vector2d(1,0);
@@ -271,20 +268,13 @@ public abstract class Collision implements InterfaceConstantes{
 		List<Collidable> effectColli = Collidable.getAllCollidableEffectOnScreen(partie);
 		List<Collidable> allColli = new ArrayList<Collidable>();
 		allColli.addAll(mondeBlocs);
-		if(object instanceof Effect){
-			System.out.println("Monde blocs "+ mondeBlocs+" for "+ objectHitbox+" "+objectHitbox.getXmin()+" "+objectHitbox.getXmax()+" "+objectHitbox.getYmin());
-		}
-		if((object == null || object.checkCollideWithEffect()) && considerEffects)
-		{
+	
+		if((object == null || object.checkCollideWithEffect()) && considerEffects){
 			allColli.addAll(effectColli);
 		}
-		if(object instanceof Effect){
-			System.out.println("Effect "+ effectColli);
-		}
+
 		allColli.remove(object);
-		if(object instanceof Effect){
-			System.out.println("remove  "+ object);
-		}
+
 		Double dInter=0.0d;
 		for(Collidable col : allColli)
 		{
@@ -297,9 +287,7 @@ public abstract class Collision implements InterfaceConstantes{
 			}
 
 			List<Vector2d> simplex = GJK_EPA.intersects(box.polygon,objectHitbox.polygon ,firstDir);
-			if(object instanceof Effect){
-				System.out.println("Check collision "+objectHitbox +" " + box +" : "+  simplex!= null);
-			}
+
 			List<Vector2d> normals = new ArrayList<Vector2d>();
 
 			int collision_type=-1;

@@ -267,7 +267,6 @@ public class Fleche extends Projectile implements InterfaceConstantes{
 			int hMouvIndex = shooter.getMouvIndex();
 			Point anchorPos = new Point(xanchor.get(hMouvIndex),yanchor.get(hMouvIndex));//xanchor relative to heros pos
 			Mouvement_entity shooterMouvement = (Mouvement_entity)shooter.getMouvement();
-			System.out.println("Shooter" + shooter+"Mouvement "+ shooter.getMouvement()+" mouv entity "+shooterMouvement);
 			Point herosAnchor = new Point(shooterMouvement.x_rot_pos.get(shooter.getMouvIndex()),shooterMouvement.y_rot_pos.get(shooter.getMouvIndex()));
 
 			//anchor should be the same as for the hero body parts 

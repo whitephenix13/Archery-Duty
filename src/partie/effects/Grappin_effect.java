@@ -176,8 +176,6 @@ public class Grappin_effect extends Effect{
 		}
 		else{
 			setRotation(Deplace.XYtoAngle(xPosRelative, yPosRelative));	
-			System.out.println(middleTailArrow +" "+ middleHeros);
-			System.out.println("Fleche grappin rotation "+ (getRotation()*180/Math.PI) + "for relative ("+xPosRelative+","+yPosRelative+")");
 		}
 	}
 

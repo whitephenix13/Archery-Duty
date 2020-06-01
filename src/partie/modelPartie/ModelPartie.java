@@ -330,8 +330,11 @@ public class ModelPartie extends AbstractModelPartie{
 
 
 			//update conditions for all entities. Only do it at the end to be sure that all entities received the same information on the conditions
-			for(Entity c : Collidable.getAllEntitiesCollidable(this))
+			//Also callback before graphical updates (ie: for the damage taken list to be updated before the graphic call)
+			for(Entity c : Collidable.getAllEntitiesCollidable(this)){
 				c.conditions.updateConditionState();
+				c.beforeGraphicUpdate();
+			}
 
 			ModelPrincipal.debugTime.elapsed("effect updates");
 
@@ -1070,9 +1073,16 @@ public class ModelPartie extends AbstractModelPartie{
 							,DrawImageHandler.MONSTRE));
 				}
 			}
+			//draw the damage
+			for(DamageDrawer damageDrawer : m.lastDamageTaken){
+				if(damageDrawer.shouldDraw()){
+					Point defaultPos = new Point(m.getXpos()+m.getCurrentXtaille()/2,m.getYpos()-35); 
+					Point drawPos = damageDrawer.getWorldDrawPos(defaultPos);
+					imageDrawer.addImage(new DrawImageItem(damageDrawer.getMessage(),drawPos.x+xScreendisp,drawPos.y+yScreendisp,damageDrawer.getColor(),Color.BLACK,
+							damageDrawer.getFontSize(),DrawImageHandler.INTERFACE));
+				} 
+			}
 
-
-			//drawBar(g,xDraw/2+xDraw_d/2-InterfaceConstantes.MAXLIFE/2,yDraw-10,InterfaceConstantes.MAXLIFE,5,m.getLife(),Color.BLACK,Color.GREEN);
 			if(drawHitbox)
 			{
 				Hitbox hitbox= m.getHitbox(INIT_RECT,getScreenDisp());
@@ -1145,6 +1155,15 @@ public class ModelPartie extends AbstractModelPartie{
 							,DrawImageHandler.PERSO));
 				}
 			}
+		}
+		//draw the damage
+		for(DamageDrawer damageDrawer : heros.lastDamageTaken){
+			if(damageDrawer.shouldDraw()){
+				Point defaultPos = new Point(heros.getXpos()+heros.getCurrentXtaille()/2,heros.getYpos()-35); 
+				Point drawPos = damageDrawer.getWorldDrawPos(defaultPos);
+				imageDrawer.addImage(new DrawImageItem(damageDrawer.getMessage(),drawPos.x,drawPos.y,damageDrawer.getColor(),Color.BLACK,
+						damageDrawer.getFontSize(),DrawImageHandler.INTERFACE));
+			} 
 		}
 
 		if(drawHitbox)

@@ -7,7 +7,8 @@ import gameConfig.ObjectTypeHelper.ObjectType;
 import partie.mouvement.entity.Mouvement_entity.EntityTypeMouv;
 
 public class ImagesMonstre extends ImagesContainer{
-
+	
+	public static ImagesMonstre me=null; //singleton
 	public static String path ="resources/entitie/monstre/";
 	ArrayList<Image> im_SP_attente= new ArrayList<Image>();
 	ArrayList<Image> im_SP_marche= new ArrayList<Image>();
@@ -16,6 +17,8 @@ public class ImagesMonstre extends ImagesContainer{
 	public ImagesMonstre()
 	{
 		super("Image monstre");
+		if(me==null)
+			me=this;
 	}
 	
 	@Override

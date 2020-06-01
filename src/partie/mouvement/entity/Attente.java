@@ -30,8 +30,8 @@ public class Attente extends Mouvement_entity{
 
 			List<List<Point>> hitboxCreation = new ArrayList<List<Point>>();
 			//add for every edge, a list of point depending on the animation
-			List<Integer> xg = Arrays.asList(40,40,13,12);
-			List<Integer> xd = Arrays.asList(71,71,44,43);
+			List<Integer> xg = Arrays.asList(40,40,3,3);
+			List<Integer> xd = Arrays.asList(81,81,44,44);
 			List<Integer> yh = Arrays.asList(13,13,13,13);
 			List<Integer> yb = Arrays.asList(99,99,99,99);
 

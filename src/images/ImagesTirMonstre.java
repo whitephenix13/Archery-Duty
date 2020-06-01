@@ -8,6 +8,7 @@ import partie.mouvement.projectile.Mouvement_projectile.MouvProjectileEnum;
 
 public class ImagesTirMonstre extends ImagesContainer{
 	
+	public static ImagesTirMonstre me=null; //singleton
 	private static String path ="resources/projectile/tirMonstre/";
 	ArrayList<Image> im_SP_normal_creation= new ArrayList<Image>();
 	ArrayList<Image> im_SP_normal_idle= new ArrayList<Image>();
@@ -15,6 +16,8 @@ public class ImagesTirMonstre extends ImagesContainer{
 	public ImagesTirMonstre()
 	{
 		super("Image tir monstre");
+		if(me==null)
+			me=this;
 	}
 	
 	@Override

@@ -8,6 +8,7 @@ import partie.mouvement.entity.Mouvement_entity.EntityTypeMouv;
 
 public class ImagesHeros extends ImagesContainer{
 	
+	public static ImagesHeros me=null; //singleton
 	public static String path ="resources/entitie/heros/";
 	ArrayList<Image> attente = new ArrayList<Image>(); // 4
 	ArrayList<Image> glissade = new ArrayList<Image>(); // 2 
@@ -24,6 +25,8 @@ public class ImagesHeros extends ImagesContainer{
 	public ImagesHeros()
 	{
 		super("Image heros");
+		if(me==null)
+			me=this;
 	}
 	
 	@Override

@@ -10,7 +10,7 @@ import partie.mouvement.effect.Mouvement_effect.MouvEffectEnum;
 public class ImagesEffect extends ImagesContainer{
 
 	private static String path ="resources/projectile/fleches/effects/";
-	
+	public static ImagesEffect me=null; //singleton
 	public static enum ImEffectInfo implements ImageInfo{SLOWDOWN};
 	
 	ArrayList<Image> im_vent_effect= new ArrayList<Image>();
@@ -33,6 +33,8 @@ public class ImagesEffect extends ImagesContainer{
 	public ImagesEffect()
 	{
 		super("Image effect");
+		if(me==null)
+			me=this;
 	}
 	
 	@Override

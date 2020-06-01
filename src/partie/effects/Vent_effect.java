@@ -111,7 +111,6 @@ public class Vent_effect extends Effect{
 	@Override
 	protected boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie) {
 		int nextMouvIndex = getMouvement().updateAnimation(getMouvIndex(), partie.getFrame(),1);
-		System.out.println("Next vent mouv "+ nextMouvIndex +" <= "+ getMouvIndex());
 		if(getMouvIndex()!=nextMouvIndex){
 			boolean success = true;//no need to hitbox alignment check 
 			if(success){

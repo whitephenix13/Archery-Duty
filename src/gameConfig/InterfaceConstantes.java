@@ -33,8 +33,8 @@ public interface InterfaceConstantes {
 	static final boolean DRAW_HITBOX_MONDE = false;
 	static final boolean DRAW_HITBOX_PERSO = true;
 	static final boolean DRAW_HITBOX_MONSTRES = false;
-	static final boolean DRAW_HITBOX_FLECHES = true;
-	static final boolean DRAW_HITBOX_TIR_MONSTRES = true;
+	static final boolean DRAW_HITBOX_FLECHES = false;
+	static final boolean DRAW_HITBOX_TIR_MONSTRES = false;
 	static final boolean DRAW_HITBOX_EFFECTS = false;
 	
 	//taille maximum de la matrice 

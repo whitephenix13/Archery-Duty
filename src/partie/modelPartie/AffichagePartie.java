@@ -158,6 +158,7 @@ public class AffichagePartie extends Drawable implements Observer{
 					allbSlots[num][i].setEnabled(false);
 					allbSlots[num][i].setVisible(false);
 				}
+				
 				allpanelSlot[num].add(allbSlots[num][i]);
 			}
 
@@ -276,20 +277,12 @@ public class AffichagePartie extends Drawable implements Observer{
 		if(controlerPartie.partie.arrowSlotIconChanged)
 		{	
 			if(initFlecheIcon){
-				//retrieved all the image for the slots in correct order 
-				ObjectType[] arrowsType1 = new ObjectType[4];  // name of the arrows in the slot 1 
-				ObjectType[] arrowsType2 = new ObjectType[4];
-				ObjectType[] arrowsType3 = new ObjectType[4];
-				ObjectType[] arrowsType4 = new ObjectType[4];
-				bSlot1=ArrowSlotButton.setIcons(bSlot1, controlerPartie.partie.imFlecheIcon.getAllImagesOfSameClass(controlerPartie.partie.heros.getSlots()[0],arrowsType1));
-				bSlot2=ArrowSlotButton.setIcons(bSlot2, controlerPartie.partie.imFlecheIcon.getAllImagesOfSameClass(controlerPartie.partie.heros.getSlots()[1],arrowsType2));
-				bSlot3=ArrowSlotButton.setIcons(bSlot3, controlerPartie.partie.imFlecheIcon.getAllImagesOfSameClass(controlerPartie.partie.heros.getSlots()[2],arrowsType3));
-				bSlot4=ArrowSlotButton.setIcons(bSlot4, controlerPartie.partie.imFlecheIcon.getAllImagesOfSameClass(controlerPartie.partie.heros.getSlots()[3],arrowsType4));
-
-				ArrowSlotButton.setArrowType(bSlot1, arrowsType1);
-				ArrowSlotButton.setArrowType(bSlot2, arrowsType2);
-				ArrowSlotButton.setArrowType(bSlot3, arrowsType3);
-				ArrowSlotButton.setArrowType(bSlot4, arrowsType4);
+				ArrowSlotButton[][] allArrowSlotButton = {bSlot1,bSlot2,bSlot3,bSlot4};
+				//Iterate over all group of buttons to init them
+				for(int i=0; i<4; ++i){
+					ArrowSlotButton.initSlotButtonGroup(allArrowSlotButton[i],controlerPartie.partie.heros.getSlots()[i]);
+				}
+				
 				initFlecheIcon=false;
 			}
 		}

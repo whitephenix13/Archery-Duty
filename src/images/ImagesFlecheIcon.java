@@ -9,6 +9,8 @@ import partie.projectile.fleches.Fleche;
 
 public class ImagesFlecheIcon extends ImagesContainer{	
 	
+	public static ImagesFlecheIcon me=null; //singleton
+	
 	private static String path ="resources/projectile/fleches/icons/";
 	
 	Image im_feu= null;
@@ -34,6 +36,8 @@ public class ImagesFlecheIcon extends ImagesContainer{
 	public ImagesFlecheIcon()
 	{
 		super("Image fleche icon");
+		if(me==null)
+			me=this;
 	}
 
 	@Override

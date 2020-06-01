@@ -8,6 +8,7 @@ import images.ImagesContainer.ImageInfo;
 import partie.mouvement.entity.Mouvement_entity.EntityTypeMouv;
 
 public class ImagesPrincipal extends ImagesContainer{
+	public static ImagesPrincipal me=null; //singleton
 	public static enum ImPrincipalInfo implements ImageInfo{BACKGROUND}
 	
 	private Image background = null;
@@ -15,6 +16,8 @@ public class ImagesPrincipal extends ImagesContainer{
 	public ImagesPrincipal()
 	{
 		super("Image main menu");
+		if(me==null)
+			me=this;
 	}
 	@Override
 	public void run() {

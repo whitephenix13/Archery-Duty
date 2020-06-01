@@ -7,6 +7,7 @@ import gameConfig.ObjectTypeHelper.ObjectType;
 
 public class ImagesFleche extends ImagesContainer{
 	
+	public static ImagesFleche me=null; //singleton
 	private static String path ="resources/projectile/fleches/";
 	ArrayList<Image> im_fleche= new ArrayList<Image>();
 	ArrayList<Image> im_faucon_aura= new ArrayList<Image>();
@@ -32,6 +33,8 @@ public class ImagesFleche extends ImagesContainer{
 	public ImagesFleche()
 	{
 		super("Image fleche");
+		if(me==null)
+			me=this;
 	}
 
 	@Override

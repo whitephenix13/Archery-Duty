@@ -80,7 +80,7 @@ public class AffichagePrincipal extends Drawable implements Observer{
 		mainPanel.setBackground(Color.black);
 		mainPanel.setOpaque(false);
 		
-		controlerPrincipal.principal.imPrincipal.run();;
+		ImagesPrincipal.me.run();
 	}
 
 	public class boutonsPrincipalListener implements MouseListener 
@@ -146,7 +146,7 @@ public class AffichagePrincipal extends Drawable implements Observer{
 	@Override
 	public void drawOnGraphics(Graphics g,boolean forceRepaint)
 	{
-		g.drawImage(controlerPrincipal.principal.imPrincipal.getImage(null,ImPrincipalInfo.BACKGROUND,null),0,0,mainPanel);		
+		g.drawImage(ImagesPrincipal.me.getImage(null,ImPrincipalInfo.BACKGROUND,null),0,0,mainPanel);		
 	}
 	
 	public Loader getLoader()

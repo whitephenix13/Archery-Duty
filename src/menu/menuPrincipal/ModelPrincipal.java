@@ -1,19 +1,12 @@
 package menu.menuPrincipal;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Image;
-import java.awt.Point;
 import java.io.IOException;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
-import java.lang.ref.WeakReference;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import javax.management.Notification;
 import javax.management.NotificationEmitter;
@@ -25,7 +18,6 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 import com.sun.management.GarbageCollectionNotificationInfo ;
 
 import Affichage.GameRenderer;
-import Affichage.Drawable;
 import debug.DebugObjectCreation;
 import debug.DebugTime;
 import editeur.AffichageEditeur;
@@ -33,12 +25,19 @@ import editeur.ControlerEditeur;
 import editeur.ModelEditeur;
 import gameConfig.InterfaceConstantes;
 import gameConfig.ObjectTypeHelper.ObjectType;
+import images.ImagesBackground;
+import images.ImagesCondition;
 import images.ImagesContainer;
 import images.ImagesContainer.ImageGroup;
 import images.ImagesContainer.ImageInfo;
-import images.ImagesContainer.ObjectSubType;
-import images.ImagesPrincipal.ImPrincipalInfo;
+import images.ImagesEffect;
+import images.ImagesFleche;
+import images.ImagesFlecheIcon;
+import images.ImagesHeros;
+import images.ImagesMonde;
+import images.ImagesMonstre;
 import images.ImagesPrincipal;
+import images.ImagesTirMonstre;
 import loading.Loader;
 import loading.LoaderItem;
 import loading.LoaderUtils;
@@ -46,15 +45,12 @@ import menu.choixNiveau.AffichageChoixNiveau;
 import menu.choixNiveau.ControlerChoixNiveau;
 import menu.choixNiveau.ModelChoixNiveau;
 import menu.credit.AffichageCredit;
-import menu.menuPrincipal.GameHandler.GameModeType;
 import music.Music;
 import option.AffichageOption;
 import option.Config;
 import option.ControlerOption;
 import option.ModelOption;
 import option.Touches;
-import partie.bloc.Bloc;
-import partie.collision.Hitbox;
 import partie.modelPartie.AffichagePartie;
 import partie.modelPartie.ControlerPartie;
 import partie.modelPartie.ModelPartie;
@@ -263,7 +259,7 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 
 		//load all image + music + bruitage in different Thread 
 		loaderAllMedia = new Loader(gameRenderer,this);
-		loaderAllMedia.addItem(LoaderUtils.loadAllImagesAndSounds(this, partie));
+		loaderAllMedia.addItem(LoaderUtils.loadAllImagesAndSounds(partie));
 		loaderAllMedia.start();
 	}
 	
@@ -544,25 +540,25 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 	@Override
 	public ImagesContainer getImageGroup(ImageGroup group) {
 		if(group.equals(ImageGroup.BACKGROUND))
-			return this.imBackground;
+			return ImagesBackground.me;
 		else if(group.equals(ImageGroup.CONDITION))
-			return this.imConditions;
+			return ImagesCondition.me;
 		else if(group.equals(ImageGroup.EFFECT))
-			return this.imEffect;
+			return ImagesEffect.me;
 		else if(group.equals(ImageGroup.FLECHE))
-			return this.imFleches;
+			return ImagesFleche.me;
 		else if(group.equals(ImageGroup.FLECHEICON))
-			return this.imFlecheIcon;
+			return ImagesFlecheIcon.me;
 		else if(group.equals(ImageGroup.HEROS))
-			return this.imHeros;
+			return ImagesHeros.me;
 		else if(group.equals(ImageGroup.MONDE))
-			return this.imMonde;
+			return ImagesMonde.me;
 		else if(group.equals(ImageGroup.MONSTRE))
-			return this.imMonstre;
+			return ImagesMonstre.me;
 		else if(group.equals(ImageGroup.PRINCIPAL))
-			return this.imPrincipal;
+			return ImagesPrincipal.me;
 		else if(group.equals(ImageGroup.TIRMONSTRE))
-			return this.imTirMonstre;
+			return ImagesTirMonstre.me;
 		else {
 			try {throw new Exception("No image group for "+ group);} catch (Exception e) {e.printStackTrace();}
 			return null;

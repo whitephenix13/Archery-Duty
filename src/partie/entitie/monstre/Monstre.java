@@ -32,19 +32,13 @@ import partie.projectile.fleches.Fleche;
 public abstract class Monstre extends Entity implements InterfaceConstantes, Serializable{
 	//on définit la position du coin en haut à  gauche de la hitbox
 
-	public boolean finSaut;
-	public boolean peutSauter;
-	public boolean glisse;
+	protected boolean wasGrounded=false;
 	
 	public boolean isStatic;
 	
     public interface AIAction{};//used for implementation in enum of sub classes (i.e. Ai of spirel)
 	public AIAction lastIAAction =null;
-	// ***REMOVEpublic boolean actionReussite;
-	//public boolean doitChangMouv;
-	//public Mouvement_entity nouvMouv;
-	//public int newMouvIndex;
-	
+
 	protected InputPartie inputPartie;
 	private InputPartiePool monstreInputPool; //based on a unique input partie since montre input and heros input need to be different
 	private InputPartiePool playerInputPool; //input pool of the player that controles this monstre 
@@ -170,27 +164,19 @@ public abstract class Monstre extends Entity implements InterfaceConstantes, Ser
 		last_colli_left=collision_gauche;
 		last_colli_right=collision_droite;
 		
-		final boolean mem_glisse=glisse;
-		final boolean mem_finSaut = finSaut;
-		final boolean mem_peutSauter=peutSauter;
 		final boolean mem_useGravity=useGravity;
-		
+		final boolean mem_wasGrounded = wasGrounded;
 		resetHandleCollision = new ResetHandleCollision(){
 			@Override
 			public void reset()
 			{
-				glisse=mem_glisse;
-				finSaut=mem_finSaut;
-				peutSauter=mem_peutSauter;
 				useGravity= mem_useGravity;
+				wasGrounded=mem_wasGrounded;
 			}};
 			
-		if(collision_gauche || collision_droite)
-			glisse=true;
 		if(collision_bas)
 		{
-			finSaut=true;
-			peutSauter=true;
+			wasGrounded=true;
 			useGravity=false;
 		}
 	}

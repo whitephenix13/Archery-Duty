@@ -45,7 +45,7 @@ public abstract class AbstractModelPrincipal implements Observable,GameHandler,G
 	public Loader loaderMenuPrincipal = null;
 	public Loader loaderAllMedia = null;
 	
-	public ImagesPrincipal imPrincipal= new ImagesPrincipal();
+	/*public ImagesPrincipal imPrincipal= new ImagesPrincipal();
 	public ImagesBackground imBackground= new ImagesBackground();
 	public ImagesMonde imMonde= new ImagesMonde();
 	public ImagesMonstre imMonstre= new ImagesMonstre();
@@ -54,7 +54,7 @@ public abstract class AbstractModelPrincipal implements Observable,GameHandler,G
 	public ImagesFleche imFleches = new ImagesFleche();
 	public ImagesEffect imEffect= new ImagesEffect();
 	public ImagesCondition imConditions= new ImagesCondition();
-	public ImagesFlecheIcon imFlecheIcon = new ImagesFlecheIcon();
+	public ImagesFlecheIcon imFlecheIcon = new ImagesFlecheIcon();*/
 	
 	public GameModeType currentGameModeType;
 	public static boolean test =false;
@@ -105,7 +105,18 @@ public abstract class AbstractModelPrincipal implements Observable,GameHandler,G
 		//nextGameMode=GameModeType.MAIN_MENU;
 		currentGameMode = this;
 		ModelPrincipal.debugTime = new DebugTime(InterfaceConstantes.DEBUG_TIME_LOOP_TO_SLOW,InterfaceConstantes.DEBUG_TIME_ACTION_TO_SLOW,InterfaceConstantes.DEBUG_TIME_VERBOSE);
-
+		
+		//Initialize singleton
+		new ImagesPrincipal();
+		new ImagesBackground();
+		new ImagesMonde();
+		new ImagesMonstre();
+		new ImagesHeros();
+		new ImagesTirMonstre();
+		new ImagesFleche();
+		new ImagesEffect();
+		new ImagesCondition();
+		new ImagesFlecheIcon();
 	}
 	
 	

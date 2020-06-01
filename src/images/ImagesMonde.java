@@ -9,8 +9,9 @@ import partie.bloc.Bloc.BlocImModifier;
 import partie.bloc.Bloc.TypeBloc;
 
 public class ImagesMonde extends ImagesContainer{
-	public static String path ="resources/editeur/";
+	public static ImagesMonde me=null; //singleton
 	
+	public static String path ="resources/editeur/";
 	//image editeur 
 	Image delete;
 	Image spirel;
@@ -41,6 +42,8 @@ public class ImagesMonde extends ImagesContainer{
 	public ImagesMonde()
 	{
 		super("Image monde");
+		if(me==null)
+			me=this;
 	}
 	
 	@Override

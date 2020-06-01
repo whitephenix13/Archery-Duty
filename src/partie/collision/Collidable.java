@@ -413,8 +413,6 @@ public abstract class Collidable extends Destroyable{
 		resetInputState(partie);
 		
 		if(isUpdated){
-			if(this instanceof Spirel)
-				System.out.println(updateCause+" causes update "+prev_mouv_type +" "+prev_mouv_index +" -> "+getMouvement() +" " +getMouvIndex());
 			onMouvementChanged( partie,prev_mouv_index != getMouvIndex(), !getMouvement().isMouvement(prev_mouv_type));
 		}
 				
@@ -504,94 +502,6 @@ public abstract class Collidable extends Destroyable{
 		//However as it is not preventing the ref_object from moving, the function returns true (but the object is not registred in collidableToMove)
 		return true;
 	}
-	/* ***REMOVE public void alignHitbox(int currentMouvIndex,Mouvement nextMouvement, int nextMouvIndex, AbstractModelPartie partie, boolean left, boolean down,
-			Object obj, boolean useTouchCollision)
-	{
-		//Collect the added motion 
-		Mouvement depActu= getMouvement();
-
-		int xdir = left ? -1 :1;
-		int ydir = down ? 1 :-1;
-		final Polygon currentPol = getHitbox(partie.INIT_RECT,partie.getScreenDisp(),depActu, currentMouvIndex,scaling).polygon;
-		//Assumed that there are no change in scaling 
-		final Polygon nextHit = getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouvement, nextMouvIndex,scaling).polygon;
-		
-		int dx= (int) Math.round( (Hitbox.supportPoint(new Vector2d(xdir,0),currentPol ).x -
-				Hitbox.supportPoint(new Vector2d(xdir,0), nextHit).x));
-
-		int dy= (int) Math.round((Hitbox.supportPoint(new Vector2d(0,ydir), currentPol).y -
-				Hitbox.supportPoint(new Vector2d(0,ydir), nextHit).y));
-
-		int m_dx=0; //-dx, computed if needed
-		int m_dy=0; //-dy, computed if needed
-
-		int xadded = dx; //remember how to get back to normal xpos
-		int yadded = dy;//remember how to get back to normal ypos
-		//xpos+=, ypos+=
-		addXpos(dx);
-		addYpos(dy);
-
-		//String s ="";
-		//String s_x =left? "left":"right";
-		//String s_mx =!left? "left":"right";
-		//String s_y =down? " down":" up";
-		//String s_my =!down? " down":" up";
-
-		boolean valid=alignTestValid(nextMouvement, nextMouvIndex, partie,useTouchCollision);
-
-		//s+= (valid && s=="") ? s_x+s_y : "";
-		boolean n_glisse = nextMouvement.isMouvement(MouvEntityEnum.GLISSADE);
-		//test the opposite y 
-		if(!valid)
-		{
-			m_dy=(int) Math.round(Hitbox.supportPoint(new Vector2d(0,-ydir), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),depActu, currentMouvIndex,scaling).polygon).y -
-					Hitbox.supportPoint(new Vector2d(0,-ydir), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouvement, nextMouvIndex,scaling).polygon).y);
-
-			addXpos(dx-xadded);
-			addYpos(m_dy-yadded);
-
-			xadded=dx;
-			yadded=m_dy;
-
-			valid=alignTestValid(nextMouvement, nextMouvIndex, partie,useTouchCollision);
-			//s+= (valid && s=="") ? s_x+s_my : "";
-		}
-
-		//test the opposite x with the first value of y
-		if(!valid && !n_glisse)
-		{
-			m_dx=(int) Math.round(Hitbox.supportPoint(new Vector2d(-xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),depActu, currentMouvIndex,scaling).polygon).x -
-					Hitbox.supportPoint(new Vector2d(-xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouvement, nextMouvIndex,scaling).polygon).x);
-
-			addXpos(m_dx-xadded);
-			addYpos(dy-yadded);
-
-			xadded=m_dx;
-			yadded=dy;
-
-			valid=alignTestValid(nextMouvement, nextMouvIndex, partie,useTouchCollision);
-			//s+= (valid && s=="") ? s_mx+s_y : "";
-
-		}
-
-		//test the opposite x with the opposite y
-		if(!valid && !n_glisse)
-		{			
-			addXpos(m_dx-xadded);
-			addYpos(m_dy-yadded);
-			xadded=m_dx;
-			yadded=m_dy;
-			valid=alignTestValid(nextMouvement, nextMouvIndex, partie,useTouchCollision);
-			//s+= (valid && s=="") ? s_mx+s_my : "";
-
-		}
-
-
-		//if(deplacement_type.equals(TypeObject.heros)){
-		//	System.out.println(deplacement.getClass().getName() +currentMouvIndex +" "+depSuiv.getClass().getName()+nextMouvIndex);
-		//	System.out.println(s);
-		//}
-	} */
 
 	/***
 	 * 
@@ -617,12 +527,6 @@ public abstract class Collidable extends Destroyable{
 		final Vector2d nextAnchor = nextHit.getPoint(getRotation(), xAlignment, yAlignment);
 		
 		//Example, current anchor is 0,0 next anchor is 2,2, we want to move by (-2,-2)
-		if(this instanceof Vent_effect)
-		{	
-			System.out.println("Current index "+getMouvIndex() +" next index "+ nextIndex);
-			System.out.println("Align next mouv vent "+currentHit +" "+nextHit+" for alignment "+ xAlignment+" "+ yAlignment );
-			System.out.println("currentAnchor "+currentAnchor +" nextAnchor "+nextAnchor);
-		}
 		addXpos_sync((int)Math.round(currentAnchor.x-nextAnchor.x));
 		addYpos_sync((int)Math.round(currentAnchor.y-nextAnchor.y));
 
