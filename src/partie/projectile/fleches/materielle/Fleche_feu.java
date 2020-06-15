@@ -11,7 +11,7 @@ import partie.effects.Feu_effect;
 import partie.effects.Roche_effect;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
-import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.ModelPartie;
 import partie.mouvement.Deplace;
 import partie.projectile.Projectile;
 
@@ -29,12 +29,12 @@ public class Fleche_feu extends Materielle {
 	
 
 	@Override
-	protected void onPlanted(List<Entity> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
+	protected void onPlanted(List<Entity> objects,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
 	{
 		if(this.afterDecochee && stuck)
-			ejectArrow(partie,unprojectedSpeed);
+			ejectArrow(unprojectedSpeed);
 		if(stuck){
-			destroy(partie,false);
+			destroy(false);
 			return;
 		}
 
@@ -43,9 +43,9 @@ public class Fleche_feu extends Materielle {
 			Vector2d arrowDir = Deplace.angleToVector(getRotation());
 			int sign = ((this.normCollision.x<0 && arrowDir.y<0) || (this.normCollision.y<0 && arrowDir.x<0))?-1 : 1;
 			//creating the effect registers it to arrowsEffects from partie 
-			Feu_effect flecheEffect=new Feu_effect(partie,this,0,partie.getFrame(),normCollision,pointCollision,correctedPointCollision,true,-1*sign*40);
-			Feu_effect flecheEffect2=new Feu_effect(partie,this,0,partie.getFrame(),normCollision,pointCollision,correctedPointCollision,true,0);
-			Feu_effect flecheEffect3=new Feu_effect(partie,this,0,partie.getFrame(),normCollision,pointCollision,correctedPointCollision,true,sign*40);
+			Feu_effect flecheEffect=new Feu_effect(this,0,ModelPartie.me.getFrame(),normCollision,pointCollision,correctedPointCollision,true,-1*sign*40);
+			Feu_effect flecheEffect2=new Feu_effect(this,0,ModelPartie.me.getFrame(),normCollision,pointCollision,correctedPointCollision,true,0);
+			Feu_effect flecheEffect3=new Feu_effect(this,0,ModelPartie.me.getFrame(),normCollision,pointCollision,correctedPointCollision,true,sign*40);
 			
 			
 			Roche_effect.synchroniseMovementWithRocheEffectMovement(collidedObject, new Collidable[] {this,flecheEffect,flecheEffect2,flecheEffect3});
@@ -57,16 +57,16 @@ public class Fleche_feu extends Materielle {
 	}
 
 	@Override
-	protected boolean OnObjectsCollision(List<Entity> objects,AbstractModelPartie partie,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
+	protected boolean OnObjectsCollision(List<Entity> objects,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
 	{
 
 		if(this.afterDecochee && (collider instanceof Effect))
 			if(((Effect)collider).isWorldCollider)
-				ejectArrow(partie,unprojectedSpeed);
+				ejectArrow(unprojectedSpeed);
 		if(!generatedEffect){
 			generatedEffect=true;
 
-			flecheEffect=new Feu_effect(partie,this,0,partie.getFrame(),normal,null,null,false,0);
+			flecheEffect=new Feu_effect(this,0,ModelPartie.me.getFrame(),normal,null,null,false,0);
 			MusicBruitage.me.startBruitage("arc");
 			
 			for(Entity obj : objects)

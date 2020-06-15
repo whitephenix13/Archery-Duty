@@ -14,6 +14,7 @@ import javax.vecmath.Vector2d;
 import partie.collision.Collidable.XAlignmentType;
 import partie.collision.Collidable.YAlignmentType;
 import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.ModelPartie;
 import partie.mouvement.Deplace;
 import utils.PointHelper;
 
@@ -829,10 +830,10 @@ public class Hitbox {
 	 * @param obj
 	 * @return
 	 */
-	public static Vector2d getObjMid(final AbstractModelPartie partie, final Collidable obj)
+	public static Vector2d getObjMid(final Collidable obj)
 	{
 		//find where object is precisely using the middle of the hitbox
-		return obj.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).getCenter();
+		return obj.getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp()).getCenter();
 	}
 	/**
 	 * Get the middle of the Hitbox*/

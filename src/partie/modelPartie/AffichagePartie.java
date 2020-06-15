@@ -547,7 +547,7 @@ public class AffichagePartie extends Drawable implements Observer{
 			int equippedArrowInSlot = equippedArrowInSlot(clickedSlot);
 			if(allSlots[clickedSlot][equippedArrowInSlot]!=source_but){
 				//change the arrow for the heros
-				controlerPartie.partie.heros.changeSlot(controlerPartie.partie, clickedSlot, source_but.arrowType);
+				controlerPartie.partie.heros.changeSlot(clickedSlot, source_but.arrowType);
 				allSlots[clickedSlot][equippedArrowInSlot].isSelected=false;
 				source_but.isSelected=true;
 			}

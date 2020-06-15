@@ -1,12 +1,13 @@
 package debug;
 
 import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.ModelPartie;
 import partie.modelPartie.PartieTimer;
 
 public class DebugBreak {
-	public static void breakAndUpdateGraphic(AbstractModelPartie partie)
+	public static void breakAndUpdateGraphic()
 	{
-		partie.forceRepaint();
+		ModelPartie.me.forceRepaint();
 		try {
 			Thread.sleep(20);
 		} catch (InterruptedException e) {

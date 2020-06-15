@@ -13,8 +13,8 @@ public abstract class Destroyable {
 	{
 		tempsDetruit=PartieTimer.me.getElapsedNano();
 	}
-	public abstract void destroy(AbstractModelPartie partie,boolean destroyNow);
-	public abstract void onDestroy(AbstractModelPartie partie);
+	public abstract void destroy(boolean destroyNow);
+	public abstract void onDestroy();
 
 	
 }

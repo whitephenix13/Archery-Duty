@@ -111,6 +111,8 @@ public class T_normal_idle extends Mouvement_projectile{
 			}
 			if(ObjectTypeHelper.isTypeOf(object, ObjectType.GRAPPIN))
 				speed_norm = (int)(60.0 / Config.ratio_fps());//60
+			if(ObjectTypeHelper.isTypeOf(object, ObjectType.OMBRE))
+				speed_norm = (int)(50.0 / Config.ratio_fps());//60
 			return object.convertSpeed(speed_norm,object.getRotation());
 		}
 		else if(ObjectTypeHelper.isTypeOf(object, ObjectType.TIR_SPIREL))

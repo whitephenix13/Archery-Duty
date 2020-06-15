@@ -6,6 +6,7 @@ import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import javax.vecmath.Vector2d;
 
@@ -22,14 +23,17 @@ import partie.collision.Collision;
 import partie.collision.GJK_EPA;
 import partie.collision.Hitbox;
 import partie.conditions.Condition.ConditionEnum;
+import partie.effects.Effect;
 import partie.effects.Roche_effect;
 import partie.entitie.Entity;
 import partie.entitie.monstre.Monstre;
+import partie.entitie.monstre.Monstre.ResetHandleCollision;
 import partie.input.InputPartie;
 import partie.input.InputPartiePool;
 import partie.input.InputPartiePool.InputType;
 import partie.input.InputPartiePool.InputTypeArray;
 import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.ModelPartie;
 import partie.modelPartie.PartieTimer;
 import partie.mouvement.Deplace;
 import partie.mouvement.Gravite;
@@ -133,10 +137,10 @@ public class Heros extends Entity{
 	public int getPressedSlotForUI(){return inputPool.getInputFirstPressed(InputTypeArray.SLOT);}
 	
 	public ObjectType[] getSlots(){return slots;}
-	public void changeSlot(AbstractModelPartie partie,int slotNum,ObjectType newArrow)
+	public void changeSlot(int slotNum,ObjectType newArrow)
 	{
 		slots[slotNum]=newArrow;
-		addSeyeri(partie, -25);
+		addSeyeri(-25);
 	}
 
 	//last time an arrow was shot
@@ -211,16 +215,16 @@ public class Heros extends Entity{
 			invincible=false;
 		}
 	}
-	public void miseAJourSeyeri(AbstractModelPartie partie)
+	public void miseAJourSeyeri()
 	{
 		if((PartieTimer.me.getElapsedNano()-lastSeyeriUpdate)*Math.pow(10, -6)>InterfaceConstantes.TEMPS_VAR_SEYERI)
 		{
 			lastSeyeriUpdate=PartieTimer.me.getElapsedNano();
-			if(partie.slowDown)
-				addSeyeri(partie,-0.15f * InterfaceConstantes.SLOW_DOWN_FACTOR);
+			if(ModelPartie.me.slowDown)
+				addSeyeri(-0.15f * InterfaceConstantes.SLOW_DOWN_FACTOR);
 			
 			else
-				addSeyeri(partie,0.25f * InterfaceConstantes.SLOW_DOWN_FACTOR);
+				addSeyeri(0.25f * InterfaceConstantes.SLOW_DOWN_FACTOR);
 		}
 	}
 
@@ -243,7 +247,7 @@ public class Heros extends Entity{
 			return true;
 
 	}
-	public void addSeyeri(AbstractModelPartie partie,float add)
+	public void addSeyeri(float add)
 	{
 		if(infiniteSeyeri)
 			return;
@@ -257,11 +261,11 @@ public class Heros extends Entity{
 		}
 		if(minimum_reached)
 		{
-			partie.slowDown=false;
+			ModelPartie.me.slowDown=false;
 			PartieTimer.me.changedSlowMotion(false);
-			partie.slowCount=0;
+			ModelPartie.me.slowCount=0;
 
-			if(partie.slowDown)
+			if(ModelPartie.me.slowDown)
 				Music.me.slowDownMusic();
 			else
 				Music.me.endSlowDownMusic();
@@ -328,7 +332,7 @@ public class Heros extends Entity{
 	 * @param right True: get the right slide hitbox False: the left one
 	 * @return
 	 */
-	public Hitbox getGliss_Accroch_Hitbox(AbstractModelPartie partie, boolean gliss, boolean right)//used to get slide hitbox
+	public Hitbox getGliss_Accroch_Hitbox( boolean gliss, boolean right)//used to get slide hitbox
 	{
 		//Hand coded, only two possible deplacement: Course or Saut 
 		int up = getGlobalVit().y<0? 0 : (getMouvement().isMouvement(EntityTypeMouv.SAUT)?4 : 0); //if gliss: up of hand
@@ -341,7 +345,7 @@ public class Heros extends Entity{
 		}
 		//WARNING assume the Heros hitbox is a square/rectangle not rotated 
 		assert getRotation()==0;
-		Hitbox herosHit = this.getHitbox(partie.getScreenDisp(),partie.getScreenDisp());
+		Hitbox herosHit = this.getHitbox(ModelPartie.me.getScreenDisp(),ModelPartie.me.getScreenDisp());
 
 		List<Vector2d> upLeftP = Hitbox.supportPoints(new Vector2d(-1,-1), herosHit.polygon);
 		List<Vector2d> downLeftP = Hitbox.supportPoints(new Vector2d(-1,1), herosHit.polygon);
@@ -382,14 +386,14 @@ public class Heros extends Entity{
 	 * @return false if moving this by motion is not possible(collision with world or effects) or if ref_object and this are not colliding ,true otherwise (AND APPLY THE MOTION)
 	 */
 	@Override
-	public boolean requestMoveBy(AbstractModelPartie partie,Collidable ref_object,Point motion,List<Collidable> collidableToMove, List<Point> motionToApply)
+	public boolean requestMoveBy(Collidable ref_object,Point motion,List<Collidable> collidableToMove, List<Point> motionToApply)
 	{
 		if(this.checkCollideWithWorld())
-			if(Collision.testcollisionObjects(partie, this, ref_object, false))
+			if(Collision.testcollisionObjects( this, ref_object, false))
 			{
 				Point appliedMotion = new Point();//not set to null so that we can retrieve the desired motion
 				boolean considerEffects = true;
-				if(!Collision.ejectWorldCollision(partie, this,ref_object,motion,appliedMotion,considerEffects) || (appliedMotion.x==0 && appliedMotion.y==0)){
+				if(!Collision.ejectWorldCollision(this,ref_object,motion,appliedMotion,considerEffects) || (appliedMotion.x==0 && appliedMotion.y==0)){
 					return false; // ejection was not successful,  "this" is preventing ref_object to move, return false
 				}
 				else
@@ -409,7 +413,7 @@ public class Heros extends Entity{
 	}
 
 	@Override
-	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,Collidable collidedObject,boolean stuck) {
+	public void handleWorldCollision(Vector2d normal ,Collidable collidedObject,boolean stuck) {
 		conditions.OnAttacherCollided();
 		boolean collision_gauche = normal.x>0;
 		boolean collision_droite = normal.x<0;
@@ -442,7 +446,7 @@ public class Heros extends Entity{
 	}
 
 	@Override
-	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider,Vector2d normal) 
+	public void handleObjectCollision(Collidable collider,Vector2d normal) 
 	{
 		if(ObjectTypeHelper.isTypeOf(collider, ObjectType.TIR_MONSTRE))
 		{
@@ -469,10 +473,10 @@ public class Heros extends Entity{
 	}
 	
 	
-	private void setMouvement(AbstractModelPartie partie,Mouvement newMouv, int newMouvIndex){
+	private void setMouvement(Mouvement newMouv, int newMouvIndex){
 		//Use this function to set specific variables when changing movement (ie: peutSauter if newMouv = saut)
 		if(newMouv.isMouvement(EntityTypeMouv.ACCROCHE) && (newMouvIndex==0 || newMouvIndex==2)){
-			for(Collidable eff : partie.arrowsEffects){
+			for(Collidable eff : ModelPartie.me.arrowsEffects){
 				if(eff instanceof Roche_effect){
 					Roche_effect r_eff = (Roche_effect) eff;
 					if((r_eff.groundEffect) && (eff == accrocheCol))
@@ -503,7 +507,7 @@ public class Heros extends Entity{
 		
 		if(getMouvement().isMouvement(EntityTypeMouv.ACCROCHE) && !newMouv.isMouvement(EntityTypeMouv.ACCROCHE)){
 			//unregister accroche from roche_effect
-			for(Collidable eff : partie.arrowsEffects){
+			for(Collidable eff : ModelPartie.me.arrowsEffects){
 				if(eff instanceof Roche_effect)
 				{
 					Roche_effect r_eff = (Roche_effect) eff;
@@ -520,38 +524,38 @@ public class Heros extends Entity{
 	@Override
 	protected void onStartDeplace(){shouldUpdateSpeed=true;}
 	@Override
-	protected void handleInputs(AbstractModelPartie partie){
+	protected void handleInputs(){
 		isMoveRightKeyDown = inputPool.isInputDown(InputType.RIGHT);
 		isMoveLeftKeyDown = inputPool.isInputDown(InputType.LEFT);
 		//SLOW DOWN 
 		if(inputPool.isInputFirstPressed(InputType.SLOW))
-			partie.onPartieSlowDown();
+			ModelPartie.me.onPartieSlowDown();
 		
 		//Warn the UI so that it updates its UI for the slots
-		partie.notifyObserver();
+		ModelPartie.me.notifyObserver();
 	};
 	
 
 	@Override
-	protected boolean updateMouvementBasedOnPhysic(AbstractModelPartie partie){		
+	protected boolean updateMouvementBasedOnPhysic(){		
 		int herosMouvIndex=getMouvIndex();
 		
-		Hitbox[] hitboxesToSlideAccrocheOn = computeHitboxToSlideAccrocheOn(partie);
+		Hitbox[] hitboxesToSlideAccrocheOn = computeHitboxToSlideAccrocheOn();
 		boolean blocGaucheGlisse =hitboxesToSlideAccrocheOn[0]!=null;
 		boolean blocDroitGlisse =hitboxesToSlideAccrocheOn[1]!=null;
 		boolean blocGaucheAccroche=hitboxesToSlideAccrocheOn[2]!=null;
 		boolean blocDroitAccroche=hitboxesToSlideAccrocheOn[3]!=null;
 
-		boolean falling = !isGrounded(partie);
+		boolean falling = !isGrounded();
 		wasGrounded=!falling;
 		if(falling)
 			useGravity=falling && !this.getMouvement().isMouvement(EntityTypeMouv.ACCROCHE) && !isDragged();
 
-		boolean[] beginSliding= computeBeginSliding(partie,blocDroitGlisse,blocGaucheGlisse,falling); 
+		boolean[] beginSliding= computeBeginSliding(blocDroitGlisse,blocGaucheGlisse,falling); 
 		boolean beginSliding_r= beginSliding[0] ;
 		boolean beginSliding_l= beginSliding[1] ;
 
-		boolean[] beginAccroche= computeAccroche(partie,blocDroitGlisse,blocGaucheGlisse,blocDroitAccroche,blocGaucheAccroche,falling);
+		boolean[] beginAccroche= computeAccroche(blocDroitGlisse,blocGaucheGlisse,blocDroitAccroche,blocGaucheAccroche,falling);
 		boolean beginAccroche_r = beginAccroche[1];
 		boolean beginAccroche_l = beginAccroche[0];
 
@@ -571,35 +575,35 @@ public class Heros extends Entity{
 		
 		//Handle accroche starts/ends 
 		if(endAccroche){
-			Mouvement nextMouv = new Attente(ObjectType.HEROS,droite_gauche(herosMouvIndex),partie.getFrame());
+			Mouvement nextMouv = new Attente(ObjectType.HEROS,droite_gauche(herosMouvIndex),ModelPartie.me.getFrame());
 			int nextMouvIndex = (droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ? 0 : 2 );
 			
-			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+			boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 			if(success){
-				setMouvement(partie,nextMouv,nextMouvIndex);
+				setMouvement(nextMouv,nextMouvIndex);
 				return true;
 			}
 		}
 		else if(accrocheRightEarlyEnd || accrocheLeftEarlyEnd)
 		{
 			int nextMouvIndex= (droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ? 1 :4);
-			Mouvement nextMouv = new Saut(ObjectType.HEROS,droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ?SubMouvSautEnum.FALL_GAUCHE: SubMouvSautEnum.FALL_DROITE,partie.getFrame());
-			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+			Mouvement nextMouv = new Saut(ObjectType.HEROS,droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ?SubMouvSautEnum.FALL_GAUCHE: SubMouvSautEnum.FALL_DROITE,ModelPartie.me.getFrame());
+			boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 			if(success){
-				setMouvement(partie,nextMouv,nextMouvIndex);
+				setMouvement(nextMouv,nextMouvIndex);
 				return true;
 			}
 		}
 		else if((beginAccroche_r || beginAccroche_l) && !getMouvement().isMouvement(EntityTypeMouv.ACCROCHE))
 		{
-			Mouvement nextMouv= new Accroche(ObjectType.HEROS, beginAccroche_l? SubMouvAccrocheEnum.ACCROCHE_GAUCHE:SubMouvAccrocheEnum.ACCROCHE_DROITE,partie.getFrame());
+			Mouvement nextMouv= new Accroche(ObjectType.HEROS, beginAccroche_l? SubMouvAccrocheEnum.ACCROCHE_GAUCHE:SubMouvAccrocheEnum.ACCROCHE_DROITE,ModelPartie.me.getFrame());
 			int nextMouvIndex = (beginAccroche_l?0:2);
 			
-			double[] dx_dy = computeAlignAccroche(partie,beginAccroche_l,nextMouv,nextMouvIndex,hitboxesToSlideAccrocheOn);
+			double[] dx_dy = computeAlignAccroche(beginAccroche_l,nextMouv,nextMouvIndex,hitboxesToSlideAccrocheOn);
 			addXpos_sync((int)dx_dy[0]); addYpos_sync((int)dx_dy[1]);
 
-			if(isNextMouvValid(nextMouv,nextMouvIndex, partie, true)){
-				setMouvement(partie,nextMouv,nextMouvIndex);
+			if(isNextMouvValid(nextMouv,nextMouvIndex,  true)){
+				setMouvement(nextMouv,nextMouvIndex);
 				return true;
 			}
 			else{
@@ -625,11 +629,11 @@ public class Heros extends Entity{
 		
 		if(landSliding)
 		{
-			Mouvement nextMouv = new Attente(ObjectType.HEROS,droite_gauche(herosMouvIndex),partie.getFrame());
+			Mouvement nextMouv = new Attente(ObjectType.HEROS,droite_gauche(herosMouvIndex),ModelPartie.me.getFrame());
 			int nextMouvIndex = (droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ? 0 : 2 );
-			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+			boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 			if(success){
-				setMouvement(partie,nextMouv,nextMouvIndex);
+				setMouvement(nextMouv,nextMouvIndex);
 				return true;
 			}
 		}
@@ -637,21 +641,21 @@ public class Heros extends Entity{
 		else if(endSliding)
 		{
 			int nextMouvIndex= (droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ? 1 :4);
-			Mouvement nextMouv = new Saut(ObjectType.HEROS,droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ?SubMouvSautEnum.FALL_GAUCHE: SubMouvSautEnum.FALL_DROITE,partie.getFrame());
-			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+			Mouvement nextMouv = new Saut(ObjectType.HEROS,droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ?SubMouvSautEnum.FALL_GAUCHE: SubMouvSautEnum.FALL_DROITE,ModelPartie.me.getFrame());
+			boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 			if(success){
-				setMouvement(partie,nextMouv,nextMouvIndex);
+				setMouvement(nextMouv,nextMouvIndex);
 				return true;
 			}
 		}
 		else if( (beginSliding_r||beginSliding_l) && !getMouvement().isMouvement(EntityTypeMouv.GLISSADE))
 		{
-			Mouvement nextMouv = new Glissade(ObjectType.HEROS,beginSliding_l?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
+			Mouvement nextMouv = new Glissade(ObjectType.HEROS,beginSliding_l?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,ModelPartie.me.getFrame());
 			int nextMouvIndex = (beginSliding_l ? 0 :1);
 			
-			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+			boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 			if(success){
-				setMouvement(partie,nextMouv,nextMouvIndex);
+				setMouvement(nextMouv,nextMouvIndex);
 				return true;
 			}
 			
@@ -660,24 +664,24 @@ public class Heros extends Entity{
 		//Handle saut transition (falling or landing)
 		if(landing) 
 		{
-			Mouvement nextMouv = new Saut(ObjectType.HEROS,droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ?SubMouvSautEnum.LAND_GAUCHE:SubMouvSautEnum.LAND_DROITE,partie.getFrame());
+			Mouvement nextMouv = new Saut(ObjectType.HEROS,droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ?SubMouvSautEnum.LAND_GAUCHE:SubMouvSautEnum.LAND_DROITE,ModelPartie.me.getFrame());
 			int nextMouvIndex = (droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE)? 2 : 5 );
 			//on ajuste la position du personnage pour qu'il soit centre 
-			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+			boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 			if(success){
-				setMouvement(partie,nextMouv,nextMouvIndex);
+				setMouvement(nextMouv,nextMouvIndex);
 				return true;
 			}
 		}
 		else if(standup){
 			boolean keepRunning = runBeforeJump &&( inputPool.isInputDown(InputType.RIGHT) || inputPool.isInputDown(InputType.LEFT));
 			int nextMouvIndex = keepRunning? (droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ? 0 : 4 ) : (droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ? 0 : 2 );
-			Mouvement_entity nextMouv=  keepRunning? new Course(ObjectType.HEROS,droite_gauche(herosMouvIndex),partie.getFrame()) 
-					: new Attente(ObjectType.HEROS,droite_gauche(herosMouvIndex),partie.getFrame());
+			Mouvement_entity nextMouv=  keepRunning? new Course(ObjectType.HEROS,droite_gauche(herosMouvIndex),ModelPartie.me.getFrame()) 
+					: new Attente(ObjectType.HEROS,droite_gauche(herosMouvIndex),ModelPartie.me.getFrame());
 			//on ajuste la position du personnage pour qu'il soit centre
-			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+			boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 			if(success){
-				setMouvement(partie,nextMouv,nextMouvIndex);
+				setMouvement(nextMouv,nextMouvIndex);
 				return true;
 			}
 		}
@@ -686,12 +690,12 @@ public class Heros extends Entity{
 			int down = getGlobalVit().y>=0 ? 1 : 0;
 			SubTypeMouv sub_type_mouv = droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ? (down==0?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.FALL_GAUCHE) :
 				(down==0?SubMouvSautEnum.JUMP_DROITE:SubMouvSautEnum.FALL_DROITE);
-			Mouvement nextMouv = new Saut(ObjectType.HEROS,sub_type_mouv,partie.getFrame());
+			Mouvement nextMouv = new Saut(ObjectType.HEROS,sub_type_mouv,ModelPartie.me.getFrame());
 			int nextMouvIndex = (droite_gauche(herosMouvIndex).equals(DirSubTypeMouv.GAUCHE) ? 0+down :3+down);
 			if(!getMouvement().isMouvement(nextMouv) || herosMouvIndex!=nextMouvIndex){
-				boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+				boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 				if(success){
-					setMouvement(partie,nextMouv,nextMouvIndex);
+					setMouvement(nextMouv,nextMouvIndex);
 					return true;
 				}
 			}
@@ -699,13 +703,13 @@ public class Heros extends Entity{
 		return false; 
 	}
 	@Override
-	protected boolean updateNonInterruptibleMouvement(AbstractModelPartie partie){
+	protected boolean updateNonInterruptibleMouvement(){
 		//Accroche anim 1 or 3
 		//Saut anim 2 or 5 
 		return false;
 	}
 	@Override
-	protected boolean updateMouvementBasedOnInput(AbstractModelPartie partie){
+	protected boolean updateMouvementBasedOnInput(){
 		if(!getMouvement().isInterruptible(getMouvIndex()))
 			return false;
 		//Current move priority: dash>shooting arrow> jump> aiming arrow> move (right/left...) 
@@ -723,13 +727,13 @@ public class Heros extends Entity{
 		{	
 			//shoot arrow whatever happens
 			if(arrowArmedIndex>-1){
-				this.shootArrow(partie);
+				this.shootArrow();
 			}
 			int nextMouvIndex = (droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE) ? 0 : 2) ;
-			Mouvement nextMouv = new Attente(ObjectType.HEROS,droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE)? DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
-			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+			Mouvement nextMouv = new Attente(ObjectType.HEROS,droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE)? DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,ModelPartie.me.getFrame());
+			boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 			if(success){
-				setMouvement(partie,nextMouv,nextMouvIndex);
+				setMouvement(nextMouv,nextMouvIndex);
 				return true;
 			}
 		}
@@ -743,22 +747,22 @@ public class Heros extends Entity{
 			if(heros_glisse)
 			{
 				nextMouvIndex= (droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE)? 0 : 3);
-				nextMouv=new Saut(ObjectType.HEROS,nextMouvIndex==0?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE,partie.getFrame() );
+				nextMouv=new Saut(ObjectType.HEROS,nextMouvIndex==0?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE,ModelPartie.me.getFrame() );
 			}
 			else if(heros_hanging)
 			{
 				nextMouvIndex= ((getMouvIndex() == 0)? 0 : 3);
-				nextMouv=new Saut(ObjectType.HEROS,nextMouvIndex==0?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE,partie.getFrame() );
+				nextMouv=new Saut(ObjectType.HEROS,nextMouvIndex==0?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE,ModelPartie.me.getFrame() );
 			}
 			else if(wasGrounded){
 				nextMouvIndex=droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE) ? 0 : 3 ;
-				nextMouv= new Saut(ObjectType.HEROS,nextMouvIndex==0?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE,partie.getFrame() );
+				nextMouv= new Saut(ObjectType.HEROS,nextMouvIndex==0?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE,ModelPartie.me.getFrame() );
 			}
 			if(nextMouv != null){
-				boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+				boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 				if(success){
 					runBeforeJump = getMouvement().isMouvement(EntityTypeMouv.COURSE);
-					setMouvement(partie,nextMouv,nextMouvIndex);
+					setMouvement(nextMouv,nextMouvIndex);
 					//Handle speed there as it is set only one time (jump is not a continuous speed)
 					shouldUpdateSpeed = false;
 					setJumpSpeed(heros_glisse,false,!heros_glisse&&(heros_hanging||wasGrounded));
@@ -771,16 +775,16 @@ public class Heros extends Entity{
 		int shootDownIndex = inputPool.getInputFirstPressed(InputTypeArray.SHOOT);
 		//Note: Prevent to shoot if we are in a Tir mouvement already (this means that the shot arrow didn't ended correctly)
 		if(shootDownIndex>-1 && !getMouvement().isMouvement(EntityTypeMouv.TIR) && arrowArmedIndex==-1
-				&& ((System.nanoTime()-this.last_shoot_time)>InterfaceConstantes.FLECHE_TIR_COOLDOWN) && canShootArrow(partie,shootDownIndex))
+				&& ((System.nanoTime()-this.last_shoot_time)>InterfaceConstantes.FLECHE_TIR_COOLDOWN) && canShootArrow(shootDownIndex))
 		{
-			Mouvement nextMouv = new Tir(ObjectType.HEROS,null,partie.getFrame()); 
-			double[] mouv_index_rotation = Deplace.getMouvIndexRotationTir(partie,false);
+			Mouvement nextMouv = new Tir(ObjectType.HEROS,null,ModelPartie.me.getFrame()); 
+			double[] mouv_index_rotation = Deplace.getMouvIndexRotationTir(false);
 			int nextMouvIndex = (int)mouv_index_rotation[0];
-			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+			boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 			if(success){
-				armArrow(partie,shootDownIndex);
+				armArrow(shootDownIndex);
 				rotation_tir=mouv_index_rotation[1];
-				setMouvement(partie,nextMouv,nextMouvIndex);
+				setMouvement(nextMouv,nextMouvIndex);
 				return true;
 			}
 		}
@@ -794,10 +798,10 @@ public class Heros extends Entity{
 			runBeforeJump = false;
 			if(wasGrounded){
 				int nextMouvIndex = (droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE) ? 0 : 2) ;
-				Mouvement nextMouv = new Attente(ObjectType.HEROS,droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE)? DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
-				boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+				Mouvement nextMouv = new Attente(ObjectType.HEROS,droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE)? DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,ModelPartie.me.getFrame());
+				boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 				if(success){
-					setMouvement(partie,nextMouv,nextMouvIndex);
+					setMouvement(nextMouv,nextMouvIndex);
 					return true;
 				}
 			}
@@ -805,12 +809,12 @@ public class Heros extends Entity{
 				int up = getGlobalVit().y>=0 ? 1 : 0;
 				SubTypeMouv sub_type_mouv = droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE) ? (up==0?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.FALL_GAUCHE) :
 					(up==0?SubMouvSautEnum.JUMP_DROITE:SubMouvSautEnum.FALL_DROITE);
-				Mouvement nextMouv = new Saut(ObjectType.HEROS,sub_type_mouv,partie.getFrame());
+				Mouvement nextMouv = new Saut(ObjectType.HEROS,sub_type_mouv,ModelPartie.me.getFrame());
 				int nextMouvIndex = (droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE) ? 0+up :3+up);
 				
-				boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+				boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 				if(success){
-					setMouvement(partie,nextMouv,nextMouvIndex);
+					setMouvement(nextMouv,nextMouvIndex);
 					return true;
 				}	
 			}
@@ -841,10 +845,10 @@ public class Heros extends Entity{
 			if(! (isRunning && isRunningInSameDirection))
 			{
 				int nextMouvIndex= courseDroiteDown?4:0; 
-				Mouvement nextMouv= new Course(ObjectType.HEROS,courseDroiteDown?DirSubTypeMouv.DROITE:DirSubTypeMouv.GAUCHE,partie.getFrame()); 
-				boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+				Mouvement nextMouv= new Course(ObjectType.HEROS,courseDroiteDown?DirSubTypeMouv.DROITE:DirSubTypeMouv.GAUCHE,ModelPartie.me.getFrame()); 
+				boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 				if(success){
-					setMouvement(partie,nextMouv,nextMouvIndex);
+					setMouvement(nextMouv,nextMouvIndex);
 					return true;
 				}
 			}
@@ -873,13 +877,13 @@ public class Heros extends Entity{
 					nextMouvIndex= (getGlobalVit().y>=0 ? saut_anim_offset+1 : saut_anim_offset); 
 					SubMouvSautEnum subMouv = marcheDroiteDown?(getGlobalVit().y>=0? SubMouvSautEnum.FALL_DROITE:SubMouvSautEnum.JUMP_DROITE) 
 							: (getGlobalVit().y>=0? SubMouvSautEnum.FALL_GAUCHE:SubMouvSautEnum.JUMP_GAUCHE);
-					nextMouv= new Saut(ObjectType.HEROS,subMouv,partie.getFrame()); 
+					nextMouv= new Saut(ObjectType.HEROS,subMouv,ModelPartie.me.getFrame()); 
 				}
 				//Move in same direction while accroche => climb
 				else if(heros_accroche && isFirstAccrocheAnim && moveInSameDirection)
 				{
 					nextMouvIndex= marcheDroiteDown?1+nb_accroche_anim_offset: 1; 
-					nextMouv= new Accroche(ObjectType.HEROS,marcheDroiteDown?SubMouvAccrocheEnum.GRIMPE_DROITE:SubMouvAccrocheEnum.GRIMPE_GAUCHE,partie.getFrame()); 						
+					nextMouv= new Accroche(ObjectType.HEROS,marcheDroiteDown?SubMouvAccrocheEnum.GRIMPE_DROITE:SubMouvAccrocheEnum.GRIMPE_GAUCHE,ModelPartie.me.getFrame()); 						
 					accrocheAlign = true;
 				}
 			}
@@ -887,7 +891,7 @@ public class Heros extends Entity{
 			else if(!(getMouvement().isMouvement(EntityTypeMouv.MARCHE) && moveInSameDirection)&& wasGrounded)
 			{
 				nextMouvIndex= marche_anim_offset; 
-				nextMouv=new Marche(ObjectType.HEROS,marcheDroiteDown?DirSubTypeMouv.DROITE:DirSubTypeMouv.GAUCHE,partie.getFrame());
+				nextMouv=new Marche(ObjectType.HEROS,marcheDroiteDown?DirSubTypeMouv.DROITE:DirSubTypeMouv.GAUCHE,ModelPartie.me.getFrame());
 			}
 
 			//Moving while being in air 
@@ -896,17 +900,17 @@ public class Heros extends Entity{
 				nextMouvIndex= (getGlobalVit().y>=0 ? saut_anim_offset+1 : saut_anim_offset); 
 				SubMouvSautEnum subMouv = marcheDroiteDown?(getGlobalVit().y>=0? SubMouvSautEnum.FALL_DROITE:SubMouvSautEnum.JUMP_DROITE) 
 						: (getGlobalVit().y>=0? SubMouvSautEnum.FALL_GAUCHE:SubMouvSautEnum.JUMP_GAUCHE);
-				nextMouv= new Saut(ObjectType.HEROS,subMouv,partie.getFrame()); 
+				nextMouv= new Saut(ObjectType.HEROS,subMouv,ModelPartie.me.getFrame()); 
 			}
 			if(nextMouv != null){
 				boolean success = false;
 				if(accrocheAlign)
-					success = alignAccrocheClimbMouvement(partie,nextMouv, nextMouvIndex);
+					success = alignAccrocheClimbMouvement(nextMouv, nextMouvIndex);
 				else
-					success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+					success = alignNextMouvement(nextMouv, nextMouvIndex);
 				if(success){
 					prevDirectionWasRight  = rightAndLeftPressedTogether?prevDirectionWasRight :  (isMoveRightDown || isMoveRightDTapDown);
-					setMouvement(partie,nextMouv,nextMouvIndex);
+					setMouvement(nextMouv,nextMouvIndex);
 					return true;
 				}
 			}
@@ -915,15 +919,15 @@ public class Heros extends Entity{
 	}//end of function
 
 	@Override
-	protected boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie){
+	protected boolean updateMouvementBasedOnAnimation(){
 		if(getMouvement().isMouvement(EntityTypeMouv.TIR)){
-				double[] mouv_index_rotation = Deplace.getMouvIndexRotationTir(partie,false);
+				double[] mouv_index_rotation = Deplace.getMouvIndexRotationTir(false);
 				int nextMouvIndex = (int)mouv_index_rotation[0];
-				Mouvement nextMouv = new Tir(ObjectType.HEROS,null,partie.getFrame());
-				boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+				Mouvement nextMouv = new Tir(ObjectType.HEROS,null,ModelPartie.me.getFrame());
+				boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 				if(success){
 					rotation_tir=mouv_index_rotation[1];
-					setMouvement(partie,nextMouv,nextMouvIndex);
+					setMouvement(nextMouv,nextMouvIndex);
 					return true;
 			}
 			 
@@ -931,21 +935,21 @@ public class Heros extends Entity{
 		else if(getMouvement().isMouvement(EntityTypeMouv.ACCROCHE) && ( (getMouvIndex() == 1) || (getMouvIndex() == 3)) && getMouvement().animEndedOnce())
 		{					
 			int nextMouvIndex = (droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE) ? 0 : 2) ;
-			Mouvement nextMouv = new Attente(ObjectType.HEROS,droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE)? DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
+			Mouvement nextMouv = new Attente(ObjectType.HEROS,droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE)? DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,ModelPartie.me.getFrame());
 			
-			boolean success = alignNextMouvement(partie,nextMouv,nextMouvIndex);
+			boolean success = alignNextMouvement(nextMouv,nextMouvIndex);
 			if(success){
-				setMouvement(partie,nextMouv,nextMouvIndex);
+				setMouvement(nextMouv,nextMouvIndex);
 				return true;
 			}
 		}
 		else// MEME MOUVEMENT QUE PRECEDEMMENT
 		{
-			int nextMouvIndex = getMouvement().updateAnimation(getMouvIndex(), partie.getFrame(),conditions.getSpeedFactor());
+			int nextMouvIndex = getMouvement().updateAnimation(getMouvIndex(), ModelPartie.me.getFrame(),conditions.getSpeedFactor());
 			if(getMouvIndex()!=nextMouvIndex){
-				boolean success = alignNextMouvement(partie,getMouvement(), nextMouvIndex);
+				boolean success = alignNextMouvement(getMouvement(), nextMouvIndex);
 				if(success){
-					setMouvement(partie,getMouvement(),nextMouvIndex);
+					setMouvement(getMouvement(),nextMouvIndex);
 				}
 			}
 			return true;
@@ -953,11 +957,11 @@ public class Heros extends Entity{
 		return false;
 	}
 	@Override
-	protected void resetInputState(AbstractModelPartie partie){
+	protected void resetInputState(){
 		inputPool.updateInputState();
 	}
 	@Override 
-	protected void onMouvementChanged(AbstractModelPartie partie,boolean animationChanged, boolean mouvementChanged){
+	protected void onMouvementChanged(boolean animationChanged, boolean mouvementChanged){
 	}
 	
 	private Collidable accrocheCol=null;
@@ -967,7 +971,7 @@ public class Heros extends Entity{
 	 * @param partie
 	 * @return [heros can slide on left bloc, heros can slide on right bloc, heros can accroche on left bloc, heros can accroche on right bloc]
 	 */
-	private Hitbox[] computeHitboxToSlideAccrocheOn(AbstractModelPartie partie){
+	private Hitbox[] computeHitboxToSlideAccrocheOn(){
 		
 		ModelPrincipal.debugTime.startElapsedForVerbose();
 		
@@ -978,12 +982,12 @@ public class Heros extends Entity{
 		Hitbox blocGaucheAccrocheHit = null;
 		
 		//translate all object hitboxes, see collision to get full formula
-		Hitbox herosHitbox= getHitbox(partie.getScreenDisp(),partie.getScreenDisp());
+		Hitbox herosHitbox= getHitbox(ModelPartie.me.getScreenDisp(),ModelPartie.me.getScreenDisp());
 		ModelPrincipal.debugTime.elapsed("get heros hitbox");
-		List<Collidable> mondeBlocs = Collision.getMondeBlocs(partie.monde,herosHitbox, partie.INIT_RECT,partie.getScreenDisp(),partie.TAILLE_BLOC);
+		List<Collidable> mondeBlocs = Collision.getMondeBlocs(ModelPartie.me.monde,herosHitbox, ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp(),ModelPartie.me.TAILLE_BLOC);
 		ModelPrincipal.debugTime.elapsed("monde bloc");
 
-		List<Collidable> effectColl = Collidable.getAllCollidableEffectOnScreen(partie);
+		List<Collidable> effectColl = Collidable.getAllCollidableEffectOnScreen();
 		ModelPrincipal.debugTime.elapsed("get all collidable effect");
 		
 		List<Collidable> allColli = new ArrayList<Collidable>();
@@ -991,15 +995,15 @@ public class Heros extends Entity{
 		allColli.addAll(effectColl);
 		
 		//Get the hitbox uses to detect glissade or accroche (hitbox around the hand)
-		Polygon p_glissade_d= getGliss_Accroch_Hitbox(partie,true,true).polygon;
-		Polygon p_glissade_g= getGliss_Accroch_Hitbox(partie,true,false).polygon;
-		Polygon p_accroche_d= getGliss_Accroch_Hitbox(partie,false,true).polygon;
-		Polygon p_accroche_g= getGliss_Accroch_Hitbox(partie,false,false).polygon;
+		Polygon p_glissade_d= getGliss_Accroch_Hitbox(true,true).polygon;
+		Polygon p_glissade_g= getGliss_Accroch_Hitbox(true,false).polygon;
+		Polygon p_accroche_d= getGliss_Accroch_Hitbox(false,true).polygon;
+		Polygon p_accroche_g= getGliss_Accroch_Hitbox(false,false).polygon;
 		
 		ModelPrincipal.debugTime.startElapsedForVerbose();
 		for(Collidable coll : allColli)
 		{
-			Hitbox box = coll.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
+			Hitbox box = coll.getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp());
 			//Check the collision with this collidable
 			Polygon p_coll= box.polygon;
 			int a = GJK_EPA.intersectsB(p_glissade_d,p_coll, getGlobalVit());
@@ -1036,7 +1040,7 @@ public class Heros extends Entity{
 		return res;
 	}
 
-	private boolean[] computeSlide_Accroche(AbstractModelPartie partie,boolean slide, boolean blocDroitGlisse, boolean blocGaucheGlisse, boolean blocDroitAccroche, boolean blocGaucheAccroche, boolean falling)
+	private boolean[] computeSlide_Accroche(boolean slide, boolean blocDroitGlisse, boolean blocGaucheGlisse, boolean blocDroitAccroche, boolean blocGaucheAccroche, boolean falling)
 	{
 		boolean blocGauche = slide? blocGaucheGlisse : (!blocGaucheGlisse && blocGaucheAccroche);
 		boolean blocDroit = slide? blocDroitGlisse:  (!blocDroitGlisse && blocDroitAccroche);
@@ -1050,14 +1054,14 @@ public class Heros extends Entity{
 		//caution for accroche, res_d is actually res_l, and res_l res_d
 		return res;
 	}
-	public boolean[] computeBeginSliding(AbstractModelPartie partie,boolean blocDroitGlisse, boolean blocGaucheGlisse,boolean falling)
+	public boolean[] computeBeginSliding(boolean blocDroitGlisse, boolean blocGaucheGlisse,boolean falling)
 	{
-		return computeSlide_Accroche(partie,true,blocDroitGlisse,blocGaucheGlisse,false,false,falling);
+		return computeSlide_Accroche(true,blocDroitGlisse,blocGaucheGlisse,false,false,falling);
 	}
 
-	public boolean[] computeAccroche(AbstractModelPartie partie,boolean blocDroitGlisse, boolean blocGaucheGlisse, boolean blocDroitAccroche, boolean blocGaucheAccroche, boolean falling)
+	public boolean[] computeAccroche(boolean blocDroitGlisse, boolean blocGaucheGlisse, boolean blocDroitAccroche, boolean blocGaucheAccroche, boolean falling)
 	{
-		return computeSlide_Accroche(partie,false,blocDroitGlisse,blocGaucheGlisse,blocDroitAccroche,blocGaucheAccroche,falling);
+		return computeSlide_Accroche(false,blocDroitGlisse,blocGaucheGlisse,blocDroitAccroche,blocGaucheAccroche,falling);
 	}
 	
 	/***
@@ -1069,17 +1073,17 @@ public class Heros extends Entity{
 	 * @param hitboxesToSlideAccrocheOn
 	 * @return [dx,dy]
 	 */
-	public double[] computeAlignAccroche(AbstractModelPartie partie, boolean beginAccroche_l,Mouvement nextMouv, int nextMouvIndex, Hitbox[] hitboxesToSlideAccrocheOn){
+	public double[] computeAlignAccroche( boolean beginAccroche_l,Mouvement nextMouv, int nextMouvIndex, Hitbox[] hitboxesToSlideAccrocheOn){
 		//Manually align hitbox 
 		int xdir = beginAccroche_l ? -1 :1;
 		int ydir = -1; //get upper part of hitbox
 
-		double ycurrentup = Hitbox.supportPoint(new Vector2d(0,ydir), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),getMouvement(), getMouvIndex()).polygon).y;
+		double ycurrentup = Hitbox.supportPoint(new Vector2d(0,ydir), getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp(),getMouvement(), getMouvIndex()).polygon).y;
 		//get value to align hitbox 
-		double dx= Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),getMouvement(), getMouvIndex()).polygon).x -
-				Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouv, nextMouvIndex).polygon).x;
+		double dx= Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp(),getMouvement(), getMouvIndex()).polygon).x -
+				Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp(),nextMouv, nextMouvIndex).polygon).x;
 		double dy= ycurrentup -
-				Hitbox.supportPoint(new Vector2d(0,ydir), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouv, nextMouvIndex).polygon).y;
+				Hitbox.supportPoint(new Vector2d(0,ydir), getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp(),nextMouv, nextMouvIndex).polygon).y;
 
 		//align to lower bloc: make ycurrentup align with top of collider hitbox 
 		double colliderTopY=0;
@@ -1093,7 +1097,7 @@ public class Heros extends Entity{
 		return res;
 	}
 
-	public boolean alignNextMouvement(AbstractModelPartie partie,Mouvement nextMouv, int nextIndex){
+	public boolean alignNextMouvement(Mouvement nextMouv, int nextIndex){
 		
 		int currentMouvIndex = getMouvIndex();
 		
@@ -1111,7 +1115,7 @@ public class Heros extends Entity{
 		boolean success = false;
 		
 		try{
-			success = super.alignNextMouvement(partie, nextMouv, nextIndex, left? XAlignmentType.LEFT : XAlignmentType.RIGHT,
+			success = super.alignNextMouvement( nextMouv, nextIndex, left? XAlignmentType.LEFT : XAlignmentType.RIGHT,
 					down?YAlignmentType.BOTTOM : YAlignmentType.TOP , true, !nextMouv.isMouvement(EntityTypeMouv.GLISSADE));
 		} catch(Exception e){e.printStackTrace();}
 		return success;
@@ -1123,7 +1127,7 @@ public class Heros extends Entity{
 	 * @param nextMouvIndex
 	 * @return true if alignment is valid
 	 */
-	public boolean alignAccrocheClimbMouvement(AbstractModelPartie partie,Mouvement nextMouv,int nextMouvIndex){
+	public boolean alignAccrocheClimbMouvement(Mouvement nextMouv,int nextMouvIndex){
 		boolean accroche_not_enough_space = false;
 		
 		DirSubTypeMouv nextDir = nextMouv.droite_gauche(nextMouvIndex,getRotation());
@@ -1136,20 +1140,20 @@ public class Heros extends Entity{
 		//top of hitbox should now be bottom of next hitbox 
 		//Manually align hitbox 
 
-		double ycurrentup = Hitbox.supportPoint(new Vector2d(0,ydir_up), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),getMouvement(), getMouvIndex()).polygon).y;
+		double ycurrentup = Hitbox.supportPoint(new Vector2d(0,ydir_up), getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp(),getMouvement(), getMouvIndex()).polygon).y;
 		//get value to align hitbox 
-		double next_x = Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouv, nextMouvIndex).polygon).x;
-		double dx= Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),getMouvement(), getMouvIndex()).polygon).x -
+		double next_x = Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp(),nextMouv, nextMouvIndex).polygon).x;
+		double dx= Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp(),getMouvement(), getMouvIndex()).polygon).x -
 				next_x;
 
-		double next_y_bottom = Hitbox.supportPoint(new Vector2d(0,ydir_down), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouv, nextMouvIndex).polygon).y;
+		double next_y_bottom = Hitbox.supportPoint(new Vector2d(0,ydir_down), getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp(),nextMouv, nextMouvIndex).polygon).y;
 		double dy= ycurrentup -next_y_bottom;
 
 		//Variables to test  if the heros would have enough space to stand up
-		Mouvement nextMouv_space = new Attente(ObjectType.HEROS,nextDir,partie.getFrame());
+		Mouvement nextMouv_space = new Attente(ObjectType.HEROS,nextDir,ModelPartie.me.getFrame());
 		int nextMouvIndex_space = (nextDir.equals(DirSubTypeMouv.GAUCHE) ? 0 : 2 );
-		double x_space= Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouv_space, nextMouvIndex_space).polygon).x;
-		double y_bottom_space= Hitbox.supportPoint(new Vector2d(0,ydir_down), getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouv_space, nextMouvIndex_space).polygon).y;
+		double x_space= Hitbox.supportPoint(new Vector2d(xdir,0), getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp(),nextMouv_space, nextMouvIndex_space).polygon).x;
+		double y_bottom_space= Hitbox.supportPoint(new Vector2d(0,ydir_down), getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp(),nextMouv_space, nextMouvIndex_space).polygon).y;
 
 		//Normal match 
 		int xdecall = 12 *  (nextDir.equals(DirSubTypeMouv.GAUCHE)? -1:1);
@@ -1163,8 +1167,8 @@ public class Heros extends Entity{
 		addXpos_sync( (int) (dx_space));
 		addYpos_sync( (int) (dy_space));
 
-		Hitbox attenteHit = getHitbox(partie.INIT_RECT,partie.getScreenDisp(),nextMouv_space, nextMouvIndex_space).copy();
-		accroche_not_enough_space=Collision.isWorldCollision(partie,attenteHit , true);
+		Hitbox attenteHit = getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp(),nextMouv_space, nextMouvIndex_space).copy();
+		accroche_not_enough_space=Collision.isWorldCollision(attenteHit , true);
 		addXpos_sync( (int) (-dx_space));
 		addYpos_sync( (int) (-dy_space));
 		//revert motion if stuck
@@ -1176,7 +1180,7 @@ public class Heros extends Entity{
 		}
 		return !accroche_not_enough_space;
 	}
-	//protected boolean alignNextMouvement(AbstractModelPartie partie,Mouvement nextMouv, int nextIndex,XAlignmentType xAlignment,YAlignmentType yAlignment,boolean avoidCollision,boolean useTouchCollision) throws Exception{
+	//protected boolean alignNextMouvement(Mouvement nextMouv, int nextIndex,XAlignmentType xAlignment,YAlignmentType yAlignment,boolean avoidCollision,boolean useTouchCollision) throws Exception{
 	
 	@Override
 	public void updateTimers()
@@ -1222,7 +1226,7 @@ public class Heros extends Entity{
 
 	}
 	@Override
-	public void handleStuck(AbstractModelPartie partie) {
+	public void handleStuck() {
 		System.out.println("heros stuck "+ getMouvement().getClass().getName()+" "+ getMouvIndex());
 		if(currentValue!=null)
 			currentValue.res();
@@ -1233,7 +1237,7 @@ public class Heros extends Entity{
 	}
 
 	@Override
-	public void handleDeplacementSuccess(AbstractModelPartie partie) {
+	public void handleDeplacementSuccess() {
 
 	}
 
@@ -1248,7 +1252,7 @@ public class Heros extends Entity{
 	 * @param add_to_list
 	 * @return
 	 */
-	public Fleche getArrowInstance(AbstractModelPartie partie,int _arrowArmedIndex,boolean add_to_list)
+	public Fleche getArrowInstance(int _arrowArmedIndex,boolean add_to_list)
 	{
 		Fleche fleche = null;
 		if(_arrowArmedIndex==-1)
@@ -1260,46 +1264,46 @@ public class Heros extends Entity{
 		//Only give the shooter information in the fleche constructor if it is needed 
 		//MATERIEL
 		if(tir_type.equals(ObjectType.FEU))
-			fleche =new Fleche_feu(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
+			fleche =new Fleche_feu(ModelPartie.me.tabFleche,ModelPartie.me.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type.equals(ObjectType.ELECTRIQUE))
-			fleche =new Fleche_electrique(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
+			fleche =new Fleche_electrique(ModelPartie.me.tabFleche,ModelPartie.me.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type.equals(ObjectType.GLACE))
-			fleche =new Fleche_glace(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
+			fleche =new Fleche_glace(ModelPartie.me.tabFleche,ModelPartie.me.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type.equals(ObjectType.ROCHE))
-			fleche =new Fleche_roche(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
+			fleche =new Fleche_roche(ModelPartie.me.tabFleche,ModelPartie.me.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 
 		//SPIRITUELLE
 		else if(tir_type.equals(ObjectType.LUMIERE))
-			fleche =new Fleche_lumiere(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
+			fleche =new Fleche_lumiere(ModelPartie.me.tabFleche,ModelPartie.me.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type.equals(ObjectType.GRAPPIN))
-			fleche =new Fleche_grappin(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
+			fleche =new Fleche_grappin(ModelPartie.me.tabFleche,ModelPartie.me.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type.equals(ObjectType.OMBRE))
-			fleche =new Fleche_ombre(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
+			fleche =new Fleche_ombre(ModelPartie.me.tabFleche,ModelPartie.me.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type.equals(ObjectType.VENT))
-			fleche =new Fleche_vent(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
+			fleche =new Fleche_vent(ModelPartie.me.tabFleche,ModelPartie.me.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 
 		//DESTRUCTEUR
 		else if(tir_type.equals(ObjectType.BARRAGE))
-			fleche =new Fleche_barrage(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
+			fleche =new Fleche_barrage(ModelPartie.me.tabFleche,ModelPartie.me.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type.equals(ObjectType.FAUCON))
-			fleche =new Fleche_faucon(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
+			fleche =new Fleche_faucon(ModelPartie.me.tabFleche,ModelPartie.me.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type.equals(ObjectType.EXPLOSIVE))
-			fleche =new Fleche_explosive(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
+			fleche =new Fleche_explosive(ModelPartie.me.tabFleche,ModelPartie.me.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type.equals(ObjectType.TROU_NOIR))
-			fleche =new Fleche_trou_noir(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
+			fleche =new Fleche_trou_noir(ModelPartie.me.tabFleche,ModelPartie.me.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 
 		//RUSE
 		else if(tir_type.equals(ObjectType.MARQUE_MORTELLE))
-			fleche =new Fleche_marque_mortelle(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
+			fleche =new Fleche_marque_mortelle(ModelPartie.me.tabFleche,ModelPartie.me.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type.equals(ObjectType.ABSORPTION))
-			fleche =new Fleche_absorption(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
+			fleche =new Fleche_absorption(ModelPartie.me.tabFleche,ModelPartie.me.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type.equals(ObjectType.LEURRE))
-			fleche =new Fleche_leurre(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
+			fleche =new Fleche_leurre(ModelPartie.me.tabFleche,ModelPartie.me.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 		else if(tir_type.equals(ObjectType.NINJA))
-			fleche =new Fleche_ninja(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
+			fleche =new Fleche_ninja(ModelPartie.me.tabFleche,ModelPartie.me.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 
 		else if(tir_type.equals(ObjectType.FLECHE))
-			fleche =new Fleche(partie.tabFleche,partie.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
+			fleche =new Fleche(ModelPartie.me.tabFleche,ModelPartie.me.getFrame(),this,add_to_list,conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 
 		return fleche;
 	}
@@ -1307,10 +1311,10 @@ public class Heros extends Entity{
 	/**
 	 * Test if the Heros can shoot an arrow (enough seyeri, can shoot several instance of this arrow...) 
 	 */
-	public boolean canShootArrow(AbstractModelPartie partie,int _arrowArmedIndex)
+	public boolean canShootArrow(int _arrowArmedIndex)
 	{
-		List<Projectile> tabFleche= partie.tabFleche;
-		Fleche f = getArrowInstance(partie,_arrowArmedIndex,false);
+		List<Projectile> tabFleche= ModelPartie.me.tabFleche;
+		Fleche f = getArrowInstance(_arrowArmedIndex,false);
 		int arrow_max_instance= f.MAX_NUMBER_INSTANCE;
 		int current_instance = 0;
 		boolean enough_seyeri=seyeriActionPossible(f.seyeri_cost);
@@ -1339,7 +1343,7 @@ public class Heros extends Entity{
 						current_instance+=1;
 						if(current_instance>=arrow_max_instance)
 						{
-							can_shoot_one_more=fl.OnArrowReshot(partie,first_fleche);
+							can_shoot_one_more=fl.OnArrowReshot(first_fleche);
 							break;
 						}
 					}
@@ -1351,50 +1355,51 @@ public class Heros extends Entity{
 		return (enough_seyeri && notParalyzed && can_shoot_one_more);
 	}
 	
-	public void armArrow(AbstractModelPartie partie,int _arrowArmedIndex){
-		armedArrow =getArrowInstance(partie,_arrowArmedIndex,true);
+	public void armArrow(int _arrowArmedIndex){
+		armedArrow =getArrowInstance(_arrowArmedIndex,true);
 		arrowArmedIndex = _arrowArmedIndex;
 
-		addSeyeri(partie, armedArrow.seyeri_cost);
+		addSeyeri( armedArrow.seyeri_cost);
 	}
 	
-	public void shootArrow(AbstractModelPartie partie)
+	public void shootArrow()
 	{	
 		last_shoot_time= System.nanoTime();
-		armedArrow.OnShoot(partie);
+		armedArrow.OnShoot();
 		armedArrow=null; //remove reference to armed arrow 
 		arrowArmedIndex = -1;
 	}
 	@Override
-	public void onDestroy(AbstractModelPartie partie) {
+	public void onDestroy() {
 		//Do nothing
 	}
 
 	@Override
-	public void destroy(AbstractModelPartie partie,boolean destroyNow) {
+	public void destroy(boolean destroyNow) {
 		//Remove all related effects 
 		if(destroyNow)
 			this.needDestroy=true;
 		else 
 			timer();
-		for(int i=currentEffects.size()-1;i>=0;--i)
+		Set<Effect> keys = currentEffectsMap.keySet();
+		for(Effect key:keys)
 		{
-			unregisterEffect(partie,currentEffects.get(i));
+			unregisterEffect(currentEffectsMap.get(key));
 		}
 
 		//Remove all reference:
 		//_shooter from fleche
-		for(int j= partie.tabFleche.size()-1; j>=0;j--)
+		for(int j= ModelPartie.me.tabFleche.size()-1; j>=0;j--)
 		{
-			Heros _shooter = ((Fleche)partie.tabFleche.get(j)).shooter;
+			Heros _shooter = ((Fleche)ModelPartie.me.tabFleche.get(j)).shooter;
 			if(_shooter==this)
 			{
 				_shooter=null;
 			}
 		}
 		//from partie
-		if(partie.heros==this)
-			partie.heros=null;
+		if(ModelPartie.me.heros==this)
+			ModelPartie.me.heros=null;
 	}
 
 }

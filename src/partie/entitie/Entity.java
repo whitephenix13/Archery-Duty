@@ -1,20 +1,23 @@
 package partie.entitie;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map.Entry;
+import java.util.Set;
 
-import debug.DebugStack;
 import gameConfig.ObjectTypeHelper;
 import gameConfig.ObjectTypeHelper.ObjectType;
-import menu.menuPrincipal.GameHandler;
 import partie.collision.Collidable;
 import partie.collision.Collision;
 import partie.collision.Hitbox;
 import partie.conditions.ConditionHandler;
 import partie.effects.Effect;
+import partie.effects.EffectConsequence;
 import partie.effects.Grappin_effect;
 import partie.entitie.heros.Heros;
-import partie.modelPartie.AbstractModelPartie;
 import partie.modelPartie.DamageDrawer;
+import partie.modelPartie.ModelPartie;
 import partie.mouvement.entity.Mouvement_entity.EntityTypeMouv;
 import utils.Vitesse;
 
@@ -23,7 +26,8 @@ public abstract class Entity extends Collidable{
 	public float MAXLIFE ;
 	public float MINLIFE ;
 	protected float life;
-	public ArrayList<Effect> currentEffects;
+	public HashMap<Effect,EffectConsequence> currentEffectsMap;
+	
 	public ArrayList<DamageDrawer> lastDamageTaken;
 	
 	public double last_feu_effect_update = -1;
@@ -39,7 +43,7 @@ public abstract class Entity extends Collidable{
 	{
 		super();
 		conditions= new ConditionHandler();
-		currentEffects  = new ArrayList<Effect>();
+		currentEffectsMap  = new HashMap<Effect,EffectConsequence>();
 		lastDamageTaken = new ArrayList<DamageDrawer>();
 	}
 	
@@ -67,27 +71,27 @@ public abstract class Entity extends Collidable{
 	}
 
 	@Override
-	public void destroy(AbstractModelPartie partie,boolean destroyNow)
+	public void destroy(boolean destroyNow)
 	{
-		super.destroy(partie, destroyNow);
+		super.destroy(destroyNow);
 
 		//Remove all related effects 
-		for(int i=currentEffects.size()-1;i>=0;--i)
+		for(int i=currentEffectsMap.size()-1;i>=0;--i)
 		{
-			unregisterEffect(partie,currentEffects.get(i));
+			unregisterEffect(currentEffectsMap.get(i));
 		}
 
 	}
 	
-	public boolean isGrounded(AbstractModelPartie partie)
+	public boolean isGrounded()
 	{
-		Hitbox hit =getHitbox(partie.INIT_RECT,partie.getScreenDisp()).copy();
+		Hitbox hit =getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp()).copy();
 		assert hit.polygon.npoints==4;
 		//get world hitboxes with Collision
 		//lowers all points by 1 at most 
 		for(int i=0; i<hit.polygon.npoints; ++i)
 			hit.polygon.ypoints[i]+=1;
-		boolean res =  Collision.isWorldCollision(partie,hit,true);
+		boolean res =  Collision.isWorldCollision(hit,true);
 		return res;
 	}
 	protected void setJumpSpeed(boolean isWallJumping,boolean isAirJumping, boolean isGroundJumping){
@@ -106,7 +110,7 @@ public abstract class Entity extends Collidable{
 			groundJumping = false;
 	}
 	@Override 
-	public void deplaceOutOfScreen(AbstractModelPartie partie)
+	public void deplaceOutOfScreen()
 	{
 		//do nothing
 		if(this instanceof Heros)
@@ -124,34 +128,49 @@ public abstract class Entity extends Collidable{
 			applyEffects = !((Heros)this).getMouvement().isMouvement(EntityTypeMouv.ACCROCHE);
 		}
 		if(applyEffects){
-			for(Effect eff: currentEffects)
+			for(EffectConsequence eff: currentEffectsMap.values())
 			{
-				if(isDragged && ObjectTypeHelper.isTypeOf(eff, ObjectType.GRAPPIN_EFF)){
-					vit = eff.getModifiedVitesse(this);
+				if(isDragged && ObjectTypeHelper.isTypeOf(eff.getParentEffect(), ObjectType.GRAPPIN_EFF)){
+					vit = eff.getParentEffect().getModifiedVitesse(this);
 					return vit;
 				}
-				vit =vit.add(eff.getModifiedVitesse(this));
+				vit =vit.add(eff.getParentEffect().getModifiedVitesse(this));
 			}
 			vit = vit.add(conditions.getModifiedVitesse());
 		}
 		return vit;
 	}
 
-	public void registerEffect(Effect eff)
+	public void registerEffect(EffectConsequence eff)
 	{		
-		currentEffects.add(eff);
+		currentEffectsMap.put(eff.getParentEffect(),eff);
 	}
-	public void unregisterEffect(AbstractModelPartie partie, Effect eff)
+	public void registerEffect(Effect eff)
+	{	
+		currentEffectsMap.put(eff,new EffectConsequence(this, eff, ModelPartie.me.getFrame()));
+	}
+	public void unregisterEffect(EffectConsequence eff)
 	{
-		currentEffects.remove(eff);
+		currentEffectsMap.remove(eff.getParentEffect());
 	}
-
+	public void unregisterEffect(Effect eff)
+	{
+		currentEffectsMap.remove(eff);
+	}
+	public void removeEffectsThatExpired(int currentFrame){
+		Iterator<Entry<Effect, EffectConsequence>> iter = currentEffectsMap.entrySet().iterator();
+		while(iter.hasNext()){
+			Entry<Effect, EffectConsequence> entry = iter.next();
+			if(entry.getValue().shouldBeRemoved(currentFrame))
+				iter.remove();
+		}
+	}
 	public boolean isDragged(){
-		for(Effect eff:currentEffects)
+		for(EffectConsequence eff:currentEffectsMap.values())
 		{
-			if(ObjectTypeHelper.isTypeOf(eff, ObjectType.GRAPPIN_EFF))
+			if(ObjectTypeHelper.isTypeOf(eff.getParentEffect(), ObjectType.GRAPPIN_EFF))
 			{
-				Grappin_effect grap = (Grappin_effect)eff;
+				Grappin_effect grap = (Grappin_effect)eff.getParentEffect();
 				if(grap.shooterDragged && this == grap.shooter)
 					return true;
 				if(!grap.shooterDragged && this != grap.shooter)

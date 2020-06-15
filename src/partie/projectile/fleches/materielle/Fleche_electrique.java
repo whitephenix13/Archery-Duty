@@ -11,7 +11,7 @@ import partie.effects.Electrique_effect;
 import partie.effects.Roche_effect;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
-import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.ModelPartie;
 import partie.projectile.Projectile;
 
 public class Fleche_electrique extends Materielle {
@@ -31,18 +31,18 @@ public class Fleche_electrique extends Materielle {
 	
 
 	@Override
-	protected void onPlanted(List<Entity> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
+	protected void onPlanted(List<Entity> objects,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
 	{
 		if(this.afterDecochee && stuck)
-			ejectArrow(partie,unprojectedSpeed);
+			ejectArrow(unprojectedSpeed);
 		if(stuck){
-			destroy(partie,false);
+			destroy(false);
 			return;
 		}
 		if(!generatedEffect){
 			generatedEffect=true;
 
-			flecheEffect=new Electrique_effect(partie,this,0,partie.getFrame(),this.normCollision,this.pointCollision,this.correctedPointCollision,true,max_explosion_depth,0);
+			flecheEffect=new Electrique_effect(this,0,ModelPartie.me.getFrame(),this.normCollision,this.pointCollision,this.correctedPointCollision,true,max_explosion_depth,0);
 			MusicBruitage.me.startBruitage("arc");
 
 			Roche_effect.synchroniseMovementWithRocheEffectMovement(collidedObject, new Collidable[] {this,flecheEffect});
@@ -52,16 +52,16 @@ public class Fleche_electrique extends Materielle {
 	}
 
 	@Override
-	protected boolean OnObjectsCollision(List<Entity> objects,AbstractModelPartie partie,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
+	protected boolean OnObjectsCollision(List<Entity> objects,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
 	{
 		if(this.afterDecochee && (collider instanceof Effect))
 			if(((Effect)collider).isWorldCollider)
-				ejectArrow(partie,unprojectedSpeed);
+				ejectArrow(unprojectedSpeed);
 		if(!generatedEffect){
 			generatedEffect=true;
 
 			for(int i =0; i< nb_effect; i++){
-				new Electrique_effect(partie,this,0,partie.getFrame(),normal,null,null,false,max_explosion_depth,0,collider,null);
+				new Electrique_effect(this,0,ModelPartie.me.getFrame(),normal,null,null,false,max_explosion_depth,0,collider,null);
 			}
 			
 			MusicBruitage.me.startBruitage("arc");

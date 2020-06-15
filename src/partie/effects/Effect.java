@@ -15,6 +15,7 @@ import partie.collision.Hitbox;
 import partie.entitie.Entity;
 import partie.input.InputPartie;
 import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.ModelPartie;
 import partie.mouvement.Deplace;
 import partie.mouvement.Mouvement;
 import partie.mouvement.Mouvement.SubTypeMouv;
@@ -37,7 +38,7 @@ public abstract class Effect extends Collidable{
 	public boolean groundEffect = false;
 
 	public Fleche ref_fleche=null;
-	public void onRemoveRefFleche(AbstractModelPartie partie,boolean destroyNow){ref_fleche=null;};
+	public void onRemoveRefFleche(boolean destroyNow){ref_fleche=null;};
 	
 	//public int xplace=1;	//Determine what is the key point defining the draw position 0 left 1 center 2 right
 	//public int yplace=1;	//Determine what is the key point defining the draw position 0 up 1 center 2 down
@@ -50,6 +51,8 @@ public abstract class Effect extends Collidable{
 	public boolean isWorldCollider =false; //set to true if this object should be consider as a bloc for collision. Used in roche_effect
 	public boolean isProjectile = false; //set to true if this object should be consider as a projectile for projectile/projectile and projectile/heros collision
 	
+	protected double consequenceUpdateTime=-1; //in seconds, the frequence at which the consequence should be apply to the affected object
+	public double getConsequenceUpdateTime(){return consequenceUpdateTime;}
 	
 	public Effect(int _mouv_index,Fleche _ref_fleche)
 	{
@@ -91,57 +94,55 @@ public abstract class Effect extends Collidable{
 	{
 		return getMouvement().animEnded();
 	}
-	/** call each step by the main loop*/
-	//REMOVE public void onUpdate(AbstractModelPartie partie, boolean last) {}
-	/** call in deplace, apply relative effects to collidable to which the effect is attached to. For speed modifiers, use getModifiedSpeed*/
-	public abstract void updateOnCollidable(AbstractModelPartie partie,Entity attacher);
+
+	public abstract void applyConsequence(Entity attacher,boolean isFirstApplication);
 	/**
 	 * return the speed to add to the agents concerned by the effect 
 	 * */
 	public abstract Vitesse getModifiedVitesse(Collidable obj);
 	@Override
-	public void onDestroy(AbstractModelPartie partie)
+	public void onDestroy()
 	{
 		
 	}
 
 	@Override
-	public void destroy(AbstractModelPartie partie,boolean destroyNow)
+	public void destroy(boolean destroyNow)
 	{
 		if(destroyNow)
 			needDestroy=true;
 		else
 			timer();
-		List<Entity> allCollidable = Collidable.getAllEntitiesCollidable(partie);
+		List<Entity> allCollidable = Collidable.getAllEntitiesCollidable();
 		//loop through all the Collidable and remove itself as reference
 		boolean remove_ref_fleche = (ref_fleche!=null);
 		for(Entity c : allCollidable)
 		{
-			c.unregisterEffect(partie, this);
+			c.unregisterEffect(this);
 
 		}
 		if(remove_ref_fleche)
 		{
-			ref_fleche.OnFlecheEffectDestroy(partie, destroyNow);
+			ref_fleche.OnFlecheEffectDestroy(destroyNow);
 		}
 	}
 	
 
-	protected Point setFirstPos(AbstractModelPartie partie,Point effCenter)
+	protected Point setFirstPos(Point effCenter)
 	{
 		if(pointCollision!=null)
 			return new Point((int)pointCollision.x+correctedPointCollision.x-effCenter.x, (int)pointCollision.y+correctedPointCollision.y-effCenter.y);
 		else
 		{
 			//get the tip of the arrow
-			Point arrowTip = getArrowTip(partie);
+			Point arrowTip = getArrowTip();
 			return new Point(arrowTip.x-effCenter.x,arrowTip.y-effCenter.y);
 		}
 
 	}
-	protected Point getArrowTip(AbstractModelPartie partie)
+	protected Point getArrowTip()
 	{
-		return Fleche.getArrowTip(partie, ref_fleche, true);
+		return Fleche.getArrowTip(ref_fleche, true);
 	}
 	
 	
@@ -171,7 +172,7 @@ public abstract class Effect extends Collidable{
 	/***
 	 * Callback that is called before updating position in deplace() function
 	 */
-	/*protected void onDeplaceStart(AbstractModelPartie partie)
+	/*protected void onDeplaceStart()
 	{
 		
 	}*/
@@ -179,24 +180,24 @@ public abstract class Effect extends Collidable{
 	@Override
 	protected void onStartDeplace(){}
 	@Override
-	protected void handleInputs(AbstractModelPartie partie) {
+	protected void handleInputs() {
 		
 	}
 	@Override
-	protected boolean updateMouvementBasedOnPhysic(AbstractModelPartie partie) {
+	protected boolean updateMouvementBasedOnPhysic() {
 		return false;
 	}
 	@Override
-	protected boolean updateNonInterruptibleMouvement(AbstractModelPartie partie) {
+	protected boolean updateNonInterruptibleMouvement() {
 		return false;
 	}
 	@Override
-	protected boolean updateMouvementBasedOnInput(AbstractModelPartie partie) {
+	protected boolean updateMouvementBasedOnInput() {
 		return false;
 	}
 	@Override
-	protected boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie) {
-		int nextMouvIndex = getMouvement().updateAnimation(getMouvIndex(), partie.getFrame(),1);
+	protected boolean updateMouvementBasedOnAnimation() {
+		int nextMouvIndex = getMouvement().updateAnimation(getMouvIndex(), ModelPartie.me.getFrame(),1);
 		if(getMouvIndex()!=nextMouvIndex){
 			boolean success = true;//no need to hitbox alignment check 
 			if(success){
@@ -207,22 +208,22 @@ public abstract class Effect extends Collidable{
 		return false;
 	}
 	@Override
-	protected void resetInputState(AbstractModelPartie partie) {
+	protected void resetInputState() {
 		
 	}
 	@Override
-	protected void onMouvementChanged(AbstractModelPartie partie,boolean animationChanged, boolean mouvementChanged) {
+	protected void onMouvementChanged(boolean animationChanged, boolean mouvementChanged) {
 	}
 	/***
 	 * Callback that is called before updating the animation in deplace() function
 	 */
 	@Override
-	protected void onAnimationEnded(AbstractModelPartie partie)
+	protected void onAnimationEnded()
 	{
-		destroy(partie,true);
+		destroy(true);
 	}
 	/*REMOVE @Override 
-	/* REMOVE public boolean[] deplace(AbstractModelPartie partie, Deplace deplace) {
+	/* REMOVE public boolean[] deplace( Deplace deplace) {
 		//onDeplaceStart(partie);
 		
 		//if(shouldUpdatePos())
@@ -233,7 +234,7 @@ public abstract class Effect extends Collidable{
 		
 		//boolean changedAnim  =false;
 		//int prev_mouv_index =getAnim();
-		//int next_mouv_index = getDeplacement().updateAnimation(getAnim(), partie.getFrame(), 1);
+		//int next_mouv_index = getDeplacement().updateAnimation(getAnim(), ModelPartie.me.getFrame(), 1);
 		
 		//setAnim(next_mouv_index);
 		//if(prev_mouv_index != getAnim()){
@@ -247,14 +248,14 @@ public abstract class Effect extends Collidable{
 		return res;
 	}*/
 	@Override 
-	public void deplaceOutOfScreen(AbstractModelPartie partie)
+	public void deplaceOutOfScreen()
 	{
 		//destroy itself
-		System.out.println("Out of screen " + this +" "+ this.getPos() +" fixed "+fixedWhenScreenMoves +" screen disp "+ partie.getScreenDisp());
-		this.destroy(partie, true);
+		System.out.println("Out of screen " + this +" "+ this.getPos() +" fixed "+fixedWhenScreenMoves +" screen disp "+ ModelPartie.me.getScreenDisp());
+		this.destroy(true);
 	}
 	
-	public Image applyFilter(AbstractModelPartie partie, Image im) {
+	public Image applyFilter(Image im) {
 		return im;
 	}
 	
@@ -280,16 +281,15 @@ public abstract class Effect extends Collidable{
 	}
 	
 	@Override
-	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,Collidable collidedObject,boolean stuck) {	
+	public void handleWorldCollision(Vector2d normal,Collidable collidedObject,boolean stuck) {	
 	}
 	
 	@Override
-	public void handleObjectCollision(AbstractModelPartie partie,
-			Collidable collider, Vector2d normal) {		
+	public void handleObjectCollision(Collidable collider, Vector2d normal) {		
 	}
 	@Override
-	public void handleStuck(AbstractModelPartie partie) {	
-		handleWorldCollision( new Vector2d(), partie,null,true );
+	public void handleStuck() {	
+		handleWorldCollision( new Vector2d(),null,true );
 	}
 	
 	@Override
@@ -305,7 +305,7 @@ public abstract class Effect extends Collidable{
 	}
 
 	@Override
-	public void handleDeplacementSuccess(AbstractModelPartie partie) {		
+	public void handleDeplacementSuccess() {		
 	}
 
 	@Override

@@ -8,22 +8,15 @@ import partie.collision.GJK_EPA;
 public class Todo {
 	
 	//DONE SINCE LAST COMMIT 
-	
-	//Refactored peutsauter (use was grounded instead)
-	//Spirel deleted finSaut/glisse
-	// Corrected fleche electrique so that it now creates smaller projectiles when splitting				
-	// marque_mortelle: increases max number of iterations 
-	// showHotkeyWhenPlaying now displays at start correctly
-	// Created damage text 
-	// Corrected some hitbox size to avoid unexpected translation from standup to falling or falling to tir 
-	// Corrected fall animation not triggering
+	//Corrected feu effect so that each pilar can damage
+	//Create effectConsequence to keep track of time on affected entities
+	//Changed main loop to better ordrer sequence of actions
 	//===================================================================================================
 	//CURRENTLY 
 
 	//===================================================================================================
 	//ANIMATION
 	//TODO: flip image horizontally instead of creating new anim g2.drawImage(image, x + width, y, -width, height, null); or negative scale (careful need translation)
-	//TODO: rework electrique projectiles
 	//TODO: create faucon animation
 	//TODO: rework trou_noir animation (make it less invasive)
 	//TODO: create leurre animation 
@@ -34,20 +27,18 @@ public class Todo {
 	//TODO: create destroy animation for each objects 
 	
 	//ARROWS
-	//TODO: Improve fleche electique: Add new electrique animation + animation of projectile split (make it smaller every time?) and pause before launching projectile so that it is visually more appealing 
+	//TODO: Glace: update ground (base on documentation: make it an explosion + reflects + move faster)
 	//TODO: Create Faucon fleche
 	//TODO: Implement Explosive effect (damage + projection) 
+	//TODO: Implement Trou noir effect (damage + pull) 
 	//TODO: Rework fleche barrage 
 	//TODO: Add cripple effect to marque_mortelle (+ new conditon delayed damage?) 
 	//TODO: Create leurre fleche 
 	//TODO: Create ninja fleche 
-	//TODO: Create absorption fleche
-	
-	//TODO: update balance table (and add a utility score for each effects)
-	//TODO: remove all TODO / remove
+	//TODO: Create absorption fleche	
+	//TODO: update values based on balance table (and add a utility score for each effects)
 		
 	//MATERIEL
-	//TODO: Electrique; rework animation
 	
 	//DESTRUCTREUR
 	//TODO: Faucon : lightning going through enemies  
@@ -71,9 +62,12 @@ public class Todo {
 	//TODO: In function where mouvement is updated (like), dont use getAnim()==1 instead use only use mouvement type and isEndedOnce and split saut/accroche in several anim 
 	//TODO; refactor heros input => use droite_gauche instead of hard coded anim values
 	//TODO: refactor remove useless variables in Heros, create function to determine whether the heros "is sliding, is grounded, isBeginSaut, ..." and maybe generalize for spirel
-
+	//TODO: Change all varables from ModelPartie to private (since it is now a singleton). Better: create a GameInfo class that has the model partie information (singleton with only getters)
+	//TODO: remove all TODO / remove
 	
 	//TODO: INTERFACE:
+	//TODO: add a seyeri info (blue) when seyeri is gained
+	//TODO: add an endurance bar for dodge
 	//TODO: correct camera to show interesting part of the world instead of too much floor/not enough bottom (https://www.gamasutra.com/blogs/JochenHeizmann/20171127/310386/Camera_Logic_in_a_2D_Platformer.php)
 		//TODO: focus zone based on the direction of the heros
 		//TODO: camera speed based on the speed of the heros
@@ -82,6 +76,7 @@ public class Todo {
 	//TODO: create a camera object that has screendisp and INIT rect in it (static) so that it can be accessed from everywhere. Remove partie reference from functions
 	//TODO: affichage des niveaux avec preview et difficulté? 
 	//TODO: Améliorer slider option (ne se déplace pas à l'endroit où on clique)
+	//TODO: make sure that the enemy that is displayed on top of the screen is the first one to be hit by an arrow
 	
 	//TODO: GRAPHISME:
 	//TODO: effet ralentissement: taille en fonction de la fenetre
@@ -93,8 +88,6 @@ public class Todo {
 	//TODO: do not move projeciles for the first frames (until one loop complete?)to account for  Frame 50: spirel shoot, projectile hit arrow => arrow & proj destroyed (we never saw the projectile!) 
 
 	//TODO: GAMEPLAY:
-	//TODO: shoot special arrow with hotkey (1 per slot) instead of right click
-	//TODO: finish implementing all arrows
 	//TODO: add specialization (ie: invisible when sliding)
 	//TODO: creer des "blocs" event
 	//TODO: creer un tutoriel

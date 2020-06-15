@@ -10,7 +10,7 @@ import partie.effects.Roche_effect;
 import partie.effects.Trou_noir_effect;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
-import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.ModelPartie;
 import partie.projectile.Projectile;
 
 public class Fleche_trou_noir extends Destructrice {
@@ -26,18 +26,18 @@ public class Fleche_trou_noir extends Destructrice {
 	}
 	
 	@Override
-	protected void onPlanted(List<Entity> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
+	protected void onPlanted(List<Entity> objects,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
 	{
 		if(this.afterDecochee && stuck)
-			ejectArrow(partie,unprojectedSpeed);
+			ejectArrow(unprojectedSpeed);
 		if(stuck){
-			destroy(partie,false);
+			destroy(false);
 			return;
 		}
 		if(!generatedEffect){
 			generatedEffect=true;
 
-			flecheEffect=new Trou_noir_effect(partie,this,0,partie.getFrame(),normCollision,pointCollision,correctedPointCollision);
+			flecheEffect=new Trou_noir_effect(this,0,ModelPartie.me.getFrame(),normCollision,pointCollision,correctedPointCollision);
 			MusicBruitage.me.startBruitage("arc");
 			if(collidedObject instanceof Roche_effect)
 			{

@@ -12,6 +12,7 @@ import partie.effects.Roche_effect;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.ModelPartie;
 import partie.mouvement.Deplace;
 import partie.projectile.Projectile;
 import partie.projectile.fleches.Fleche;
@@ -39,11 +40,11 @@ public class Fleche_grappin extends Spirituelle {
 
 	//only move arrow if the grappin length is long enough
 	@Override
-	public boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie) {
+	public boolean updateMouvementBasedOnAnimation() {
 		if(collider!=null)
 			if(collider.getNeedDestroy()){
 				collider=null;
-				destroy(partie,false);
+				destroy(false);
 			}
 		//doitDeplace, animationChanged
 		max_speed_norm = -1;
@@ -52,7 +53,7 @@ public class Fleche_grappin extends Spirituelle {
 		if(eff!= null && eff.shooterDragged){
 			this.setLocalVit(eff.getModifiedVitesse(this));
 		}
-		boolean updated = super.updateMouvementBasedOnAnimation(partie);
+		boolean updated = super.updateMouvementBasedOnAnimation();
 		double speedNorm = this.getGlobalVit().norm();
 		if(generatedEffect && (this.tempsDetruit==0) && (!this.getNeedDestroy()) )
 		{
@@ -64,7 +65,7 @@ public class Fleche_grappin extends Spirituelle {
 				if(this.tempsDetruit<=0)
 				{
 					eff.reached_max_length=true;
-					destroy(partie,false);
+					destroy(false);
 					shouldMove=false;
 				}
 			}
@@ -78,16 +79,16 @@ public class Fleche_grappin extends Spirituelle {
 	}
 
 	@Override
-	protected void onPlanted(List<Entity> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
+	protected void onPlanted(List<Entity> objects,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
 	{
 		//Handle case where effect is destroyed but last compute is true just for display purpose
 		if(flecheEffect ==null)
 			return;
 		
 		if(this.afterDecochee && stuck)
-			ejectArrow(partie,unprojectedSpeed);
+			ejectArrow(unprojectedSpeed);
 		if(stuck){
-			destroy(partie,false);
+			destroy(false);
 			return;
 		}
 
@@ -109,18 +110,18 @@ public class Fleche_grappin extends Spirituelle {
 			}
 			else
 			{
-				this.destroy(partie, false);
+				this.destroy( false);
 			}
 		}
 	}
 
 
 	@Override
-	protected boolean OnObjectsCollision(List<Entity> objects,AbstractModelPartie partie,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
+	protected boolean OnObjectsCollision(List<Entity> objects,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
 	{
 		if(this.afterDecochee && (collider instanceof Effect))
 			if(((Effect)collider).isWorldCollider)
-				ejectArrow(partie,unprojectedSpeed);
+				ejectArrow(unprojectedSpeed);
 
 		boolean isColliderEntitie = collider instanceof Entity;
 		Entity colliderEntitie = isColliderEntitie?  (Entity) collider : null;
@@ -148,26 +149,26 @@ public class Fleche_grappin extends Spirituelle {
 
 
 	@Override
-	public void OnShoot(AbstractModelPartie partie)
+	public void OnShoot()
 	{
-		super.OnShoot(partie);
+		super.OnShoot();
 		if(!generatedEffect){
 			generatedEffect=true;
-			flecheEffect=new Grappin_effect(partie,this,0,partie.getFrame(),shooter);
+			flecheEffect=new Grappin_effect(this,0,ModelPartie.me.getFrame(),shooter);
 			//TODO: sound grappin
 			MusicBruitage.me.startBruitage("arc");
 		}
 
 	}
 	@Override
-	public boolean OnArrowReshot(AbstractModelPartie partie, Fleche firstFleche)
+	public boolean OnArrowReshot( Fleche firstFleche)
 	{
 		if(!getNeedDestroy() && (tempsDetruit==0))
-			destroy(partie,true);
+			destroy(true);
 		return false;
 	}
 	@Override
-	public void beforeFlecheDestroyed(AbstractModelPartie partie)
+	public void beforeFlecheDestroyed()
 	{
 		Grappin_effect grap = ((Grappin_effect)flecheEffect);
 		if(grap != null){

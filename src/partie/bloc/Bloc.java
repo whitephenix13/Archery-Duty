@@ -102,12 +102,12 @@ public class Bloc extends Collidable{
 		return computeHitbox(INIT_RECT,screenDisp);
 	}
 	@Override
-	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,Collidable collidedObject,boolean stuck) {
+	public void handleWorldCollision(Vector2d normal,Collidable collidedObject,boolean stuck) {
 		//no collision handle: this bloc si currently static which means that the only objects that can collides with it are
 		//mobile objects. We'll rather call the handleCollision of the mobile objects 
 	}
 	@Override
-	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider,Vector2d normal) {
+	public void handleObjectCollision(Collidable collider,Vector2d normal) {
 		try {
 			throw new Exception("Calling handleObjectCollision for a bloc is forbidden");
 		} catch (Exception e) {
@@ -121,7 +121,7 @@ public class Bloc extends Collidable{
 	}
 
 	@Override 
-	public void deplaceOutOfScreen(AbstractModelPartie partie)
+	public void deplaceOutOfScreen()
 	{
 		//do nothing
 	}
@@ -134,11 +134,11 @@ public class Bloc extends Collidable{
 		//do nothing
 	}
 	@Override
-	public void handleStuck(AbstractModelPartie partie) {
+	public void handleStuck() {
 		//do nothing
 	}
 	@Override
-	public void handleDeplacementSuccess(AbstractModelPartie partie) {
+	public void handleDeplacementSuccess() {
 
 	}
 	@Override
@@ -146,7 +146,7 @@ public class Bloc extends Collidable{
 		//do nothing
 	}
 	@Override
-	public void onDestroy(AbstractModelPartie partie) {
+	public void onDestroy() {
 		//do nothing
 	}
 	@Override
@@ -156,31 +156,31 @@ public class Bloc extends Collidable{
 	@Override
 	protected void onStartDeplace(){}
 	@Override
-	protected void handleInputs(AbstractModelPartie partie) {
+	protected void handleInputs() {
 		
 	}
 	@Override
-	protected boolean updateMouvementBasedOnPhysic(AbstractModelPartie partie) {
+	protected boolean updateMouvementBasedOnPhysic() {
 		return false;
 	}
 	@Override
-	protected boolean updateNonInterruptibleMouvement(AbstractModelPartie partie) {
+	protected boolean updateNonInterruptibleMouvement() {
 		return false;
 	}
 	@Override
-	protected boolean updateMouvementBasedOnInput(AbstractModelPartie partie) {
+	protected boolean updateMouvementBasedOnInput() {
 		return false;
 	}
 	@Override
-	protected boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie) {
+	protected boolean updateMouvementBasedOnAnimation() {
 		return false;
 	}
 	@Override
-	protected void resetInputState(AbstractModelPartie partie) {
+	protected void resetInputState() {
 		
 	}
 	@Override
-	protected void onMouvementChanged(AbstractModelPartie partie,boolean animationChanged, boolean mouvementChanged) {
+	protected void onMouvementChanged(boolean animationChanged, boolean mouvementChanged) {
 		
 	}
 

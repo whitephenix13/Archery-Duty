@@ -13,6 +13,7 @@ import partie.collision.GJK_EPA;
 import partie.collision.Hitbox;
 import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.ModelPartie;
 import partie.modelPartie.PartieTimer;
 import partie.mouvement.Deplace;
 import partie.mouvement.Mouvement;
@@ -27,8 +28,8 @@ public class Fleche_barrage  extends Destructrice{
 	
 	Parameters_marque_mortelle params = new Parameters_marque_mortelle();
 	//Used to created the 7 copy arrows
-	public Fleche_barrage(AbstractModelPartie partie,Fleche_barrage mainF,int xpos, int ypos, double _rotation) {
-		super(partie.tabFleche, partie.getFrame(),mainF.shooter,true,mainF.params.damageMult,mainF.speedFactor);
+	public Fleche_barrage(Fleche_barrage mainF,int xpos, int ypos, double _rotation) {
+		super(ModelPartie.me.tabFleche, ModelPartie.me.getFrame(),mainF.shooter,true,mainF.params.damageMult,mainF.speedFactor);
 		TEMPS_DESTRUCTION= (long) (2* Math.pow(10,8));//in nano sec = 0.2 sec 
 		damage=-10*mainF.params.damageMult;
 		seyeri_cost=0; //20
@@ -58,7 +59,7 @@ public class Fleche_barrage  extends Destructrice{
 	}
 	
 	
-	private int[] computeBarragePos(AbstractModelPartie partie,double rot)
+	private int[] computeBarragePos(double rot)
 	{		
 		//compute direction
 		Vector2d direction = Deplace.angleToVector(rot);
@@ -66,13 +67,13 @@ public class Fleche_barrage  extends Destructrice{
 		direction.x*= this.params.current_distance;
 		direction.y*= this.params.current_distance;
 
-		Vector2d shooter_tl = getShooterTopLeft(partie);
+		Vector2d shooter_tl = getShooterTopLeft();
 		int[] res = new int[2];
 		res[0] = (int) Math.round (shooter_tl.x+params.center.x+direction.x); 
 		res[1] = (int) Math.round(shooter_tl.y+params.center.y+direction.y); 
 		return res;
 	}
-	private void addNewArrows(AbstractModelPartie partie)
+	private void addNewArrows()
 	{
 		double time = PartieTimer.me.getElapsedNano();
 		if(params.nbarrow<params.NB_ARROW && (time-params.last_add_time)>params.ADD_ARROW_TIME*Math.pow(10, 9))
@@ -84,8 +85,8 @@ public class Fleche_barrage  extends Destructrice{
 				{
 					//position is heros center + maxdistance in correct direction 
 					double rot = params.creat_rot + ((i%2)==0? 2*Math.PI/params.NB_ARROW*(i+2)/2: -1 * 2*Math.PI/params.NB_ARROW*(i+1)/2);
-					int[] xypos = computeBarragePos(partie,rot);//,getHitbox(partie.INIT_RECT),deplacement.hitbox_rotated
-					params.barrageArrows.add(new Fleche_barrage(partie,this,xypos[0],xypos[1],rot));
+					int[] xypos = computeBarragePos(rot);//,getHitbox(ModelPartie.me.INIT_RECT),deplacement.hitbox_rotated
+					params.barrageArrows.add(new Fleche_barrage(this,xypos[0],xypos[1],rot));
 					params.nbarrow+=1;
 				}
 				else
@@ -96,7 +97,7 @@ public class Fleche_barrage  extends Destructrice{
 
 	}
 	/**Top left with respect to human coordinates (y towards up)*/
-	private Vector2d getShooterTopLeft(AbstractModelPartie partie)
+	private Vector2d getShooterTopLeft()
 	{
 		//value to shift the rotation to get the two points from the tail
 		double epsilon = Math.PI/10;
@@ -104,10 +105,10 @@ public class Fleche_barrage  extends Destructrice{
 		double[] XY = Deplace.angleToXY(-3.0*Math.PI/4+epsilon);
 
 		//get the opposite since the direction we found was the one towards the tip
-		return  Hitbox.supportPoint(new Vector2d(XY[0],XY[1]),shooter.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon);//getHitbox(partie.INIT_RECT).polygon);
+		return  Hitbox.supportPoint(new Vector2d(XY[0],XY[1]),shooter.getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp()).polygon);//getHitbox(ModelPartie.me.INIT_RECT).polygon);
 	}
 
-	private Vector2d getMiddleTailArrow(AbstractModelPartie partie)
+	private Vector2d getMiddleTailArrow()
 	{
 		//value to shift the rotation to get the two points from the tail
 		double epsilon = Math.PI/10;
@@ -116,20 +117,20 @@ public class Fleche_barrage  extends Destructrice{
 		double[] XY2 = Deplace.angleToXY(getRotation()-epsilon);
 
 		//get the opposite since the direction we found was the one towards the tip
-		Vector2d fleche_tail1 = Hitbox.supportPoint(new Vector2d(-XY[0],-XY[1]),getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon);
-		Vector2d fleche_tail2 = Hitbox.supportPoint(new Vector2d(-XY2[0],-XY2[1]),getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon);
+		Vector2d fleche_tail1 = Hitbox.supportPoint(new Vector2d(-XY[0],-XY[1]),getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp()).polygon);
+		Vector2d fleche_tail2 = Hitbox.supportPoint(new Vector2d(-XY2[0],-XY2[1]),getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp()).polygon);
 
 		return new Vector2d(((fleche_tail1.x+fleche_tail2.x)/2),((fleche_tail1.y+fleche_tail2.y)/2));
 	}
-	private double getDistanceToShooter(AbstractModelPartie partie)
+	private double getDistanceToShooter()
 	{
 		if(shooter ==null)
 			return 0;
 
 		//get the tail of the arrow
-		Vector2d middleTailArrow = getMiddleTailArrow(partie);
+		Vector2d middleTailArrow = getMiddleTailArrow();
 
-		Vector2d shooterTopLeft = getShooterTopLeft(partie);
+		Vector2d shooterTopLeft = getShooterTopLeft();
 
 		double xPosRelative= middleTailArrow.x-params.center.x-shooterTopLeft.x; 
 		double yPosRelative= middleTailArrow.y-params.center.y-shooterTopLeft.y;
@@ -153,14 +154,14 @@ public class Fleche_barrage  extends Destructrice{
 		return res;
 	}
 
-	private void computeCenter(AbstractModelPartie partie)
+	private void computeCenter()
 	{
 		//compute the intersection between the arrow direction and the hitbox 
 		final Vector2d direction = Deplace.angleToVector(this.getRotation());
 		direction.negate();
 
-		final Vector2d origin = getMiddleTailArrow(partie); 
-		final List<Vector2d> intersections = computeIntersectionWithHitbox(shooter.getHitbox(partie.INIT_RECT,partie.getScreenDisp()),direction,origin);
+		final Vector2d origin = getMiddleTailArrow(); 
+		final List<Vector2d> intersections = computeIntersectionWithHitbox(shooter.getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp()),direction,origin);
 
 		//The middle of those points is the "center" that will be used to create the new arrows 
 		this.params.center = new Vector2d();
@@ -172,21 +173,21 @@ public class Fleche_barrage  extends Destructrice{
 		params.center.y/=nbInter;
 
 		//make it relative 
-		Vector2d shooter_tl = getShooterTopLeft(partie);
+		Vector2d shooter_tl = getShooterTopLeft();
 		params.center.x-=shooter_tl.x;
 		params.center.y-=shooter_tl.y;
 
 	}
 	@Override
-	public void OnShoot(AbstractModelPartie partie)
+	public void OnShoot()
 	{
-		computeCenter(partie);
-		super.OnShoot(partie);
+		computeCenter();
+		super.OnShoot();
 		params.creat_rot=this.getRotation();
 	}
 
 	@Override
-	public boolean OnArrowReshot(AbstractModelPartie partie,Fleche firstFleche)
+	public boolean OnArrowReshot(Fleche firstFleche)
 	{
 		params.shoot_arrows=true;
 		return false;
@@ -197,9 +198,9 @@ public class Fleche_barrage  extends Destructrice{
 	}
 	
 	@Override 
-	public boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie) {
+	public boolean updateMouvementBasedOnAnimation() {
 		if(DESACTIVATED)
-			return super.updateMouvementBasedOnAnimation(partie);;
+			return super.updateMouvementBasedOnAnimation();;
 		if(this.needDestroy || this.tempsDetruit>0){
 			shouldMove = false;
 			return false;
@@ -209,17 +210,17 @@ public class Fleche_barrage  extends Destructrice{
 		if(params.shoot_arrows){
 			this.shouldMove=true;
 			this.setCollideWithout(Arrays.asList(ObjectType.FLECHE,ObjectType.HEROS));
-			return super.updateMouvementBasedOnAnimation(partie);
+			return super.updateMouvementBasedOnAnimation();
 		}
 		boolean computeDist = !this.encochee; 
-		if(this.params.lastFrameUpdate != partie.getFrame())
+		if(this.params.lastFrameUpdate != ModelPartie.me.getFrame())
 		{
 			double dist=0;
 			if(computeDist)
-				dist = getDistanceToShooter(partie);
+				dist = getDistanceToShooter();
 			//The main arrow is shot (barrage still not created) but max distance is not reached yet: use regular deplace
 			if(dist<params.MAX_DISTANCE && !params.reached_max_distance)
-				return super.updateMouvementBasedOnAnimation(partie);
+				return super.updateMouvementBasedOnAnimation();
 			else
 			{
 				//Update the distance
@@ -236,14 +237,14 @@ public class Fleche_barrage  extends Destructrice{
 					for(int i=0; i<params.barrageArrows.size();i++)
 					{
 						Fleche_barrage fb = params.barrageArrows.get(i);
-						xypos = computeBarragePos(partie,fb.getRotation());
+						xypos = computeBarragePos(fb.getRotation());
 						fb.setXpos_sync(xypos[0]);
 						fb.setYpos_sync(xypos[1]);
 					}
 				}
-				addNewArrows(partie);
-				this.params.lastFrameUpdate = partie.getFrame();
-				return updateMouvementBasedOnAnimation(partie);
+				addNewArrows();
+				this.params.lastFrameUpdate = ModelPartie.me.getFrame();
+				return updateMouvementBasedOnAnimation();
 			}
 		}
 		else

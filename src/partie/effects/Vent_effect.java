@@ -7,21 +7,18 @@ import javax.vecmath.Vector2d;
 
 import gameConfig.ObjectTypeHelper.ObjectType;
 import partie.collision.Collidable;
-import partie.collision.Collision;
 import partie.collision.Hitbox;
 import partie.conditions.Condition.ConditionEnum;
 import partie.entitie.Entity;
-import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.ModelPartie;
 import partie.mouvement.effect.Vent_idle;
 import partie.projectile.fleches.Fleche;
 import utils.Vitesse;
 
 public class Vent_effect extends Effect{
 	
-	double FRICTION_UPDATE_TIME = 0.01 ; // ~4 frames
-	double lastFrictionUpdate = 0;
-
 	double DUREE_EJECT = -1;
+	final double PULSE_EVERY = 1;
 
 	public static double[] SQRT_EJECT_SPEED={30,22, 18,15};//square of desired speed at distance < sqrt(EJECT_DISTANCE) per animation 
 	private int getEJECT_DISTANCE()
@@ -34,16 +31,18 @@ public class Vent_effect extends Effect{
 	
 	
 
-	public Vent_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _mouv_index, int current_frame,Vector2d _normalCollision,Point _pointCollision,
+	public Vent_effect(Fleche _ref_fleche,int _mouv_index, int current_frame,Vector2d _normalCollision,Point _pointCollision,
 			Point _correctedPointCollision)
 	{
 		super(_mouv_index,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,false,false);
 		this.setCollideWithout(Arrays.asList(ObjectType.PROJECTILE));
 		
+		consequenceUpdateTime = PULSE_EVERY;//s => consequence applied every X while in the effect
+
 		subTypeMouv = null;
-		setMouvement(new Vent_idle(subTypeMouv,partie.getFrame()));
-		partie.arrowsEffects.add(this);
-		setFirstPos(partie);
+		setMouvement(new Vent_idle(subTypeMouv,ModelPartie.me.getFrame()));
+		ModelPartie.me.arrowsEffects.add(this);
+		setFirstPos();
 	}
 	public void setCollidedObject(Collidable _collidedObject,Vitesse _collidedEjectSpeed)
 	{
@@ -52,7 +51,7 @@ public class Vent_effect extends Effect{
 	}
 	
 
-	public Vitesse computeProjectSpeed(AbstractModelPartie partie,Vector2d objPoint,Point flechePoint,int EJECT_DISTANCE,int mouv_index)
+	public Vitesse computeProjectSpeed(Vector2d objPoint,Point flechePoint,int EJECT_DISTANCE,int mouv_index)
 	{
 
 		double deltaX= (objPoint.x - flechePoint.x);
@@ -75,11 +74,8 @@ public class Vent_effect extends Effect{
 	}
 	
 
-	Vitesse computeProjectSpeed(AbstractModelPartie partie,Collidable obj)
+	Vitesse computeProjectSpeed(Collidable obj)
 	{
-		boolean isAffected = Collision.testcollisionObjects(partie, this, obj,false);
-		if(!isAffected)
-			return new Vitesse();
 		if(obj == collidedObject)
 			System.out.println("\tSpecial case: " + collidedEjectSpeed);
 		if(obj == collidedObject )
@@ -88,33 +84,31 @@ public class Vent_effect extends Effect{
 		//else compute vitesse for the first time 
 	
 		//find where object is precisely using the middle of the hitbox
-		Vector2d obj_mid = Hitbox.getObjMid(partie,obj);
+		Vector2d obj_mid = Hitbox.getObjMid(obj);
 
-		return computeProjectSpeed(partie,obj_mid,super.getArrowTip(partie),getEJECT_DISTANCE(),getMouvIndex());
+		return computeProjectSpeed(obj_mid,super.getArrowTip(),getEJECT_DISTANCE(),getMouvIndex());
 	}
 
 	@Override
-	public void updateOnCollidable(AbstractModelPartie partie,Entity attacher)
+	public void applyConsequence(Entity attacher,boolean isFirstApplication)
 	{
-		if(Collision.testcollisionObjects(partie, this, attacher,true)){
-			Vitesse init_vit = computeProjectSpeed(partie,attacher); 
-			attacher.conditions.addNewCondition(ConditionEnum.MOTION, DUREE_EJECT,init_vit,System.identityHashCode(this));
-		}
+		Vitesse init_vit = computeProjectSpeed(attacher); 
+		attacher.conditions.addNewCondition(ConditionEnum.MOTION, DUREE_EJECT,init_vit,System.identityHashCode(this));
 	}
 	
-	private void alignBasedOnMouvIndex(AbstractModelPartie partie,int mouvIndex, int nextMouvIndex)
+	private void alignBasedOnMouvIndex(int mouvIndex, int nextMouvIndex)
 	{
 		try {
-			this.alignNextMouvement(partie, getMouvement(), nextMouvIndex, XAlignmentType.CENTER, YAlignmentType.CENTER, false, true);
+			this.alignNextMouvement(getMouvement(), nextMouvIndex, XAlignmentType.CENTER, YAlignmentType.CENTER, false, true);
 		} catch (Exception e) {} //this happens if we couldn't align the movement. We don't care in that case
 	}
 	@Override
-	protected boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie) {
-		int nextMouvIndex = getMouvement().updateAnimation(getMouvIndex(), partie.getFrame(),1);
+	protected boolean updateMouvementBasedOnAnimation() {
+		int nextMouvIndex = getMouvement().updateAnimation(getMouvIndex(), ModelPartie.me.getFrame(),1);
 		if(getMouvIndex()!=nextMouvIndex){
 			boolean success = true;//no need to hitbox alignment check 
 			if(success){
-				alignBasedOnMouvIndex(partie,getMouvIndex(),nextMouvIndex);
+				alignBasedOnMouvIndex(getMouvIndex(),nextMouvIndex);
 				setMouvIndex(nextMouvIndex);
 				return true;
 			}
@@ -128,18 +122,18 @@ public class Vent_effect extends Effect{
 	}
 
 
-	public void setFirstPos(AbstractModelPartie partie) {
+	public void setFirstPos() {
 
 		boolean worldCollision = pointCollision!=null;
-		Vector2d eff_center = Hitbox.getObjMid(partie, this);//.getCenterOfTaille();
+		Vector2d eff_center = Hitbox.getObjMid(this);//.getCenterOfTaille();
 		Point p_eff_center = new Point((int)Math.round(eff_center.x),(int)Math.round(eff_center.y));
 		
 		Point firstPos = new Point();
 		if(worldCollision)
-			firstPos = super.setFirstPos(partie,p_eff_center);
+			firstPos = super.setFirstPos(p_eff_center);
 		else{
 			//get the tip of the arrow
-			Point arrowTip = super.getArrowTip(partie);
+			Point arrowTip = super.getArrowTip();
 
 			firstPos=new Point(arrowTip.x-p_eff_center.x,arrowTip.y-p_eff_center.y);
 
@@ -149,9 +143,9 @@ public class Vent_effect extends Effect{
 	}
 
 	@Override
-	public void onDestroy(AbstractModelPartie partie)
+	public void onDestroy()
 	{
 		if(ref_fleche != null)
-			ref_fleche.OnFlecheEffectDestroy(partie, true);
+			ref_fleche.OnFlecheEffectDestroy(true);
 	}
 }

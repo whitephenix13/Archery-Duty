@@ -14,16 +14,13 @@ import gameConfig.ObjectTypeHelper;
 import gameConfig.ObjectTypeHelper.ObjectType;
 import partie.collision.Collidable;
 import partie.collision.Hitbox;
-import partie.effects.Effect;
+import partie.effects.EffectConsequence;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
 import partie.input.InputPartie;
 import partie.input.InputPartiePool;
-import partie.modelPartie.AbstractModelPartie;
-import partie.mouvement.Deplace;
 import partie.mouvement.Mouvement;
 import partie.mouvement.Mouvement.DirSubTypeMouv;
-import partie.mouvement.entity.Mouvement_entity;
 import partie.projectile.Projectile;
 import partie.projectile.fleches.Fleche;
 
@@ -96,11 +93,11 @@ public abstract class Monstre extends Entity implements InterfaceConstantes, Ser
 	 * @param heros, le personnage jouable
 	 * @param Monde, le niveau en cours  
 	 */	
-	public abstract void AI (List<Projectile> tabTirMonstre, AbstractModelPartie partie);
+	public abstract void AI (List<Projectile> tabTirMonstre);
 
 	
 	@Override
-	public void registerEffect(Effect eff)
+	public void registerEffect(EffectConsequence eff)
 	{
 		super.registerEffect(eff);
 	}
@@ -154,7 +151,7 @@ public abstract class Monstre extends Entity implements InterfaceConstantes, Ser
 	@Override
 	protected void onStartDeplace(){}
 	@Override
-	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,Collidable collidedObject,boolean stuck) {
+	public void handleWorldCollision(Vector2d normal,Collidable collidedObject,boolean stuck) {
 		conditions.OnAttacherCollided();
 		boolean collision_gauche = normal.x>0;
 		boolean collision_droite = normal.x<0;
@@ -181,7 +178,7 @@ public abstract class Monstre extends Entity implements InterfaceConstantes, Ser
 		}
 	}
 	@Override
-	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider,Vector2d normal) 
+	public void handleObjectCollision(Collidable collider,Vector2d normal) 
 	{
 		if(ObjectTypeHelper.isTypeOf(collider, ObjectType.FLECHE))
 		{

@@ -19,6 +19,7 @@ import partie.conditions.Condition.ConditionEnum;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.ModelPartie;
 import partie.modelPartie.PartieTimer;
 import partie.mouvement.Deplace;
 import partie.mouvement.Mouvement.DirSubTypeMouv;
@@ -29,6 +30,8 @@ import utils.Vitesse;
 public class Roche_effect extends Effect{
 	
 	double DUREE_DEFAILLANCE = 3;
+	final double GROUND_PULSE_EVERY = 0.05;
+	final double ENTITY_PULSE_EVERY = 0.5;
 
 	double UPDATE_LENGTH_TIME= 0.01; //10ms
 	int MAX_UPDATE_LENGTH = 5;//by how much the pilar grows each update
@@ -87,7 +90,7 @@ public class Roche_effect extends Effect{
 
 	private BufferedImage convertedIm=null;
 
-	public Roche_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _mouv_index, int current_frame,Vector2d _normalCollision,Point _pointCollision,
+	public Roche_effect(Fleche _ref_fleche,int _mouv_index, int current_frame,Vector2d _normalCollision,Point _pointCollision,
 			Point _correctedPointCollision, boolean _groundCollision)
 	{
 		super(_mouv_index,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,_groundCollision,_groundCollision);
@@ -95,43 +98,44 @@ public class Roche_effect extends Effect{
 		ModelPrincipal.debugTime.startElapsedForVerbose();
 		ModelPrincipal.debugTime.elapsed("Roche effect: call super.init");
 		this.setCollideWithAll();
+		
+		consequenceUpdateTime = groundEffect?GROUND_PULSE_EVERY:ENTITY_PULSE_EVERY;
 
 		this.isWorldCollider= groundEffect? true :false; //groundEffect=_groundCollision
 		
 		subTypeMouv = groundEffect?EffectCollisionEnum.GROUND:EffectCollisionEnum.ENTITY;
-		setMouvement(new Roche_idle(subTypeMouv,partie.getFrame()));
+		setMouvement(new Roche_idle(subTypeMouv,ModelPartie.me.getFrame()));
 		
 		MAX_LENGTH = (int)Math.round(MAX_LENGTH * getScaling().y);
 		MAX_UPDATE_LENGTH = (int)Math.round(MAX_UPDATE_LENGTH * getScaling().y);
 		
-		setFirstPos(partie);
+		setFirstPos();
 
 		if(groundEffect)
-			updateHitbox(partie);
+			updateHitbox();
 		
 		ModelPrincipal.debugTime.elapsed("Roche effect: call update hitbox");
-		partie.arrowsEffects.add(this);
+		ModelPartie.me.arrowsEffects.add(this);
 
 		int initialEject = MAX_UPDATE_LENGTH+1;
-		ejectCollidable(partie,initialEject,true);
 		ModelPrincipal.debugTime.elapsed("Roche effect: call on update");
 		//if the eject failed, the object is stuck (for example when arrow roche shot in corner) then destroy it
 	}
 
 	@Override
-	public boolean requestMoveBy(AbstractModelPartie partie,Collidable ref_object,Point motion,List<Collidable> collidableToMove, List<Point> motionToApply)
+	public boolean requestMoveBy(Collidable ref_object,Point motion,List<Collidable> collidableToMove, List<Point> motionToApply)
 	{
 
 		if(!groundEffect)
-			super.requestMoveBy(partie, ref_object, motion, collidableToMove, motionToApply);
+			super.requestMoveBy( ref_object, motion, collidableToMove, motionToApply);
 		
 		if(this.checkCollideWithWorld())
-			if(Collision.testcollisionObjects(partie, this, ref_object, false))
+			if(Collision.testcollisionObjects(this, ref_object, false))
 			{
 				//eject the object by only considering the world collision (not effect because they can be pushed)
 				Point appliedMotion = new Point();//not set to null so that we can retrieve the desired motion
 				boolean considerEffects = false;
-				if(!Collision.ejectWorldCollision(partie, this,ref_object,motion,appliedMotion,considerEffects)){
+				if(!Collision.ejectWorldCollision(this,ref_object,motion,appliedMotion,considerEffects)){
 					return false; // ejection was not successful,  "this" is preventing ref_object to move, return false
 				}
 
@@ -142,16 +146,16 @@ public class Roche_effect extends Effect{
 				this.addYpos(appliedMotion.y);
 
 				//Check if perpendicular is not a problem : 
-				boolean noCollision = checkPerpendicularValid(partie, collidableToMove,motionToApply);
+				boolean noCollision = checkPerpendicularValid(collidableToMove,motionToApply);
 				if(!noCollision)
 					return false;
 				
-				noCollision = checkSynchronizeValid(partie,collidableToMove,motionToApply);
+				noCollision = checkSynchronizeValid(collidableToMove,motionToApply);
 				if(!noCollision)
 					return false;
 				
 				//check all current collision with effectand entities 
-				List<Collidable> effectEntitieColliding = Collision.getAllEffectEntitieCollision(partie, this, motion);
+				List<Collidable> effectEntitieColliding = Collision.getAllEffectEntitieCollision(this, motion);
 				effectEntitieColliding.remove(this);
 				//for all current collisions != ref_object 
 				for(Collidable col : effectEntitieColliding)
@@ -161,7 +165,7 @@ public class Roche_effect extends Effect{
 					}
 
 					//call requestMoveBy (try to push it) and return false if fail
-					if(!col.requestMoveBy(partie, this, motion, collidableToMove, motionToApply))
+					if(!col.requestMoveBy(this, motion, collidableToMove, motionToApply))
 					{
 						return false;
 					}
@@ -182,7 +186,7 @@ public class Roche_effect extends Effect{
 	 * @param motionToApply
 	 * @return Check if the synchronized object does not collide with other collidable
 	 */
-	private boolean checkSynchronizeValid(AbstractModelPartie partie,List<Collidable> collidableToMove, List<Point> motionToApply)
+	private boolean checkSynchronizeValid(List<Collidable> collidableToMove, List<Point> motionToApply)
 	{
 		boolean success=true;
 		for(Collidable col : synchroSpeed)
@@ -192,8 +196,8 @@ public class Roche_effect extends Effect{
 			//If collider : check collision (true). If effect, only check collision if worldCollider
 			boolean isEffect = ( col instanceof Effect);
 			boolean isCollidable= isEffect ?  ((Effect)col).isWorldCollider : true ; 
-			boolean collideWithWorld = Collision.isWorldCollision(partie, col, true);
-			boolean collideWithEntiteEffect = Collision.getAllEffectEntitieCollision(partie, col, new Point(0,0)).size()>0;
+			boolean collideWithWorld = Collision.isWorldCollision(col, true);
+			boolean collideWithEntiteEffect = Collision.getAllEffectEntitieCollision(col, new Point(0,0)).size()>0;
 			if(isCollidable && (collideWithWorld || collideWithEntiteEffect))
 			{
 				success=false;
@@ -211,7 +215,7 @@ public class Roche_effect extends Effect{
 	 * @return Check for all accroch objects (heros) and perpendicular (arrows that hit this pilar)  if they are not colliding in that current setting (and also adjust the 
 	 * accroche to the top of the pilar). Returns true if there is no collision, returns false otherwise. 
 	 */
-	private boolean checkPerpendicularValid(AbstractModelPartie partie,List<Collidable> collidableToMove, List<Point> motionToApply)
+	private boolean checkPerpendicularValid(List<Collidable> collidableToMove, List<Point> motionToApply)
 	{
 		boolean success=true;
 		for(Collidable col : accrochedCol)
@@ -219,8 +223,8 @@ public class Roche_effect extends Effect{
 			Vector2d xydir_effect = Deplace.angleToVector(getRotation()-Math.PI/2); 
 			Vector2d xydir_col = Deplace.angleToVector(col.getMouvement().droite_gauche(col.getMouvIndex(),col.getRotation()).equals(DirSubTypeMouv.GAUCHE) ? 5.0*Math.PI/4: 7.0*Math.PI/4);
 
-			Vector2d effect_sp = Hitbox.supportPoint(xydir_effect, getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon);
-			Vector2d col_sp = Hitbox.supportPoint(xydir_col, col.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon);
+			Vector2d effect_sp = Hitbox.supportPoint(xydir_effect, getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp()).polygon);
+			Vector2d col_sp = Hitbox.supportPoint(xydir_col, col.getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp()).polygon);
 			
 			boolean considerTouch =true;
 			//pillar goes up
@@ -239,7 +243,7 @@ public class Roche_effect extends Effect{
 				collidableToMove.add(col);
 				motionToApply.add(new Point((int)dx,0));
 			}
-			if(Collision.isWorldCollision(partie, col, considerTouch))
+			if(Collision.isWorldCollision( col, considerTouch))
 			{
 				success=false;
 				break;
@@ -251,7 +255,7 @@ public class Roche_effect extends Effect{
 			//loop over synchronized object and check if they do not collide 
 			for(Collidable col : synchroSpeed)
 			{
-				if(Collision.isWorldCollision(partie, col, true))
+				if(Collision.isWorldCollision( col, true))
 				{
 					success=false;
 					break;
@@ -277,7 +281,7 @@ public class Roche_effect extends Effect{
 			return super.computeHitbox(INIT_RECT, screenDisp);
 	}
 
-	private void updateHitbox(AbstractModelPartie partie)
+	private void updateHitbox()
 	{
 		if(groundEffect)
 			forceHitboxDirty();
@@ -309,14 +313,13 @@ public class Roche_effect extends Effect{
 		}
 	}
 	@Override
-	public void updateOnCollidable(AbstractModelPartie partie,Entity attacher)
+	public void applyConsequence(Entity attacher,boolean isFirstApplication)
 	{
 		if(!groundEffect)
-			if(Collision.testcollisionObjects(partie, this, attacher,true))
-				attacher.conditions.addNewCondition(ConditionEnum.DEFAILLANCE, DUREE_DEFAILLANCE,System.identityHashCode(this));
+			attacher.conditions.addNewCondition(ConditionEnum.DEFAILLANCE, DUREE_DEFAILLANCE,System.identityHashCode(this));
 	}
 
-	private void ejectCollidable(AbstractModelPartie partie,int initEject,boolean init)
+	private void ejectCollidable(int initEject,boolean init)
 	{
 		if(!groundEffect)
 			return;
@@ -328,7 +331,7 @@ public class Roche_effect extends Effect{
 		
 		if(!init){
 			growPilar(update_length);
-			updateHitbox(partie);
+			updateHitbox();
 		}
 		else
 			update_length=1;
@@ -340,25 +343,25 @@ public class Roche_effect extends Effect{
 		List<Collidable> collidableToMove = new ArrayList<Collidable>();  //Collidable that were moved
 		List<Point> motionToApply = new ArrayList<Point>();  // motion that was applied
 
-		if(Collision.isWorldCollision(partie, this, true,false))
+		if(Collision.isWorldCollision(this, true,false))
 			couldntGrow=true;
 
 		//check perpendicular 
 		if(!couldntGrow)
 		{
-			couldntGrow=!checkPerpendicularValid(partie, collidableToMove, motionToApply);
+			couldntGrow=!checkPerpendicularValid(collidableToMove, motionToApply);
 		}
 		
 		if(!couldntGrow)
 		{
-			couldntGrow=!checkSynchronizeValid(partie,collidableToMove,motionToApply);
+			couldntGrow=!checkSynchronizeValid(collidableToMove,motionToApply);
 		}
 		//check recursivity 
 		if(!couldntGrow)
 		{
 			//Test if the movement doesn't stuck any other objects
-			List<Entity> allEntities = Collidable.getAllEntitiesCollidable(partie,this);
-			List<Collidable>  allEffects = Collidable.getAllCollidableEffect(partie, this);
+			List<Entity> allEntities = Collidable.getAllEntitiesCollidable(this);
+			List<Collidable>  allEffects = Collidable.getAllCollidableEffect( this);
 			allEffects.remove(this);
 
 			List<Collidable> allColli = new ArrayList<Collidable>();
@@ -374,7 +377,7 @@ public class Roche_effect extends Effect{
 				Collidable col = allColli.get(i);
 
 				//In the case where the movement was no possible: revert growth + objects from collidableToMove
-				if(!col.requestMoveBy(partie, this, motion, collidableToMove, motionToApply)){
+				if(!col.requestMoveBy(this, motion, collidableToMove, motionToApply)){
 					//Stop pilar growth and revert its motion
 					couldntGrow=true;
 					break; 
@@ -382,8 +385,8 @@ public class Roche_effect extends Effect{
 
 				//Otherwise, object has been moved in requestMoveBy, check if the screen has to be updated 
 				if(col.controlScreenMotion){
-					Point delta = Deplace.getdeplaceEcran(partie,(Heros)col,true);
-					Deplace.deplaceEcran(delta,partie,col);
+					Point delta = Deplace.getdeplaceEcran((Heros)col,true);
+					Deplace.deplaceEcran(delta,col);
 				}
 
 			}
@@ -393,19 +396,19 @@ public class Roche_effect extends Effect{
 		{
 			//if couldn't eject objects on init, then it has to be destroyed (ie: stuck in world)
 			if(init)
-				this.destroy(partie, true);
-			this.revertGrowth(update_length, partie, collidableToMove, motionToApply);
+				this.destroy(true);
+			this.revertGrowth(update_length,  collidableToMove, motionToApply);
 		}
 
 	}
 	
 	@Override
-	protected boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie) {
+	protected boolean updateMouvementBasedOnAnimation() {
 		
 		if(groundEffect){
 			if(!stopGrowing && (pilar_length < MAX_LENGTH) && (PartieTimer.me.getElapsedNano() - lastLengthUpdateTime)>UPDATE_LENGTH_TIME*Math.pow(10, 9))
 			{
-				ejectCollidable(partie,0,false);
+				ejectCollidable(0,false);
 				if(pilar_length == MAX_LENGTH)
 				{
 					stopGrowing=true;
@@ -415,16 +418,16 @@ public class Roche_effect extends Effect{
 			}			
 			if(!startDestroyAnim && stopGrowing&& (PartieTimer.me.getElapsedNano()-lastTimePilarFullLength)>PILAR_DURATION*Math.pow(10, 9))
 			{
-				startDestroyAnim(partie.getFrame(),false);
+				startDestroyAnim(ModelPartie.me.getFrame(),false);
 				startDestroyAnim=true;
 				return true;
 			}
 		}
-		return super.updateMouvementBasedOnAnimation(partie);
+		return super.updateMouvementBasedOnAnimation();
 	}
 
 	@Override
-	protected void onMouvementChanged(AbstractModelPartie partie,boolean animationChanged, boolean mouvementChanged)
+	protected void onMouvementChanged(boolean animationChanged, boolean mouvementChanged)
 	{
 		if(animationChanged)
 			previousMaskedIm=null;
@@ -436,7 +439,7 @@ public class Roche_effect extends Effect{
 	}
 
 	@Override
-	public Image applyFilter(AbstractModelPartie partie, Image im) {
+	public Image applyFilter( Image im) {
 		if(!groundEffect)
 			return im;
 		int width = im.getWidth(null);
@@ -452,7 +455,7 @@ public class Roche_effect extends Effect{
 		int start_filter = (int)Math.round(getUnscaledPilarLength());
 		if(previousMaskedIm==null){
 			previousMaskedIm = new BufferedImage(width,height,BufferedImage.TYPE_4BYTE_ABGR);
-			convertedIm=partie.toBufferedImage(im);
+			convertedIm=ModelPartie.me.toBufferedImage(im);
 
 			//deep copy of converted image into previous masked im
 			ColorModel cm = convertedIm.getColorModel();
@@ -461,7 +464,7 @@ public class Roche_effect extends Effect{
 			previousMaskedIm=new BufferedImage(cm, raster, isAlphaPremultiplied, null);
 
 		}
-		previousMaskedIm=partie.apply_height_mask(convertedIm,previousMaskedIm,start_filter,1);
+		previousMaskedIm=ModelPartie.me.apply_height_mask(convertedIm,previousMaskedIm,start_filter,1);
 
 		if(stopUpdate)
 			lastStopGrowingUpdate=false;
@@ -469,7 +472,7 @@ public class Roche_effect extends Effect{
 	}
 
 
-	public void setFirstPos(AbstractModelPartie partie) {
+	public void setFirstPos() {
 
 		int divider = groundEffect? 1:2;
 		
@@ -480,11 +483,11 @@ public class Roche_effect extends Effect{
 		Point firstPos = new Point();
 		if(groundEffect)
 		{
-			firstPos=super.setFirstPos(partie,new Point(x_eff_center,y_eff_center));
+			firstPos=super.setFirstPos(new Point(x_eff_center,y_eff_center));
 		} 
 		else
 		{
-			Hitbox fHitbox = ref_fleche.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
+			Hitbox fHitbox = ref_fleche.getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp());
 
 			Vector2d opposNormal = new Vector2d();
 			opposNormal.negate(normalCollision);
@@ -527,10 +530,10 @@ public class Roche_effect extends Effect{
 		addXpos_sync(-deltaGrow.x);
 		addYpos_sync(-deltaGrow.y);
 	}
-	protected void revertGrowth(double update_length,AbstractModelPartie partie,List<Collidable> collidableToMove, List<Point> motionToApply)
+	protected void revertGrowth(double update_length,List<Collidable> collidableToMove, List<Point> motionToApply)
 	{
 		growPilar(-update_length);
-		updateHitbox(partie);
+		updateHitbox();
 		stopGrowing=true;
 		lastTimePilarFullLength=PartieTimer.me.getElapsedNano();
 

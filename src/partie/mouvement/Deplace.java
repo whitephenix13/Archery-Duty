@@ -14,6 +14,7 @@ import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
 import partie.modelPartie.DamageDrawer;
+import partie.modelPartie.ModelPartie;
 import partie.mouvement.entity.Mouvement_entity;
 import partie.mouvement.entity.Mouvement_entity.EntityTypeMouv;
 
@@ -24,25 +25,25 @@ public class Deplace implements InterfaceConstantes{
 	{
 	}
 
-	public void deplaceObject(Collidable object, AbstractModelPartie partie)
+	public void deplaceObject(Collidable object)
 	{
 		ModelPrincipal.debugTime.startElapsedForVerbose();
 		boolean isHeros = object instanceof Heros;
 
 		
-		if(isHeros && partie.slowDown){
-			partie.slowCount= (partie.slowCount+1) % (InterfaceConstantes.SLOW_DOWN_FACTOR);
+		if(isHeros && ModelPartie.me.slowDown){
+			ModelPartie.me.slowCount= (ModelPartie.me.slowCount+1) % (InterfaceConstantes.SLOW_DOWN_FACTOR);
 		}
 
 		object.memorizeCurrentValue();
 		ModelPrincipal.debugTime.elapsed("test memorize values");
 
 		
-		boolean update_with_speed = ( !partie.slowDown || (partie.slowDown && partie.slowCount==0));
+		boolean update_with_speed = ( !ModelPartie.me.slowDown || (ModelPartie.me.slowDown && ModelPartie.me.slowCount==0));
 		if(!update_with_speed)
 			return;
 		//Prepare the object to move, the object will actually move in checkCollideWithWorld 
-		boolean shouldMove =object.deplace(partie);
+		boolean shouldMove =object.deplace();
 		
 		if(!shouldMove)
 			return;
@@ -68,15 +69,15 @@ public class Deplace implements InterfaceConstantes{
 			boolean checkColli = object.checkCollideWithWorld();
 			boolean stuck = false;
 			if(checkColli){
-				stuck = !Collision.ejectWorldCollision(partie, object);
+				stuck = !Collision.ejectWorldCollision(object);
 			}
 
 			if(stuck)
 			{
-				object.handleStuck(partie);
+				object.handleStuck();
 			}
 			else
-				object.handleDeplacementSuccess(partie);
+				object.handleDeplacementSuccess();
 			
 		}
 		else //update with no speed, ie just check if collide with world
@@ -84,11 +85,11 @@ public class Deplace implements InterfaceConstantes{
 			boolean checkColli = object.checkCollideWithWorld();
 			boolean stuck = false;
 			if(checkColli){
-				stuck = Collision.isWorldCollision(partie, object, true);
+				stuck = Collision.isWorldCollision(object, true);
 			}
 			if(stuck)
 			{
-				object.handleStuck(partie);
+				object.handleStuck();
 			}
 
 		}
@@ -98,31 +99,17 @@ public class Deplace implements InterfaceConstantes{
 		object.resetVarDeplace(update_with_speed);
 		
 		if(object.controlScreenMotion){
-			Point delta = getdeplaceEcran(partie,(Heros)object,false);
-			deplaceEcran(delta,partie,object);
+			Point delta = getdeplaceEcran((Heros)object,false);
+			deplaceEcran(delta,object);
 		}
 		
 		ModelPrincipal.debugTime.elapsed("deplace ecran");
-		
-		if(object instanceof Entity){
-			Entity enti = (Entity) object;
-
-			//update the conditions (or other) before applying them
-			for(Effect eff : enti.currentEffects)
-				eff.updateOnCollidable(partie, enti);
 			
-			//Apply conditions damage 
-			enti.addLife(enti.conditions.conditionDamageReceived());
-			
-		}
-		
-		ModelPrincipal.debugTime.elapsed("update conditions");
-	
 	}
 
-	public void deplaceObjectOutOfScreen(AbstractModelPartie partie, Collidable object)
+	public void deplaceObjectOutOfScreen( Collidable object)
 	{
-		object.deplaceOutOfScreen(partie);
+		object.deplaceOutOfScreen();
 	}
 
 	/**
@@ -132,13 +119,13 @@ public class Deplace implements InterfaceConstantes{
 	 * @return how much to add to xScreendisp,yScreendisp,object.xpos,object.ypos to get them to the right place
 	 * 
 	 */	
-	public static Point getdeplaceEcran(AbstractModelPartie partie, Collidable object,boolean force) //{{
+	public static Point getdeplaceEcran( Collidable object,boolean force) //{{
 	{
 		if(MOVE_SCREEN_WHEN_HEROS_MOVES)
 		{
 			
-			Vector2d cent = Hitbox.getObjMid(partie, object);
-			return new Point(InterfaceConstantes.WINDOW_WIDTH/2-(int)Math.round(cent.x)-partie.xScreendisp,InterfaceConstantes.WINDOW_HEIGHT/2-(int)Math.round(cent.y)-partie.yScreendisp);
+			Vector2d cent = Hitbox.getObjMid(object);
+			return new Point(InterfaceConstantes.WINDOW_WIDTH/2-(int)Math.round(cent.x)-ModelPartie.me.xScreendisp,InterfaceConstantes.WINDOW_HEIGHT/2-(int)Math.round(cent.y)-ModelPartie.me.yScreendisp);
 		}
 		else{
 			int xdelta=0;
@@ -147,11 +134,11 @@ public class Deplace implements InterfaceConstantes{
 			int largeur_fenetre=0;
 			int hauteur_fenetre=0;
 
-			//Add partie.getScreenDisp() to get the relative position with respect to the screen 
-			int left_xpos_hit = (int) Hitbox.supportPoint(new Vector2d(-1,0), object.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon).x+partie.xScreendisp;
-			int right_xpos_hit = (int) Hitbox.supportPoint(new Vector2d(1,0), object.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon).x+partie.xScreendisp;
-			int up_ypos_hit = (int) Hitbox.supportPoint(new Vector2d(0,-1), object.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon).y+partie.yScreendisp;
-			int down_ypos_hit = (int) Hitbox.supportPoint(new Vector2d(0,1), object.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon).y+partie.yScreendisp;
+			//Add ModelPartie.me.getScreenDisp() to get the relative position with respect to the screen 
+			int left_xpos_hit = (int) Hitbox.supportPoint(new Vector2d(-1,0), object.getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp()).polygon).x+ModelPartie.me.xScreendisp;
+			int right_xpos_hit = (int) Hitbox.supportPoint(new Vector2d(1,0), object.getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp()).polygon).x+ModelPartie.me.xScreendisp;
+			int up_ypos_hit = (int) Hitbox.supportPoint(new Vector2d(0,-1), object.getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp()).polygon).y+ModelPartie.me.yScreendisp;
+			int down_ypos_hit = (int) Hitbox.supportPoint(new Vector2d(0,1), object.getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp()).polygon).y+ModelPartie.me.yScreendisp;
 			int xpos_hit=0;
 			int ypos_hit=0;
 
@@ -189,12 +176,12 @@ public class Deplace implements InterfaceConstantes{
 			return new Point(xdelta,ydelta);
 		}
 	}
-	public static void deplaceEcran(Point delta,  AbstractModelPartie partie, Collidable object)
+	public static void deplaceEcran(Point delta, Collidable object)
 	{
-		partie.xScreendisp+= delta.x;
+		ModelPartie.me.xScreendisp+= delta.x;
 		object.addXpos_sync(delta.x,object.fixedWhenScreenMoves); 
 
-		partie.yScreendisp+=  delta.y;
+		ModelPartie.me.yScreendisp+=  delta.y;
 		object.addYpos_sync(delta.y,object.fixedWhenScreenMoves); 
 		
 	}
@@ -245,7 +232,7 @@ public class Deplace implements InterfaceConstantes{
 		return XY;
 	}
 
-	public static double[] getMouvIndexRotationTir(AbstractModelPartie partie, boolean getForArrow)
+	public static double[] getMouvIndexRotationTir( boolean getForArrow)
 	{
 		double[] mouv_index_rotation = new double[2];
 		/*Anims:
@@ -260,7 +247,7 @@ public class Deplace implements InterfaceConstantes{
 		 * 
 		 * */
 		double tolerance =0;
-		Heros heros = partie.heros;
+		Heros heros = ModelPartie.me.heros;
 		boolean isFiring = heros.getMouvement().isMouvement(EntityTypeMouv.TIR);
 		double xcenter= heros.getXpos()+ (isFiring? ((Mouvement_entity)heros.getMouvement()).x_center_tir.get(heros.getMouvIndex()) : 
 			(heros.getMouvement().xtaille.get(heros.getMouvIndex())/2));
@@ -268,8 +255,8 @@ public class Deplace implements InterfaceConstantes{
 		double ycenter= heros.getYpos()+(isFiring? ((Mouvement_entity)heros.getMouvement()).y_center_tir.get(heros.getMouvIndex()):
 			(heros.getMouvement().ytaille.get(heros.getMouvIndex())/4))-6;//arms at neck level
 		
-		double xPosRelative= partie.getXPositionSouris()-xcenter; 
-		double yPosRelative= partie.getYPositionSouris()-ycenter;
+		double xPosRelative= ModelPartie.me.getXPositionSouris()-xcenter; 
+		double yPosRelative= ModelPartie.me.getYPositionSouris()-ycenter;
 		double angle= XYtoAngle(xPosRelative, yPosRelative);
 		double range = 2 * Math.PI / 8;
 		double left_range= 15 * Math.PI / 8;

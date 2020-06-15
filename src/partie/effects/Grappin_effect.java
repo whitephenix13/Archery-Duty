@@ -17,6 +17,7 @@ import partie.collision.Hitbox;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.ModelPartie;
 import partie.mouvement.Deplace;
 import partie.mouvement.effect.Grappin_idle;
 import partie.projectile.fleches.Fleche;
@@ -68,46 +69,49 @@ public class Grappin_effect extends Effect{
 	public double MIN_SHOOTER_ANCHOR_D = 50;
 	int MAX_LENGTH = 1000; 
 	private double DRAG_SPEED=15;//15
-	
-	public Grappin_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _mouv_index, int current_frame, Collidable _shooter )
+	final double PULSE_EVERY = 0.05;
+
+	public Grappin_effect(Fleche _ref_fleche,int _mouv_index, int current_frame, Collidable _shooter )
 	{
 		super(_mouv_index,_ref_fleche);
 		setScaling(1,getScaling().y);//Never change the x scaling or it will screw the arrow (since grappin is from hero to arrow disregarding the scale).
 		this.setCollideWithNone();
 	
+		consequenceUpdateTime = PULSE_EVERY;//s => consequence applied every X while in the effect
+
 		ref_fleche=_ref_fleche;
 		localVit= new Vitesse();
 		setRotation(0);
 		shooter=_shooter;
 		
 		subTypeMouv = null;
-		setMouvement(new Grappin_idle(subTypeMouv,partie.getFrame()));
+		setMouvement(new Grappin_idle(subTypeMouv,ModelPartie.me.getFrame()));
 
 		TEMPS_DESTRUCTION= _ref_fleche.TEMPS_DESTRUCTION;
 				
-		partie.arrowsEffects.add(this);
-		setFirstPos(partie);
+		ModelPartie.me.arrowsEffects.add(this);
+		setFirstPos();
 		
-		this.onUpdate(partie); 
+		this.onUpdate(); 
 		
 	}
 
 	
 	@Override
-	protected boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie) {
-		onUpdate(partie);
-		return super.updateMouvementBasedOnAnimation(partie);
+	protected boolean updateMouvementBasedOnAnimation() {
+		onUpdate();
+		return super.updateMouvementBasedOnAnimation();
 	}
 	
 	@Override 
-	public void onRemoveRefFleche(AbstractModelPartie partie,boolean destroyNow){
+	public void onRemoveRefFleche(boolean destroyNow){
 		this.needDestroy=true;
-		super.onRemoveRefFleche(partie, destroyNow);
+		super.onRemoveRefFleche(destroyNow);
 	}
 	
 
 	
-	private void onUpdate(AbstractModelPartie partie) {		
+	private void onUpdate() {		
 		//destroy object when heros has collide
 		boolean stopCondi = getShooterToAnchorDistance()<=MIN_SHOOTER_ANCHOR_D && isDragging;
 		if(stopCondi)
@@ -115,8 +119,8 @@ public class Grappin_effect extends Effect{
 			if(this.tempsDetruit>0)
 				return;
 			reached_max_length=true;
-			ref_fleche.destroy(partie,false);
-			this.destroy(partie,false);
+			ref_fleche.destroy(false);
+			this.destroy(false);
 			return;
 		}
 		if(reached_max_length)
@@ -129,7 +133,7 @@ public class Grappin_effect extends Effect{
 
 		if((ref_fleche.getNeedDestroy() || this.needDestroy))
 		{
-			this.destroy(partie,true);
+			this.destroy(true);
 			return;
 		}
 
@@ -137,7 +141,7 @@ public class Grappin_effect extends Effect{
 		//update the parameter for the mask 
 
 		Heros her = ref_fleche.shooter;
-		Hitbox herHit = her.getHitbox(partie.INIT_RECT, partie.getScreenDisp());
+		Hitbox herHit = her.getHitbox(ModelPartie.me.INIT_RECT, ModelPartie.me.getScreenDisp());
 		
 		Vector2d topleftH = Hitbox.supportPoint(new Vector2d(-1,-1), herHit.polygon);
 		Vector2d bottomrightH = Hitbox.supportPoint(new Vector2d(1,1), herHit.polygon);
@@ -154,8 +158,8 @@ public class Grappin_effect extends Effect{
 		double[] XY2 = Deplace.angleToXY(ref_fleche.getRotation()-epsilon);
 
 		//get the opposite since the direction we found was the one towards the tip
-		Vector2d fleche_tail1 = Hitbox.supportPoint(new Vector2d(-XY[0],-XY[1]),ref_fleche.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon);
-		Vector2d fleche_tail2 = Hitbox.supportPoint(new Vector2d(-XY2[0],-XY2[1]),ref_fleche.getHitbox(partie.INIT_RECT,partie.getScreenDisp()).polygon);
+		Vector2d fleche_tail1 = Hitbox.supportPoint(new Vector2d(-XY[0],-XY[1]),ref_fleche.getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp()).polygon);
+		Vector2d fleche_tail2 = Hitbox.supportPoint(new Vector2d(-XY2[0],-XY2[1]),ref_fleche.getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp()).polygon);
 		Vector2d prevMiddleTailArrow = new Vector2d(middleTailArrow);
 		//compute the middle of the tail
 		middleTailArrow.set(fleche_tail1);
@@ -171,8 +175,8 @@ public class Grappin_effect extends Effect{
 			middleHeros=prevMiddleHeros;
 			middleTailArrow=prevMiddleTailArrow;
 			
-			ref_fleche.destroy(partie,false);
-			destroy(partie,false);
+			ref_fleche.destroy(false);
+			destroy(false);
 		}
 		else{
 			setRotation(Deplace.XYtoAngle(xPosRelative, yPosRelative));	
@@ -181,7 +185,7 @@ public class Grappin_effect extends Effect{
 
 	
 	@Override
-	public void updateOnCollidable(AbstractModelPartie partie,Entity attacher)
+	public void applyConsequence(Entity attacher,boolean isFirstApplication)
 	{
 		
 	}
@@ -224,17 +228,17 @@ public class Grappin_effect extends Effect{
 		return computeEffectHitbox(unscaledMouvementHitbox,INIT_RECT,screenDisp);
 	}
 
-	public void setFirstPos(AbstractModelPartie partie)
+	public void setFirstPos()
 	{
 		//get the middle right of the effect
 		Point middle_right = getRightOfTaille();
 
-		setXpos_sync((int)(middleTailArrow.x)-middle_right.x+partie.xScreendisp);
-		setYpos_sync((int)(middleTailArrow.y)-middle_right.y+partie.yScreendisp);
+		setXpos_sync((int)(middleTailArrow.x)-middle_right.x+ModelPartie.me.xScreendisp);
+		setYpos_sync((int)(middleTailArrow.y)-middle_right.y+ModelPartie.me.yScreendisp);
 	}
 
 	@Override
-	public Image applyFilter(AbstractModelPartie partie,Image im) {
+	public Image applyFilter(Image im) {
 		int width = im.getWidth(null);
 		int height = im.getHeight(null);
 		if(width==-1 || height == -1 )
@@ -244,7 +248,7 @@ public class Grappin_effect extends Effect{
 		int start_filter = width - distance ; 
 		if(previousMaskedIm==null){
 			previousMaskedIm = new BufferedImage(width,height,BufferedImage.TYPE_4BYTE_ABGR);
-			convertedIm=partie.toBufferedImage(im);
+			convertedIm=ModelPartie.me.toBufferedImage(im);
 
 			//deep copy of converted image into previous masked im
 			ColorModel cm = convertedIm.getColorModel();
@@ -254,7 +258,7 @@ public class Grappin_effect extends Effect{
 
 			last_start_filter=0;
 		}
-		previousMaskedIm=partie.apply_width_mask(convertedIm,previousMaskedIm,start_filter,last_start_filter,1);
+		previousMaskedIm=ModelPartie.me.apply_width_mask(convertedIm,previousMaskedIm,start_filter,last_start_filter,1);
 		last_start_filter=start_filter;
 
 		return previousMaskedIm;

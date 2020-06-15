@@ -83,7 +83,6 @@ public abstract class AbstractModelPrincipal implements Observable,GameHandler,G
 	protected AbstractControlerChoixNiveau controlerChoix ;
 	protected AffichageChoixNiveau affichageChoix ;
 	
-	protected AbstractModelPartie partie ;
 	protected AbstractControlerPartie controlerPartie ;
 	protected AffichagePartie affichagePartie ;
 	

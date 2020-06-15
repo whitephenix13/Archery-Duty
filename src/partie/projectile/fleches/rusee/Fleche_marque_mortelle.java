@@ -8,7 +8,6 @@ import java.util.List;
 
 import javax.vecmath.Vector2d;
 
-import debug.DebugBreak;
 import gameConfig.InterfaceConstantes;
 import menu.menuPrincipal.ModelPrincipal;
 import music.MusicBruitage;
@@ -19,7 +18,7 @@ import partie.effects.Effect;
 import partie.effects.Roche_effect;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
-import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.ModelPartie;
 import partie.modelPartie.PartieTimer;
 import partie.mouvement.Deplace;
 import partie.projectile.Projectile;
@@ -87,14 +86,14 @@ public class Fleche_marque_mortelle extends Rusee{
 	}
 	
 	@Override
-	public void OnShoot(AbstractModelPartie partie){
+	public void OnShoot(){
 		shootTime = PartieTimer.me.getElapsedNano();
-		super.OnShoot(partie);
+		super.OnShoot();
 	}
 	
-	private Polygon generateTrail(AbstractModelPartie partie)
+	private Polygon generateTrail()
 	{
-		Vector2d arrow_middle = Hitbox.getObjMid(partie, this);
+		Vector2d arrow_middle = Hitbox.getObjMid(this);
 		if(trail_last_arrow_middle==null){
 			
 			trail_last_arrow_middle =PointHelper.VecToPoint(arrow_middle);
@@ -122,14 +121,14 @@ public class Fleche_marque_mortelle extends Rusee{
 		return p;
 	}
 
-	private void updateTrail(AbstractModelPartie partie)
+	private void updateTrail()
 	{
 		if(encochee)
 			return;
 		double time = PartieTimer.me.getElapsedNano() ;
 		if((time - last_trail_time) > TRAIL_TIME )
 		{
-			Polygon trail = generateTrail(partie);
+			Polygon trail = generateTrail();
 			if(trail !=null)
 				trails.add(trail);
 			trailsColor.add(Color.WHITE);
@@ -154,15 +153,15 @@ public class Fleche_marque_mortelle extends Rusee{
 		}
 	}
 
-	Collidable FindTarget(AbstractModelPartie partie,Vector2d thisMid,Point mousePos)
+	Collidable FindTarget(Vector2d thisMid,Point mousePos)
 	{
 		double minDist = -1;
 		Entity target = null;
-		Point worldMousePos = new Point(mousePos.x-partie.getScreenDisp().x,mousePos.y-partie.getScreenDisp().y);
-		for(Entity ent: partie.tabMonstre) //only take enemies visible on screen 
+		Point worldMousePos = new Point(mousePos.x-ModelPartie.me.getScreenDisp().x,mousePos.y-ModelPartie.me.getScreenDisp().y);
+		for(Entity ent: ModelPartie.me.tabMonstre) //only take enemies visible on screen 
 		{
-			if(Collidable.isObjectOnScreen(partie, ent)){
-				Vector2d objMid = Hitbox.getObjMid(partie, ent);
+			if(Collidable.isObjectOnScreen( ent)){
+				Vector2d objMid = Hitbox.getObjMid(ent);
 				//Consider scalar product of vector : fleche/mouse fleche/montre as fleche pos = heros pos at the start.
 				//The target should minimize the angle and the distance to the mouse and be >0
 				Vector2d thisToMouse = new Vector2d(worldMousePos.x-thisMid.x,worldMousePos.y-thisMid.y);
@@ -194,23 +193,23 @@ public class Fleche_marque_mortelle extends Rusee{
 	
 
 	@Override
-	public boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie) {
+	public boolean updateMouvementBasedOnAnimation() {
 		
 		ModelPrincipal.debugTime.startElapsedForVerbose();
 		boolean res = shouldMove;		
 		shouldSetSpeed = true; //set to false if speed is set in a custom way 
 		if(!encochee && !stopTargeting)
 		{
-			OnTargetActive(partie);
+			OnTargetActive();
 			ModelPrincipal.debugTime.elapsed("change mouv_index based on target");	
 		}
 		else
 		{
-			res = super.updateMouvementBasedOnAnimation(partie);
+			res = super.updateMouvementBasedOnAnimation();
 			ModelPrincipal.debugTime.elapsed("change mouv_index based on regular update");	
 		}
 		ModelPrincipal.debugTime.elapsed("update transform and hitbox");
-		updateTrail(partie);
+		updateTrail();
 		ModelPrincipal.debugTime.elapsed("update trail");
 
 		return res;
@@ -218,22 +217,22 @@ public class Fleche_marque_mortelle extends Rusee{
 	/***
 	 * Keep moving towards the target
 	 */
-	private void OnTargetActive(AbstractModelPartie partie){
+	private void OnTargetActive(){
 		Vector2d dir = Deplace.angleToVector(getRotation());
-		Vector2d thisMid = Hitbox.getObjMid(partie, this);
+		Vector2d thisMid = Hitbox.getObjMid(this);
 		Vector2d target=null;
 		//If we have not found the first target => find closest target to mouse
 		if(firstTarget)
 		{
-			objTargeted = FindTarget(partie,thisMid,shooter.getMousePositionWhenReleased());
+			objTargeted = FindTarget(thisMid,shooter.getMousePositionWhenReleased());
 			if(objTargeted != null)
-				target = Hitbox.getObjMid(partie, objTargeted);
+				target = Hitbox.getObjMid(objTargeted);
 			firstTarget=false;
 		}
 		//Else if we found first target and it is not destroyed yet  
 		if(!firstTarget && objTargeted!= null && !objTargeted.getNeedDestroy())
 		{
-			target = Hitbox.getObjMid(partie, objTargeted);
+			target = Hitbox.getObjMid(objTargeted);
 		}
 		//target destroyed => move straight
 		else if(!firstTarget)
@@ -243,7 +242,7 @@ public class Fleche_marque_mortelle extends Rusee{
 		}
 		ModelPrincipal.debugTime.elapsed("find target");
 		if(target!=null){
-			ArrayList<Point> nextPathPoints = pathAlgo.GetNextTargets(partie, this, dir, target,MAX_NUMBER_TARGET);
+			ArrayList<Point> nextPathPoints = pathAlgo.GetNextTargets(this, dir, target,MAX_NUMBER_TARGET);
 			ModelPrincipal.debugTime.elapsed("get next targets");
 			if(nextPathPoints != null && nextPathPoints.size()>0){
 				//Point to the next target and move to exactly end up at the target point.
@@ -271,7 +270,7 @@ public class Fleche_marque_mortelle extends Rusee{
 				Vector2d final_direction = new Vector2d(target.x-thisMid.x,target.y-thisMid.y);
 				setRotation(Deplace.XYtoAngle(final_direction.x, final_direction.y));
 				ModelPrincipal.debugTime.elapsed("rotation");
-				partie.forceRepaint();
+				ModelPartie.me.forceRepaint();
 				ModelPrincipal.debugTime.elapsed("force repaint");
 				
 				double scaler = this.getMouvement().getSpeed(this, getMouvIndex()).length() / final_direction.length();
@@ -291,19 +290,19 @@ public class Fleche_marque_mortelle extends Rusee{
 
 
 	@Override
-	public void destroy(AbstractModelPartie partie,boolean destroyNow)
+	public void destroy(boolean destroyNow)
 	{
 		stopTargeting=true;
-		pathAlgo.OnDestroy(partie);
-		super.destroy(partie, destroyNow);
+		pathAlgo.OnDestroy();
+		super.destroy( destroyNow);
 	}
 	@Override
-	protected void onPlanted(List<Entity> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
+	protected void onPlanted(List<Entity> objects,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
 	{
 		if(this.afterDecochee && stuck)
-			ejectArrow(partie,unprojectedSpeed);
+			ejectArrow(unprojectedSpeed);
 		if(stuck){
-			destroy(partie,false);
+			destroy(false);
 			return;
 		}
 		if(!generatedEffect){
@@ -321,17 +320,17 @@ public class Fleche_marque_mortelle extends Rusee{
 			this.simulateDestroy();
 			this.isVisible=true;
 		}
-		destroy(partie,false);
+		destroy(false);
 	}
 
 	@Override
-	protected boolean OnObjectsCollision(List<Entity> objects,AbstractModelPartie partie,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
+	protected boolean OnObjectsCollision(List<Entity> objects,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
 	{
 		if((collider instanceof Projectile))
 			return false;
 		if(this.afterDecochee && (collider instanceof Effect))
 			if(((Effect)collider).isWorldCollider)
-				ejectArrow(partie,unprojectedSpeed);
+				ejectArrow(unprojectedSpeed);
 		if(!generatedEffect){
 			generatedEffect=true;
 			MusicBruitage.me.startBruitage("arc");

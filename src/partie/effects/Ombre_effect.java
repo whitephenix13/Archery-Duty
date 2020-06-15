@@ -11,6 +11,7 @@ import partie.collision.Collision;
 import partie.conditions.Condition.ConditionEnum;
 import partie.entitie.Entity;
 import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.ModelPartie;
 import partie.mouvement.effect.Ombre_idle;
 import partie.projectile.fleches.Fleche;
 import utils.Vitesse;
@@ -18,25 +19,27 @@ import utils.Vitesse;
 public class Ombre_effect extends Effect{
 	
 	double LENTEUR_DUREE = 3;
-	
-	public Ombre_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _mouv_index, int current_frame,Vector2d _normalCollision,Point _pointCollision,
+	final double PULSE_EVERY = 0.5;
+
+	public Ombre_effect(Fleche _ref_fleche,int _mouv_index, int current_frame,Vector2d _normalCollision,Point _pointCollision,
 			Point _correctedPointCollision)
 	{
 		super(_mouv_index,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,false,true);
 		this.setCollideWithout(Arrays.asList(ObjectType.PROJECTILE));
 		subTypeMouv = null;
-		setMouvement(new Ombre_idle(subTypeMouv,partie.getFrame()));
+		setMouvement(new Ombre_idle(subTypeMouv,ModelPartie.me.getFrame()));
 		
-		partie.arrowsEffects.add(this);
-		setFirstPos(partie);
+		consequenceUpdateTime = PULSE_EVERY;//s => consequence applied every X while in the effect
+
+		ModelPartie.me.arrowsEffects.add(this);
+		setFirstPos();
 	}
 
 	
 	@Override
-	public void updateOnCollidable(AbstractModelPartie partie,Entity attacher)
+	public void applyConsequence(Entity attacher,boolean isFirstApplication)
 	{
-		if(Collision.testcollisionObjects(partie, this, attacher,true))
-			attacher.conditions.addNewCondition(ConditionEnum.LENTEUR, LENTEUR_DUREE,System.identityHashCode(this));
+		attacher.conditions.addNewCondition(ConditionEnum.LENTEUR, LENTEUR_DUREE,System.identityHashCode(this));
 	}
 	
 	@Override
@@ -45,7 +48,7 @@ public class Ombre_effect extends Effect{
 	}
 
 	
-	public void setFirstPos(AbstractModelPartie partie) {
+	public void setFirstPos() {
 
 		boolean worldCollision = (pointCollision !=null);
 		Point eff_center = getBottomOfTaille();
@@ -53,10 +56,10 @@ public class Ombre_effect extends Effect{
 			
 		Point firstPos = new Point();
 		if(worldCollision)
-			firstPos = super.setFirstPos(partie,eff_center);
+			firstPos = super.setFirstPos(eff_center);
 		else{
 			//get the tip of the arrow
-			Point arrowTip = super.getArrowTip(partie);
+			Point arrowTip = super.getArrowTip();
 			firstPos=new Point(arrowTip.x-eff_center.x,arrowTip.y-eff_center.y);
 
 		}

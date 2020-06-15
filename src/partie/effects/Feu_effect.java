@@ -11,6 +11,7 @@ import partie.collision.Collision;
 import partie.conditions.Condition.ConditionEnum;
 import partie.entitie.Entity;
 import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.ModelPartie;
 import partie.modelPartie.PartieTimer;
 import partie.mouvement.effect.Feu_idle;
 import partie.projectile.fleches.Fleche;
@@ -20,10 +21,11 @@ public class Feu_effect extends Effect{
 
 	int shift ;
 	double DUREE_BRULURE = 5;
-	double UPDATE_TIME = 0.05 ; //s
-	double damage = -3;
+	double damage = -5;
+	final double GROUND_PULSE_EVERY = 0.06;
+	final double ENTITY_PULSE_EVERY = 0.5;
 	
-	public Feu_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _mouv_index, int current_frame,Vector2d _normalCollision,Point _pointCollision,
+	public Feu_effect(Fleche _ref_fleche,int _mouv_index, int current_frame,Vector2d _normalCollision,Point _pointCollision,
 			Point _correctedPointCollision,boolean groundEffect,int shift)
 	{
 		super(_mouv_index,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,groundEffect,groundEffect);
@@ -34,28 +36,26 @@ public class Feu_effect extends Effect{
 		this.shift=(int)Math.round(shift*getScaling().x);
 		this.groundEffect = groundEffect;
 		
-		subTypeMouv = groundEffect?EffectCollisionEnum.GROUND:EffectCollisionEnum.ENTITY;
-		setMouvement(new Feu_idle(subTypeMouv,partie.getFrame()));
+		consequenceUpdateTime = groundEffect?GROUND_PULSE_EVERY:ENTITY_PULSE_EVERY;
 		
-		partie.arrowsEffects.add(this);
-		setFirstPos(partie);
-		//Destroy if it is colliding in the ground
-		/*if(groundEffect && Collision.isWorldCollision(partie, this, true)){//
-			this.destroy(partie, true);
-		}*/
+		subTypeMouv = groundEffect?EffectCollisionEnum.GROUND:EffectCollisionEnum.ENTITY;
+		setMouvement(new Feu_idle(subTypeMouv,ModelPartie.me.getFrame()));
+		
+		ModelPartie.me.arrowsEffects.add(this);
+		setFirstPos();
+		System.out.println(System.nanoTime());
 	}
 
 	@Override
-	public void updateOnCollidable(AbstractModelPartie partie,Entity attacher)
+	public void applyConsequence(Entity attacher,boolean isFirstApplication)
 	{
 		if(!groundEffect){
-			if(Collision.testcollisionObjects(partie, this, attacher,true))
-				attacher.conditions.addNewCondition(ConditionEnum.BRULURE, DUREE_BRULURE,System.identityHashCode(this));}
-		else
-			if((PartieTimer.me.getElapsedNano() - attacher.last_feu_effect_update)>UPDATE_TIME*Math.pow(10, 9) && Collision.testcollisionObjects(partie, this, attacher,true)){
-				attacher.addLife(damage);
-				attacher.last_feu_effect_update=PartieTimer.me.getElapsedNano();
-			}
+			attacher.conditions.addNewCondition(ConditionEnum.BRULURE, DUREE_BRULURE,System.identityHashCode(this));
+		}
+		else{
+			attacher.addLife(damage);
+			attacher.last_feu_effect_update=PartieTimer.me.getElapsedNano();
+		}
 	}
 
 	@Override
@@ -64,19 +64,19 @@ public class Feu_effect extends Effect{
 	}
 
 
-	public void setFirstPos(AbstractModelPartie partie) {
+	public void setFirstPos() {
 		
 		Point eff_center = groundEffect? getBottomOfTaille() : getCenterOfTaille();
 			
 		Point firstPos = new Point();
 		if(groundEffect){
-			firstPos = super.setFirstPos(partie,eff_center);
+			firstPos = super.setFirstPos(eff_center);
 			firstPos = new Point(firstPos.x+(int) (shift * Math.cos(getRotation())),firstPos.y +(int) (shift * Math.sin(getRotation())) );
 		}
 		else
 		{
 			//get the tip of the arrow
-			Point arrowTip = super.getArrowTip(partie);
+			Point arrowTip = super.getArrowTip();
 			firstPos=new Point(arrowTip.x-eff_center.x,arrowTip.y-eff_center.y);
 		}
 

@@ -213,7 +213,7 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 				affichageChoix.init();
 				percentage = 40;
 
-				partie = new ModelPartie(touches,ModelPrincipal.this);
+				ModelPartie partie = ModelPartie.Instantiate(touches, ModelPrincipal.this);
 				controlerPartie= new ControlerPartie(partie) ;
 				affichagePartie = new AffichagePartie(controlerPartie);
 				partie.addObserver(affichagePartie);
@@ -245,9 +245,9 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		//Wait for background to be visible + music principal to be loaded
 		
 		loaderMenuPrincipal.addItem(mainObjectsCreation);
-		loaderMenuPrincipal.addItem(LoaderUtils.load(LoaderUtils.MT_IMAGE, LoaderUtils.C_PRINCIPAL, null, this, partie));
+		loaderMenuPrincipal.addItem(LoaderUtils.load(LoaderUtils.MT_IMAGE, LoaderUtils.C_PRINCIPAL, null, this, ModelPartie.me));
 		if(!InterfaceConstantes.IGNORE_SOUND)
-			loaderMenuPrincipal.addItem(LoaderUtils.load(LoaderUtils.MT_SOUND, LoaderUtils.C_MUSIC, InterfaceConstantes.musiquePrincipal, this, partie));
+			loaderMenuPrincipal.addItem(LoaderUtils.load(LoaderUtils.MT_SOUND, LoaderUtils.C_MUSIC, InterfaceConstantes.musiquePrincipal, this, ModelPartie.me));
 		loaderMenuPrincipal.start();
 
 		loaderMenuPrincipal.waitToEnd(principal);
@@ -259,7 +259,7 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 
 		//load all image + music + bruitage in different Thread 
 		loaderAllMedia = new Loader(gameRenderer,this);
-		loaderAllMedia.addItem(LoaderUtils.loadAllImagesAndSounds(partie));
+		loaderAllMedia.addItem(LoaderUtils.loadAllImagesAndSounds(ModelPartie.me));
 		loaderAllMedia.start();
 	}
 	
@@ -300,7 +300,7 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		}
 		else if (newMode.equals(GameModeType.OPTION))
 		{	
-			boolean comesFromPartie = (partie != null && partie.shoudResumeGame());
+			boolean comesFromPartie = (ModelPartie.me != null && ModelPartie.me.shoudResumeGame());
 			if(!comesFromPartie){
 				//musique 
 				String nextMusic = InterfaceConstantes.musiqueOption;
@@ -415,41 +415,41 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 		{
 			//not drawing at first 			
 			//If we come from the partie loader, don't init the partie again 
-			if(partie.shoudResumeGame())
+			if(ModelPartie.me.shoudResumeGame())
 				gameRenderer.removeListener(currentGameModeType);
 			else if(!currentGameModeType.equals(GameModeType.LOADER)){
 				//listener
 				gameRenderer.removeListener(currentGameModeType);
 	
 				//on reinitialiser les variables pour pouvoir rejouer plusieurs fois
-				partie.init();
+				ModelPartie.me.init();
 	
 				//on lance la partie rapide si elle n'est pas deja en cours ie: le jeu n'est pas en pause
 				//And load level
-				partie.loaderPartie = new Loader(gameRenderer,this);
-				partie.loaderPartie.addItem(LoaderUtils.loadWorld(choix.getNiveauSelectionne(), partie));
-				partie.loaderPartie.addItem(LoaderUtils.waitForLoaderToEnd(loaderAllMedia));
-				partie.loaderPartie.addItem(LoaderUtils.waitForGarbageCollectorToEndInALoader());
-				partie.loaderPartie.start();
+				ModelPartie.me.loaderPartie = new Loader(gameRenderer,this);
+				ModelPartie.me.loaderPartie.addItem(LoaderUtils.loadWorld(choix.getNiveauSelectionne(), ModelPartie.me));
+				ModelPartie.me.loaderPartie.addItem(LoaderUtils.waitForLoaderToEnd(loaderAllMedia));
+				ModelPartie.me.loaderPartie.addItem(LoaderUtils.waitForGarbageCollectorToEndInALoader());
+				ModelPartie.me.loaderPartie.start();
 			}
 			//changement de mode
-			if(!partie.isGameModeLoaded()){//partie loader not done 
+			if(!ModelPartie.me.isGameModeLoaded()){//partie loader not done 
 				currentGameModeType=GameModeType.LOADER;
-				currentGameMode = partie.getLoaderGameMode(); //get loader from partie 
-				((Loader)partie.getLoaderGameMode()).setCallback(new Runnable(){
+				currentGameMode = ModelPartie.me.getLoaderGameMode(); //get loader from partie 
+				((Loader)ModelPartie.me.getLoaderGameMode()).setCallback(new Runnable(){
 					@Override
 					public void run() {
 						ModelPrincipal.this.setGameMode(GameModeType.GAME); //return back to this function to finish initialization of partie 
 					}
 				});
-				gameRenderer.changeGameModeRendering(((Loader)partie.getLoaderGameMode()).getAffichageLoader());//begin transition to loader
+				gameRenderer.changeGameModeRendering(((Loader)ModelPartie.me.getLoaderGameMode()).getAffichageLoader());//begin transition to loader
 			}
 			else{
 				currentGameModeType=newMode;
-				currentGameMode = partie;
+				currentGameMode = ModelPartie.me;
 				
 				//musique 
-				if(!partie.shoudResumeGame()){
+				if(!ModelPartie.me.shoudResumeGame()){
 					int numMus = (int) (Math.random()*InterfaceConstantes.musiquePartie.length);
 					String nextMusic = InterfaceConstantes.musiquePartie[numMus];
 	
@@ -464,7 +464,7 @@ public class ModelPrincipal extends AbstractModelPrincipal{
 				gameRenderer.changeGameModeRendering();
 				
 				//make sure that all other media are loaded correctly
-				if(InterfaceConstantes.DEBUG_OBJECT_CREATION && !partie.shoudResumeGame())
+				if(InterfaceConstantes.DEBUG_OBJECT_CREATION && !ModelPartie.me.shoudResumeGame())
 					DebugObjectCreation.start();
 						
 				//listener

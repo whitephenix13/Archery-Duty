@@ -13,7 +13,7 @@ import partie.effects.Roche_effect;
 import partie.effects.Vent_effect;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
-import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.ModelPartie;
 import partie.projectile.Projectile;
 import utils.PointHelper;
 import utils.Vitesse;
@@ -33,13 +33,13 @@ public class Fleche_vent extends Spirituelle{
 		seyeri_cost = -5;
 	}
 	@Override
-	protected void onPlanted(List<Entity> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
+	protected void onPlanted(List<Entity> objects,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
 	{
 		if(this.afterDecochee&& stuck)
-			ejectArrow(partie,unprojectedSpeed);
+			ejectArrow(unprojectedSpeed);
 		if(stuck)
 		{
-			this.destroy(partie,false);
+			this.destroy(false);
 			return;
 		}
 		if(arrowExploded)
@@ -48,7 +48,7 @@ public class Fleche_vent extends Spirituelle{
 		if(!generatedEffect){
 			generatedEffect=true;
 
-			flecheEffect=new Vent_effect(partie,this,0,partie.getFrame(),normCollision,pointCollision,correctedPointCollision);
+			flecheEffect=new Vent_effect(this,0,ModelPartie.me.getFrame(),normCollision,pointCollision,correctedPointCollision);
 			MusicBruitage.me.startBruitage("vent_effect");
 		}
 		/*for(Entitie obj : objects)
@@ -64,18 +64,18 @@ public class Fleche_vent extends Spirituelle{
 	}
 
 	@Override
-	protected boolean OnObjectsCollision(List<Entity> objects,AbstractModelPartie partie,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
+	protected boolean OnObjectsCollision(List<Entity> objects,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
 	{
 		if(this.afterDecochee && (collider instanceof Effect))
 			if(((Effect)collider).isWorldCollider)
-				ejectArrow(partie,unprojectedSpeed);
+				ejectArrow(unprojectedSpeed);
 
 		if(arrowExploded)
 			return false;
 
 		//Compute speed for collider: specific case because collision point is not exact 
-		Polygon arrowPol = this.getHitbox(partie.INIT_RECT, partie.getScreenDisp()).polygon;
-		Hitbox colliderHitbox = collider.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
+		Polygon arrowPol = this.getHitbox(ModelPartie.me.INIT_RECT, ModelPartie.me.getScreenDisp()).polygon;
+		Hitbox colliderHitbox = collider.getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp());
 		Vector2d intersectPoint = null;
 		//project each border to the hitbox to find one point of collision
 		for(int i=0; i<arrowPol.npoints;++i)
@@ -88,13 +88,13 @@ public class Fleche_vent extends Spirituelle{
 
 		if(!generatedEffect){
 			generatedEffect=true;
-			flecheEffect=new Vent_effect(partie,this,0,partie.getFrame(),normal,null,null);
+			flecheEffect=new Vent_effect(this,0,ModelPartie.me.getFrame(),normal,null,null);
 			Vent_effect ventEffect = (Vent_effect) flecheEffect;
 
-			Vector2d objMid = Hitbox.getObjMid(partie, collider) ;
+			Vector2d objMid = Hitbox.getObjMid( collider) ;
 			
 			//Compute the speed with respect to the intersection point and the middle of the collider hitbox
-			Vitesse projectionSpeed = ventEffect.computeProjectSpeed(partie,objMid,
+			Vitesse projectionSpeed = ventEffect.computeProjectSpeed(objMid,
 					PointHelper.VecToPoint(intersectPoint),1000000,ventEffect.getMouvIndex());
 			((Vent_effect)flecheEffect).setCollidedObject(collider,projectionSpeed);
 			MusicBruitage.me.startBruitage("vent_effect");
@@ -114,7 +114,7 @@ public class Fleche_vent extends Spirituelle{
 	}
 
 	@Override
-	public void beforeFlecheDestroyed(AbstractModelPartie partie)
+	public void beforeFlecheDestroyed()
 	{
 		//nothing to do with ref_fleche before destruction
 	}

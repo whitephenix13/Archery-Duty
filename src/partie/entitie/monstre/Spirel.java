@@ -21,6 +21,7 @@ import partie.input.InputPartie;
 import partie.input.InputPartiePool.InputType;
 import partie.input.InputPartiePool.InputTypeArray;
 import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.ModelPartie;
 import partie.modelPartie.PartieTimer;
 import partie.mouvement.Deplace;
 import partie.mouvement.Mouvement;
@@ -123,12 +124,12 @@ public class Spirel extends Monstre{
 	 * Handle non mouvement based inputs
 	 * @param partie
 	 */
-	protected void handleInputs(AbstractModelPartie partie){
+	protected void handleInputs(){
 		if(controlledBy== null)
-			AI(partie.tabTirMonstre,partie);
+			AI(ModelPartie.me.tabTirMonstre);
 	}
-	private Collidable selectTarget(AbstractModelPartie partie){
-		return partie.heros; //by default, should be more complex later including clones or enemies if this entity is controlled by heros
+	private Collidable selectTarget(){
+		return ModelPartie.me.heros; //by default, should be more complex later including clones or enemies if this entity is controlled by heros
 	}
 	
 	private void moveTo(boolean leftDirection){		
@@ -146,7 +147,7 @@ public class Spirel extends Monstre{
 			getCurrentInputPool().onMove(-1, false, true);
 	}
 	@Override
-	public void AI (List<Projectile> tabTirMonstre,AbstractModelPartie partie)
+	public void AI (List<Projectile> tabTirMonstre)
 	{	
 		if(!getMouvement().isInterruptible(getMouvIndex()))
 			return;
@@ -166,7 +167,7 @@ public class Spirel extends Monstre{
 		
 		boolean targetAtMyLeft;
 		boolean isFacingLeft = getMouvement().droite_gauche(getMouvIndex(), getRotation()).equals(DirSubTypeMouv.GAUCHE);
-		boolean monsterOnScreen= InterfaceConstantes.SCREEN.polygon.contains(new Point (getXpos()+partie.xScreendisp,getYpos()+partie.yScreendisp));
+		boolean monsterOnScreen= InterfaceConstantes.SCREEN.polygon.contains(new Point (getXpos()+ModelPartie.me.xScreendisp,getYpos()+ModelPartie.me.yScreendisp));
 		boolean canAction= (PartieTimer.me.getElapsedNano()-lastAIUpdate)*Math.pow(10, -6)>delaiMouv && monsterOnScreen;
 		boolean canShoot = (PartieTimer.me.getElapsedNano()-last_shoot_time)*Math.pow(10, -6)>delaiTir ;
 		//On test le cooldown de tir
@@ -178,11 +179,11 @@ public class Spirel extends Monstre{
 		//on test le cooldown de mouvement
 		if(canAction)
 		{
-			Collidable target = selectTarget(partie);
-			Hitbox target_hit = target.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
+			Collidable target = selectTarget();
+			Hitbox target_hit = target.getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp());
 			Vector2d targetCenter = target_hit.getCenter();
 	
-			Hitbox monstre_hit = this.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
+			Hitbox monstre_hit = this.getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp());
 			Vector2d monsterCenter = monstre_hit.getCenter();
 			
 			double deltaX= Math.abs(monsterCenter.x-targetCenter.x);
@@ -217,14 +218,14 @@ public class Spirel extends Monstre{
 			{
 				
 				//sinon on se rapproche ou on reste proche 
-				boolean blocLeftDown= nearObstacle(partie,-1,-1);
-				boolean blocRightDown= nearObstacle(partie,1,-1);
+				boolean blocLeftDown= nearObstacle(-1,-1);
+				boolean blocRightDown= nearObstacle(1,-1);
 
-				boolean blocRight= nearObstacle(partie,1,0);
-				boolean blocLeft= nearObstacle(partie,-1,0);
+				boolean blocRight= nearObstacle(1,0);
+				boolean blocLeft= nearObstacle(-1,0);
 				
-				boolean blocRightUp= nearObstacle(partie,1,InterfaceConstantes.TAILLE_BLOC);
-				boolean blocLeftUp= nearObstacle(partie,-1,InterfaceConstantes.TAILLE_BLOC);
+				boolean blocRightUp= nearObstacle(1,InterfaceConstantes.TAILLE_BLOC);
+				boolean blocLeftUp= nearObstacle(-1,InterfaceConstantes.TAILLE_BLOC);
 				
 				boolean jumpAbove= (droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE)? (blocLeft && !blocLeftUp) : (blocRight && !blocRightUp) ) && wasGrounded;
 				boolean inAir= getMouvement().isMouvement(EntityTypeMouv.SAUT);
@@ -286,7 +287,7 @@ public class Spirel extends Monstre{
 		}
 	}
 	
-	private void setMouvement(AbstractModelPartie partie,Mouvement newMouv, int newMouvIndex){
+	private void setMouvement(Mouvement newMouv, int newMouvIndex){
 		if(wasGrounded){
 			useGravity=false;
 			sautDroit=false;
@@ -299,10 +300,10 @@ public class Spirel extends Monstre{
 	 * 
 	 * @return true if mouvement updated
 	 */
-	protected boolean updateMouvementBasedOnPhysic(AbstractModelPartie partie){
+	protected boolean updateMouvementBasedOnPhysic(){
 		ModelPrincipal.debugTime.startElapsedForVerbose();
 		boolean isFacingLeft = getMouvement().droite_gauche(getMouvIndex(), getRotation()).equals(DirSubTypeMouv.GAUCHE);
-		boolean falling= !isGrounded(partie);
+		boolean falling= !isGrounded();
 		wasGrounded = !falling;
 		boolean landing= !falling && getMouvement().isMouvement(EntityTypeMouv.SAUT);
 		if(falling)
@@ -314,11 +315,11 @@ public class Spirel extends Monstre{
 		{
 			int nextMouvIndex = isFacingLeft? 0 : 1;
 			//no fall animation, put the jump instead
-			Mouvement_entity nextMouv=new Saut(ObjectType.SPIREL,isFacingLeft?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE, partie.getFrame());
+			Mouvement_entity nextMouv=new Saut(ObjectType.SPIREL,isFacingLeft?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE, ModelPartie.me.getFrame());
 			
-			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+			boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 			if(success){
-				setMouvement(partie,nextMouv,nextMouvIndex);
+				setMouvement(nextMouv,nextMouvIndex);
 				return true;
 			}
 		}
@@ -327,10 +328,10 @@ public class Spirel extends Monstre{
 		if(landing)
 		{
 			int nextMouvIndex = isFacingLeft? 0 : 1;
-			Mouvement_entity nextMouv=new Attente(ObjectType.SPIREL,isFacingLeft?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
-			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+			Mouvement_entity nextMouv=new Attente(ObjectType.SPIREL,isFacingLeft?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,ModelPartie.me.getFrame());
+			boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 			if(success){
-				setMouvement(partie,nextMouv,nextMouvIndex);
+				setMouvement(nextMouv,nextMouvIndex);
 				return true;
 			}
 			
@@ -343,25 +344,25 @@ public class Spirel extends Monstre{
 	 * 
 	 * @return true if mouvement updated
 	 */
-	protected boolean updateNonInterruptibleMouvement(AbstractModelPartie partie){
+	protected boolean updateNonInterruptibleMouvement(){
 		return false;
 	}
 	/***
 	 * 
 	 * @return true if mouvement updated
 	 */
-	protected boolean updateMouvementBasedOnInput(AbstractModelPartie partie){
+	protected boolean updateMouvementBasedOnInput(){
 		//First handle released (shoot & move) then handle press (shoot,jump,move)
 		boolean isFacingLeft = getMouvement().droite_gauche(getMouvIndex(), getRotation()).equals(DirSubTypeMouv.GAUCHE);
-		boolean falling = !isGrounded(partie);
+		boolean falling = !isGrounded();
 		if(getCurrentInputPool().isInputReleased(InputTypeArray.SHOOT,0)){
 			
 			int nextMouvIndex = isFacingLeft?0:1;
-			Mouvement nextMouv = new Attente(ObjectType.SPIREL,isFacingLeft?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
+			Mouvement nextMouv = new Attente(ObjectType.SPIREL,isFacingLeft?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,ModelPartie.me.getFrame());
 			
-			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+			boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 			if(success){
-				setMouvement(partie,nextMouv,nextMouvIndex);
+				setMouvement(nextMouv,nextMouvIndex);
 			}
 			else
 				return false;
@@ -370,10 +371,10 @@ public class Spirel extends Monstre{
 			double tir2_rotation = 3*Math.PI/2;
 			
 			//middle of the spirel hitbox
-			Vector2d spirelMid = Hitbox.getObjMid(partie, this);
+			Vector2d spirelMid = Hitbox.getObjMid( this);
 			
-			partie.tabTirMonstre.add(createProjectile(partie,spirelMid,tir1_rotation,getScaling()));	
-			partie.tabTirMonstre.add(createProjectile(partie,spirelMid,tir2_rotation,getScaling()));	
+			ModelPartie.me.tabTirMonstre.add(createProjectile(spirelMid,tir1_rotation,getScaling()));	
+			ModelPartie.me.tabTirMonstre.add(createProjectile(spirelMid,tir2_rotation,getScaling()));	
 			
 			cooldown=true;
 			return true;
@@ -383,30 +384,30 @@ public class Spirel extends Monstre{
 			if(shouldStop){
 				if(falling){
 					int nextMouvIndex = isFacingLeft?0:1;
-					Mouvement nextMouv = new Saut(ObjectType.SPIREL,isFacingLeft?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
+					Mouvement nextMouv = new Saut(ObjectType.SPIREL,isFacingLeft?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,ModelPartie.me.getFrame());
 					
 					boolean isNextDirectionLeft = nextMouv.droite_gauche(nextMouvIndex,0).equals(DirSubTypeMouv.GAUCHE);
 					boolean isSameMouvement = getMouvement().isMouvement(EntityTypeMouv.SAUT) && ((isFacingLeft&& isNextDirectionLeft)||(!isFacingLeft && !isNextDirectionLeft));
 					
 					if(!isSameMouvement){
-						boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+						boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 						if(success){
-							setMouvement(partie,nextMouv,nextMouvIndex);
+							setMouvement(nextMouv,nextMouvIndex);
 							return true;
 						}
 					}
 				}
 				else{
 					int nextMouvIndex = isFacingLeft?0:1;
-					Mouvement nextMouv = new Attente(ObjectType.SPIREL,isFacingLeft?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
+					Mouvement nextMouv = new Attente(ObjectType.SPIREL,isFacingLeft?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,ModelPartie.me.getFrame());
 					
 					boolean isNextDirectionLeft = nextMouv.droite_gauche(nextMouvIndex,0).equals(DirSubTypeMouv.GAUCHE);
 					boolean isSameMouvement = getMouvement().isMouvement(EntityTypeMouv.ATTENTE) && ((isFacingLeft&& isNextDirectionLeft)||(!isFacingLeft && !isNextDirectionLeft));
 					
 					if(!isSameMouvement){
-						boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+						boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 						if(success){
-							setMouvement(partie,nextMouv,nextMouvIndex);
+							setMouvement(nextMouv,nextMouvIndex);
 							return true;
 						}
 					}
@@ -417,20 +418,20 @@ public class Spirel extends Monstre{
 		if(getCurrentInputPool().isInputDown(InputTypeArray.SHOOT,0)){
 			if(!getMouvement().isMouvement(EntityTypeMouv.TIR)){
 				int nextMouvIndex = isFacingLeft?0:1;
-				Mouvement nextMouv = new Tir(ObjectType.SPIREL,isFacingLeft?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
-				boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+				Mouvement nextMouv = new Tir(ObjectType.SPIREL,isFacingLeft?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,ModelPartie.me.getFrame());
+				boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 				if(success){
-					setMouvement(partie,nextMouv,nextMouvIndex);
+					setMouvement(nextMouv,nextMouvIndex);
 					return true;
 				}
 			}
 		}
 		else if(getCurrentInputPool().isInputDown(InputType.JUMP) && wasGrounded){
 			int nextMouvIndex = isFacingLeft?0:1;
-			Mouvement nextMouv = new Saut(ObjectType.SPIREL,isFacingLeft?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE,partie.getFrame());
-			boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+			Mouvement nextMouv = new Saut(ObjectType.SPIREL,isFacingLeft?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE,ModelPartie.me.getFrame());
+			boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 			if(success){
-				setMouvement(partie,nextMouv,nextMouvIndex);
+				setMouvement(nextMouv,nextMouvIndex);
 				shouldUpdateSpeed = false;
 				setJumpSpeed(false,false,true);
 				return true;
@@ -442,15 +443,15 @@ public class Spirel extends Monstre{
 			if(falling){
 				//if(!getMouvement().isMouvement(EntityTypeMouv.SAUT)){
 				int nextMouvIndex = !shouldMoveRight?0:1;
-				Mouvement nextMouv = new Saut(ObjectType.SPIREL,!shouldMoveRight?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE,partie.getFrame());
+				Mouvement nextMouv = new Saut(ObjectType.SPIREL,!shouldMoveRight?SubMouvSautEnum.JUMP_GAUCHE:SubMouvSautEnum.JUMP_DROITE,ModelPartie.me.getFrame());
 				
 				boolean isSameMouvement = getMouvement().isMouvement(EntityTypeMouv.SAUT) && ((!shouldMoveRight&& isFacingLeft)||(shouldMoveRight && !isFacingLeft));
 				if(!isSameMouvement){
-					boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+					boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 					if(success){
 						sautDroit = shouldMoveRight;
 						sautGauche = !shouldMoveRight;
-						setMouvement(partie,nextMouv,nextMouvIndex);
+						setMouvement(nextMouv,nextMouvIndex);
 						return true;
 					}
 				}else{
@@ -460,14 +461,14 @@ public class Spirel extends Monstre{
 			}
 			else{
 				int nextMouvIndex = !shouldMoveRight?0:2;
-				Mouvement nextMouv = new Marche(ObjectType.SPIREL,!shouldMoveRight?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,partie.getFrame());
+				Mouvement nextMouv = new Marche(ObjectType.SPIREL,!shouldMoveRight?DirSubTypeMouv.GAUCHE:DirSubTypeMouv.DROITE,ModelPartie.me.getFrame());
 				
 				boolean isSameMouvement = getMouvement().isMouvement(EntityTypeMouv.MARCHE) && ((!shouldMoveRight&& isFacingLeft)||(shouldMoveRight && !isFacingLeft));
 				
 				if(!isSameMouvement){
-					boolean success = alignNextMouvement(partie,nextMouv, nextMouvIndex);
+					boolean success = alignNextMouvement(nextMouv, nextMouvIndex);
 					if(success){
-						setMouvement(partie,nextMouv,nextMouvIndex);
+						setMouvement(nextMouv,nextMouvIndex);
 						return true;
 					}
 				}
@@ -480,12 +481,12 @@ public class Spirel extends Monstre{
 	 * 
 	 * @return true if mouvement updated
 	 */
-	protected boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie){
-		int nextMouvIndex = getMouvement().updateAnimation(getMouvIndex(), partie.getFrame(),conditions.getSpeedFactor());
+	protected boolean updateMouvementBasedOnAnimation(){
+		int nextMouvIndex = getMouvement().updateAnimation(getMouvIndex(), ModelPartie.me.getFrame(),conditions.getSpeedFactor());
 		if(getMouvIndex() != nextMouvIndex){
-			boolean success = alignNextMouvement(partie,getMouvement(), nextMouvIndex);
+			boolean success = alignNextMouvement(getMouvement(), nextMouvIndex);
 			if(success){
-				setMouvement(partie,getMouvement(),nextMouvIndex);
+				setMouvement(getMouvement(),nextMouvIndex);
 				return true;
 			}
 		}
@@ -494,16 +495,16 @@ public class Spirel extends Monstre{
 	/***
 	 * Callback that is called before updating the animation in deplace() function
 	 */
-	protected void resetInputState(AbstractModelPartie partie){
+	protected void resetInputState(){
 		getCurrentInputPool().updateInputState();
 	}
 	/***
 	 * Callback that is called before updating the animation in deplace() function
 	 */
-	protected void onMouvementChanged(AbstractModelPartie partie,boolean animationChanged, boolean mouvementChanged){
+	protected void onMouvementChanged(boolean animationChanged, boolean mouvementChanged){
 	}
-	protected void onAnimationEnded(AbstractModelPartie partie){
-		destroy(partie,true);
+	protected void onAnimationEnded(){
+		destroy(true);
 	}
 	protected void updateTimers(){
 		updateShootTime();
@@ -517,7 +518,7 @@ public class Spirel extends Monstre{
 	 * @param nextMouvIndex
 	 * @param partie
 	 */
-	public boolean alignNextMouvement(AbstractModelPartie partie,Mouvement nextMouv, int nextMouvIndex)
+	public boolean alignNextMouvement(Mouvement nextMouv, int nextMouvIndex)
 	{
 		boolean going_left = getGlobalVit().x<0;
 		boolean facing_left_still= getGlobalVit().x==0 &&(droite_gauche(getMouvIndex()).equals(DirSubTypeMouv.GAUCHE)|| last_colli_left);
@@ -528,7 +529,7 @@ public class Spirel extends Monstre{
 		
 		boolean success = false;
 		try{
-			success = super.alignNextMouvement(partie, nextMouv, nextMouvIndex, left? XAlignmentType.LEFT : XAlignmentType.RIGHT,
+			success = super.alignNextMouvement( nextMouv, nextMouvIndex, left? XAlignmentType.LEFT : XAlignmentType.RIGHT,
 					down?YAlignmentType.BOTTOM : YAlignmentType.TOP , true, !nextMouv.isMouvement(EntityTypeMouv.GLISSADE));
 		} catch(Exception e){e.printStackTrace();}
 		
@@ -536,13 +537,13 @@ public class Spirel extends Monstre{
 
 	}
 
-	private TirSpirel createProjectile(AbstractModelPartie partie, Vector2d pos,double rotation,Vector2d scaling){
-		return new TirSpirel(partie,pos,
-				0,rotation,scaling,partie.getFrame(),conditions.getDamageFactor(),conditions.getShotSpeedFactor());
+	private TirSpirel createProjectile( Vector2d pos,double rotation,Vector2d scaling){
+		return new TirSpirel(pos,
+				0,rotation,scaling,ModelPartie.me.getFrame(),conditions.getDamageFactor(),conditions.getShotSpeedFactor());
 	}
-	public boolean isGrounded(AbstractModelPartie partie)
+	public boolean isGrounded()
 	{
-		return nearObstacle(partie,0,-1);
+		return nearObstacle(0,-1);
 	}
 
 	/**
@@ -552,13 +553,13 @@ public class Spirel extends Monstre{
 	 * @param height the height to shift the hitbox, positive is towards the top of the screen
 	 * @return
 	 */
-	public boolean nearObstacle(AbstractModelPartie partie,int right,int height)
+	public boolean nearObstacle(int right,int height)
 	{
-		Hitbox hit = getHitbox(partie.INIT_RECT,partie.getScreenDisp()).copy();
+		Hitbox hit = getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp()).copy();
 		assert hit.polygon.npoints==4;
 		
 		hit.translate(right, -1*height);
-		return Collision.isWorldCollision(partie, hit, true);
+		return Collision.isWorldCollision( hit, true);
 	}
 
 	@Override
@@ -577,7 +578,7 @@ public class Spirel extends Monstre{
 			setCachedHit(cachedHit);setCachedDrawTr(cachedDrawTr);}};
 	}
 	@Override
-	public void handleStuck(AbstractModelPartie partie)
+	public void handleStuck()
 	{
 		if(currentValue!=null)
 			currentValue.res();
@@ -586,7 +587,7 @@ public class Spirel extends Monstre{
 			resetHandleCollision.reset();
 	}
 	@Override
-	public void handleDeplacementSuccess(AbstractModelPartie partie) {
+	public void handleDeplacementSuccess() {
 	}
 	@Override
 	protected boolean shouldUpdateSpeed(){
@@ -606,7 +607,7 @@ public class Spirel extends Monstre{
 	
 	
 	@Override
-	public void onDestroy(AbstractModelPartie partie)
+	public void onDestroy()
 	{
 		MusicBruitage.me.startBruitage("destruction robot");
 	}

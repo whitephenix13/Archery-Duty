@@ -12,7 +12,7 @@ import partie.effects.Effect;
 import partie.effects.Roche_effect;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
-import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.ModelPartie;
 import partie.projectile.Projectile;
 import partie.projectile.fleches.Fleche;
 
@@ -30,23 +30,23 @@ public class Fleche_roche extends Materielle {
 	}
 	
 	@Override
-	protected void onPlanted(List<Entity> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
+	protected void onPlanted(List<Entity> objects,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
 	{
 		ModelPrincipal.debugTime.startElapsedForVerbose();
 		if(this.afterDecochee && stuck){
 			Collidable[] collidedObjects = {new Bloc()};
-			stuck  = !ejectArrow(partie,unprojectedSpeed,collidedObjects);
+			stuck  = !ejectArrow(unprojectedSpeed,collidedObjects);
 			if(!(collidedObjects[0] instanceof Bloc) || collidedObjects==null)
 				collidedObject=collidedObjects[0];
 		}
 		ModelPrincipal.debugTime.elapsed("Fleche roche: After eject arrow");
 		if(stuck){
-			destroy(partie,false);
+			destroy(false);
 			return;
 		}
 		if(!generatedEffect){
 			generatedEffect=true;
-			flecheEffect=new Roche_effect(partie,this,0,partie.getFrame(),this.normCollision,this.pointCollision,this.correctedPointCollision,true);
+			flecheEffect=new Roche_effect(this,0,ModelPartie.me.getFrame(),this.normCollision,this.pointCollision,this.correctedPointCollision,true);
 			ModelPrincipal.debugTime.elapsed("Fleche roche: After generating roche effect");
 			if(collidedObject instanceof Roche_effect)
 			{
@@ -69,13 +69,13 @@ public class Fleche_roche extends Materielle {
 	}
 
 	@Override
-	protected boolean OnObjectsCollision(List<Entity> objects,AbstractModelPartie partie,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
+	protected boolean OnObjectsCollision(List<Entity> objects,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
 	{
 
 		if(this.afterDecochee && (collider instanceof Effect)){
 			if(((Effect)collider).isWorldCollider){
 				Collidable[] collidedObjects = {new Bloc()};
-				ejectArrow(partie,unprojectedSpeed,collidedObjects);
+				ejectArrow(unprojectedSpeed,collidedObjects);
 				if(!(collidedObjects[0] instanceof Bloc) || collidedObjects[0]==null)
 					collider=collidedObjects[0];
 			}
@@ -85,7 +85,7 @@ public class Fleche_roche extends Materielle {
 
 			generatedEffect=true;
 
-			flecheEffect=new Roche_effect(partie,this,0,partie.getFrame(),normal,null,null,false);
+			flecheEffect=new Roche_effect(	this,0,ModelPartie.me.getFrame(),normal,null,null,false);
 			MusicBruitage.me.startBruitage("arc");
 
 			//Hide the arrow but don't destroy it otherwise the effect position is no longer updated
@@ -111,12 +111,12 @@ public class Fleche_roche extends Materielle {
 		return true;
 	}
 	@Override
-	public boolean OnArrowReshot(AbstractModelPartie partie, Fleche firstFleche)
+	public boolean OnArrowReshot( Fleche firstFleche)
 	{
 		if(firstFleche.flecheEffect!=null && (firstFleche.flecheEffect.groundEffect))
-			((Roche_effect)firstFleche.flecheEffect).startDestroyAnim(partie.getFrame(), true);
+			((Roche_effect)firstFleche.flecheEffect).startDestroyAnim(ModelPartie.me.getFrame(), true);
 		else
-			firstFleche.destroy(partie, true);
+			firstFleche.destroy( true);
 		return true;
 	}
 }

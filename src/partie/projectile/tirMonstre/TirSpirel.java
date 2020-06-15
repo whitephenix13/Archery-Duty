@@ -13,7 +13,7 @@ import partie.collision.Collidable;
 import partie.collision.Collision;
 import partie.collision.Hitbox;
 import partie.modelPartie.AbstractModelPartie;
-import partie.mouvement.Deplace;
+import partie.modelPartie.ModelPartie;
 import partie.mouvement.Mouvement;
 import partie.mouvement.projectile.Mouvement_projectile;
 import partie.mouvement.projectile.t_normal.T_normal_creation;
@@ -30,7 +30,7 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	 * 
 	 * @return le nombre de tour de boucle a attendre avant de redeplacer le monstre
 	 */	
-	public TirSpirel(AbstractModelPartie partie,Vector2d pos,int _mouv_index, double _rotation,Vector2d _scaling,int current_frame,float damageMultiplier,float _speedFactor)
+	public TirSpirel(Vector2d pos,int _mouv_index, double _rotation,Vector2d _scaling,int current_frame,float damageMultiplier,float _speedFactor)
 	{
 		super();
 		
@@ -63,9 +63,9 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 		MusicBruitage.me.startBruitage("laser");
 		
 		//If collide, destroy it 
-		if(Collision.isWorldCollision(partie, this, true))
+		if(Collision.isWorldCollision( this, true))
 		{
-			this.destroy(partie, true);
+			this.destroy( true);
 		}
 	}
 	
@@ -75,35 +75,35 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	}
 	
 	@Override
-	protected void handleInputs(AbstractModelPartie partie) {}
+	protected void handleInputs() {}
 	@Override
-	protected boolean updateMouvementBasedOnPhysic(AbstractModelPartie partie) {
+	protected boolean updateMouvementBasedOnPhysic() {
 		return false;
 	}
 	@Override
-	protected boolean updateNonInterruptibleMouvement(AbstractModelPartie partie) {
+	protected boolean updateNonInterruptibleMouvement() {
 		return false;
 	}
 	@Override
-	protected boolean updateMouvementBasedOnInput(AbstractModelPartie partie) {
+	protected boolean updateMouvementBasedOnInput() {
 		return false;
 	}
 	@Override
-	public boolean updateMouvementBasedOnAnimation(AbstractModelPartie partie){
+	public boolean updateMouvementBasedOnAnimation(){
 		//update rotation : not needed 
 		//switch mouv_index 
 		
 		if(getMouvement().animEndedOnce() && getMouvement() instanceof T_normal_creation)
 		{
-			setMouvement(new T_normal_idle(ObjectType.TIR_SPIREL,null,partie.getFrame()));
+			setMouvement(new T_normal_idle(ObjectType.TIR_SPIREL,null,ModelPartie.me.getFrame()));
 			setMouvIndex(0);
 		}
 		int prevMouvIndex = getMouvIndex();
-		int nextMouvIndex = getMouvement().updateAnimation(getMouvIndex(), partie.getFrame(),speedFactor);
+		int nextMouvIndex = getMouvement().updateAnimation(getMouvIndex(), ModelPartie.me.getFrame(),speedFactor);
 		if(prevMouvIndex != getMouvIndex())
 		{
 			try {
-				this.alignNextMouvement(partie, getMouvement(), nextMouvIndex, XAlignmentType.LEFT, YAlignmentType.CENTER, false, true);
+				this.alignNextMouvement(getMouvement(), nextMouvIndex, XAlignmentType.LEFT, YAlignmentType.CENTER, false, true);
 			} catch (Exception e) {} //this happens if we couldn't align the movement. We don't care in that case
 			
 			setMouvIndex(nextMouvIndex);
@@ -117,9 +117,9 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 		return true;
 	}
 	@Override
-	protected void resetInputState(AbstractModelPartie partie) {}
+	protected void resetInputState() {}
 	@Override
-	protected void onMouvementChanged(AbstractModelPartie partie,boolean animationChanged, boolean mouvementChanged) {}
+	protected void onMouvementChanged(boolean animationChanged, boolean mouvementChanged) {}
 	
 	@Override
 	public void memorizeCurrentValue() {
@@ -130,11 +130,11 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 			{}};*/
 	}
 	@Override
-	public void handleStuck(AbstractModelPartie partie) {
-		handleWorldCollision(new Vector2d(0,0), partie,null,true);
+	public void handleStuck() {
+		handleWorldCollision(new Vector2d(0,0), null,true);
 	}
 	@Override
-	public void handleDeplacementSuccess(AbstractModelPartie partie) {
+	public void handleDeplacementSuccess() {
 	}
 	@Override
 	public void applyFriction(double minLocalspeed, double minEnvirSpeed) {
@@ -154,7 +154,7 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	 * 
 	 */
 	@Override
-	public void onDestroy(AbstractModelPartie partie) {
+	public void onDestroy() {
 		//on ne fait rien à la destruction
 	}
 	
@@ -191,7 +191,7 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 	}
 	
 	@Override
-	public void handleWorldCollision(Vector2d normal, AbstractModelPartie partie,Collidable collidedObject,boolean stuck) {
+	public void handleWorldCollision(Vector2d normal, Collidable collidedObject,boolean stuck) {
 		//project speed to ground 
 		boolean collision_gauche = normal.x>0;
 		boolean collision_droite = normal.x<0;
@@ -205,7 +205,7 @@ public class TirSpirel extends TirMonstre implements InterfaceConstantes {
 		
 	}
 	@Override
-	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider,Vector2d normal) {
+	public void handleObjectCollision(Collidable collider,Vector2d normal) {
 		if(ObjectTypeHelper.isTypeOf(collider, ObjectType.FLECHE))
 			MusicBruitage.me.startBruitage("annulation tir");
 		needDestroy=true;

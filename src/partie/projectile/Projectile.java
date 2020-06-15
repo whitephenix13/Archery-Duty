@@ -20,9 +20,9 @@ public abstract class Projectile extends Collidable{
 	}
 	
 	@Override 
-	public void deplaceOutOfScreen(AbstractModelPartie partie)
+	public void deplaceOutOfScreen()
 	{
-		destroy(partie,true);
+		destroy(true);
 	}
 	@Override
 	public AffineTransform computeDrawTr(Point screenDisp)
@@ -34,7 +34,7 @@ public abstract class Projectile extends Collidable{
 		Vitesse vit = localVit.Copy();
 		return vit.times(speedFactor);
 	}
-	public Vitesse getGlobalVit(AbstractModelPartie partie,Vitesse _localVit){
+	public Vitesse getGlobalVit(Vitesse _localVit){
 		return _localVit.times(speedFactor);
 	}
 	

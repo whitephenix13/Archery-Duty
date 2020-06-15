@@ -12,7 +12,7 @@ import partie.effects.Explosive_effect;
 import partie.effects.Roche_effect;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
-import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.ModelPartie;
 import partie.projectile.Projectile;
 
 public class Fleche_explosive extends Destructrice {
@@ -29,7 +29,7 @@ public class Fleche_explosive extends Destructrice {
 	}
 
 	
-	void applyArrowEffect(List<Entity> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d collisionNormal,Point _pointCollision,
+	void applyArrowEffect(List<Entity> objects,Collidable collidedObject,Vector2d collisionNormal,Point _pointCollision,
 			Point _correctedPointCollision)
 	{
 		if(generatedEffect)
@@ -37,7 +37,7 @@ public class Fleche_explosive extends Destructrice {
 
 		generatedEffect=true;
 
-		flecheEffect=new Explosive_effect(partie,this,0,partie.getFrame(),collisionNormal,_pointCollision,_correctedPointCollision);
+		flecheEffect=new Explosive_effect(this,0,ModelPartie.me.getFrame(),collisionNormal,_pointCollision,_correctedPointCollision);
 		MusicBruitage.me.startBruitage("arc");
 		
 		Roche_effect.synchroniseMovementWithRocheEffectMovement(collidedObject, new Collidable[] {this,flecheEffect});
@@ -46,23 +46,23 @@ public class Fleche_explosive extends Destructrice {
 		this.setCollideWithNone();
 	}
 	@Override
-	protected void onPlanted(List<Entity> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
+	protected void onPlanted(List<Entity> objects,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
 	{
 		if(this.afterDecochee && stuck)
-			ejectArrow(partie,unprojectedSpeed);
+			ejectArrow(unprojectedSpeed);
 		if(stuck)
-			destroy(partie,false);
+			destroy(false);
 		else
-			applyArrowEffect(objects,partie,collidedObject,this.normCollision,this.pointCollision,this.correctedPointCollision);
+			applyArrowEffect(objects,collidedObject,this.normCollision,this.pointCollision,this.correctedPointCollision);
 		this.simulateDestroy();
 	}
 	@Override
-	protected boolean OnObjectsCollision(List<Entity> objects,AbstractModelPartie partie,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
+	protected boolean OnObjectsCollision(List<Entity> objects,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
 	{
 		if(this.afterDecochee && (collider instanceof Effect))
 			if(((Effect)collider).isWorldCollider)
-				ejectArrow(partie,unprojectedSpeed);
-		applyArrowEffect(objects,partie,collider,normal,null,null);
+				ejectArrow(unprojectedSpeed);
+		applyArrowEffect(objects,collider,normal,null,null);
 		//Hide the arrow but don't destroy it otherwise the effect position is no longer updated
 		this.simulateDestroy();
 		collider.addSynchroSpeed(flecheEffect);

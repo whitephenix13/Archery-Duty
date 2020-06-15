@@ -46,14 +46,14 @@ public class A_Star_Helper {
 			params.setDebug(val);
 	}
 
-	public boolean PointReached(AbstractModelPartie partie,Collidable objectToMove,Vector2d prevDir, Point target,Point nextTarget,double speednorm)
+	public boolean PointReached(Collidable objectToMove,Vector2d prevDir, Point target,Point nextTarget,double speednorm)
 	{
 		//When the center is at less than 10% of the max_step_size, consider that the point is reached. 
 		//This is to account for the fact that we actually want to hit the hitbox and not the target (hitbox is bigger than target)
 		//Hitting the target is harder and required last minute rotation (which can cause collisions)
 		
 		double reach_distance =0.1 * params.max_step_size;
-		Vector2d objMid = Hitbox.getObjMid(partie, objectToMove);
+		Vector2d objMid = Hitbox.getObjMid(objectToMove);
 		Vector2d dir = new Vector2d(target.x-objMid.x,target.y-objMid.y);
 		
 		if(dir.length() <= reach_distance)
@@ -63,18 +63,18 @@ public class A_Star_Helper {
 
 	}
 
-	public ArrayList<Point> GetNextTargets(AbstractModelPartie partie,Collidable objectToMove,Vector2d dir, Vector2d _target, int max_num_target)
+	public ArrayList<Point> GetNextTargets(Collidable objectToMove,Vector2d dir, Vector2d _target, int max_num_target)
 	{
 		System.out.println("path null " + path==null);
 		aStarDebugLog.log("Begin get next targets");
 		if(path ==null){
-			path = A_Star.FindPath(params,partie,objectToMove, dir, _target, smoothStrength);
+			path = A_Star.FindPath(params,objectToMove, dir, _target, smoothStrength);
 		}
 		else{
 			int[] newCurrentIndex = {-1};
 			Point prevNextTarget = path.get(current_index);
 			System.out.println("before update path");
-			path = A_Star.UpdatePath(params,partie,path, dir, objectToMove, _target, smoothStrength,false,prevNextTarget,newCurrentIndex);
+			path = A_Star.UpdatePath(params,path, dir, objectToMove, _target, smoothStrength,false,prevNextTarget,newCurrentIndex);
 			System.out.println("after update path");
 			if(newCurrentIndex[0] != -1)
 				current_index=newCurrentIndex[0];
@@ -88,7 +88,7 @@ public class A_Star_Helper {
 		
 		for(; current_index<path_size; ++current_index)
 		{
-			boolean pointReached = PointReached(partie,objectToMove,dir,path.get(current_index),(current_index+1<path_size)?path.get(current_index+1):null, speednorm);
+			boolean pointReached = PointReached(objectToMove,dir,path.get(current_index),(current_index+1<path_size)?path.get(current_index+1):null, speednorm);
 			if(!pointReached)
 				break;
 		}
@@ -116,9 +116,9 @@ public class A_Star_Helper {
 		return A_Star.PathToString(path);
 	}
 
-	public void OnDestroy(AbstractModelPartie partie)
+	public void OnDestroy()
 	{
-		A_Star.OnDestroy(params,partie);
+		A_Star.OnDestroy(params);
 		params=null;
 	}
 

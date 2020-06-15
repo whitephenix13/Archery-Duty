@@ -3,15 +3,12 @@ package partie.effects;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 import javax.vecmath.Vector2d;
 
-import debug.DebugBreak;
 import debug.DebugDraw;
 import gameConfig.ObjectTypeHelper.ObjectType;
-import partie.AI.A_Star.A_Star_Parameters;
 import partie.collision.Collidable;
 import partie.collision.Collision;
 import partie.collision.Hitbox;
@@ -19,6 +16,7 @@ import partie.conditions.Condition.ConditionEnum;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
 import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.ModelPartie;
 import partie.mouvement.effect.Mouvement_effect.MouvEffectEnum;
 import partie.mouvement.effect.electrique.Electrique_appear;
 import partie.mouvement.effect.electrique.Electrique_idle;
@@ -28,7 +26,8 @@ import utils.Vitesse;
 
 public class Electrique_effect extends Effect{
 	
-	double DUREE_PARALYSIE= 2;
+	final double DUREE_PARALYSIE= 2;
+	final double PULSE_EVERY = 0.5;
 	
 	int explosionDepth; //number of time that an effect exploded. 0 at start
 	int maxExplosionDepth = 0;
@@ -38,13 +37,13 @@ public class Electrique_effect extends Effect{
 	Collidable previousCollider = null;
 	Collidable currentCollider = null;
 	Point previousEffectPos = null;
-	public Electrique_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _mouv_index, int current_frame,Vector2d _normalCollision,Point _pointCollision,
+	public Electrique_effect(Fleche _ref_fleche,int _mouv_index, int current_frame,Vector2d _normalCollision,Point _pointCollision,
 			Point _correctedPointCollision,boolean groundCollision,int _numberExplosion,int explosionDepth)
 	{
-		this(partie,_ref_fleche,_mouv_index, current_frame,_normalCollision,_pointCollision,
+		this(_ref_fleche,_mouv_index, current_frame,_normalCollision,_pointCollision,
 				_correctedPointCollision,groundCollision,_numberExplosion,explosionDepth,null,null);
 	}
-	public Electrique_effect(AbstractModelPartie partie,Fleche _ref_fleche,int _mouv_index, int current_frame,Vector2d _normalCollision,Point _pointCollision,
+	public Electrique_effect(Fleche _ref_fleche,int _mouv_index, int current_frame,Vector2d _normalCollision,Point _pointCollision,
 			Point _correctedPointCollision,boolean groundCollision,int max_explosion_depth,int explosionDepth,Collidable prevCollider,Point previousEffectPos)
 	{
 		super(_mouv_index,_ref_fleche,_normalCollision,_pointCollision,_correctedPointCollision,groundCollision,groundCollision);
@@ -52,6 +51,7 @@ public class Electrique_effect extends Effect{
 		setScaling(new Vector2d(newScaling,newScaling));
 		TEMPS_DESTRUCTION = 1*(long) Math.pow(10, 8);//nanos, 0.3sec 
 		isProjectile =true; //to allow for collision with other projectile and entities
+		consequenceUpdateTime = PULSE_EVERY;//s => consequence applied every X while in the effect
 		this.setCollideWithout(Arrays.asList(ObjectType.ELECTRIQUE_EFF,ObjectType.FLECHE));
 		this.maxExplosionDepth=max_explosion_depth;
 		this.explosionDepth=explosionDepth;
@@ -59,11 +59,11 @@ public class Electrique_effect extends Effect{
 		this.previousEffectPos = previousEffectPos;
 		subTypeMouv = groundEffect?EffectCollisionEnum.GROUND:EffectCollisionEnum.ENTITY;
 		if(groundEffect)
-			setMouvement(new Electrique_idle(subTypeMouv,partie.getFrame()));
+			setMouvement(new Electrique_idle(subTypeMouv,ModelPartie.me.getFrame()));
 		else
-			setMouvement(new Electrique_appear(subTypeMouv,partie.getFrame()));
+			setMouvement(new Electrique_appear(subTypeMouv,ModelPartie.me.getFrame()));
 				
-		partie.arrowsEffects.add(this);
+		ModelPartie.me.arrowsEffects.add(this);
 		if(!groundEffect){
 			//Try random rotation at most 10 times to avoid this effect to be created in the ground 
 			boolean isStuck =true;
@@ -74,30 +74,30 @@ public class Electrique_effect extends Effect{
 				//Is Stuck 
 				setRotation(Math.random() * 2* Math.PI);
 				//setRotation(0);
-				setFirstPos(partie);
+				setFirstPos();
 				
 				//extend the hitbox in the movement direction 
-				Hitbox extendedHit = Hitbox.directionalExtend(this.getHitbox(partie.INIT_RECT, partie.getScreenDisp()),getRotation(),getMouvement().getMaxBoundingSquare());
-				isStuck = Collision.isWorldCollision(partie,extendedHit , false);
+				Hitbox extendedHit = Hitbox.directionalExtend(this.getHitbox(ModelPartie.me.INIT_RECT, ModelPartie.me.getScreenDisp()),getRotation(),getMouvement().getMaxBoundingSquare());
+				isStuck = Collision.isWorldCollision(extendedHit , false);
 			}
 			
 			
 		}else{
 			this.setCollideWithout(Arrays.asList(ObjectType.ELECTRIQUE_EFF,ObjectType.PROJECTILE));
-			setFirstPos(partie);
+			setFirstPos();
 		}
 		
 	}
 	
-	static void debugDraw(final AbstractModelPartie partie,final Point leftPos,final Point rightPos)
+	static void debugDraw(final Point leftPos,final Point rightPos)
 	{
-		if(partie.debugDraw==null){
-			partie.debugDraw = new DebugDraw(){
+		if(ModelPartie.me.debugDraw==null){
+			ModelPartie.me.debugDraw = new DebugDraw(){
 				@Override
 				public void draw(Graphics g){
 					g.setColor(Color.red);
-					g.fillRect(leftPos.x-5+partie.getScreenDisp().x, leftPos.y-5+partie.getScreenDisp().y, 10, 10);
-					g.fillRect(rightPos.x-5+partie.getScreenDisp().x, rightPos.y-5+partie.getScreenDisp().y, 10, 10);
+					g.fillRect(leftPos.x-5+ModelPartie.me.getScreenDisp().x, leftPos.y-5+ModelPartie.me.getScreenDisp().y, 10, 10);
+					g.fillRect(rightPos.x-5+ModelPartie.me.getScreenDisp().x, rightPos.y-5+ModelPartie.me.getScreenDisp().y, 10, 10);
 				}
 			};
 		}
@@ -107,19 +107,18 @@ public class Electrique_effect extends Effect{
 		return new Vitesse();
 	}
 	@Override
-	public void updateOnCollidable(AbstractModelPartie partie,Entity attacher)
+	public void applyConsequence(Entity attacher,boolean isFirstApplication)
 	{
 		if(groundEffect)
-			if(Collision.testcollisionObjects(partie, this, attacher,true))
-				attacher.conditions.addNewCondition(ConditionEnum.PARALYSIE, DUREE_PARALYSIE,System.identityHashCode(this));
+			attacher.conditions.addNewCondition(ConditionEnum.PARALYSIE, DUREE_PARALYSIE,System.identityHashCode(this));
 	}
 	
 	@Override
-	protected void onAnimationEnded(AbstractModelPartie partie)
+	protected void onAnimationEnded()
 	{
 		if(getMouvement().getTypeMouv().equals(MouvEffectEnum.ELECTRIQUE_APPEAR))
 		{
-			this.setMouvement(new Electrique_idle(EffectCollisionEnum.ENTITY,partie.getFrame()));
+			this.setMouvement(new Electrique_idle(EffectCollisionEnum.ENTITY,ModelPartie.me.getFrame()));
 			this.setMouvIndex(0);
 		}
 		else if(getMouvement().getTypeMouv().equals(MouvEffectEnum.ELECTRIQUE_SPLIT))
@@ -127,7 +126,7 @@ public class Electrique_effect extends Effect{
 			//TODO: convert the point to world coordinate (instead of screen ones) ? 
 			//TODO: compute the first pos based on those new points 
 			//TODO: make it work with scaling 
-			Vector2d mid = Hitbox.getObjMid(partie, this);
+			Vector2d mid = Hitbox.getObjMid(this);
 			double center_offset = 0.45 * getCurrentXtaille();
 			Point leftPos = new Point((int)Math.round(mid.x - center_offset*Math.cos(getRotation())) , 
 									(int)Math.round(mid.y - center_offset*Math.sin(getRotation())));
@@ -137,21 +136,21 @@ public class Electrique_effect extends Effect{
 			for(int i=0; i<2;++i)
 			{
 				Point lastPos = i%2==0? leftPos: rightPos;
-				new Electrique_effect(partie,ref_fleche,0,partie.getFrame(),normal,null,null,false,maxExplosionDepth,explosionDepth+1,currentCollider,lastPos);
+				new Electrique_effect(ref_fleche,0,ModelPartie.me.getFrame(),normal,null,null,false,maxExplosionDepth,explosionDepth+1,currentCollider,lastPos);
 			}
-			 destroy(partie,true);
+			 destroy(true);
 		}
 		 else
-			destroy(partie,true);
+			destroy(true);
 		
 	}
-	private void setFirstPos(AbstractModelPartie partie) {
+	private void setFirstPos() {
 
 		Point eff_center = groundEffect? getBottomOfTaille() : getCenterOfTaille();
 
 		 Point firstPos = new Point();
 		 if(groundEffect || (!groundEffect && previousEffectPos==null))
-			 firstPos = super.setFirstPos(partie,eff_center);
+			 firstPos = super.setFirstPos(eff_center);
 		 else{
 			 firstPos = new Point(previousEffectPos.x-eff_center.x,previousEffectPos.y-eff_center.y);
 		 }
@@ -160,7 +159,7 @@ public class Electrique_effect extends Effect{
 	}
 	
 	@Override
-	public void handleWorldCollision(Vector2d normal,AbstractModelPartie partie,Collidable collidedObject,boolean stuck)
+	public void handleWorldCollision(Vector2d normal,Collidable collidedObject,boolean stuck)
 	{
 		if(groundEffect)
 			return;
@@ -172,11 +171,11 @@ public class Electrique_effect extends Effect{
 		last_colli_right=collision_droite;
 		localVit= new Vitesse(0,0);
 		this.setCollideWithNone();
-		this.destroy(partie, stuck);
+		this.destroy(stuck);
 	}
 	
 	@Override
-	public void handleObjectCollision(AbstractModelPartie partie,Collidable collider,Vector2d normal)
+	public void handleObjectCollision(Collidable collider,Vector2d normal)
 	{
 		if(groundEffect)
 			return;
@@ -185,7 +184,7 @@ public class Electrique_effect extends Effect{
 		//If collide with the heros, gain seyeri
 		if(collider instanceof Heros){
 			((Heros)collider).addLife(lifeGained);
-			this.destroy(partie, true);
+			this.destroy(true);
 		}
 		//else exploded in other electrique effect 
 		else 
@@ -193,19 +192,19 @@ public class Electrique_effect extends Effect{
 			this.setCollideWithNone();
 			if(explosionDepth < (maxExplosionDepth-1) ){
 				this.setMouvIndex(0);
-				this.setMouvement(new Electrique_split(EffectCollisionEnum.ENTITY,partie.getFrame()));
+				this.setMouvement(new Electrique_split(EffectCollisionEnum.ENTITY,ModelPartie.me.getFrame()));
 				currentCollider = collider;
 			}
 			else
-				this.destroy(partie, true);
+				this.destroy(true);
 			if(collider instanceof Entity)
 				((Entity)collider).addLife(damage);
 		}
 	}
 	@Override
-	public void handleStuck(AbstractModelPartie partie) {
+	public void handleStuck() {
 		if(groundEffect)
 			return;
-		handleWorldCollision( new Vector2d(), partie,null,true );
+		handleWorldCollision( new Vector2d(), null,true );
 	}
 }

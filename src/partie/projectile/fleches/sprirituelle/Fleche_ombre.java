@@ -15,7 +15,7 @@ import partie.effects.Ombre_effect;
 import partie.effects.Roche_effect;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
-import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.ModelPartie;
 import partie.mouvement.Deplace;
 import partie.projectile.Projectile;
 
@@ -33,10 +33,10 @@ public class Fleche_ombre extends Spirituelle {
 	}
 
 	/**Switch the two position of the objects following this rule: try switch by mathing bottom first and top last */
-	void teleportSwitch(Collidable object1,Collidable object2,AbstractModelPartie partie,Vector2d normal)
+	void teleportSwitch(Collidable object1,Collidable object2,Vector2d normal)
 	{
 		//Get hitbox from object 1
-		Hitbox object1Hitbox = object1.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
+		Hitbox object1Hitbox = object1.getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp());
 
 		//Get points to match 
 		Vector2d v1 = Hitbox.supportPoint(new Vector2d(1,1), object1Hitbox.polygon);
@@ -51,7 +51,7 @@ public class Fleche_ombre extends Spirituelle {
 		double y2 = v1.y;
 
 		//Get hitbox from object 2
-		Hitbox object2Hitbox = object2.getHitbox(partie.INIT_RECT,partie.getScreenDisp());
+		Hitbox object2Hitbox = object2.getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp());
 
 		//Get points to match 
 		Vector2d v1_2 = Hitbox.supportPoint(new Vector2d(1,1), object2Hitbox.polygon);
@@ -76,7 +76,7 @@ public class Fleche_ombre extends Spirituelle {
 				object1.addXpos_sync((int) allDeltaPos[i].x);
 				object1.addYpos_sync((int) allDeltaPos[i].y);
 				//test stuck
-				if(Collision.isWorldCollision(partie, object1, true)){
+				if(Collision.isWorldCollision(object1, true)){
 					//revert position
 					object1.addXpos_sync((int) -allDeltaPos[i].x);
 					object1.addYpos_sync((int) -allDeltaPos[i].y);
@@ -89,7 +89,7 @@ public class Fleche_ombre extends Spirituelle {
 				object2.addXpos_sync((int) -allDeltaPos[i].x);
 				object2.addYpos_sync((int) -allDeltaPos[i].y);
 				//test stuck
-				if(Collision.isWorldCollision(partie, object2, true)){
+				if(Collision.isWorldCollision(object2, true)){
 					//revert position
 					object2.addXpos_sync((int) allDeltaPos[i].x);
 					object2.addYpos_sync((int) allDeltaPos[i].y);
@@ -103,20 +103,20 @@ public class Fleche_ombre extends Spirituelle {
 		//correct screen : 
 		if(object1.controlScreenMotion)
 		{
-			Point delta = Deplace.getdeplaceEcran(partie,object1,true);
-			Deplace.deplaceEcran(delta,partie,object1);
+			Point delta = Deplace.getdeplaceEcran(object1,true);
+			Deplace.deplaceEcran(delta,object1);
 		}
 		if(object2.controlScreenMotion)
 		{
-			Point delta = Deplace.getdeplaceEcran(partie,object2,true);
-			Deplace.deplaceEcran(delta,partie,object2);
+			Point delta = Deplace.getdeplaceEcran(object2,true);
+			Deplace.deplaceEcran(delta,object2);
 		}
 	}
 
-	void teleportToArrow(Collidable object,AbstractModelPartie partie,Vector2d normal)
+	void teleportToArrow(Collidable object,Vector2d normal)
 	{
 		//get the teleportation point 
-		Hitbox fHitbox = getHitbox(partie.INIT_RECT,partie.getScreenDisp());
+		Hitbox fHitbox = getHitbox(ModelPartie.me.INIT_RECT,ModelPartie.me.getScreenDisp());
 
 		Vector2d v1 = Hitbox.supportPoint(Deplace.angleToVector(getRotation()-Math.PI/10), fHitbox.polygon); //top right of unrotated hitbox (with tip pointing right)
 		Vector2d v2 = Hitbox.supportPoint(Deplace.angleToVector(getRotation()+Math.PI/10), fHitbox.polygon); //bottom right of unrotated hitbox (with tip pointing right)
@@ -128,7 +128,7 @@ public class Fleche_ombre extends Spirituelle {
 		Vector2d dir1 = GJK_EPA.projectVectorTo90(normal,true,0.01);
 		Vector2d dir2 = GJK_EPA.projectVectorTo90(normal,true,-0.01);
 
-		Hitbox objectHitbox= object.getHitbox(partie.INIT_RECT, partie.getScreenDisp());
+		Hitbox objectHitbox= object.getHitbox(ModelPartie.me.INIT_RECT, ModelPartie.me.getScreenDisp());
 
 		/**Condider 3 reference points for the object: imagine the case where the arrow is shot in the ground. The three possible reference are : 
 		 * bottom middle, bottom left and bottom right */
@@ -150,7 +150,7 @@ public class Fleche_ombre extends Spirituelle {
 			object.addXpos_sync((int) allDeltaPos[i].x);
 			object.addYpos_sync((int) allDeltaPos[i].y);
 			//test stuck
-			if(Collision.isWorldCollision(partie, object, true)){
+			if(Collision.isWorldCollision(object, true)){
 				//revert position
 				object.addXpos_sync((int) -allDeltaPos[i].x);
 				object.addYpos_sync((int) -allDeltaPos[i].y);
@@ -160,28 +160,28 @@ public class Fleche_ombre extends Spirituelle {
 			{
 				if(object.controlScreenMotion)
 				{
-					Point delta = Deplace.getdeplaceEcran(partie,object,true);
-					Deplace.deplaceEcran(delta,partie,object);
+					Point delta = Deplace.getdeplaceEcran(object,true);
+					Deplace.deplaceEcran(delta,object);
 				}
 				tpSuccess=true;
 				break;
 			}
 		}
 	}
-	void applyArrowEffect(List<Entity> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d collisionNormal,Point pColli, Point correctedPColli)
+	void applyArrowEffect(List<Entity> objects,Collidable collidedObject,Vector2d collisionNormal,Point pColli, Point correctedPColli)
 	{
 		if(generatedEffect)
 			return;
 
 		generatedEffect=true;
 
-		flecheEffect=new Ombre_effect(partie,this,0,partie.getFrame(),collisionNormal,pColli,correctedPColli);
+		flecheEffect=new Ombre_effect(this,0,ModelPartie.me.getFrame(),collisionNormal,pColli,correctedPColli);
 		MusicBruitage.me.startBruitage("arc");
 
 		if(collidedObject == null|| !(collidedObject instanceof Entity))
-			teleportToArrow(shooter,partie,collisionNormal);
+			teleportToArrow(shooter,collisionNormal);
 		else
-			teleportSwitch(shooter,collidedObject,partie,collisionNormal);
+			teleportSwitch(shooter,collidedObject,collisionNormal);
 		for(Entity obj : objects)
 		{
 			obj.registerEffect(flecheEffect);
@@ -192,28 +192,28 @@ public class Fleche_ombre extends Spirituelle {
 		this.simulateDestroy();
 	}
 	@Override
-	protected void onPlanted(List<Entity> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
+	protected void onPlanted(List<Entity> objects,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
 	{
 		if(this.afterDecochee && stuck)
-			ejectArrow(partie,unprojectedSpeed);
+			ejectArrow(unprojectedSpeed);
 		if(stuck)
-			destroy(partie,false);
+			destroy(false);
 		else
-			applyArrowEffect(objects,partie,collidedObject,normCollision,pointCollision,correctedPointCollision);
+			applyArrowEffect(objects,collidedObject,normCollision,pointCollision,correctedPointCollision);
 		this.isVisible=false;
 	}
 	@Override
-	protected boolean OnObjectsCollision(List<Entity> objects,AbstractModelPartie partie,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
+	protected boolean OnObjectsCollision(List<Entity> objects,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
 	{
 		if(this.afterDecochee && (collider instanceof Effect))
 			if(((Effect)collider).isWorldCollider)
-				ejectArrow(partie,unprojectedSpeed);
+				ejectArrow(unprojectedSpeed);
 		
 		this.isVisible=false;
 		this.shouldMove=false;
 		this.setCollideWithNone();
 		if(collider instanceof Entity){
-			applyArrowEffect(objects,partie,collider,normal,null,null);
+			applyArrowEffect(objects,collider,normal,null,null);
 			return false;
 		}
 		return true;

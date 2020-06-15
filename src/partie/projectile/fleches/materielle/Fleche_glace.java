@@ -11,7 +11,7 @@ import partie.effects.Glace_effect;
 import partie.effects.Roche_effect;
 import partie.entitie.Entity;
 import partie.entitie.heros.Heros;
-import partie.modelPartie.AbstractModelPartie;
+import partie.modelPartie.ModelPartie;
 import partie.projectile.Projectile;
 
 public class Fleche_glace extends Materielle {
@@ -28,18 +28,18 @@ public class Fleche_glace extends Materielle {
 	}
 	
 	@Override
-	protected void onPlanted(List<Entity> objects,AbstractModelPartie partie,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
+	protected void onPlanted(List<Entity> objects,Collidable collidedObject,Vector2d unprojectedSpeed,boolean stuck)
 	{
 		if(this.afterDecochee && stuck)
-			ejectArrow(partie,unprojectedSpeed);
+			ejectArrow(unprojectedSpeed);
 		if(stuck){
-			destroy(partie,false);
+			destroy(false);
 			return;
 		}
 		if(!generatedEffect){
 			generatedEffect=true;
 
-			flecheEffect=new Glace_effect(partie,this,0,partie.getFrame(),normCollision,pointCollision,correctedPointCollision,true,damage_init);
+			flecheEffect=new Glace_effect(this,0,ModelPartie.me.getFrame(),normCollision,pointCollision,correctedPointCollision,true,damage_init);
 			MusicBruitage.me.startBruitage("arc");
 			Roche_effect.synchroniseMovementWithRocheEffectMovement(collidedObject, new Collidable[] {this,flecheEffect});
 
@@ -48,16 +48,16 @@ public class Fleche_glace extends Materielle {
 	}
 
 	@Override
-	protected boolean OnObjectsCollision(List<Entity> objects,AbstractModelPartie partie,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
+	protected boolean OnObjectsCollision(List<Entity> objects,Collidable collider,Vector2d unprojectedSpeed,Vector2d normal)
 	{
 		if(this.afterDecochee && (collider instanceof Effect))
 			if(((Effect)collider).isWorldCollider)
-				ejectArrow(partie,unprojectedSpeed);
+				ejectArrow(unprojectedSpeed);
 
 		if(!generatedEffect){
 			generatedEffect=true;
 
-			flecheEffect=new Glace_effect(partie,this,0,partie.getFrame(),normal,null,null,false,damage_init);
+			flecheEffect=new Glace_effect(this,0,ModelPartie.me.getFrame(),normal,null,null,false,damage_init);
 			MusicBruitage.me.startBruitage("arc");
 
 			//Hide the arrow but don't destroy it otherwise the effect position is no longer updated
